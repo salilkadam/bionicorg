@@ -1,0 +1,22 @@
+installation:
+  version: 1.0.0
+  installDate: 2026-09-30T20:53:26.510Z
+  lastUpdated: 2026-09-30T20:53:26.510Z
+modules:
+  - name: core
+    version: 1.0.0
+    installDate: 2026-09-30T20:53:26.510Z
+    lastUpdated: 2026-09-30T20:53:26.510Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmm
+    version: 1.0.0
+    installDate: 2026-09-30T20:53:26.410Z
+    lastUpdated: 2026-09-30T20:53:26.510Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+ides:
+  - claude-code
+  - zed

@@ -1,0 +1,3 @@
+canonicalId,name,description,module,path,install_to_skad
+"skad-review-adversarial-general","skad-review-adversarial-general","Perform a Cynical Review and produce a findings report. Use when the user requests a critical review of something","core","_skad/core/tasks/skad-review-adversarial-general/workflow.md","true"
+"skad-quick-dev-new-preview","quick-dev-new-preview","Unified quick flow - clarify intent, plan, implement, review, present.","bmm","_skad/bmm/workflows/skad-quick-flow/skad-quick-dev-new-preview/workflow.md","true"

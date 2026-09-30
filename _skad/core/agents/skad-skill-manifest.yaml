@@ -1,0 +1,9 @@
+skad-master.agent.yaml:
+  canonicalId: skad-master
+  type: agent
+  description: "SKad Master Executor, Knowledge Custodian, and Workflow Orchestrator"
+
+thirteenth-man.agent.yaml:
+  canonicalId: skad-thirteenth-man
+  type: agent
+  description: "Obligatory Dissenter for adversarial verification, independent re-derivation from source, and gate testing"
