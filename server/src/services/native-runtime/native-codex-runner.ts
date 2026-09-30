@@ -5,20 +5,20 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { and, eq } from "drizzle-orm";
 
-import type { AdapterExecutionResult } from "@paperclipai/adapter-utils";
-import type { Db } from "@paperclipai/db";
-import { agentSessionGoalActions, agentTaskSessions } from "@paperclipai/db";
+import type { AdapterExecutionResult } from "@bionicai/adapter-utils";
+import type { Db } from "@bionicai/db";
+import { agentSessionGoalActions, agentTaskSessions } from "@bionicai/db";
 
 import { resolvePaperclipInstanceRoot } from "../../home-paths.js";
 import { failRunnerGoalAction } from "../runner-goals.js";
 import {
   createPaperclipRunnerAuthorizedToolSet,
   type PaperclipSemanticToolDefinition,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 import { runnerPrpCoordinator } from "./runner-prp-coordinator.js";
 
 const moduleDirectory = dirname(fileURLToPath(import.meta.url));
-const RUNNER_VERSION = "paperclip-runner-v1";
+const RUNNER_VERSION = "bionic-runner-v1";
 
 interface NativeGoalControl {
   sessionId: string;
@@ -165,24 +165,24 @@ export function buildNativeRunnerPreparePayload(
 }
 
 function executableName(): string {
-  return process.platform === "win32" ? "paperclip-runnerd.exe" : "paperclip-runnerd";
+  return process.platform === "win32" ? "bionic-runnerd.exe" : "bionic-runnerd";
 }
 
 export function resolvePaperclipRunnerBinary(
-  configuredPath = process.env.PAPERCLIP_RUNNER_BINARY,
+  configuredPath = process.env.BIONIC_RUNNER_BINARY,
 ): string {
   const candidates = [
     configuredPath,
-    resolve(moduleDirectory, "../../vendor/paperclip-runner/bin", executableName()),
-    resolve(moduleDirectory, "../../../../packages/paperclip-runner/dist/bin", executableName()),
+    resolve(moduleDirectory, "../../vendor/bionic-runner/bin", executableName()),
+    resolve(moduleDirectory, "../../../../packages/bionic-runner/dist/bin", executableName()),
     resolve(
       moduleDirectory,
-      "../../../../packages/paperclip-runner/runner/target/release",
+      "../../../../packages/bionic-runner/runner/target/release",
       executableName(),
     ),
   ].filter((candidate): candidate is string => Boolean(candidate));
   if (configuredPath && !isAbsolute(configuredPath)) {
-    throw new Error("PAPERCLIP_RUNNER_BINARY must be an absolute path");
+    throw new Error("BIONIC_RUNNER_BINARY must be an absolute path");
   }
   for (const candidate of candidates) {
     try {
@@ -193,7 +193,7 @@ export function resolvePaperclipRunnerBinary(
     }
   }
   throw new Error(
-    "paperclip_runner_binary_missing: build @paperclipai/paperclip-runner or set PAPERCLIP_RUNNER_BINARY",
+    "bionic_runner_binary_missing: build @bionicai/bionic-runner or set BIONIC_RUNNER_BINARY",
   );
 }
 
@@ -317,7 +317,7 @@ export async function executeNativeCodexRunner(input: {
   const runnerDigest = `sha256:${createHash("sha256").update(readFileSync(binary)).digest("hex")}`;
   const runtimeRoot = input.runtimeRoot
     ? resolve(input.runtimeRoot)
-    : resolve(resolvePaperclipInstanceRoot(), "runtime", "paperclip-runner");
+    : resolve(resolvePaperclipInstanceRoot(), "runtime", "bionic-runner");
   const runnerStateDirectory = resolve(runtimeRoot, "runner", input.runId);
   const goalControl = await readNativeGoalControl({
     db: input.db,
@@ -398,7 +398,7 @@ export async function executeNativeCodexRunner(input: {
     env: {
       ...process.env,
       ...input.environment,
-      PAPERCLIP_RUNNER_BOOTSTRAP_TICKET: prepared.bootstrapTicket,
+      BIONIC_RUNNER_BOOTSTRAP_TICKET: prepared.bootstrapTicket,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -411,7 +411,7 @@ export async function executeNativeCodexRunner(input: {
   });
 
   try {
-    if (!child.pid) throw new Error("paperclip_runner_process_not_started");
+    if (!child.pid) throw new Error("bionic_runner_process_not_started");
     await input.onSpawn({
       pid: child.pid,
       processGroupId: process.platform === "win32" ? null : child.pid,
@@ -445,7 +445,7 @@ export async function executeNativeCodexRunner(input: {
         if (recovered) return recovered;
         if (recovered === null && goalControl && !shouldWaitForGoalCompletion) return null;
         throw new Error(
-          `paperclip_runner_process_exited: code=${code ?? "null"} signal=${signal ?? "null"}`,
+          `bionic_runner_process_exited: code=${code ?? "null"} signal=${signal ?? "null"}`,
         );
       }),
     ]);
@@ -469,7 +469,7 @@ export async function executeNativeCodexRunner(input: {
       signal: null,
       timedOut: false,
       ...(succeeded ? {} : {
-        errorCode: "paperclip_runner_provider_failed",
+        errorCode: "bionic_runner_provider_failed",
         errorMessage: completed?.result.summary,
       }),
       provider: "codex",
@@ -506,7 +506,7 @@ export async function executeNativeCodexRunner(input: {
           companyId: input.companyId,
           issueId: input.issueId,
           agentId: input.agentId,
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
         },
         goalControl.requestId,
         error instanceof Error ? error.message : "native_goal_control_failed",

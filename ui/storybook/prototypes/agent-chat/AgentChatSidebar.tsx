@@ -1,4 +1,4 @@
-import { storybookAgents } from "../../fixtures/paperclipData";
+import { storybookAgents } from "../../fixtures/bionicData";
 
 export const chatAgents = [
   ...storybookAgents,

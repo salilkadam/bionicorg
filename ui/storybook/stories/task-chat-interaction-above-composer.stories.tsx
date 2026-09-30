@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import type { IssueThreadInteraction, IssueWorkMode } from "@paperclipai/shared";
+import type { IssueThreadInteraction, IssueWorkMode } from "@bionicai/shared";
 import { ChevronLeft, Ellipsis } from "lucide-react";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { TaskChatComposer } from "@/components/task-chat/TaskChatComposer";
@@ -20,7 +20,7 @@ import {
   issueThreadInteractionFixtureMeta,
 } from "@/fixtures/issueThreadInteractionFixtures";
 import { composerAgentAppearance, composerAgents } from "../prototypes/composer-model-picker/fixtures";
-import { storybookAgentMap } from "../fixtures/paperclipData";
+import { storybookAgentMap } from "../fixtures/bionicData";
 
 const agentMap = new Map(composerAgents.map((agent) => [agent.id, {
   id: agent.id,
@@ -183,7 +183,7 @@ const runtimeRequest: TaskChatRuntimeRequestItem = {
   choices: [],
   fields: [],
   questionSet: {
-    schema: "paperclip.question_set.v1",
+    schema: "bionic.question_set.v1",
     title: "Runtime question",
     questions: [{
       id: "environment",

@@ -97,7 +97,7 @@ describe("adapter routes", () => {
     mockAdapterPluginStore.addAdapterPlugin.mockResolvedValue(undefined);
     mockAdapterPluginStore.removeAdapterPlugin.mockReturnValue(false);
     mockAdapterPluginStore.getAdapterPluginByType.mockReturnValue(undefined);
-    mockAdapterPluginStore.getAdapterPluginsDir.mockReturnValue("/tmp/paperclip-adapter-routes-test");
+    mockAdapterPluginStore.getAdapterPluginsDir.mockReturnValue("/tmp/bionic-adapter-routes-test");
     mockAdapterPluginStore.getDisabledAdapterTypes.mockReturnValue([]);
     mockAdapterPluginStore.setAdapterDisabled.mockReturnValue(false);
     mockPluginLoader.buildExternalAdapters.mockResolvedValue([]);
@@ -149,17 +149,17 @@ describe("adapter routes", () => {
     }
   });
 
-  it("keeps paperclip_runner hidden from selection unless the rollout flag is enabled", async () => {
+  it("keeps bionic_runner hidden from selection unless the rollout flag is enabled", async () => {
     const disabledResponse = await request(createApp()).get("/api/adapters");
     expect(disabledResponse.status).toBe(200);
-    expect(disabledResponse.body.find((adapter: any) => adapter.type === "paperclip_runner"))
+    expect(disabledResponse.body.find((adapter: any) => adapter.type === "bionic_runner"))
       .toMatchObject({ disabled: true });
 
     const enabledResponse = await request(createApp({}, {
       getNativeRunnerEnabled: async () => true,
     })).get("/api/adapters");
     expect(enabledResponse.status).toBe(200);
-    expect(enabledResponse.body.find((adapter: any) => adapter.type === "paperclip_runner"))
+    expect(enabledResponse.body.find((adapter: any) => adapter.type === "bionic_runner"))
       .toMatchObject({
         disabled: false,
         capabilities: {
@@ -333,10 +333,10 @@ describe("adapter routes", () => {
     expect(res.body.fields).toEqual([]);
   });
 
-  it("serves provider-scoped Paperclip Runner configuration fields", async () => {
+  it("serves provider-scoped Bionic Runner configuration fields", async () => {
     const app = createApp();
 
-    const res = await request(app).get("/api/adapters/paperclip_runner/config-schema");
+    const res = await request(app).get("/api/adapters/bionic_runner/config-schema");
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(res.body.fields).toEqual(expect.arrayContaining([

@@ -15,8 +15,8 @@ import {
   issueRecoveryActions,
   issueTreeHolds,
   issues,
-} from "@paperclipai/db";
-import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@bionicai/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -46,7 +46,7 @@ describeEmbeddedPostgres("run-dispatch postgres adapter", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-run-dispatch-postgres-adapter-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-run-dispatch-postgres-adapter-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
@@ -73,7 +73,7 @@ describeEmbeddedPostgres("run-dispatch postgres adapter", () => {
     const agentId = randomUUID();
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "responsible-user",
@@ -545,7 +545,7 @@ describeEmbeddedPostgres("run-dispatch postgres adapter", () => {
           issueId,
           wakeReason: "issue_assigned",
           ...(source === undefined ? {} : { source }),
-          paperclipWake: { privateTestMarker: "not-for-the-status-effect" },
+          bionicWake: { privateTestMarker: "not-for-the-status-effect" },
         },
       });
       const outcome = await createPostgresRunDispatchAdapter(db).cancelStaleQueuedRun({
@@ -579,7 +579,7 @@ describeEmbeddedPostgres("run-dispatch postgres adapter", () => {
         .then((rows) => rows[0]);
       expect(persisted?.status).toBe("cancelled");
       expect(persisted?.contextSnapshot).toMatchObject({
-        paperclipWake: { privateTestMarker: "not-for-the-status-effect" },
+        bionicWake: { privateTestMarker: "not-for-the-status-effect" },
       });
     });
 

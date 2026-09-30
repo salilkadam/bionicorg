@@ -1,0 +1,432 @@
+# GENERATED FILE — DO NOT EDIT. Run pnpm generate:capability-inventory.
+{
+  "schemaVersion": 2,
+  "inventoryRole": "legacy_alias_index",
+  "generatedFrom": "packages/mcp-server/src/tools.ts",
+  "normativeSources": [
+    "capabilities",
+    "evaluations"
+  ],
+  "rows": [
+    {
+      "id": "mcp:bionicMe",
+      "name": "bionicMe",
+      "description": "Get the current authenticated Bionic actor details",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:290",
+      "expectedSemantics": "Get the current authenticated Bionic actor details",
+      "foldedInto": "eval:hb-inbox-lite-01",
+      "evidenceId": "mcp:bionicMe"
+    },
+    {
+      "id": "mcp:bionicInboxLite",
+      "name": "bionicInboxLite",
+      "description": "Get the current authenticated agent inbox-lite assignment list",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:296",
+      "expectedSemantics": "Get the current authenticated agent inbox-lite assignment list",
+      "foldedInto": "eval:hb-inbox-lite-01",
+      "evidenceId": "mcp:bionicInboxLite"
+    },
+    {
+      "id": "mcp:bionicListAgents",
+      "name": "bionicListAgents",
+      "description": "List agents in a company",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:302",
+      "expectedSemantics": "List agents in a company",
+      "foldedInto": "eval:rf-api-mgr-heartbeat-01",
+      "evidenceId": "mcp:bionicListAgents"
+    },
+    {
+      "id": "mcp:bionicListSkills",
+      "name": "bionicListSkills",
+      "description": "List the company skill library (all installed skills, independent of which agents have them enabled)",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:308",
+      "expectedSemantics": "List the company skill library (all installed skills, independent of which agents have them enabled)",
+      "foldedInto": "eval:rf-cskill-audit-01",
+      "evidenceId": "mcp:bionicListSkills"
+    },
+    {
+      "id": "mcp:bionicGetAgent",
+      "name": "bionicGetAgent",
+      "description": "Get a single agent by id",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:314",
+      "expectedSemantics": "Get a single agent by id",
+      "foldedInto": "eval:rf-api-mgr-heartbeat-01",
+      "evidenceId": "mcp:bionicGetAgent"
+    },
+    {
+      "id": "mcp:bionicListIssues",
+      "name": "bionicListIssues",
+      "description": "List issues for a company with optional filters",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:323",
+      "expectedSemantics": "List issues for a company with optional filters",
+      "foldedInto": "eval:se-q-filters-01",
+      "evidenceId": "mcp:bionicListIssues"
+    },
+    {
+      "id": "mcp:bionicGetIssue",
+      "name": "bionicGetIssue",
+      "description": "Get a single issue by UUID or identifier",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:338",
+      "expectedSemantics": "Get a single issue by UUID or identifier",
+      "foldedInto": "eval:se-get-issue-01",
+      "evidenceId": "mcp:bionicGetIssue"
+    },
+    {
+      "id": "mcp:bionicGetHeartbeatContext",
+      "name": "bionicGetHeartbeatContext",
+      "description": "Get compact heartbeat context for an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:344",
+      "expectedSemantics": "Get compact heartbeat context for an issue",
+      "foldedInto": "eval:hb-context-01",
+      "evidenceId": "mcp:bionicGetHeartbeatContext"
+    },
+    {
+      "id": "mcp:bionicListComments",
+      "name": "bionicListComments",
+      "description": "List issue comments with incremental options",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:353",
+      "expectedSemantics": "List issue comments with incremental options",
+      "foldedInto": "eval:se-get-issue-01",
+      "evidenceId": "mcp:bionicListComments"
+    },
+    {
+      "id": "mcp:bionicGetComment",
+      "name": "bionicGetComment",
+      "description": "Get a specific issue comment by id",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:366",
+      "expectedSemantics": "Get a specific issue comment by id",
+      "foldedInto": "eval:hb-wake-comment-01",
+      "evidenceId": "mcp:bionicGetComment"
+    },
+    {
+      "id": "mcp:bionicListIssueApprovals",
+      "name": "bionicListIssueApprovals",
+      "description": "List approvals linked to an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:373",
+      "expectedSemantics": "List approvals linked to an issue",
+      "foldedInto": "eval:ap-board-approval-01",
+      "evidenceId": "mcp:bionicListIssueApprovals"
+    },
+    {
+      "id": "mcp:bionicListDocuments",
+      "name": "bionicListDocuments",
+      "description": "List issue documents",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:379",
+      "expectedSemantics": "List issue documents",
+      "foldedInto": "eval:dp-base-revision-01",
+      "evidenceId": "mcp:bionicListDocuments"
+    },
+    {
+      "id": "mcp:bionicGetDocument",
+      "name": "bionicGetDocument",
+      "description": "Get one issue document by key",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:385",
+      "expectedSemantics": "Get one issue document by key",
+      "foldedInto": "eval:dp-base-revision-01",
+      "evidenceId": "mcp:bionicGetDocument"
+    },
+    {
+      "id": "mcp:bionicListDocumentRevisions",
+      "name": "bionicListDocumentRevisions",
+      "description": "List revisions for an issue document",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:392",
+      "expectedSemantics": "List revisions for an issue document",
+      "foldedInto": "eval:dp-base-revision-01",
+      "evidenceId": "mcp:bionicListDocumentRevisions"
+    },
+    {
+      "id": "mcp:bionicListProjects",
+      "name": "bionicListProjects",
+      "description": "List projects in a company",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:402",
+      "expectedSemantics": "List projects in a company",
+      "foldedInto": "eval:rf-wf-project-setup-01",
+      "evidenceId": "mcp:bionicListProjects"
+    },
+    {
+      "id": "mcp:bionicGetProject",
+      "name": "bionicGetProject",
+      "description": "Get a project by id or company-scoped short reference",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:408",
+      "expectedSemantics": "Get a project by id or company-scoped short reference",
+      "foldedInto": "eval:rf-wf-project-setup-01",
+      "evidenceId": "mcp:bionicGetProject"
+    },
+    {
+      "id": "mcp:bionicGetIssueWorkspaceRuntime",
+      "name": "bionicGetIssueWorkspaceRuntime",
+      "description": "Get the current execution workspace and runtime services for an issue, including service URLs",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:417",
+      "expectedSemantics": "Get the current execution workspace and runtime services for an issue, including service URLs",
+      "foldedInto": "eval:rf-iws-start-url-01",
+      "evidenceId": "mcp:bionicGetIssueWorkspaceRuntime"
+    },
+    {
+      "id": "mcp:bionicControlIssueWorkspaceServices",
+      "name": "bionicControlIssueWorkspaceServices",
+      "description": "Start, stop, or restart the current issue execution workspace runtime services",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:423",
+      "expectedSemantics": "Start, stop, or restart the current issue execution workspace runtime services",
+      "foldedInto": "eval:rf-iws-start-url-01",
+      "evidenceId": "mcp:bionicControlIssueWorkspaceServices"
+    },
+    {
+      "id": "mcp:bionicWaitForIssueWorkspaceService",
+      "name": "bionicWaitForIssueWorkspaceService",
+      "description": "Wait until an issue execution workspace runtime service is running and has a URL when one is exposed",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:440",
+      "expectedSemantics": "Wait until an issue execution workspace runtime service is running and has a URL when one is exposed",
+      "foldedInto": "eval:rf-iws-target-restart-01",
+      "evidenceId": "mcp:bionicWaitForIssueWorkspaceService"
+    },
+    {
+      "id": "mcp:bionicListGoals",
+      "name": "bionicListGoals",
+      "description": "List goals in a company",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:466",
+      "expectedSemantics": "List goals in a company",
+      "foldedInto": "eval:su-parent-goal-01",
+      "evidenceId": "mcp:bionicListGoals"
+    },
+    {
+      "id": "mcp:bionicGetGoal",
+      "name": "bionicGetGoal",
+      "description": "Get a goal by id",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:472",
+      "expectedSemantics": "Get a goal by id",
+      "foldedInto": "eval:su-parent-goal-01",
+      "evidenceId": "mcp:bionicGetGoal"
+    },
+    {
+      "id": "mcp:bionicListApprovals",
+      "name": "bionicListApprovals",
+      "description": "List approvals in a company",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:478",
+      "expectedSemantics": "List approvals in a company",
+      "foldedInto": "eval:ap-approval-wake-01",
+      "evidenceId": "mcp:bionicListApprovals"
+    },
+    {
+      "id": "mcp:bionicCreateApproval",
+      "name": "bionicCreateApproval",
+      "description": "Create a board approval request, optionally linked to one or more issues",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:487",
+      "expectedSemantics": "Create a board approval request, optionally linked to one or more issues",
+      "foldedInto": "eval:ap-board-approval-01",
+      "evidenceId": "mcp:bionicCreateApproval"
+    },
+    {
+      "id": "mcp:bionicGetApproval",
+      "name": "bionicGetApproval",
+      "description": "Get an approval by id",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:496",
+      "expectedSemantics": "Get an approval by id",
+      "foldedInto": "eval:ap-approval-wake-01",
+      "evidenceId": "mcp:bionicGetApproval"
+    },
+    {
+      "id": "mcp:bionicGetApprovalIssues",
+      "name": "bionicGetApprovalIssues",
+      "description": "List issues linked to an approval",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:502",
+      "expectedSemantics": "List issues linked to an approval",
+      "foldedInto": "eval:ap-approval-wake-01",
+      "evidenceId": "mcp:bionicGetApprovalIssues"
+    },
+    {
+      "id": "mcp:bionicListApprovalComments",
+      "name": "bionicListApprovalComments",
+      "description": "List comments for an approval",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:508",
+      "expectedSemantics": "List comments for an approval",
+      "foldedInto": "eval:ap-approval-deny-01",
+      "evidenceId": "mcp:bionicListApprovalComments"
+    },
+    {
+      "id": "mcp:bionicCreateIssue",
+      "name": "bionicCreateIssue",
+      "description": "Create a new issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:514",
+      "expectedSemantics": "Create a new issue",
+      "foldedInto": "eval:su-parent-goal-01",
+      "evidenceId": "mcp:bionicCreateIssue"
+    },
+    {
+      "id": "mcp:bionicUpdateIssue",
+      "name": "bionicUpdateIssue",
+      "description": "Patch an issue, optionally including a comment; include resume=true when intentionally requesting follow-up on resumable closed work",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:521",
+      "expectedSemantics": "Patch an issue, optionally including a comment; include resume=true when intentionally requesting follow-up on resumable closed work",
+      "foldedInto": "eval:st-done-comment-01",
+      "evidenceId": "mcp:bionicUpdateIssue"
+    },
+    {
+      "id": "mcp:bionicCheckoutIssue",
+      "name": "bionicCheckoutIssue",
+      "description": "Checkout an issue for an agent",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:528",
+      "expectedSemantics": "Checkout an issue for an agent",
+      "foldedInto": "eval:co-body-contract-01",
+      "evidenceId": "mcp:bionicCheckoutIssue"
+    },
+    {
+      "id": "mcp:bionicReleaseIssue",
+      "name": "bionicReleaseIssue",
+      "description": "Release an issue checkout",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:540",
+      "expectedSemantics": "Release an issue checkout",
+      "foldedInto": "eval:er-release-01",
+      "evidenceId": "mcp:bionicReleaseIssue"
+    },
+    {
+      "id": "mcp:bionicAddComment",
+      "name": "bionicAddComment",
+      "description": "Add a comment to an issue; include resume=true when intentionally requesting follow-up on resumable closed work",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:546",
+      "expectedSemantics": "Add a comment to an issue; include resume=true when intentionally requesting follow-up on resumable closed work",
+      "foldedInto": "eval:cm-multiline-01",
+      "evidenceId": "mcp:bionicAddComment"
+    },
+    {
+      "id": "mcp:bionicSuggestTasks",
+      "name": "bionicSuggestTasks",
+      "description": "Create a suggest_tasks interaction on an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:553",
+      "expectedSemantics": "Create a suggest_tasks interaction on an issue",
+      "foldedInto": "eval:ix-suggest-tasks-01",
+      "evidenceId": "mcp:bionicSuggestTasks"
+    },
+    {
+      "id": "mcp:bionicAskUserQuestions",
+      "name": "bionicAskUserQuestions",
+      "description": "Create an ask_user_questions interaction on an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:565",
+      "expectedSemantics": "Create an ask_user_questions interaction on an issue",
+      "foldedInto": "eval:ix-questions-01",
+      "evidenceId": "mcp:bionicAskUserQuestions"
+    },
+    {
+      "id": "mcp:bionicRequestConfirmation",
+      "name": "bionicRequestConfirmation",
+      "description": "Create a request_confirmation interaction on an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:577",
+      "expectedSemantics": "Create a request_confirmation interaction on an issue",
+      "foldedInto": "eval:ix-confirmation-plan-01",
+      "evidenceId": "mcp:bionicRequestConfirmation"
+    },
+    {
+      "id": "mcp:bionicRequestCheckboxConfirmation",
+      "name": "bionicRequestCheckboxConfirmation",
+      "description": "Create a request_checkbox_confirmation interaction on an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:589",
+      "expectedSemantics": "Create a request_checkbox_confirmation interaction on an issue",
+      "foldedInto": "eval:ix-checkbox-01",
+      "evidenceId": "mcp:bionicRequestCheckboxConfirmation"
+    },
+    {
+      "id": "mcp:bionicUpsertIssueDocument",
+      "name": "bionicUpsertIssueDocument",
+      "description": "Create or update an issue document",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:601",
+      "expectedSemantics": "Create or update an issue document",
+      "foldedInto": "eval:dp-plan-doc-01",
+      "evidenceId": "mcp:bionicUpsertIssueDocument"
+    },
+    {
+      "id": "mcp:bionicRestoreIssueDocumentRevision",
+      "name": "bionicRestoreIssueDocumentRevision",
+      "description": "Restore a prior revision of an issue document",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:612",
+      "expectedSemantics": "Restore a prior revision of an issue document",
+      "foldedInto": "eval:dp-base-revision-01",
+      "evidenceId": "mcp:bionicRestoreIssueDocumentRevision"
+    },
+    {
+      "id": "mcp:bionicLinkIssueApproval",
+      "name": "bionicLinkIssueApproval",
+      "description": "Link an approval to an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:627",
+      "expectedSemantics": "Link an approval to an issue",
+      "foldedInto": "eval:ap-board-approval-01",
+      "evidenceId": "mcp:bionicLinkIssueApproval"
+    },
+    {
+      "id": "mcp:bionicUnlinkIssueApproval",
+      "name": "bionicUnlinkIssueApproval",
+      "description": "Unlink an approval from an issue",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:636",
+      "expectedSemantics": "Unlink an approval from an issue",
+      "foldedInto": "eval:ap-board-approval-01",
+      "evidenceId": "mcp:bionicUnlinkIssueApproval"
+    },
+    {
+      "id": "mcp:bionicApprovalDecision",
+      "name": "bionicApprovalDecision",
+      "description": "Approve, reject, request revision, or resubmit an approval",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:646",
+      "expectedSemantics": "Approve, reject, request revision, or resubmit an approval",
+      "foldedInto": "eval:ap-approval-wake-01",
+      "evidenceId": "mcp:bionicApprovalDecision"
+    },
+    {
+      "id": "mcp:bionicAddApprovalComment",
+      "name": "bionicAddApprovalComment",
+      "description": "Add a comment to an approval",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:668",
+      "expectedSemantics": "Add a comment to an approval",
+      "foldedInto": "eval:ap-approval-deny-01",
+      "evidenceId": "mcp:bionicAddApprovalComment"
+    },
+    {
+      "id": "mcp:bionicApiRequest",
+      "name": "bionicApiRequest",
+      "description": "Make a JSON request to an existing Bionic /api endpoint for unsupported operations",
+      "sourceKind": "legacy_mcp_alias",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts:677",
+      "expectedSemantics": "Make a JSON request to an existing Bionic /api endpoint for unsupported operations",
+      "foldedInto": "eval:rf-api-404-report-01",
+      "evidenceId": "mcp:bionicApiRequest"
+    }
+  ]
+}

@@ -6,8 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { agents, companies, createDb, heartbeatRuns, issues, projects, projectWorkspaces } from "@paperclipai/db";
-import { setExpensiveWorkspaceGitExecutor } from "@paperclipai/adapter-utils/git-workspace-sync";
+import { agents, companies, createDb, heartbeatRuns, issues, projects, projectWorkspaces } from "@bionicai/db";
+import { setExpensiveWorkspaceGitExecutor } from "@bionicai/adapter-utils/git-workspace-sync";
 import { createWorkspaceGitOperationScheduler, WorkspaceGitScanError } from "../services/workspace-git-operation-scheduler.js";
 import { getEmbeddedPostgresTestSupport, startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import { heartbeatService } from "../services/heartbeat.ts";
@@ -29,9 +29,9 @@ suite("task project repository provisioning", () => {
   let root: string;
   let heartbeat: ReturnType<typeof heartbeatService>;
   beforeAll(async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "paperclip-project-repos-"));
-    vi.stubEnv("PAPERCLIP_HOME", path.join(root, "home"));
-    vi.stubEnv("PAPERCLIP_MULTI_PROJECT_WORKSPACE_SYNC", "false");
+    root = await mkdtemp(path.join(os.tmpdir(), "bionic-project-repos-"));
+    vi.stubEnv("BIONIC_HOME", path.join(root, "home"));
+    vi.stubEnv("BIONIC_MULTI_PROJECT_WORKSPACE_SYNC", "false");
     database = await startEmbeddedPostgresTestDatabase("project-repositories");
     db = createDb(database.connectionString);
     heartbeat = heartbeatService(db);
@@ -101,7 +101,7 @@ suite("task project repository provisioning", () => {
     const calls = execute.mock.calls.filter(([input]) => input.runId === run!.id);
     expect(calls).toHaveLength(explicitIsolation ? 0 : 1);
     if (!explicitIsolation) {
-      const workspace = calls[0]![0].context.paperclipWorkspace;
+      const workspace = calls[0]![0].context.bionicWorkspace;
       expect(workspace.mode).toBe(configuredWorkspace ? "isolated_workspace" : "shared_workspace");
       if (configuredWorkspace) {
         expect(workspace.strategy).toBe("git_worktree");
@@ -210,7 +210,7 @@ suite("task project repository provisioning", () => {
     expect(execute.mock.calls.filter(([input]) => input.runId === retry!.id)).toHaveLength(1);
     const [task] = await db.select().from(issues).where(and(eq(issues.companyId, companyId), eq(issues.id, issueId)));
     expect(task).toMatchObject({ status: "done", assigneeAgentId: agentId });
-    const copies = (execute.mock.calls.find(([input]) => input.runId === retry!.id)![0].context.paperclipWorkspaces as Array<{ cwd: string }>).filter((hint) => hint.cwd.includes(".paperclip-repositories"));
+    const copies = (execute.mock.calls.find(([input]) => input.runId === retry!.id)![0].context.bionicWorkspaces as Array<{ cwd: string }>).filter((hint) => hint.cwd.includes(".bionic-repositories"));
     expect(copies.length).toBeGreaterThan(0);
     expect(await readFile(path.join(copies[0]!.cwd, "README.md"), "utf8")).toBe("preserved dirty work");
     await expect(readFile(path.join(copies[0]!.cwd, "private.secret"))).rejects.toMatchObject({ code: "ENOENT" });
@@ -245,7 +245,7 @@ suite("task project repository provisioning", () => {
       expect({ status: latest?.status, error: latest?.error }).toEqual({ status: "succeeded", error: null });
     }, { timeout: 15_000 });
     const input = execute.mock.calls.find(([ctx]) => ctx.runId === run!.id)![0];
-    const hints = input.context.paperclipWorkspaces as Array<{ workspaceId: string; cwd: string }>;
+    const hints = input.context.bionicWorkspaces as Array<{ workspaceId: string; cwd: string }>;
     for (let index = 0; index < count; index++) {
       const hint = hints.find((entry) => entry.workspaceId === repositoryRows[index]!.id);
       expect(hint?.cwd).toBeTruthy();

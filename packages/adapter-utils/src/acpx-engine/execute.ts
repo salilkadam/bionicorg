@@ -12,7 +12,7 @@ import type {
   AdapterExecutionContext,
   AdapterExecutionResult,
   UsageSummary,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import {
   adapterExecutionTargetSessionIdentity,
   describeAdapterExecutionTarget,
@@ -35,7 +35,7 @@ import {
   type PreparedAdapterExecutionTargetRuntime,
   type ReferencedSourceIgnoreResolution,
   type SandboxAdditionalSource,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import { captureLocalProcess, capturedProcessExited, killCapturedLocalProcess } from "./local-process-control.js";
 import type { DuplexLossReason } from "../duplex-observability.js";
 import { DUPLEX_CHANNEL_LOST_ERROR_CODE } from "../bridge-transport-contract.js";
@@ -52,8 +52,8 @@ import {
   describeWorkspaceRestoreFailure,
 } from "../workspace-restore-merge.js";
 import {
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
-  DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE,
   applyPaperclipWorkspaceEnv,
   asNumber,
   asString,
@@ -79,8 +79,8 @@ import {
   rewriteWorkspaceCwdEnvVarsForExecution,
   shapePaperclipWorkspaceEnvForExecution,
   type PaperclipSkillEntry,
-} from "@paperclipai/adapter-utils/server-utils";
-import { shellQuote } from "@paperclipai/adapter-utils/ssh";
+} from "@bionicai/adapter-utils/server-utils";
+import { shellQuote } from "@bionicai/adapter-utils/ssh";
 import {
   createAcpRuntime,
   createAgentRegistry,
@@ -162,7 +162,7 @@ import {
 } from "./startup-timing.js";
 
 const defaultModuleDir = path.dirname(fileURLToPath(import.meta.url));
-const PAPERCLIP_MANAGED_CODEX_SKILLS_MANIFEST = ".paperclip-managed-skills.json";
+const BIONIC_MANAGED_CODEX_SKILLS_MANIFEST = ".bionic-managed-skills.json";
 const BENIGN_NES_CLOSE_STDERR = /method: ['"]nes\/close['"].*-32601/;
 
 function routeChildStderr(state: ChildStderrState, chunk: string) {
@@ -207,7 +207,7 @@ type AcpxRuntimeFactory = (options: PaperclipAcpRuntimeOptions) => AcpRuntime;
  * A remote runner-backed session's staged runtime, kept warm across runs so a
  * compatible resume reuses it instead of re-shipping the workspace / re-seeding
  * the managed home (PR 3: "stage once per session"). Keyed by the session's
- * `sessionKey` (`paperclip:companyId:agentId:taskKey:fingerprint`) — the SAME
+ * `sessionKey` (`bionic:companyId:agentId:taskKey:fingerprint`) — the SAME
  * fingerprint scoping the warm handle uses — so one session can never read
  * another session's staged credentials: a different agent/task/config hashes to
  * a different key, misses this cache, and stages its own home.
@@ -267,7 +267,7 @@ export interface AcpxEngineBillingIdentity {
  * credential/home helpers (`copyBackCodexAuth`, `stageCodexHomeForSync`,
  * `prepareClaudeConfigSeed`, the Gemini skills stager, …) live in the adapter
  * packages, and the shared engine — which lives *inside*
- * `@paperclipai/adapter-utils`, a dependency of those packages — cannot import
+ * `@bionicai/adapter-utils`, a dependency of those packages — cannot import
  * them without a circular dependency. So the engine exposes this seam and each
  * adapter supplies it, reusing the exact same vetted helpers (no duplication of
  * the security-critical copy-back path).
@@ -457,7 +457,7 @@ interface AcpxPreparedRuntime {
   agentCommand: string | null;
   agentRegistry: AcpAgentRegistry;
   processSessionBridge: AdapterExecutionTargetProcessSessionBridgeHandle | null;
-  paperclipBridge: AdapterExecutionTargetPaperclipBridgeHandle | null;
+  bionicBridge: AdapterExecutionTargetPaperclipBridgeHandle | null;
   // The workspace/runtime staged into a runner-backed remote sandbox (null for
   // local runs and the runner-less ACP→CLI fallback). PR 1 stages the workspace
   // + cwd only; the `assetDirs`/`runtimeRootDir`/`restoreWorkspace` it carries
@@ -490,7 +490,7 @@ interface AcpxPreparedRuntime {
   skillPromptInstructions: string;
   skillsIdentity: Record<string, unknown>;
   childStderrLogPath: string | null;
-  paperclipClaudeSettings: PaperclipClaudeSettingsResult | null;
+  bionicClaudeSettings: PaperclipClaudeSettingsResult | null;
   mcpServers: NonNullable<AcpRuntimeOptions["mcpServers"]>;
   mcpIdentity: Array<{ name: string; url: string; connectionId: string }>;
   // Per-step round-trip / provider-duration readers sourced from the sandbox
@@ -541,13 +541,13 @@ export function buildSessionFingerprint(identity: SessionFingerprintIdentity): s
 
 /**
  * Build the session key from the fingerprint and the outer-key identity. The key
- * form is `paperclip:companyId:agentId:taskKey:fingerprint`.
+ * form is `bionic:companyId:agentId:taskKey:fingerprint`.
  */
 export function buildSessionKey(identity: SessionKeyIdentity, fingerprint: string): string {
-  return `paperclip:${identity.companyId}:${identity.agentId}:${identity.taskKey}:${fingerprint}`;
+  return `bionic:${identity.companyId}:${identity.agentId}:${identity.taskKey}:${fingerprint}`;
 }
 
-// ACPX runs inside the long-lived Paperclip server process. A local child needs
+// ACPX runs inside the long-lived Bionic server process. A local child needs
 // a small amount of host context (PATH, locale, certificate/proxy settings, and
 // provider authentication), but it must not inherit the server's complete
 // environment. A runner-backed remote sandbox inherits no ambient host context
@@ -793,8 +793,8 @@ export async function referencedSourceContentSignature(
 }
 
 function defaultPaperclipInstanceDir(): string {
-  const home = process.env.PAPERCLIP_HOME?.trim() || path.join(os.homedir(), ".paperclip");
-  const instanceId = process.env.PAPERCLIP_INSTANCE_ID?.trim() || "default";
+  const home = process.env.BIONIC_HOME?.trim() || path.join(os.homedir(), ".bionic");
+  const instanceId = process.env.BIONIC_INSTANCE_ID?.trim() || "default";
   return resolvePaperclipInstanceRootForAdapter({
     homeDir: home,
     instanceId,
@@ -1039,7 +1039,7 @@ async function prepareManagedCodexHome(input: {
 
   await onLog(
     "stdout",
-    `[paperclip] Using Paperclip-managed ACPX Codex home "${targetHome}" (seeded from "${sourceHome}").\n`,
+    `[bionic] Using Bionic-managed ACPX Codex home "${targetHome}" (seeded from "${sourceHome}").\n`,
   );
   return targetHome;
 }
@@ -1089,7 +1089,7 @@ async function buildSkillSetKey(input: {
   label: string;
 }): Promise<string> {
   const hash = createHash("sha256");
-  hash.update(`paperclip-acpx-${input.label}-skills:v1\n`);
+  hash.update(`bionic-acpx-${input.label}-skills:v1\n`);
   const sorted = [...input.skills].sort((left, right) => left.runtimeName.localeCompare(right.runtimeName));
   for (const entry of sorted) {
     hash.update(`skill:${entry.key}:${entry.runtimeName}\n`);
@@ -1159,7 +1159,7 @@ async function prepareClaudeSkillRuntime(input: {
         await fs.rm(target, { recursive: true, force: true });
         await input.onLog(
           "stderr",
-          `[paperclip] Skipped ACPX Claude skill "${entry.key}": the staged copy at ${target} has no usable SKILL.md.\n`,
+          `[bionic] Skipped ACPX Claude skill "${entry.key}": the staged copy at ${target} has no usable SKILL.md.\n`,
         );
         continue;
       }
@@ -1167,13 +1167,13 @@ async function prepareClaudeSkillRuntime(input: {
       if (result.skippedSymlinks.length > 0) {
         await input.onLog(
           "stdout",
-          `[paperclip] Materialized ACPX Claude skill "${entry.runtimeName}" into ${skillsHome} and skipped ${result.skippedSymlinks.length} symlink(s).\n`,
+          `[bionic] Materialized ACPX Claude skill "${entry.runtimeName}" into ${skillsHome} and skipped ${result.skippedSymlinks.length} symlink(s).\n`,
         );
       }
     } catch (err) {
       await input.onLog(
         "stderr",
-        `[paperclip] Failed to materialize ACPX Claude skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
+        `[bionic] Failed to materialize ACPX Claude skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
       );
     }
   }
@@ -1181,7 +1181,7 @@ async function prepareClaudeSkillRuntime(input: {
   const selectedNames = materializedNames.sort();
   const promptInstructions = selectedNames.length > 0
     ? [
-        "Paperclip has materialized selected runtime skills for this ACPX Claude session.",
+        "Bionic has materialized selected runtime skills for this ACPX Claude session.",
         `Skill root: ${skillsHome}`,
         `Selected skills: ${selectedNames.join(", ")}`,
         "When a task calls for one of these skills, read its SKILL.md from that root and follow it.",
@@ -1198,14 +1198,14 @@ async function prepareClaudeSkillRuntime(input: {
     },
     promptInstructions,
     commandNotes: selectedNames.length > 0
-      ? [`Materialized ${selectedNames.length} Paperclip skill(s) for ACPX Claude at ${skillsHome}.`]
+      ? [`Materialized ${selectedNames.length} Bionic skill(s) for ACPX Claude at ${skillsHome}.`]
       : [],
     bundleDir: selectedNames.length > 0 ? skillsHome : null,
   };
 }
 
 async function readManagedCodexSkillsManifest(skillsHome: string): Promise<Set<string>> {
-  const manifestPath = path.join(skillsHome, PAPERCLIP_MANAGED_CODEX_SKILLS_MANIFEST);
+  const manifestPath = path.join(skillsHome, BIONIC_MANAGED_CODEX_SKILLS_MANIFEST);
   try {
     const raw = JSON.parse(await fs.readFile(manifestPath, "utf8")) as unknown;
     const parsed = parseObject(raw);
@@ -1221,7 +1221,7 @@ async function readManagedCodexSkillsManifest(skillsHome: string): Promise<Set<s
 async function writeManagedCodexSkillsManifest(skillsHome: string, skillNames: Iterable<string>): Promise<void> {
   const managedSkillNames = Array.from(new Set(skillNames)).sort();
   await fs.writeFile(
-    path.join(skillsHome, PAPERCLIP_MANAGED_CODEX_SKILLS_MANIFEST),
+    path.join(skillsHome, BIONIC_MANAGED_CODEX_SKILLS_MANIFEST),
     `${JSON.stringify({ version: 1, managedSkillNames }, null, 2)}\n`,
     "utf8",
   );
@@ -1247,7 +1247,7 @@ async function reconcileManagedCodexSkills(input: {
   for (const name of managed) {
     if (desired.has(name)) continue;
     if (await removeSkillTarget(path.join(input.skillsHome, name))) {
-      await input.onLog("stdout", `[paperclip] Revoked ACPX Codex skill "${name}" from ${input.skillsHome}\n`);
+      await input.onLog("stdout", `[bionic] Revoked ACPX Codex skill "${name}" from ${input.skillsHome}\n`);
     }
   }
 
@@ -1261,14 +1261,14 @@ async function reconcileManagedCodexSkills(input: {
     const resolvedLinkedPath = path.resolve(path.dirname(target), linkedPath);
     if (resolvedLinkedPath !== path.resolve(entry.source)) continue;
     if (await removeSkillTarget(target)) {
-      await input.onLog("stdout", `[paperclip] Revoked legacy ACPX Codex skill "${entry.runtimeName}" from ${input.skillsHome}\n`);
+      await input.onLog("stdout", `[bionic] Revoked legacy ACPX Codex skill "${entry.runtimeName}" from ${input.skillsHome}\n`);
     }
   }
 
   for (const name of managed) {
     if (desired.has(name) || availableByRuntimeName.has(name)) continue;
     if (await removeSkillTarget(path.join(input.skillsHome, name))) {
-      await input.onLog("stdout", `[paperclip] Revoked unavailable ACPX Codex skill "${name}" from ${input.skillsHome}\n`);
+      await input.onLog("stdout", `[bionic] Revoked unavailable ACPX Codex skill "${name}" from ${input.skillsHome}\n`);
     }
   }
 }
@@ -1349,13 +1349,13 @@ async function prepareCodexSkillRuntime(input: {
       if (result.skippedSymlinks.length > 0) {
         await input.onLog(
           "stdout",
-          `[paperclip] Materialized ACPX Codex skill "${entry.runtimeName}" into ${skillsHome} and skipped ${result.skippedSymlinks.length} symlink(s).\n`,
+          `[bionic] Materialized ACPX Codex skill "${entry.runtimeName}" into ${skillsHome} and skipped ${result.skippedSymlinks.length} symlink(s).\n`,
         );
       }
     } catch (err) {
       await input.onLog(
         "stderr",
-        `[paperclip] Failed to inject ACPX Codex skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
+        `[bionic] Failed to inject ACPX Codex skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
       );
     }
   }
@@ -1398,7 +1398,7 @@ async function prepareGeminiSkillRuntime(input: {
   const allowedSkillNames = selectedSkills.map((entry) => entry.runtimeName);
   const removedSkills = await removeMaintainerOnlySkillSymlinks(skillsHome, allowedSkillNames);
   for (const skillName of removedSkills) {
-    await input.onLog("stdout", `[paperclip] Removed maintainer-only ACPX Gemini skill "${skillName}" from ${skillsHome}\n`);
+    await input.onLog("stdout", `[bionic] Removed maintainer-only ACPX Gemini skill "${skillName}" from ${skillsHome}\n`);
   }
 
   for (const entry of selectedSkills) {
@@ -1408,7 +1408,7 @@ async function prepareGeminiSkillRuntime(input: {
       if (result === "created" || result === "repaired") {
         await input.onLog(
           "stdout",
-          `[paperclip] ${result === "repaired" ? "Repaired" : "Linked"} ACPX Gemini skill "${entry.runtimeName}" into ${skillsHome}\n`,
+          `[bionic] ${result === "repaired" ? "Repaired" : "Linked"} ACPX Gemini skill "${entry.runtimeName}" into ${skillsHome}\n`,
         );
       }
     } catch (err) {
@@ -1416,13 +1416,13 @@ async function prepareGeminiSkillRuntime(input: {
         const result = await materializePaperclipSkillCopy(entry.source, target);
         await input.onLog(
           "stdout",
-          `[paperclip] Copied ACPX Gemini skill "${entry.runtimeName}" into ${skillsHome} because symlinks are unavailable.${result.skippedSymlinks.length > 0 ? ` Skipped ${result.skippedSymlinks.length} nested symlink(s).` : ""}\n`,
+          `[bionic] Copied ACPX Gemini skill "${entry.runtimeName}" into ${skillsHome} because symlinks are unavailable.${result.skippedSymlinks.length > 0 ? ` Skipped ${result.skippedSymlinks.length} nested symlink(s).` : ""}\n`,
         );
         continue;
       }
       await input.onLog(
         "stderr",
-        `[paperclip] Failed to link ACPX Gemini skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
+        `[bionic] Failed to link ACPX Gemini skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
       );
     }
   }
@@ -1569,7 +1569,7 @@ function uniqueSorted(values: Array<string | null | undefined>): string[] {
 // `.claude/settings.local.json` we override the user's potentially-restrictive
 // `~/.claude/settings.json` (e.g. `defaultMode: "dontAsk"`, which silently
 // denies every non-allowlisted tool and never reaches `canUseTool`), and we
-// widen the SDK's Read sandbox to include the Paperclip state dirs the agent
+// widen the SDK's Read sandbox to include the Bionic state dirs the agent
 // needs to talk to its own control plane.
 async function writePaperclipClaudeSettings(input: {
   cwd: string;
@@ -1580,17 +1580,17 @@ async function writePaperclipClaudeSettings(input: {
   const filePath = path.join(input.cwd, ".claude", "settings.local.json");
   const instanceRoot = defaultPaperclipInstanceDir();
   const companyRoot = path.join(instanceRoot, "companies", input.companyId);
-  const paperclipAdditionalDirectories = uniqueSorted([
+  const bionicAdditionalDirectories = uniqueSorted([
     input.stateDir,
     input.agentHome,
     companyRoot,
   ]);
-  const paperclipAllow = uniqueSorted([
+  const bionicAllow = uniqueSorted([
     "Bash(curl:*)",
     "Bash(env:*)",
     "Bash(env)",
-    `Bash(${input.cwd}/scripts/paperclip-issue-update.sh:*)`,
-    `Bash(${input.cwd}/scripts/paperclip:*)`,
+    `Bash(${input.cwd}/scripts/bionic-issue-update.sh:*)`,
+    `Bash(${input.cwd}/scripts/bionic:*)`,
   ]);
 
   let existing: Record<string, unknown> = {};
@@ -1613,10 +1613,10 @@ async function writePaperclipClaudeSettings(input: {
   const existingAdditionalDirectories = Array.isArray(existingPerms.additionalDirectories)
     ? (existingPerms.additionalDirectories as unknown[]).filter((value): value is string => typeof value === "string")
     : [];
-  const mergedAllow = uniqueSorted([...existingAllow, ...paperclipAllow]);
+  const mergedAllow = uniqueSorted([...existingAllow, ...bionicAllow]);
   const mergedAdditionalDirectories = uniqueSorted([
     ...existingAdditionalDirectories,
-    ...paperclipAdditionalDirectories,
+    ...bionicAdditionalDirectories,
   ]);
   const existingDefaultMode =
     typeof existingPerms.defaultMode === "string" ? (existingPerms.defaultMode as string) : "";
@@ -1681,7 +1681,7 @@ async function stageAcpRemoteRuntime(input: {
 }): Promise<PreparedAdapterExecutionTargetRuntime> {
   await input.onLog(
     "stdout",
-    `[paperclip] Syncing workspace to ${describeAdapterExecutionTarget(input.target)}.\n`,
+    `[bionic] Syncing workspace to ${describeAdapterExecutionTarget(input.target)}.\n`,
   );
   return await prepareAdapterExecutionTargetRuntime({
     runId: input.runId,
@@ -1733,7 +1733,7 @@ async function disposeFreshStagedRuntime(input: {
   } catch (err) {
     await input.onLog(
       "stderr",
-      `[paperclip] Failed to dispose the fresh staged runtime after a managed-home seam error: ${
+      `[bionic] Failed to dispose the fresh staged runtime after a managed-home seam error: ${
         err instanceof Error ? err.message : String(err)
       }\n`,
     );
@@ -1782,8 +1782,8 @@ async function buildRuntime(input: {
   // first instrumented boundary (step 1 `workspace.resolve`, below) so every
   // `measureStartupStep` call in this function shares one deterministic clock.
   const nowMs = input.deps.now ?? (() => Date.now());
-  const workspaceContext = parseObject(context.paperclipWorkspace);
-  const secretsContext = parseObject(context.paperclipSecrets);
+  const workspaceContext = parseObject(context.bionicWorkspace);
+  const secretsContext = parseObject(context.bionicSecrets);
   const secretManifest = Array.isArray(secretsContext.manifest) ? secretsContext.manifest : [];
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
@@ -1859,12 +1859,12 @@ async function buildRuntime(input: {
       contentSignature: await referencedSourceContentSignature(entry.localPath, ignoreResolution),
     })),
   );
-  // Referenced-project workspace hints exposed to the agent through PAPERCLIP_WORKSPACES_JSON. The
+  // Referenced-project workspace hints exposed to the agent through BIONIC_WORKSPACES_JSON. The
   // list joins the anchor project's alternative workspaces with the referenced (mentioned) projects.
   // On the confined sandbox lane the run repoints each referenced hint at its staged directory after
   // staging below. Empty unless run prep resolved referenced projects or alternative workspaces.
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.bionicWorkspaces)
+    ? context.bionicWorkspaces.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
@@ -1939,7 +1939,7 @@ async function buildRuntime(input: {
   await fs.mkdir(stateDir, { recursive: true });
 
   const envConfig = parseObject(config.env);
-  const env: Record<string, string> = { ...buildPaperclipEnv(agent), PAPERCLIP_RUN_ID: runId };
+  const env: Record<string, string> = { ...buildPaperclipEnv(agent), BIONIC_RUN_ID: runId };
   const wakeTaskId =
     (typeof context.taskId === "string" && context.taskId.trim()) ||
     (typeof context.issueId === "string" && context.issueId.trim()) ||
@@ -1955,13 +1955,13 @@ async function buildRuntime(input: {
     ? context.issueIds.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     : [];
   const issueWorkMode = readPaperclipIssueWorkModeFromContext(context);
-  if (wakeTaskId) env.PAPERCLIP_TASK_ID = wakeTaskId;
-  if (issueWorkMode) env.PAPERCLIP_ISSUE_WORK_MODE = issueWorkMode;
-  if (wakeReason) env.PAPERCLIP_WAKE_REASON = wakeReason;
-  if (wakeCommentId) env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
-  if (approvalId) env.PAPERCLIP_APPROVAL_ID = approvalId;
-  if (approvalStatus) env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
-  if (linkedIssueIds.length > 0) env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
+  if (wakeTaskId) env.BIONIC_TASK_ID = wakeTaskId;
+  if (issueWorkMode) env.BIONIC_ISSUE_WORK_MODE = issueWorkMode;
+  if (wakeReason) env.BIONIC_WAKE_REASON = wakeReason;
+  if (wakeCommentId) env.BIONIC_WAKE_COMMENT_ID = wakeCommentId;
+  if (approvalId) env.BIONIC_APPROVAL_ID = approvalId;
+  if (approvalStatus) env.BIONIC_APPROVAL_STATUS = approvalStatus;
+  if (linkedIssueIds.length > 0) env.BIONIC_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
   applyPaperclipWorkspaceEnv(env, {
     workspaceCwd: shapedWorkspaceEnv.workspaceCwd,
     workspaceSource,
@@ -1983,23 +1983,23 @@ async function buildRuntime(input: {
   // forward to the spawned agent process. Captured so a stable hash of it can be
   // folded into the session fingerprint below — a change here must invalidate a
   // warm/resumable session so the next launch picks up the latest env. Only
-  // user/adapter-configured env flows through this loop; per-wake PAPERCLIP_*
-  // runtime vars (PAPERCLIP_RUN_ID, wake/approval ids, ...) were assigned to
+  // user/adapter-configured env flows through this loop; per-wake BIONIC_*
+  // runtime vars (BIONIC_RUN_ID, wake/approval ids, ...) were assigned to
   // `env` above and are never present in shapedEnvConfig, so they inherently
   // stay out of the hash and don't reset the session every heartbeat.
   const resolvedAdapterEnv: Record<string, string> = {};
-  const scratch = parseObject(context.paperclipScratch);
+  const scratch = parseObject(context.bionicScratch);
   const scratchKeys = scratch.type === "heartbeat_run" && typeof scratch.dir === "string"
-    ? new Set(["PAPERCLIP_RUN_SCRATCH_DIR", "PAPERCLIP_TASK_SCRATCH_DIR", "PAPERCLIP_SCRATCH_DIR", "PAPERCLIP_TMPDIR",
+    ? new Set(["BIONIC_RUN_SCRATCH_DIR", "BIONIC_TASK_SCRATCH_DIR", "BIONIC_SCRATCH_DIR", "BIONIC_TMPDIR",
       ...(Array.isArray(scratch.tempKeysApplied) ? scratch.tempKeysApplied.filter((key): key is string =>
         typeof key === "string" && ["TMPDIR", "TEMP", "TMP"].includes(key)) : [])])
     : new Set<string>();
   for (const [key, value] of Object.entries(shapedEnvConfig)) {
     if (typeof value !== "string") continue;
-    // Runtime PAPERCLIP_* always wins over config: skip a PAPERCLIP_* key that
-    // Paperclip has already assigned this run. PAPERCLIP_API_KEY is never
+    // Runtime BIONIC_* always wins over config: skip a BIONIC_* key that
+    // Bionic has already assigned this run. BIONIC_API_KEY is never
     // accepted from config — the harness-minted run token is the only source.
-    // A PAPERCLIP_* key Paperclip did NOT set is stable per-run config, so it
+    // A BIONIC_* key Bionic did NOT set is stable per-run config, so it
     // applies and feeds the fingerprint hash below.
     if (isForbiddenConfigEnvKey(key)) continue;
     if (isPaperclipRuntimeEnvKey(key) && key in env) continue;
@@ -2009,7 +2009,7 @@ async function buildRuntime(input: {
     // are absent from tempKeysApplied and keep their compatibility protection.
     if (!scratchKeys.has(key) || value !== scratch.dir) resolvedAdapterEnv[key] = value;
   }
-  if (authToken) env.PAPERCLIP_API_KEY = authToken;
+  if (authToken) env.BIONIC_API_KEY = authToken;
   // For the claude agent, set model via ANTHROPIC_MODEL at startup rather than
   // via session/set_config_option — the ACP server's set_config_option handler
   // validates the value against its internal available-models list and rejects
@@ -2029,7 +2029,7 @@ async function buildRuntime(input: {
     if (codexStartupConfig.invalidExistingConfig) {
       await input.ctx.onLog(
         "stderr",
-        "[paperclip] Ignoring invalid user CODEX_CONFIG while applying runtime Codex settings; expected a JSON object.\n",
+        "[bionic] Ignoring invalid user CODEX_CONFIG while applying runtime Codex settings; expected a JSON object.\n",
       );
     }
     if (codexStartupConfig.value) env.CODEX_CONFIG = codexStartupConfig.value;
@@ -2044,7 +2044,7 @@ async function buildRuntime(input: {
   // below, after `placeWorkspace` returns). This field is `null` for every
   // non-Claude agent, and for a Claude run with no skill selected.
   let claudeSkillsBundleDir: string | null = null;
-  let paperclipClaudeSettings: PaperclipClaudeSettingsResult | null = null;
+  let bionicClaudeSettings: PaperclipClaudeSettingsResult | null = null;
   if (acpxAgent === "claude") {
     const preparedSkills = await prepareClaudeSkillRuntime({
       stateDir,
@@ -2056,7 +2056,7 @@ async function buildRuntime(input: {
     skillsIdentity = preparedSkills.identity;
     skillCommandNotes.push(...preparedSkills.commandNotes);
     claudeSkillsBundleDir = preparedSkills.bundleDir;
-    paperclipClaudeSettings = await writePaperclipClaudeSettings({
+    bionicClaudeSettings = await writePaperclipClaudeSettings({
       cwd,
       stateDir,
       // A run's writable AGENT_HOME moves, but the existing permission root
@@ -2067,9 +2067,9 @@ async function buildRuntime(input: {
       companyId: agent.companyId,
     });
     skillCommandNotes.push(
-      `Wrote Paperclip-managed Claude settings to ${paperclipClaudeSettings.filePath} (defaultMode=${paperclipClaudeSettings.defaultMode}${
-        paperclipClaudeSettings.overrodeDontAsk ? "; overrode user dontAsk" : ""
-      }, +${paperclipClaudeSettings.additionalDirectories.length} read root(s), +${paperclipClaudeSettings.allow.length} allow rule(s)).`,
+      `Wrote Bionic-managed Claude settings to ${bionicClaudeSettings.filePath} (defaultMode=${bionicClaudeSettings.defaultMode}${
+        bionicClaudeSettings.overrodeDontAsk ? "; overrode user dontAsk" : ""
+      }, +${bionicClaudeSettings.additionalDirectories.length} read root(s), +${bionicClaudeSettings.allow.length} allow rule(s)).`,
     );
   } else if (acpxAgent === "codex") {
     // Step 2 — codex-home.seed: the codex managed-home + skills preparation.
@@ -2114,7 +2114,7 @@ async function buildRuntime(input: {
     );
     skillsIdentity = { mode: "custom_unsupported", desiredSkillNames: desired };
     if (desired.length > 0) {
-      skillCommandNotes.push("Selected Paperclip skills are tracked only; ACPX custom commands do not expose a runtime skill contract yet.");
+      skillCommandNotes.push("Selected Bionic skills are tracked only; ACPX custom commands do not expose a runtime skill contract yet.");
     }
   }
 
@@ -2200,18 +2200,18 @@ async function buildRuntime(input: {
     additionalSourcesIdentity: additionalSourcesIdentity as unknown as Record<string, unknown>,
     skillsIdentity,
     skillPromptInstructions,
-    paperclipClaudeSettings: paperclipClaudeSettings
+    bionicClaudeSettings: bionicClaudeSettings
       ? {
-          allow: paperclipClaudeSettings.allow,
-          additionalDirectories: paperclipClaudeSettings.additionalDirectories,
-          defaultMode: paperclipClaudeSettings.defaultMode,
+          allow: bionicClaudeSettings.allow,
+          additionalDirectories: bionicClaudeSettings.additionalDirectories,
+          defaultMode: bionicClaudeSettings.defaultMode,
         }
       : null,
     mcpServers: mcpIdentity,
     secretManifestHash: shortHash(secretManifest),
     // Fold the resolved adapter env (all applied user-configured values —
-    // plain, secret_ref, and stable PAPERCLIP_* config such as an explicit
-    // PAPERCLIP_API_KEY) into the fingerprint so a change to any forwarded value
+    // plain, secret_ref, and stable BIONIC_* config such as an explicit
+    // BIONIC_API_KEY) into the fingerprint so a change to any forwarded value
     // invalidates a warm handle / resumable session and forces a fresh launch
     // that sources the latest env. secretManifestHash alone misses plain-value
     // edits and same-version secret rotations. Per-wake runtime vars never enter
@@ -2356,13 +2356,13 @@ async function buildRuntime(input: {
           stagedProjectDirs,
         }).workspaceHints;
         if (shapedHints.length > 0) {
-          env.PAPERCLIP_WORKSPACES_JSON = JSON.stringify(shapedHints);
+          env.BIONIC_WORKSPACES_JSON = JSON.stringify(shapedHints);
         }
       },
       onReuseLog: () =>
         input.ctx.onLog(
           "stdout",
-          "[paperclip] Reusing the staged in-sandbox runtime for this resumed session (no workspace re-ship / managed-home re-seed).\n",
+          "[bionic] Reusing the staged in-sandbox runtime for this resumed session (no workspace re-ship / managed-home re-seed).\n",
         ),
       startPaperclipBridge: (runtimeRootDir) =>
         startAdapterExecutionTargetPaperclipBridge({
@@ -2371,7 +2371,7 @@ async function buildRuntime(input: {
           runtimeRootDir,
           adapterKey: input.engine.adapterType,
           timeoutSec,
-          hostApiToken: env.PAPERCLIP_API_KEY,
+          hostApiToken: env.BIONIC_API_KEY,
           enableSandboxDuplexBridge: adapterExecutionTargetEnablesSandboxDuplexBridge(remoteTarget),
           duplexObservabilityRecorder: adapterExecutionTargetDuplexObservabilityRecorder(remoteTarget),
           onLog: input.ctx.onLog,
@@ -2402,7 +2402,7 @@ async function buildRuntime(input: {
           inheritHostEnvironment: !useRemoteProcessSession,
         }).env,
       onPaperclipBridgeLog: () =>
-        input.ctx.onLog("stdout", "[paperclip] Sandbox ACP API callback bridge enabled for this run.\n"),
+        input.ctx.onLog("stdout", "[bionic] Sandbox ACP API callback bridge enabled for this run.\n"),
       stopBridges: async ({ controlBridge, agentBridge }) => {
         await Promise.allSettled([agentBridge?.stop(), controlBridge?.stop()]);
         if (remoteManagedHomeTeardown) {
@@ -2438,7 +2438,7 @@ async function buildRuntime(input: {
       stagedRuntime.assetDirs.skills ??
       path.posix.join(
         stagedRuntime.runtimeRootDir ??
-          path.posix.join(stagedRuntime.workspaceRemoteDir ?? cwd, ".paperclip-runtime", acpxAgent),
+          path.posix.join(stagedRuntime.workspaceRemoteDir ?? cwd, ".bionic-runtime", acpxAgent),
         "skills",
       );
     const rebaseToSandbox = (value: string) => value.split(claudeSkillsBundleDir!).join(inSandboxSkillsRoot);
@@ -2454,24 +2454,24 @@ async function buildRuntime(input: {
     }
   }
   // Both bridge starts run under one try so a failure at EITHER — including the
-  // paperclip callback bridge — fires the same abandon-path cleanup. The
-  // paperclip bridge starts after the workspace + managed home were already
+  // bionic callback bridge — fires the same abandon-path cleanup. The
+  // bionic bridge starts after the workspace + managed home were already
   // staged and the per-session staging lease is already held, so leaving it
   // outside the catch would strand the lease (and the staged temp) on a
   // start failure and deadlock the next run of this session.
-  let paperclipBridge: AdapterExecutionTargetPaperclipBridgeHandle | null = null;
+  let bionicBridge: AdapterExecutionTargetPaperclipBridgeHandle | null = null;
   let processSessionBridge: AdapterExecutionTargetProcessSessionBridgeHandle | null = null;
   let runtimeEnv: Record<string, string> = {};
   const startTransportStart = nowMs();
   try {
     if (useRemoteProcessSession && sandboxSite) {
       // The sandbox run site brings up both host-side bridges concurrently, keeps
-      // the one paperclip-env → process-session-launch dependency at a single
+      // the one bionic-env → process-session-launch dependency at a single
       // sequencing point, settles both starts, and returns the started handles
       // plus the finalized launch env. On a partial failure it stops nothing and
       // rethrows; the catch below stops whichever bridge the site started.
       const transport = await sandboxSite.startTransport({ sessionKey } as unknown as AcpRunContext);
-      paperclipBridge = transport.controlBridge;
+      bionicBridge = transport.controlBridge;
       processSessionBridge = transport.agentBridge;
       runtimeEnv = transport.launchEnv;
       await emitRunPhaseTiming(input.ctx, "start_transport", nowMs() - startTransportStart, "ok");
@@ -2490,7 +2490,7 @@ async function buildRuntime(input: {
     // bridge leaks (mirrors the settlement `stopTransport` step). The site sets its
     // started bridges before it rethrows, so read them from the site here (the
     // local handles stay null when `startTransport` throws before it returns).
-    const startedControl = sandboxSite?.controlBridge ?? paperclipBridge;
+    const startedControl = sandboxSite?.controlBridge ?? bionicBridge;
     const startedAgent = sandboxSite?.agentBridge ?? processSessionBridge;
     await Promise.allSettled([startedControl?.stop(), startedAgent?.stop()]);
     // The staged home / copy-back teardown must run even if a bridge fails to
@@ -2565,7 +2565,7 @@ async function buildRuntime(input: {
     agentCommand,
     agentRegistry,
     processSessionBridge,
-    paperclipBridge,
+    bionicBridge,
     stagedRuntime,
     remoteManagedHomeTeardown,
     remoteStagingDispose,
@@ -2578,7 +2578,7 @@ async function buildRuntime(input: {
       commandNotes: skillCommandNotes,
     },
     childStderrLogPath,
-    paperclipClaudeSettings,
+    bionicClaudeSettings,
     mcpServers,
     mcpIdentity,
     stepMetrics,
@@ -2623,7 +2623,7 @@ async function applySessionConfigOptions(input: {
   if (!input.runtime.setConfigOption) {
     const message =
       "ACPX runtime does not expose session config controls; upgrade ACPX or remove configured model, effort, and fast mode overrides.";
-    await input.onLog("stderr", `[paperclip] ${message}\n`);
+    await input.onLog("stderr", `[bionic] ${message}\n`);
     throw new Error(message);
   }
   for (const option of options) {
@@ -2634,7 +2634,7 @@ async function applySessionConfigOptions(input: {
     });
     await input.onLog(
       "stdout",
-      `[paperclip] Applied ACPX ${input.prepared.acpxAgent} config ${option.key}=${option.value}\n`,
+      `[bionic] Applied ACPX ${input.prepared.acpxAgent} config ${option.key}=${option.value}\n`,
     );
   }
 }
@@ -2726,7 +2726,7 @@ function mergeRuntimeEnvironment(
 async function stopRunTransport(prepared: AcpxPreparedRuntime): Promise<void> {
   await Promise.allSettled([
     prepared.processSessionBridge?.stop(),
-    prepared.paperclipBridge?.stop(),
+    prepared.bionicBridge?.stop(),
   ]);
 }
 
@@ -2936,31 +2936,31 @@ function guardEnsureSession(params: {
 }
 
 function renderPaperclipEnvNote(env: Record<string, string>): string {
-  const paperclipKeys = Object.keys(env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+  const bionicKeys = Object.keys(env)
+    .filter((key) => key.startsWith("BIONIC_"))
     .sort();
-  if (paperclipKeys.length === 0) return "";
+  if (bionicKeys.length === 0) return "";
   return [
-    "Paperclip runtime note:",
-    `The following PAPERCLIP_* environment variables are available in this run: ${paperclipKeys.join(", ")}`,
+    "Bionic runtime note:",
+    `The following BIONIC_* environment variables are available in this run: ${bionicKeys.join(", ")}`,
     "Do not assume these variables are missing without checking your shell environment.",
   ].join("\n");
 }
 
 function renderApiAccessNote(env: Record<string, string>): string {
-  if (!env.PAPERCLIP_API_URL || !env.PAPERCLIP_API_KEY) return "";
+  if (!env.BIONIC_API_URL || !env.BIONIC_API_KEY) return "";
   const lines = [
-    "Paperclip API access note:",
-    "Use terminal commands with curl to make Paperclip API requests.",
+    "Bionic API access note:",
+    "Use terminal commands with curl to make Bionic API requests.",
     "Normalize the base URL before adding API paths:",
-    `  PAPERCLIP_API_BASE="\${PAPERCLIP_API_URL%/}"; PAPERCLIP_API_BASE="\${PAPERCLIP_API_BASE%/api}"`,
+    `  BIONIC_API_BASE="\${BIONIC_API_URL%/}"; BIONIC_API_BASE="\${BIONIC_API_BASE%/api}"`,
     "GET example:",
-    `  curl -s -H "Authorization: Bearer $PAPERCLIP_API_KEY" "$PAPERCLIP_API_BASE/api/agents/me"`,
+    `  curl -s -H "Authorization: Bearer $BIONIC_API_KEY" "$BIONIC_API_BASE/api/agents/me"`,
   ];
-  if (env.PAPERCLIP_TASK_ID) {
+  if (env.BIONIC_TASK_ID) {
     lines.push(
       "Scoped issue comment example:",
-      `  curl -s -X POST -H "Authorization: Bearer $PAPERCLIP_API_KEY" -H "Content-Type: application/json" -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" -d '{"body":"Status update from agent."}' "$PAPERCLIP_API_BASE/api/issues/$PAPERCLIP_TASK_ID/comments"`,
+      `  curl -s -X POST -H "Authorization: Bearer $BIONIC_API_KEY" -H "Content-Type: application/json" -H "X-Bionic-Run-Id: $BIONIC_RUN_ID" -d '{"body":"Status update from agent."}' "$BIONIC_API_BASE/api/issues/$BIONIC_TASK_ID/comments"`,
     );
   } else {
     lines.push("Use a real issue id from the current context before making issue write requests.");
@@ -2979,8 +2979,8 @@ async function buildPrompt(ctx: AdapterExecutionContext, resumedSession: boolean
   const promptTemplate = hasCustomPromptTemplate
     ? configuredPromptTemplate
     : context.conversationMode === true
-      ? DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE
-      : DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE;
+      ? DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE
+      : DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE;
   const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
   const instructionsDir = instructionsFilePath ? `${path.dirname(instructionsFilePath)}/` : "";
   let instructionsPrefix = "";
@@ -3000,7 +3000,7 @@ async function buildPrompt(ctx: AdapterExecutionContext, resumedSession: boolean
       const reason = err instanceof Error ? err.message : String(err);
       await onLog(
         "stderr",
-        `[paperclip] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
+        `[bionic] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
       );
       commandNotes.push(`Configured instructionsFilePath ${instructionsFilePath}, but file could not be read.`);
     }
@@ -3021,15 +3021,15 @@ async function buildPrompt(ctx: AdapterExecutionContext, resumedSession: boolean
       ? renderTemplate(bootstrapPromptTemplate, templateData).trim()
       : "";
   const { taskContextNote, wakePrompt } = selectPaperclipPromptSections(context, { resumedSession });
-  const externalChatTurn = isPaperclipExternalChatTurn(context.paperclipWake);
+  const externalChatTurn = isPaperclipExternalChatTurn(context.bionicWake);
   const shouldUseResumeDeltaPrompt = resumedSession && wakePrompt.length > 0;
   const promptInstructionsPrefix = shouldUseResumeDeltaPrompt ? "" : instructionsPrefix;
   const renderedPrompt =
     shouldUseResumeDeltaPrompt || (externalChatTurn && !hasCustomPromptTemplate)
       ? ""
       : renderTemplate(promptTemplate, templateData);
-  const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
-  const paperclipEnvNote = externalChatTurn ? "" : renderPaperclipEnvNote(env);
+  const sessionHandoffNote = asString(context.bionicSessionHandoffMarkdown, "").trim();
+  const bionicEnvNote = externalChatTurn ? "" : renderPaperclipEnvNote(env);
   const apiAccessNote = externalChatTurn ? "" : renderApiAccessNote(env);
   const prompt = joinPromptSections([
     promptInstructionsPrefix,
@@ -3037,7 +3037,7 @@ async function buildPrompt(ctx: AdapterExecutionContext, resumedSession: boolean
     wakePrompt,
     sessionHandoffNote,
     taskContextNote,
-    paperclipEnvNote,
+    bionicEnvNote,
     apiAccessNote,
     renderedPrompt,
   ]);
@@ -3052,7 +3052,7 @@ async function buildPrompt(ctx: AdapterExecutionContext, resumedSession: boolean
       wakePromptChars: wakePrompt.length,
       sessionHandoffChars: sessionHandoffNote.length,
       taskContextChars: taskContextNote.length,
-      runtimeNoteChars: paperclipEnvNote.length + apiAccessNote.length,
+      runtimeNoteChars: bionicEnvNote.length + apiAccessNote.length,
       heartbeatPromptChars: renderedPrompt.length,
     },
   };
@@ -3063,7 +3063,7 @@ async function emitAcpxLog(ctx: AdapterExecutionContext, payload: Record<string,
 }
 
 /**
- * Build the short run summary that Paperclip may auto-post as an issue comment
+ * Build the short run summary that Bionic may auto-post as an issue comment
  * when the agent leaves no comment of its own.
  *
  * Prefer the last non-empty *output* segment after a tool call. Intermediate
@@ -3456,7 +3456,7 @@ async function emitAcpxFailure(input: {
   if (childStderrTail) {
     await ctx.onLog(
       "stderr",
-      `[paperclip] ACPX child stderr tail (${phase}):\n${childStderrTail}\n`,
+      `[bionic] ACPX child stderr tail (${phase}):\n${childStderrTail}\n`,
     );
   }
   await emitAcpxLog(ctx, {
@@ -3724,11 +3724,11 @@ const TURN_SPAN_NAME = "agent.turn";
 /** The attribute prefix for the run root span. It groups the run-level span
  * attributes under one namespace, the same shape as the sandbox startup
  * prefix. */
-const RUN_ROOT_SPAN_ATTR_PREFIX = "paperclip.task.run.";
+const RUN_ROOT_SPAN_ATTR_PREFIX = "bionic.task.run.";
 
 /** The attribute prefix for the agent turn span. It groups the turn-level span
  * attributes under one namespace, the same shape as the run root prefix. */
-const TURN_SPAN_ATTR_PREFIX = "paperclip.agent.turn.";
+const TURN_SPAN_ATTR_PREFIX = "bionic.agent.turn.";
 
 /** Map a run id to a non-reversible 12-hex hash for a span attribute. The raw
  * run id never rides a span; only this hash does. This mirrors the id-hash rule
@@ -3886,7 +3886,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
       idleMs: warmIdleMs,
       closeWarmEntry: async (entry) => {
         await entry.runtime
-          .close({ handle: entry.handle, reason: "paperclip idle cleanup", discardPersistentState: false })
+          .close({ handle: entry.handle, reason: "bionic idle cleanup", discardPersistentState: false })
           .catch(() => {});
         flushChildStderr(entry.childStderrState);
       },
@@ -4072,7 +4072,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
               ? teardownErr.message
               : String(teardownErr);
         await ctx
-          .onLog("stderr", `[paperclip] ACPX teardown step "${step}" failed: ${reason}\n`)
+          .onLog("stderr", `[bionic] ACPX teardown step "${step}" failed: ${reason}\n`)
           .catch(() => {});
       };
       // Emit one per-phase timing run-log event. It is not an OpenTelemetry
@@ -4200,7 +4200,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         for (const failure of referencedProjectStagingFailures) {
           await ctx.onLog(
             "stderr",
-            `[paperclip] Referenced project ${failure.projectId} failed to stage; the run continues without it: ${failure.error}\n`,
+            `[bionic] Referenced project ${failure.projectId} failed to stage; the run continues without it: ${failure.error}\n`,
           );
         }
         // State the effective wall-clock timeout and its source up front so a
@@ -4209,7 +4209,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         // stay machine-parseable line by line.
         await ctx.onLog(
           "stderr",
-          `[paperclip] ${formatAdapterExecutionTimeoutStartLogLine(prepared.timeoutResolution)}\n`,
+          `[bionic] ${formatAdapterExecutionTimeoutStartLogLine(prepared.timeoutResolution)}\n`,
         );
         await hostStore.evictIdle(now());
 
@@ -4272,7 +4272,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           // benefit from doubling the log volume.
           verbose: prepared.acpxAgent === "claude",
           // The engine passes a complete, sanitized launch environment. ACPX
-          // must not merge the Paperclip server's ambient environment back in
+          // must not merge the Bionic server's ambient environment back in
           // when it spawns the provider child.
           inheritProcessEnv: false,
           onAgentStderr: prepared.childStderrLogPath
@@ -4331,7 +4331,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         if (!canResume && asString(previousParams.runtimeSessionName, "")) {
           await ctx.onLog(
             "stdout",
-            `[paperclip] ACPX session "${asString(previousParams.runtimeSessionName, "")}" does not match the current agent/cwd/mode/runtime identity; starting fresh in "${prepared.cwd}".\n`,
+            `[bionic] ACPX session "${asString(previousParams.runtimeSessionName, "")}" does not match the current agent/cwd/mode/runtime identity; starting fresh in "${prepared.cwd}".\n`,
           );
         }
 
@@ -4341,7 +4341,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         const ensureSessionPhaseStart = now();
         resumedSession = Boolean(handle ?? resumeSessionId);
         const isHandshakeTransportLost = (): boolean =>
-          prepared.paperclipBridge?.readRunDisposition?.().failed ?? false;
+          prepared.bionicBridge?.readRunDisposition?.().failed ?? false;
         // The fence's own close, for a real handle that resolves after
         // `endSession` already sealed. `endSession` closed the synthetic
         // placeholder by then (or skipped closing because the channel was
@@ -4358,14 +4358,14 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           void runtime
             .close({
               handle: lateHandle,
-              reason: "paperclip late handshake cleanup",
+              reason: "bionic late handshake cleanup",
               discardPersistentState: false,
             })
             .catch(() =>
               ctx
                 .onLog(
                   "stderr",
-                  "[paperclip] ACPX handshake late close failed: acpx_handshake_late_close_failed\n",
+                  "[bionic] ACPX handshake late close failed: acpx_handshake_late_close_failed\n",
                 )
                 .catch(() => {}),
             );
@@ -4375,7 +4375,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         // the result, or a classification: log the fixed closed code only.
         const recordLateHandshakeRejection = (): void => {
           void ctx
-            .onLog("stderr", "[paperclip] ACPX handshake late rejection: acpx_handshake_late_rejection\n")
+            .onLog("stderr", "[bionic] ACPX handshake late rejection: acpx_handshake_late_rejection\n")
             .catch(() => {});
         };
 
@@ -4420,7 +4420,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
               resumedSession = false;
               await ctx.onLog(
                 "stdout",
-                `[paperclip] ACPX resume session "${resumeSessionId}" is unavailable; retrying with a fresh session.\n`,
+                `[bionic] ACPX resume session "${resumeSessionId}" is unavailable; retrying with a fresh session.\n`,
               );
               // Fresh-session retry: the runtime was already constructed on the
               // first attempt (never re-created), so this event reports only its
@@ -4498,7 +4498,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           runtimeSettlement = {
             mode: "direct",
             handle: handle ?? syntheticCloseHandle(),
-            reason: "paperclip handshake cleanup",
+            reason: "bionic handshake cleanup",
             discardPersistentState: false,
             dropWarmEntry: true,
             recordCloseError: true,
@@ -4545,7 +4545,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           runtimeSettlement = {
             mode: "direct",
             handle: syntheticCloseHandle(),
-            reason: "paperclip missing-handle cleanup",
+            reason: "bionic missing-handle cleanup",
             discardPersistentState: false,
             dropWarmEntry: false,
             recordCloseError: true,
@@ -4629,7 +4629,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         runtimeSettlement = {
           mode: "direct",
           handle: sessionHandle,
-          reason: "paperclip config cleanup",
+          reason: "bionic config cleanup",
           discardPersistentState: false,
           dropWarmEntry: true,
           recordCloseError: true,
@@ -4737,7 +4737,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
             command: prepared.agentCommand ?? prepared.acpxAgent,
             cwd: prepared.cwd,
             commandNotes: [
-              `ACPX runtime embedded in Paperclip with ${prepared.mode} session mode.`,
+              `ACPX runtime embedded in Bionic with ${prepared.mode} session mode.`,
               `Effective ACPX permission mode: ${prepared.permissionMode}.`,
               ...(prepared.requestedModel
                 ? [
@@ -4802,10 +4802,10 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         // before this turn started — so the turn returns a terminal result
         // right away. `turnFinalize` reads the same latch and builds the
         // failure from the typed loss reason alone.
-        const bridge = prepared.paperclipBridge;
+        const bridge = prepared.bionicBridge;
         if (bridge?.onLoss) {
           const cancelForLoss = (reason: DuplexLossReason) => {
-            void turn.cancel({ reason: `paperclip sandbox duplex channel lost (${reason})` }).catch(() => {});
+            void turn.cancel({ reason: `bionic sandbox duplex channel lost (${reason})` }).catch(() => {});
             // `cancel()` only asks the agent to end the turn; it does not end
             // the turn by itself. Start the fail-fast deadline the moment the
             // loss latches, so the run does not wait past this bound for an
@@ -4854,7 +4854,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
       // failure and its message.
       const LOSS_DEADLINE_TERMINAL: AcpRuntimeTurnResult = {
         status: "cancelled",
-        stopReason: "paperclip_duplex_loss_deadline",
+        stopReason: "bionic_duplex_loss_deadline",
       };
       const stepEventRelay = async (): Promise<AcpRuntimeTurnResult> => {
         const turn = activeTurn as AcpRuntimeTurn;
@@ -4904,7 +4904,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           // both the close call and the drain it unblocks before this step
           // returns, so no late runtime event can still mutate shared state
           // (output segments, tool inventory) after finalization reads it.
-          await turn.closeStream({ reason: "paperclip duplex loss cancel deadline" }).catch(() => {});
+          await turn.closeStream({ reason: "bionic duplex loss cancel deadline" }).catch(() => {});
           await drainEvents.catch(() => {});
           flushOutputSegment();
           return LOSS_DEADLINE_TERMINAL;
@@ -4936,7 +4936,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         // nominally completed terminal. The file bridge path never sets this
         // method, so the optional call no-ops there.
         let duplexLossReason: DuplexLossReason | null = null;
-        const disposition = prepared.paperclipBridge?.settleRunDisposition?.() ?? null;
+        const disposition = prepared.bionicBridge?.settleRunDisposition?.() ?? null;
         if (disposition?.failed) {
           duplexLossReason = disposition.lossReason ?? "other";
         }
@@ -4988,12 +4988,12 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           mode: "warm_or_close",
           handle: sessionHandle,
           reason: timedOut
-            ? "paperclip timeout cleanup"
+            ? "bionic timeout cleanup"
             : channelLost
-              ? "paperclip duplex channel lost cleanup"
+              ? "bionic duplex channel lost cleanup"
               : failedTurn
-                ? `paperclip turn ${terminal.status}`
-                : "paperclip completed turn cleanup",
+                ? `bionic turn ${terminal.status}`
+                : "bionic completed turn cleanup",
           discardPersistentState: sessionUnavailable || (terminal.status === "cancelled" && !preserveInterruptedSession) || timedOut || channelLost,
           dropWarmEntry: false,
           recordCloseError: false,
@@ -5152,7 +5152,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
         runtimeSettlement = {
           mode: "direct",
           handle: sessionHandle,
-          reason: timedOut ? "paperclip timeout cleanup" : "paperclip error cleanup",
+          reason: timedOut ? "bionic timeout cleanup" : "bionic error cleanup",
           discardPersistentState: timedOut,
           dropWarmEntry: true,
           recordCloseError: true,
@@ -5219,7 +5219,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
       // run-minted API key is never revoked, so it stays valid and forces a
       // close-and-relaunch. It is a non-secret marker; the settlement reads only its
       // presence, and no report or reuse payload carries it.
-      const LIVE_RUN_SCOPED_API_KEY = "paperclip-run-scoped-api-key";
+      const LIVE_RUN_SCOPED_API_KEY = "bionic-run-scoped-api-key";
       // Record the final per-resource disposition report where a test can observe
       // it. The engine never reads it back.
       const recordDispositionReport = (report: SettlementDispositionReport): void => {
@@ -5266,7 +5266,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           const baseSettlement: RuntimeSettlementPlan = runtimeSettlement ?? {
             mode: "direct",
             handle: syntheticCloseHandle(),
-            reason: "paperclip cleanup",
+            reason: "bionic cleanup",
             discardPersistentState: false,
             dropWarmEntry: false,
             recordCloseError: true,
@@ -5292,7 +5292,7 @@ export function createAcpxEngineExecutor(deps: AcpxEngineExecutorOptions = {}) {
           // channel that is dead by now. The read is non-mutating and only
           // adds a later-observed loss; it never clears the snapshot's `true`.
           const remoteChannelLost =
-            settlement.skipRemoteClose || (prepared.paperclipBridge?.readRunDisposition?.().failed ?? false);
+            settlement.skipRemoteClose || (prepared.bionicBridge?.readRunDisposition?.().failed ?? false);
           // The control channel is already known lost, so no remote call can
           // reach the backend. Release the local bookkeeping only and place no
           // `runtime.close(...)` call — that call has no deadline of its own

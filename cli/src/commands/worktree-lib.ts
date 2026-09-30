@@ -3,7 +3,7 @@ import path from "node:path";
 import type { PaperclipConfig } from "../config/schema.js";
 import { expandHomePrefix } from "../config/home.js";
 
-export const DEFAULT_WORKTREE_HOME = "~/.paperclip-worktrees";
+export const DEFAULT_WORKTREE_HOME = "~/.bionic-worktrees";
 export const WORKTREE_SEED_MODES = ["minimal", "full"] as const;
 export const WORKTREE_SEED_MANIFEST = "seed-manifest.json";
 export const WORKTREE_SEED_PENDING_MARKER = "seed-pending";
@@ -201,7 +201,7 @@ export function resolveWorktreeLocalPaths(opts: {
   const cwd = path.resolve(opts.cwd);
   const homeDir = path.resolve(expandHomePrefix(opts.homeDir ?? DEFAULT_WORKTREE_HOME));
   const instanceRoot = path.resolve(homeDir, "instances", opts.instanceId);
-  const repoConfigDir = path.resolve(cwd, ".paperclip");
+  const repoConfigDir = path.resolve(cwd, ".bionic");
   return {
     cwd,
     repoConfigDir,
@@ -291,7 +291,7 @@ export function buildWorktreeConfig(input: {
         baseDir: paths.storageDir,
       },
       s3: {
-        bucket: source?.storage.s3.bucket ?? "paperclip",
+        bucket: source?.storage.s3.bucket ?? "bionic",
         region: source?.storage.s3.region ?? "us-east-1",
         endpoint: source?.storage.s3.endpoint,
         prefix: source?.storage.s3.prefix ?? "",
@@ -313,14 +313,14 @@ export function buildWorktreeEnvEntries(
   branding?: WorktreeUiBranding,
 ): Record<string, string> {
   return {
-    PAPERCLIP_HOME: paths.homeDir,
-    PAPERCLIP_INSTANCE_ID: paths.instanceId,
-    PAPERCLIP_CONFIG: paths.configPath,
-    PAPERCLIP_CONTEXT: paths.contextPath,
-    PAPERCLIP_IN_WORKTREE: "true",
-    PAPERCLIP_DB_BACKUP_ENABLED: "false",
-    ...(branding?.name ? { PAPERCLIP_WORKTREE_NAME: branding.name } : {}),
-    ...(branding?.color ? { PAPERCLIP_WORKTREE_COLOR: branding.color } : {}),
+    BIONIC_HOME: paths.homeDir,
+    BIONIC_INSTANCE_ID: paths.instanceId,
+    BIONIC_CONFIG: paths.configPath,
+    BIONIC_CONTEXT: paths.contextPath,
+    BIONIC_IN_WORKTREE: "true",
+    BIONIC_DB_BACKUP_ENABLED: "false",
+    ...(branding?.name ? { BIONIC_WORKTREE_NAME: branding.name } : {}),
+    ...(branding?.color ? { BIONIC_WORKTREE_COLOR: branding.color } : {}),
   };
 }
 

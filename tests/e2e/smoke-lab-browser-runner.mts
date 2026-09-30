@@ -32,7 +32,7 @@ import { ciSmokeLabScenarios } from "./smoke-lab.catalog.ts";
 const BASE = (process.env.SMOKE_BASE ?? "http://127.0.0.1:3211").replace(/\/$/, "");
 const SHOT_DIR = process.env.SMOKE_SHOT_DIR ?? "/tmp/pap13350-shots";
 const CHROMIUM_PATH = process.env.SMOKE_CHROMIUM_PATH?.trim() || null;
-const DEMO_EMAIL = "smoke@paperclip.test";
+const DEMO_EMAIL = "smoke@bionic.test";
 const DEMO_PASSWORD = "smoke-password";
 const ONLY = (process.env.SMOKE_ONLY ?? "")
   .split(",")
@@ -287,10 +287,10 @@ async function main() {
       if (scenario.transport === "gateway_session") {
         const invoked = await api("POST", `/api/agents/${scout.id}/heartbeat/invoke`);
         const session = await api("POST", "/api/tool-gateway/sessions", { companyId, agentId: scout.id, runId: invoked.id, ttlMs: 60_000 });
-        const listRes = await fetch(`${BASE}${new URL(session.toolsUrl, BASE).pathname}`, { headers: { "x-paperclip-tool-gateway-token": session.token } });
+        const listRes = await fetch(`${BASE}${new URL(session.toolsUrl, BASE).pathname}`, { headers: { "x-bionic-tool-gateway-token": session.token } });
         assert(listRes.ok, "gateway tools list ok pre-revoke");
         await api("POST", `/api/tool-gateway/sessions/${session.sessionId}/revoke`, { companyId });
-        const after = await fetch(`${BASE}${new URL(session.toolsUrl, BASE).pathname}`, { headers: { "x-paperclip-tool-gateway-token": session.token } });
+        const after = await fetch(`${BASE}${new URL(session.toolsUrl, BASE).pathname}`, { headers: { "x-bionic-tool-gateway-token": session.token } });
         assert(after.status === 401, `revoked token cut off (got ${after.status})`);
         await page.goto(`${BASE}/${prefix}/activity?action=tool_`, { waitUntil: "networkidle" });
         return scenario.lifecycle.revoke;

@@ -1,4 +1,4 @@
-import type { PrpStructuredRunResult } from "../../vendor/paperclip-runner/index.js";
+import type { PrpStructuredRunResult } from "../../vendor/bionic-runner/index.js";
 import { nativeCompletionFeedback } from "./native-completion-feedback.js";
 import { createHash, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -29,7 +29,7 @@ import {
   issueComments,
   issues,
   issueWorkProducts,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 
 import { startEmbeddedPostgresTestDatabase } from "../../__tests__/helpers/embedded-postgres.js";
 import { createLocalDiskStorageProvider } from "../../storage/local-disk-provider.js";
@@ -41,7 +41,7 @@ import {
   renderNativeRunnerStagedAttachmentPrompt,
   stageNativeRunnerWakeAttachments,
 } from "./native-runner-file-handoff.js";
-import { PaperclipRunnerToolAuthority } from "./paperclip-runner-tool-authority.js";
+import { PaperclipRunnerToolAuthority } from "./bionic-runner-tool-authority.js";
 
 describe("native runner file handoff", () => {
   let temporary: Awaited<
@@ -63,7 +63,7 @@ describe("native runner file handoff", () => {
     );
     db = createDb(temporary.connectionString);
     temporaryRoot = await mkdtemp(
-      path.join(tmpdir(), "paperclip-native-file-handoff-"),
+      path.join(tmpdir(), "bionic-native-file-handoff-"),
     );
     workspaceRoot = path.join(temporaryRoot, "workspace");
     storageRoot = path.join(temporaryRoot, "storage");
@@ -79,7 +79,7 @@ describe("native runner file handoff", () => {
       id: agentId,
       companyId,
       name: "Native file agent",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "codex" },
       runtimeConfig: {},
       status: "active",
@@ -186,7 +186,7 @@ describe("native runner file handoff", () => {
 
   function doneReport(refs: string[]): PrpStructuredRunResult {
     return {
-      schema: "paperclip.run_result.v1",
+      schema: "bionic.run_result.v1",
       reportedWorkDisposition: "done",
       summary: "Created the requested checklist.",
       completionClaim: { contractRevision: "test", objectiveSatisfied: true, criteria: [], remainingWork: [] },
@@ -354,7 +354,7 @@ describe("native runner file handoff", () => {
     ).resolves.toEqual([
       expect.objectContaining({
         type: "artifact",
-        provider: "paperclip",
+        provider: "bionic",
         title: "Requested answer",
         createdByRunId: runId,
       }),
@@ -367,7 +367,7 @@ describe("native runner file handoff", () => {
         createdByRunId: runId,
         body: "Prepared Requested answer for this response.",
         metadata: expect.objectContaining({
-          authorizationReason: "paperclip_runner_protocol",
+          authorizationReason: "bionic_runner_protocol",
         }),
       }),
     ]);
@@ -382,7 +382,7 @@ describe("native runner file handoff", () => {
           attachmentId: first.entityRefs[0],
           workProductId: first.entityRefs[1],
           commentId: first.entityRefs[2],
-          source: "paperclip_runner_protocol",
+          source: "bionic_runner_protocol",
         }),
       }),
     ]);
@@ -416,10 +416,10 @@ describe("native runner file handoff", () => {
       authority({ executionTargetKind: "remote" }).execute(
         callFor("checked.txt", body, "remote-denied"),
       ),
-    ).rejects.toThrow("paperclip_runner_file_handoff_remote_unsupported");
+    ).rejects.toThrow("bionic_runner_file_handoff_remote_unsupported");
     await expect(
       authority().execute(callFor("linked.txt", body, "symlink-denied")),
-    ).rejects.toThrow("paperclip_runner_file_handoff_symlink_denied");
+    ).rejects.toThrow("bionic_runner_file_handoff_symlink_denied");
     await expect(
       authority().execute(
         callFor(
@@ -428,13 +428,13 @@ describe("native runner file handoff", () => {
           "intermediate-symlink-denied",
         ),
       ),
-    ).rejects.toThrow("paperclip_runner_file_handoff_symlink_denied");
+    ).rejects.toThrow("bionic_runner_file_handoff_symlink_denied");
     await expect(
       authority().execute(callFor("hardlinked.txt", body, "hardlink-denied")),
-    ).rejects.toThrow("paperclip_runner_file_handoff_file_changed");
+    ).rejects.toThrow("bionic_runner_file_handoff_file_changed");
     await expect(
       authority().execute(callFor("../checked.txt", body, "traversal-denied")),
-    ).rejects.toThrow("paperclip_runner_file_handoff_path_denied");
+    ).rejects.toThrow("bionic_runner_file_handoff_path_denied");
     await expect(
       authority().execute({
         ...callFor("checked.txt", body, "hash-denied"),
@@ -443,12 +443,12 @@ describe("native runner file handoff", () => {
           sha256: "0".repeat(64),
         },
       }),
-    ).rejects.toThrow("paperclip_runner_file_handoff_hash_mismatch");
+    ).rejects.toThrow("bionic_runner_file_handoff_hash_mismatch");
     await expect(
       authority({ companyId: "00000000-0000-4000-8000-000000009999" }).execute(
         callFor("checked.txt", body, "foreign-denied"),
       ),
-    ).rejects.toThrow("paperclip_runner_tool_binding_not_authorized");
+    ).rejects.toThrow("bionic_runner_tool_binding_not_authorized");
   });
 
   it("registers a verified remote output without reading a controller path", async () => {
@@ -503,7 +503,7 @@ describe("native runner file handoff", () => {
       .set({
         contextSnapshot: {
           issueId,
-          paperclipWake: {
+          bionicWake: {
             comments: [
               {
                 id: comment.id,
@@ -543,7 +543,7 @@ describe("native runner file handoff", () => {
         contentType: "text/plain",
         byteSize: body.length,
         workspaceRelativePath: expect.stringMatching(
-          /^\.paperclip-inbound\/.+\/[0-9a-f-]{36}$/u,
+          /^\.bionic-inbound\/.+\/[0-9a-f-]{36}$/u,
         ),
         unavailableReason: null,
       },
@@ -583,7 +583,7 @@ describe("native runner file handoff", () => {
     try {
       const liveForeignDirectory = path.join(
         workspaceRoot,
-        ".paperclip-inbound",
+        ".bionic-inbound",
         `process-${liveOwner.pid}-unknown-00000000-0000-4000-8000-000000009298`,
       );
       const liveForeignFile = path.join(liveForeignDirectory, "active-slot");
@@ -608,7 +608,7 @@ describe("native runner file handoff", () => {
 
       const recycledOwnerDirectory = path.join(
         workspaceRoot,
-        ".paperclip-inbound",
+        ".bionic-inbound",
         `process-${liveOwner.pid}-0-00000000-0000-4000-8000-000000009297`,
       );
       const recycledOwnerFile = path.join(recycledOwnerDirectory, "stale-slot");
@@ -641,7 +641,7 @@ describe("native runner file handoff", () => {
     );
     expect(prompt).toContain(relativePath!);
     expect(prompt).not.toContain("/api/attachments/");
-    expect(prompt).not.toContain("PAPERCLIP_API_KEY");
+    expect(prompt).not.toContain("BIONIC_API_KEY");
     await stage.cleanup();
     await expect(
       readFile(path.join(workspaceRoot, relativePath!)),
@@ -649,7 +649,7 @@ describe("native runner file handoff", () => {
 
     const crashDirectory = path.join(
       workspaceRoot,
-      ".paperclip-inbound",
+      ".bionic-inbound",
       "process-2147483647-0-00000000-0000-4000-8000-000000009299",
     );
     await mkdir(crashDirectory, { recursive: true });
@@ -670,7 +670,7 @@ describe("native runner file handoff", () => {
         },
         storage,
       }),
-    ).rejects.toThrow("paperclip_runner_attachment_staging_residue_denied");
+    ).rejects.toThrow("bionic_runner_attachment_staging_residue_denied");
     await expect(readFile(outsideResidue, "utf8")).resolves.toBe(
       "outside bytes must remain intact",
     );
@@ -706,7 +706,7 @@ describe("native runner file handoff", () => {
         },
         storage,
       }),
-    ).rejects.toThrow("paperclip_runner_attachment_staging_not_authorized");
+    ).rejects.toThrow("bionic_runner_attachment_staging_not_authorized");
 
     const remoteStage = await stageNativeRunnerWakeAttachments({
       db,
@@ -759,7 +759,7 @@ describe("native runner file handoff", () => {
       .set({
         contextSnapshot: {
           issueId,
-          paperclipWake: {
+          bionicWake: {
             comments: [
               {
                 id: current.comment.id,
@@ -833,7 +833,7 @@ describe("native runner file handoff", () => {
     });
     const currentComment = await issueService(db).addComment(
       issueId,
-      "Inspect the current attachment if Paperclip imported it.",
+      "Inspect the current attachment if Bionic imported it.",
       { userId: "inbound-user" },
     );
     await db
@@ -841,11 +841,11 @@ describe("native runner file handoff", () => {
       .set({
         contextSnapshot: {
           issueId,
-          paperclipWake: {
+          bionicWake: {
             comments: [
               {
                 id: currentComment.id,
-                body: "Inspect the current attachment if Paperclip imported it.",
+                body: "Inspect the current attachment if Bionic imported it.",
                 attachments: [],
               },
             ],
@@ -916,7 +916,7 @@ describe("native runner file handoff", () => {
       companyId,
       issueId,
       type: "artifact",
-      provider: "paperclip",
+      provider: "bionic",
       externalId: existingAttachment!.id,
       title: "Reminted by another run",
       status: "active",
@@ -930,7 +930,7 @@ describe("native runner file handoff", () => {
       authority().execute(
         callFor("out/answer.txt", originalBody, "reminted-work-product"),
       ),
-    ).rejects.toThrow("paperclip_runner_file_handoff_work_product_missing");
+    ).rejects.toThrow("bionic_runner_file_handoff_work_product_missing");
 
     const failureBody = Buffer.from("storage mismatch cleanup\n", "utf8");
     await writeFile(path.join(workspaceRoot, "mismatch.txt"), failureBody);
@@ -962,7 +962,7 @@ describe("native runner file handoff", () => {
       mismatchingAuthority.execute(
         callFor("mismatch.txt", failureBody, "storage-mismatch"),
       ),
-    ).rejects.toThrow("paperclip_runner_file_handoff_storage_mismatch");
+    ).rejects.toThrow("bionic_runner_file_handoff_storage_mismatch");
     expect(deletedObjectKey).toEqual(expect.any(String));
     await expect(
       realStorage.headObject(companyId, deletedObjectKey!),
@@ -989,7 +989,7 @@ describe("native runner file handoff", () => {
       },
     };
     await db.execute(sql`
-      CREATE OR REPLACE FUNCTION paperclip_test_fail_native_receipt()
+      CREATE OR REPLACE FUNCTION bionic_test_fail_native_receipt()
       RETURNS trigger LANGUAGE plpgsql AS $$
       BEGIN
         IF NEW.result_json IS DISTINCT FROM OLD.result_json THEN
@@ -1000,9 +1000,9 @@ describe("native runner file handoff", () => {
       $$
     `);
     await db.execute(sql`
-      CREATE TRIGGER paperclip_test_fail_native_receipt
+      CREATE TRIGGER bionic_test_fail_native_receipt
       BEFORE UPDATE ON heartbeat_runs
-      FOR EACH ROW EXECUTE FUNCTION paperclip_test_fail_native_receipt()
+      FOR EACH ROW EXECUTE FUNCTION bionic_test_fail_native_receipt()
     `);
     try {
       const receiptFailureAuthority = new PaperclipRunnerToolAuthority(db, {
@@ -1036,10 +1036,10 @@ describe("native runner file handoff", () => {
       });
     } finally {
       await db.execute(
-        sql`DROP TRIGGER IF EXISTS paperclip_test_fail_native_receipt ON heartbeat_runs`,
+        sql`DROP TRIGGER IF EXISTS bionic_test_fail_native_receipt ON heartbeat_runs`,
       );
       await db.execute(
-        sql`DROP FUNCTION IF EXISTS paperclip_test_fail_native_receipt()`,
+        sql`DROP FUNCTION IF EXISTS bionic_test_fail_native_receipt()`,
       );
     }
     expect(receiptFailureObjectKey).toEqual(expect.any(String));
@@ -1070,12 +1070,12 @@ describe("native runner file handoff", () => {
       {
         wake: wakeFor("github"),
         provider: "github",
-        mode: "paperclip_task_only",
+        mode: "bionic_task_only",
       },
       {
         wake: wakeFor("microsoft-teams"),
         provider: "microsoft-teams",
-        mode: "paperclip_task_only",
+        mode: "bionic_task_only",
       },
       ...["slack", "discord", "telegram"].map((provider) => ({
         wake: wakeFor(provider),
@@ -1115,7 +1115,7 @@ describe("native runner file handoff", () => {
         await writeFile(path.join(workspaceRoot, filename), body);
         await db
           .update(heartbeatRuns)
-          .set({ contextSnapshot: { issueId, paperclipWake: testCase.wake } })
+          .set({ contextSnapshot: { issueId, bionicWake: testCase.wake } })
           .where(eq(heartbeatRuns.id, runId));
         const call = callFor(filename, body, `delivery-mode-${index}`);
         // A tool argument or user comment never selects delivery capability.

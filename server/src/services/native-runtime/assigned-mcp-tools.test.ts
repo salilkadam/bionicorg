@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import { ToolGatewayHttpError, type ToolGatewayDescriptor, type ToolGatewayService } from "../tool-gateway.js";
 import { createAssignedMcpTools, getAssignedMcpGateway, registerAssignedMcpGateway } from "./assigned-mcp-tools.js";
 
@@ -15,8 +15,8 @@ function fixture(tools: ToolGatewayDescriptor[]) {
 }
 
 describe("assigned MCP runner tools", () => {
-  const searchName = "paperclip_search_assigned_tools";
-  const callName = "paperclip_call_assigned_tool";
+  const searchName = "bionic_search_assigned_tools";
+  const callName = "bionic_call_assigned_tool";
 
   it("pages through an oversized catalog and calls every tool through the original gateway", async () => {
     const f = fixture(Array.from({ length: 224 }, (_, i) => descriptor(`app.action_${i}`)));
@@ -68,8 +68,8 @@ describe("assigned MCP runner tools", () => {
     const assigned = await createAssignedMcpTools(f);
     const restricted = await createAssignedMcpTools({ ...f, workMode: mode });
     const call = { tool: callName, arguments: { name: assigned.definitions()[1]!.name, arguments: {} } };
-    await expect(assigned.execute(call, mode)).rejects.toThrow("paperclip_runner_tool_mode_denied");
-    await expect(restricted.execute(call, "standard")).rejects.toThrow("paperclip_runner_tool_mode_denied");
+    await expect(assigned.execute(call, mode)).rejects.toThrow("bionic_runner_tool_mode_denied");
+    await expect(restricted.execute(call, "standard")).rejects.toThrow("bionic_runner_tool_mode_denied");
     expect(f.executeTool).not.toHaveBeenCalled();
     const discovery = await restricted.execute({ tool: searchName, arguments: { query: "" } }, "standard");
     expect(discovery).toEqual({ tools: [assigned.definitions()[0]], nextOffset: null });
@@ -210,7 +210,7 @@ describe("assigned MCP runner tools", () => {
     const restricted = await createAssignedMcpTools({ ...f, workMode });
     expect(restricted.definitions()).toEqual([standard.definitions()[0]]);
     for (const tool of standard.definitions().slice(1)) {
-      await expect(restricted.execute({ tool: tool.name as string, arguments: {} })).rejects.toThrow("paperclip_runner_tool_mode_denied");
+      await expect(restricted.execute({ tool: tool.name as string, arguments: {} })).rejects.toThrow("bionic_runner_tool_mode_denied");
     }
     expect(f.executeTool).not.toHaveBeenCalled();
     await restricted.execute({ tool: restricted.definitions()[0]!.name as string, arguments: {} });
@@ -230,8 +230,8 @@ describe("assigned MCP runner tools", () => {
     const standard = await createAssignedMcpTools(f);
     const restricted = await createAssignedMcpTools({ ...f, workMode: currentMode });
     const write = { tool: standard.definitions()[1]!.name as string, arguments: {} };
-    await expect(standard.execute(write, currentMode)).rejects.toThrow("paperclip_runner_tool_mode_denied");
-    await expect(restricted.execute(write, "standard")).rejects.toThrow("paperclip_runner_tool_mode_denied");
+    await expect(standard.execute(write, currentMode)).rejects.toThrow("bionic_runner_tool_mode_denied");
+    await expect(restricted.execute(write, "standard")).rejects.toThrow("bionic_runner_tool_mode_denied");
     expect(f.executeTool).not.toHaveBeenCalled();
     await standard.execute({ tool: standard.definitions()[0]!.name as string, arguments: {} }, currentMode);
     expect(f.executeTool).toHaveBeenCalledOnce();

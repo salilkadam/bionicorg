@@ -1,15 +1,15 @@
 # Paid runner full-stack E2E
 
 For family selection, ownership, provenance, history, and failure taxonomy,
-see the [Paperclip evaluation guide](../../doc/evals.md). This README is the
+see the [Bionic evaluation guide](../../doc/evals.md). This README is the
 authoritative runbook for Product E2E runner cells; the separate Runner Evals
 protocol guide lives at
-`packages/paperclip-runner/docs/runner-protocol-live-evals.md`.
+`packages/bionic-runner/docs/runner-protocol-live-evals.md`.
 
-This is the billable browser acceptance campaign system for Paperclip runner
+This is the billable browser acceptance campaign system for Bionic runner
 profiles. It is deliberately separate from `tests/e2e`: every independently
 scheduled execution gets
-a fresh Paperclip home, embedded Postgres database, instance configuration,
+a fresh Bionic home, embedded Postgres database, instance configuration,
 port, workspace, company, encrypted secrets, environment, and agent.
 
 The vocabulary is: a **campaign** is one workflow invocation against one SHA; a
@@ -21,7 +21,7 @@ The browser creates and assigns the task; fixtures use public APIs. The
 `accept-while-running` case additionally holds the committed card’s creation
 response in the test server until browser acceptance, to exercise real overlap.
 
-The launcher always sets `PAPERCLIP_ANNOUNCEMENTS_ENABLED=false` for its isolated
+The launcher always sets `BIONIC_ANNOUNCEMENTS_ENABLED=false` for its isolated
 instances so announcement panels do not obscure screenshot evidence. No shell
 or workflow configuration is needed, including for Daytona cells.
 
@@ -31,7 +31,7 @@ or workflow configuration is needed, including for Daytona cells.
 loaded before and after the production service worker takes control. It keeps
 full traces and checks that Vite module loads do not create worker fetches or
 leave the page empty. This isolates browser loading; it does not create a
-Paperclip task, run an agent, or replace a Product E2E result.
+Bionic task, run an agent, or replace a Product E2E result.
 
 ## Conversational confirmation replies (explicit only)
 
@@ -167,14 +167,14 @@ Shell variables take precedence over the local file. The recognized names are:
 - `DAYTONA_API_KEY`
 - `CURSOR_AUTH_TOKEN` (extended Cursor candidate)
 - `COPILOT_GITHUB_TOKEN` (extended Copilot candidate)
-- `PAPERCLIP_E2E_DAYTONA_IMAGE` (Daytona only)
+- `BIONIC_E2E_DAYTONA_IMAGE` (Daytona only)
 
 The image must be an immutable `image@sha256:...` reference. The launcher
 reports missing variable names but never prints values. It passes raw provider
 keys only to Playwright, which posts each value once to the company-secrets API.
-Paperclip receives secret references in agent/environment payloads. Provider
+Bionic receives secret references in agent/environment payloads. Provider
 keys, Daytona keys, `DATABASE_URL`, and `DATABASE_MIGRATION_URL` are removed
-from the Paperclip child process.
+from the Bionic child process.
 
 Kimi keys are recognized for local catalog, schema, and isolation tests only.
 Its explicit context-integrity profiles are blocked before credential loading
@@ -193,10 +193,10 @@ runner binaries:
 ```bash
 pnpm install
 pnpm exec playwright install chromium
-pnpm --filter @paperclipai/paperclip-runner build:runner-binaries
+pnpm --filter @bionicai/bionic-runner build:runner-binaries
 ```
 
-List cells without loading credentials or starting Paperclip:
+List cells without loading credentials or starting Bionic:
 
 ```bash
 pnpm test:e2e:runner -- --list
@@ -251,7 +251,7 @@ local native and direct-adapter profiles × two two-run structured-question
 workflows: 14 cells. Both prove that a required structured interaction is
 rendered, answered in the browser, and resumed once on the same task without
 duplicating the final response. The second workflow restarts the isolated
-Paperclip server while the interaction is waiting, reloads that state, and
+Bionic server while the interaction is waiting, reloads that state, and
 then resumes it. The suite has no Daytona cells.
 
 `instruction-persistence` is an explicit-only three-cell workflow: legacy and
@@ -262,7 +262,7 @@ nested text, editor-created content, and exact binary bytes. The oracle checks t
 current files, a stopped-run save receipt, and absence of newly appended history.
 The first task also publishes a small verification receipt for the normal
 completion contract; the personal files stay in the agent directory.
-After a Paperclip restart, a fresh task must upload a downloaded proof attachment
+After a Bionic restart, a fresh task must upload a downloaded proof attachment
 containing independent saved nonces absent from its prompt. A third task edits its
 private copy while the browser edits the same current file. The later run sync
 must win for that changed file, preserve an unrelated board-created file, and
@@ -388,7 +388,7 @@ status. Mentioning the right blocker only as resolved history cannot pass.
 
 The committed-send case drops the browser's acknowledgement after the server
 saves its comment. It waits for the agent to save one backlog task, restarts
-Paperclip, and replays the exact public request with the original client request ID. It
+Bionic, and replays the exact public request with the original client request ID. It
 requires the original comment, task, plan, and single consuming run. This proves
 HTTP request idempotency across restart, not replay safety for an ambiguous
 provider tool response. Existing native tool-receipt tests cover that boundary.
@@ -461,7 +461,7 @@ GitHub discovery is simulated, scoped to a fixture-only credential; repository
 permissions and mutations remain real. Run it with:
 
 ```bash
-pnpm --filter @paperclipai/ui build
+pnpm --filter @bionicai/ui build
 pnpm test:e2e tests/e2e/agent-chat.spec.ts
 # Against a dedicated authenticated test instance configured per that suite:
 pnpm test:e2e:multiuser-authenticated --grep 'agent chats'
@@ -484,9 +484,9 @@ values in one dimension use OR semantics; dimensions and repeated groups use
 AND semantics. `--id` is exclusive with dimension selectors and `--all`.
 `--headed`, `--ui`, and `--debug` are forwarded to Playwright. An unknown
 selector, an empty selection, or a run with no explicit selector exits before
-Paperclip starts. `--max-parallel <n>` controls the number of isolated
+Bionic starts. `--max-parallel <n>` controls the number of isolated
 profile/environment/case harnesses that can overlap (default 1, also configurable
-with `PAPERCLIP_E2E_MAX_PARALLEL`). `--max-automatic-retries <0|1>` controls the
+with `BIONIC_E2E_MAX_PARALLEL`). `--max-automatic-retries <0|1>` controls the
 launcher retry budget (default 1). Set it to 0 for a single-attempt comparison;
 it suppresses both transient-infrastructure and provider-variance retries while
 preserving the original failure classification. Headed/UI/debug runs are forced
@@ -496,7 +496,7 @@ it runs in parallel with unrelated scenarios.
 
 Use a single `--id` smoke test for routine local verification. Full-matrix
 parallelism is intended for GitHub Actions; raising local parallelism starts
-multiple Paperclip/Postgres/Chromium stacks and can consume substantial CPU and
+multiple Bionic/Postgres/Chromium stacks and can consume substantial CPU and
 memory.
 
 Credential-free checks are:
@@ -522,12 +522,12 @@ or publish the current source locally:
 ```bash
 content_id="$(pnpm --silent test:e2e:runner:image-id)"
 source_revision="$(git rev-parse HEAD)"
-image="ghcr.io/paperclipai/paperclip-daytona-runner:e2e-content-${content_id}"
+image="ghcr.io/bionicai/bionic-daytona-runner:e2e-content-${content_id}"
 if ! docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
   docker buildx build \
     --platform linux/amd64 \
-    --build-arg "PAPERCLIP_RUNNER_CONTENT_ID=${content_id}" \
-    --build-arg "PAPERCLIP_RUNNER_SOURCE_REVISION=${source_revision}" \
+    --build-arg "BIONIC_RUNNER_CONTENT_ID=${content_id}" \
+    --build-arg "BIONIC_RUNNER_SOURCE_REVISION=${source_revision}" \
     --file docker/daytona-runner/Dockerfile \
     --tag "$image" \
     --push \
@@ -538,14 +538,14 @@ docker buildx imagetools inspect "$image"
 
 The content ID hashes the audited image inputs, including the Dockerfile,
 platform, root package/lock/build configuration, dependency patches,
-`paperclip-eval-kernel`, and `paperclip-runner`. Changes elsewhere in the
+`bionic-eval-kernel`, and `bionic-runner`. Changes elsewhere in the
 repository keep the same tag and reuse the already signed image. The Git SHA is
 stored separately as image provenance. CI reads that provenance back from a
 reused image when it builds the controller-side provider pack, preserving the
 exact manifest match required to avoid restaging the pack into Daytona.
 
-Resolve the manifest digest and set `PAPERCLIP_E2E_DAYTONA_IMAGE` to
-`ghcr.io/paperclipai/paperclip-daytona-runner@sha256:...`. The repository
+Resolve the manifest digest and set `BIONIC_E2E_DAYTONA_IMAGE` to
+`ghcr.io/bionicai/bionic-daytona-runner@sha256:...`. The repository
 workflow signs that digest with Cosign/OIDC and verifies that it is publicly
 pullable, includes the provider pack, and advertises `dial_ws_loopback`,
 `dial_wss`, and `listen_ws`. The GHCR package must be configured as public;
@@ -555,15 +555,15 @@ content tags are never rebuilt or overwritten by the workflow.
 ### Match the local controller package to the Daytona image
 
 When the controller runs on macOS or another platform different from the sandbox,
-set `PAPERCLIP_RUNNER_REMOTE_BINARY_PATH` to a verified Linux amd64
-`paperclip-runnerd`, such as the binary copied from `/usr/local/bin/paperclip-runnerd`
+set `BIONIC_RUNNER_REMOTE_BINARY_PATH` to a verified Linux amd64
+`bionic-runnerd`, such as the binary copied from `/usr/local/bin/bionic-runnerd`
 in the pinned image. The controller must have these exact bytes for its artifact
 identity check. A local macOS runner cannot substitute for the Linux binary,
 even when the sandbox image contains a compatible runner. This also applies to
 native Codex cells, which do not otherwise need the remote provider pack below.
 
 Native ACPX (including Claude) and OpenCode Daytona cells also require
-`PAPERCLIP_RUNNER_REMOTE_PROVIDER_PACK_PATH` on the controller. The package and
+`BIONIC_RUNNER_REMOTE_PROVIDER_PACK_PATH` on the controller. The package and
 the image must come from the same verified build. Equal provider version numbers
 are insufficient: verification compares the complete manifest, source revision,
 Node executable, lockfile, and built bridge hashes. An independently rebuilt
@@ -579,19 +579,19 @@ match. Docker must be running; the temporary container below is never started.
 ```sh
 (
   set -eu
-  : "${PAPERCLIP_E2E_DAYTONA_IMAGE:?Set the verified immutable image digest}"
-  case "$PAPERCLIP_E2E_DAYTONA_IMAGE" in
+  : "${BIONIC_E2E_DAYTONA_IMAGE:?Set the verified immutable image digest}"
+  case "$BIONIC_E2E_DAYTONA_IMAGE" in
     *@sha256:*) ;;
     *) echo "Use an immutable image digest" >&2; exit 1 ;;
   esac
-  docker pull --platform linux/amd64 "$PAPERCLIP_E2E_DAYTONA_IMAGE"
-  pack_dir="$(mktemp -d "${TMPDIR:-/tmp}/paperclip-e2e-provider-pack.XXXXXX")"
+  docker pull --platform linux/amd64 "$BIONIC_E2E_DAYTONA_IMAGE"
+  pack_dir="$(mktemp -d "${TMPDIR:-/tmp}/bionic-e2e-provider-pack.XXXXXX")"
   container_id="$(docker create --platform linux/amd64 --network none \
-    --entrypoint /bin/true "$PAPERCLIP_E2E_DAYTONA_IMAGE")"
+    --entrypoint /bin/true "$BIONIC_E2E_DAYTONA_IMAGE")"
   trap 'docker rm "$container_id" >/dev/null' EXIT
-  docker cp "$container_id:/opt/paperclip-runner/provider-pack/." "$pack_dir/"
+  docker cp "$container_id:/opt/bionic-runner/provider-pack/." "$pack_dir/"
   test -f "$pack_dir/provider-pack.json"
-  printf 'Set PAPERCLIP_RUNNER_REMOTE_PROVIDER_PACK_PATH to: %s\n' "$pack_dir"
+  printf 'Set BIONIC_RUNNER_REMOTE_PROVIDER_PACK_PATH to: %s\n' "$pack_dir"
 )
 ```
 
@@ -609,7 +609,7 @@ Packaged, access-controlled evidence is written beneath
 `final-state.png`, Plan draft/revision screenshots when applicable, matcher
 outcomes, sanitized fixture/API metadata, a result record, JUnit, HTML, and a
 blob report. Failures additionally retain the Playwright trace/video, browser
-diagnostics, failure screenshot, and sanitized Paperclip/run logs when
+diagnostics, failure screenshot, and sanitized Bionic/run logs when
 produced. WebM files remain limited to the local results directory and
 access-controlled GitHub Actions artifact. Declared PNG screenshots are also
 published with permanent campaign dashboards; fixture authors must therefore
@@ -705,7 +705,7 @@ to inspect branch-only results; an absent dashboard card is not passing coverage
 Case details show the overall failure reason separately from behavioral matcher
 results. For first-task cases, **Read full conversation** starts collapsed and displays retained
 comments, question and approval cards, card answers, and document revisions in
-time order, using Paperclip chat styling: user bubbles on the right, agent replies
+time order, using Bionic chat styling: user bubbles on the right, agent replies
 on the left, and separate cards for questions and documents. This presentation
 is defined in the shared dashboard renderer for every campaign and regeneration,
 not in a particular published report. GitHub publication uses the trusted
@@ -731,7 +731,7 @@ public structured evidence files. The Pages artifact has already had private
 visual and generated report evidence removed:
 
 ```bash
-gh run download <run-id> --repo paperclipai/paperclip --name github-pages --dir /tmp/runner-e2e-pages
+gh run download <run-id> --repo bionicai/bionic --name github-pages --dir /tmp/runner-e2e-pages
 mkdir /tmp/runner-e2e-site
 tar -xf /tmp/runner-e2e-pages/artifact.tar -C /tmp/runner-e2e-site
 pnpm test:e2e:runner:dashboard -- /tmp/runner-e2e-site
@@ -740,20 +740,20 @@ pnpm test:e2e:runner:dashboard -- /tmp/runner-e2e-site --history /tmp/history.js
 ```
 
 Serve that directory with any static file server. This path does not start
-Paperclip, invoke an agent, create a Daytona lease, or consume provider tokens.
+Bionic, invoke an agent, create a Daytona lease, or consume provider tokens.
 
 Before an access-controlled evidence artifact is uploaded, the launcher:
 
 1. copies only allowlisted file types;
 2. scans raw API snapshots before sanitizing them;
-3. scans the closed Paperclip home/database and workspace as streams;
+3. scans the closed Bionic home/database and workspace as streams;
 4. redacts loaded exact values and known provider-key shapes from text;
 5. expands ZIP reports for secret scanning;
 6. rejects SVG and other unsafe files and fails the cell if a leak is detected;
    and
 7. verifies that a passing attempt has its final-state screenshot.
 
-The temporary Paperclip home, embedded database, raw workspace, master key,
+The temporary Bionic home, embedded database, raw workspace, master key,
 and unredacted logs are removed after each attempt. Daytona teardown destroys
 the environment and any reusable leases through the public API; provider-side
 auto-stop/archive/delete values remain as cancellation backstops.
@@ -763,7 +763,7 @@ auto-stop/archive/delete values remain as cancellation backstops.
 `Runner Full-Stack E2E` has only `schedule` and `workflow_dispatch` triggers; it
 never runs for a pull request or ordinary push. Start the trusted workflow from
 the default branch. A CODEOWNER can set the optional `target_branch` input to
-any branch in `paperclipai/paperclip`. The authorization job resolves that
+any branch in `bionicai/bionic`. The authorization job resolves that
 branch to one immutable commit before any checkout. A separate credential-free
 job checks out the resolved commit and regenerates `pnpm-lock.yaml` once with
 `--ignore-scripts --no-frozen-lockfile --lockfile-only`. It uploads that exact
@@ -818,7 +818,7 @@ by the repository variable `RUNNER_FULL_STACK_E2E_NIGHTLY_ENABLED=true`. Set it
 only after the live acceptance ladder in the architecture plan is green.
 Set `RUNNER_E2E_AWS_ENABLED=true` to route paid cells to the repository-scoped
 ephemeral AWS RunsOn fleet selected by
-`runs-on/fleet=paperclip-public-pr-x64/env=public-ci`. Any other value uses the
+`runs-on/fleet=bionic-public-pr-x64/env=public-ci`. Any other value uses the
 proven GitHub-hosted `ubuntu-latest` target. Set `RUNNER_E2E_MAX_PARALLEL` to an
 integer from 1–100 on AWS (default 100). The 171-cell default selection takes more than
 one wave at that limit; use suite selectors for smaller campaigns. The fallback runner retains its 1–57 limit and
@@ -855,7 +855,7 @@ administrators, then configure these repository variables:
 
 The job exchanges GitHub OIDC for short-lived AWS credentials; never add AWS
 access-key secrets. Its IAM role must trust only
-`repo:paperclipai/paperclip:environment:runner-e2e-history`, and permit only
+`repo:bionicai/bionic:environment:runner-e2e-history`, and permit only
 Get/List/Put under the configured prefix—never Delete. Enable S3 versioning and
 Block Public Access. CloudFront reads the private bucket through Origin Access
 Control. Immutable campaign bundles live under `campaigns/<run-id>-<attempt>/`;
@@ -870,11 +870,11 @@ separate Pages stage. Both surfaces publish only per-result PNG screenshots
 with the explicit `public-runner-fixture` marker alongside sanitized structured
 evidence. The runner capture helper refuses to mark a screenshot outside the
 exact live fixture issue route. Neither surface publishes video, archives,
-SVG/active content, databases, Paperclip homes, workspaces, raw/unallowlisted
+SVG/active content, databases, Bionic homes, workspaces, raw/unallowlisted
 logs, or credentials.
 
 See [FIXTURES.md](./FIXTURES.md) before adding or changing a profile,
-environment, task, matcher, or future Paperclip object fixture.
+environment, task, matcher, or future Bionic object fixture.
 See [SECURITY.md](./SECURITY.md) before enabling paid dispatch, the runner
 group, or permanent public history in this public repository.
 
@@ -931,7 +931,7 @@ runtime configuration via the public API before its first task. The wizard does
 not currently offer native Runner. Persona, managed instructions, skills, seeded
 question, and task invocation are preserved. Explicit model choices are retained;
 an unset model resolves through the production runtime-switch defaults. The
-production switch removes the legacy Paperclip operational skill because Runner
+production switch removes the legacy Bionic operational skill because Runner
 supplies its control-plane contract through its protocol; other assigned skills,
 including `/first-task`, are retained. Native runtime permissions come from the
 existing qualified profile. Evidence labels
@@ -997,7 +997,7 @@ artifact checks still apply.
 Behavioral checks inspect persisted comments, interactions, tasks, documents,
 agent counts, creation timestamps, and terminal runs. Planning and clarification
 are allowed before acceptance. Premature durable work fails immediately. The
-suite checks persisted Paperclip effects; it does not claim to prove the absence
+suite checks persisted Bionic effects; it does not claim to prove the absence
 of arbitrary external side effects from a provider process.
 
 ```bash
@@ -1053,9 +1053,9 @@ usage is not reported as free. Judge spend is shown separately and included in
 total estimated spend when known; provider/child usage stays in the run ledger.
 
 Regenerate normalized reports with the existing report command, pointing
-`PAPERCLIP_RUNNER_E2E_REPORT_ROOT` at that campaign,
-`PAPERCLIP_RUNNER_E2E_REPORT_OUT` at a fresh output directory, and
-`PAPERCLIP_RUNNER_E2E_EXPECTED_IDS` at the JSON array of selected execution IDs.
+`BIONIC_RUNNER_E2E_REPORT_ROOT` at that campaign,
+`BIONIC_RUNNER_E2E_REPORT_OUT` at a fresh output directory, and
+`BIONIC_RUNNER_E2E_EXPECTED_IDS` at the JSON array of selected execution IDs.
 Then use the existing dashboard/history publication workflow. Merely running
 `test:e2e:runner:dashboard` reads the already normalized bundle; it never calls
 a judge or refreshes results from outside that bundle. Published campaign
@@ -1066,7 +1066,7 @@ bundles remain immutable; judge them before publishing.
 Use separate campaigns for each skill revision and three repetitions per
 case/provider (144 executions per revision), keeping source environment,
 provider/default model, credentials mode, case facts, and judge configuration
-matched. Set distinct `PAPERCLIP_E2E_CAMPAIGN_ID` values such as
+matched. Set distinct `BIONIC_E2E_CAMPAIGN_ID` values such as
 `first-task-skill-a-r1` through `r3`, and repeat for skill B. Review actual model
 identities and instruction hashes before comparing; dirty working trees are
 explicitly marked. Do not pool results with mismatched configurations or treat
@@ -1126,7 +1126,7 @@ Browser-only regressions exercise delayed rendering without provider calls:
 ```sh
 pnpm test:e2e:runner:browser-support
 # To use an installed Chrome instead of Playwright's Chromium:
-PAPERCLIP_PLAYWRIGHT_CHANNEL=chrome pnpm test:e2e:runner:browser-support
+BIONIC_PLAYWRIGHT_CHANNEL=chrome pnpm test:e2e:runner:browser-support
 ```
 
 ### Native provider continuity
@@ -1139,12 +1139,12 @@ The check excludes child runs and applies only to native profiles.
 For ordinary native comment and child-completion wakes, a verified provider resume
 receives only new attributed messages, the current authenticated interaction result,
 actual task edits, child results, and completion-report identifiers. The provider
-retains conversation history. Paperclip retains task state and authorization. A new
+retains conversation history. Bionic retains task state and authorization. A new
 or replacement session still receives the full bootstrap; specialized recovery,
 review, external-chat and planning paths retain their existing context. Legacy
 adapter prompts are unchanged.
 
-The ACPX Claude-only `provider-question-bridge` case exercises the provider’s built-in question tool, verifies that its card appears in Paperclip, answers it in the browser, and requires the same paused run to finish with the selected fact. The `accept-while-running` fixture holds the committed card’s creation response until browser acceptance, making the overlap deterministic without changing production behavior.
+The ACPX Claude-only `provider-question-bridge` case exercises the provider’s built-in question tool, verifies that its card appears in Bionic, answers it in the browser, and requires the same paused run to finish with the selected fact. The `accept-while-running` fixture holds the committed card’s creation response until browser acceptance, making the overlap deterministic without changing production behavior.
 
 Local Legacy Claude cells qualify Claude Code `2.1.277` before starting the server.
 If the ambient CLI differs, the harness installs the exact version under the
@@ -1172,7 +1172,7 @@ lockfile from its own trusted checkout, never from the tested branch.
 
 ### Injected interruption diagnostics
 
-The restart supervisor starts Paperclip with the TypeScript loader in the same
+The restart supervisor starts Bionic with the TypeScript loader in the same
 Node process it owns. A forced stop therefore cannot leave an old controller
 alive to stop the embedded database after the replacement starts.
 
@@ -1346,7 +1346,7 @@ charges are separate; unavailable receipts do not mean zero cost. The September
 $25 per provider and $25 coordinated infrastructure/diagnosis.
 
 The launcher binds only the selected candidate and exact discovered model in
-`PAPERCLIP_RUNNER_ACPX_QUALIFICATION`, a JSON array of `{agent,model}` pairs.
+`BIONIC_RUNNER_ACPX_QUALIFICATION`, a JSON array of `{agent,model}` pairs.
 The server reads this operator environment at its normal runnerd construction
 boundary; agent config/environment cannot enable qualification. Normal hosts
 have no admission override. It does not bypass profile, executable, credential,
@@ -1362,7 +1362,7 @@ local execution. Daytona additionally requires that branch's immutable Linux
 candidate image and the matching controller-owned provider pack described in
 [`docker/daytona-runner/README.md`](../../docker/daytona-runner/README.md).
 The separate Runner Evals `extended-harnesses` campaign lives in the private
-`paperclip-evals` repository and grades semantic protocol behavior against the
+`bionic-evals` repository and grades semantic protocol behavior against the
 mock control plane. Neither suite substitutes for the other.
 
 The explicit-only `confirmation-replies` suite also includes `unanswered-question-return` for native Claude and Codex (three provider turns). The browser asks a saved color question, dismisses and reopens the fresh form, sends an unrelated message, verifies the reply while the original stays pending, reloads, reopens the history entry, submits Blue, and verifies the saved answer plus a later agent acknowledgement. After dismissing the fresh form and before and after reload, the history card is the only pending-question reminder; the composer has no duplicate pending-input badge. It checks that no tasks were created. Unique, UI-ready screenshots show each checkpoint; individual checks are included in the report. This is a bounded mechanical workflow check, not broader semantic answer-quality qualification.
@@ -1430,7 +1430,7 @@ contribute to the existing billing contract. Evidence includes the waiting and
 final task screenshots, saved checkpoints, final observations, source revision,
 profile/model, catalog digest, and SHA-256 fingerprints of both changed skill
 files and the grader/flow in `snapshots/blocker-guidance.json`. Grader version
-`paperclip.blocker-guidance.v5` requires the approved public note, a saved answer
+`bionic.blocker-guidance.v5` requires the approved public note, a saved answer
 before the confirmation wake, and a new worker reply after the waiting checkpoint,
 accepts writable confirmations and multiple questions, and records `inputUx` separately from
 the blocking checks. Direct text input is the preferred UX for these open-ended

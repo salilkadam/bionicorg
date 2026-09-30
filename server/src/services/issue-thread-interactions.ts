@@ -3,7 +3,7 @@ import {
   deliveredContinuationCommentIds,
 } from "./execution-continuation.js";
 import { assertAgentRunWriteAllowed } from "../agent-run-cancellation.js";
-import { connectionIntentDeliveries } from "@paperclipai/db";
+import { connectionIntentDeliveries } from "@bionicai/db";
 import { isDeepStrictEqual } from "node:util";
 import {
   and,
@@ -18,7 +18,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agents,
   companySecretProposals,
@@ -33,11 +33,11 @@ import {
   issues,
   toolActionRequests,
   toolOauthStates,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   trackInteractionCreated,
   trackInteractionResolved,
-} from "@paperclipai/shared/telemetry";
+} from "@bionicai/shared/telemetry";
 import type {
   AcceptIssueThreadInteraction,
   AskUserQuestionsAnswer,
@@ -66,7 +66,7 @@ import type {
   SuggestTasksResultCreatedTask,
   SubmitIssueThreadInteractionVerdicts,
   WithdrawIssueThreadInteraction,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   acceptIssueThreadInteractionSchema,
   askUserQuestionsPayloadSchema,
@@ -89,7 +89,7 @@ import {
   suggestTasksResultSchema,
   submitIssueThreadInteractionVerdictsSchema,
   withdrawIssueThreadInteractionSchema,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { z } from "zod";
 import { conflict, forbidden, notFound, unprocessable } from "../errors.js";
 import { getTelemetryClient } from "../telemetry.js";
@@ -635,7 +635,7 @@ function parseStoredInteractionResult<S extends z.ZodTypeAny>(
   const parsed = schema.safeParse(raw);
   if (parsed.success) return parsed.data;
   console.warn(
-    `[paperclip] Dropping unparseable ${row.kind} interaction result for interaction ${row.id}`,
+    `[bionic] Dropping unparseable ${row.kind} interaction result for interaction ${row.id}`,
     parsed.error.issues,
   );
   return null;
@@ -1374,7 +1374,7 @@ async function emitInteractionResolvedTelemetry(
         roleByAgentId = await fetchCreatorAgentRoleById(db, [interaction]);
       } catch (error) {
         console.error(
-          "[paperclip] Failed to load interaction.resolved creator role",
+          "[bionic] Failed to load interaction.resolved creator role",
           error,
         );
       }
@@ -1401,7 +1401,7 @@ async function emitInteractionResolvedTelemetry(
     });
   } catch (error) {
     console.error(
-      "[paperclip] Failed to emit interaction.resolved telemetry",
+      "[bionic] Failed to emit interaction.resolved telemetry",
       error,
     );
   }
@@ -1424,7 +1424,7 @@ function emitInteractionCreatedTelemetry(args: {
     });
   } catch (error) {
     console.error(
-      "[paperclip] Failed to emit interaction.created telemetry",
+      "[bionic] Failed to emit interaction.created telemetry",
       error,
     );
   }
@@ -1440,7 +1440,7 @@ async function emitResolvedInteractionsTelemetry(
     roleByAgentId = await fetchCreatorAgentRoleById(db, interactions);
   } catch (error) {
     console.error(
-      "[paperclip] Failed to load interaction.resolved creator roles",
+      "[bionic] Failed to load interaction.resolved creator roles",
       error,
     );
   }

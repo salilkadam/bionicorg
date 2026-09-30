@@ -1,0 +1,26 @@
+[Unit]
+Description=Paperclip Tailscale HTTPS broker
+After=tailscaled.service
+Requires=tailscaled.service
+
+[Service]
+Type=simple
+User=bionic-tsbroker
+Group=bionic-tsbroker-sock
+EnvironmentFile=/etc/bionic/tailscale-https-broker.env
+ExecStart=/usr/bin/node /opt/bionic/packages/tailscale-https-broker/dist/main.js
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+RuntimeDirectory=bionic-tailscale-broker
+RuntimeDirectoryMode=0750
+StateDirectory=bionic-tailscale-broker
+StateDirectoryMode=0700
+LogsDirectory=bionic-tailscale-broker
+LogsDirectoryMode=0700
+ReadWritePaths=/run/bionic-tailscale-broker /var/lib/bionic-tailscale-broker /var/log/bionic-tailscale-broker
+
+[Install]
+WantedBy=multi-user.target

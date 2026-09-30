@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks (hoisted so vi.mock factories can close over them) ----------------
 
-const ONBOARDING_STORAGE_KEY = "paperclip-onboarding-state";
+const ONBOARDING_STORAGE_KEY = "bionic-onboarding-state";
 
 const mockDialog = vi.hoisted(() => ({
   onboardingOpen: true,
@@ -200,16 +200,16 @@ describe("OnboardingWizard adapter selection", () => {
     });
   });
 
-  it("keeps onboarding on legacy adapters even when Paperclip Runner is enabled", async () => {
+  it("keeps onboarding on legacy adapters even when Bionic Runner is enabled", async () => {
     mockAdapterRegistry.list = [
-      { type: "paperclip_runner" },
+      { type: "bionic_runner" },
       { type: "codex_local" },
     ];
     window.localStorage.setItem(
       ONBOARDING_STORAGE_KEY,
       JSON.stringify({
         step: 0,
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         model: "gpt-runner-only",
         command: "runnerd",
         args: "--native",
@@ -233,14 +233,14 @@ describe("OnboardingWizard adapter selection", () => {
     });
   });
 
-  it("normalizes a saved Paperclip Runner draft before adapter discovery resolves", async () => {
+  it("normalizes a saved Bionic Runner draft before adapter discovery resolves", async () => {
     mockAdapterRegistry.loaded = false;
     mockAdapterRegistry.list = [{ type: "codex_local" }];
     window.localStorage.setItem(
       ONBOARDING_STORAGE_KEY,
       JSON.stringify({
         step: 0,
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         model: "gpt-runner-only",
         command: "runnerd",
         args: "--native",

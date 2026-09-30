@@ -6,31 +6,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completePaperclipCloudConnectorEnrollment,
   loadPaperclipCloudConnectorIdentity,
-  paperclipCloudConnectorEnrollmentStatus,
-  paperclipCloudConnectorIdentityPath,
+  bionicCloudConnectorEnrollmentStatus,
+  bionicCloudConnectorIdentityPath,
   startPaperclipCloudConnectorEnrollment,
-} from "./paperclip-cloud-connector-enrollment.js";
-import { paperclipCloudConnectorConfigFromEnv } from "./paperclip-cloud-connector.js";
-import { reconcilePaperclipCloudConnectorEnrollmentStatus } from "./paperclip-cloud-connector-status.js";
+} from "./bionic-cloud-connector-enrollment.js";
+import { bionicCloudConnectorConfigFromEnv } from "./bionic-cloud-connector.js";
+import { reconcilePaperclipCloudConnectorEnrollmentStatus } from "./bionic-cloud-connector-status.js";
 
-describe("Paperclip Cloud self-host enrollment", () => {
+describe("Bionic Cloud self-host enrollment", () => {
   let root = "";
   let previousHome: string | undefined;
   let previousInstance: string | undefined;
 
   beforeEach(() => {
-    root = mkdtempSync(path.join(os.tmpdir(), "paperclip-cloud-connector-"));
-    previousHome = process.env.PAPERCLIP_HOME;
-    previousInstance = process.env.PAPERCLIP_INSTANCE_ID;
-    process.env.PAPERCLIP_HOME = root;
-    process.env.PAPERCLIP_INSTANCE_ID = "connector-test";
+    root = mkdtempSync(path.join(os.tmpdir(), "bionic-cloud-connector-"));
+    previousHome = process.env.BIONIC_HOME;
+    previousInstance = process.env.BIONIC_INSTANCE_ID;
+    process.env.BIONIC_HOME = root;
+    process.env.BIONIC_INSTANCE_ID = "connector-test";
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.PAPERCLIP_HOME;
-    else process.env.PAPERCLIP_HOME = previousHome;
-    if (previousInstance === undefined) delete process.env.PAPERCLIP_INSTANCE_ID;
-    else process.env.PAPERCLIP_INSTANCE_ID = previousInstance;
+    if (previousHome === undefined) delete process.env.BIONIC_HOME;
+    else process.env.BIONIC_HOME = previousHome;
+    if (previousInstance === undefined) delete process.env.BIONIC_INSTANCE_ID;
+    else process.env.BIONIC_INSTANCE_ID = previousInstance;
     rmSync(root, { recursive: true, force: true });
   });
 
@@ -66,16 +66,16 @@ describe("Paperclip Cloud self-host enrollment", () => {
     const pending = await startPaperclipCloudConnectorEnrollment({
       origin: "https://private.example.test",
       env: {
-        PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.example.test",
-        PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "development",
+        BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.example.test",
+        BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "development",
       },
       request: request as typeof fetch,
     });
     expect(pending.status).toBe("pending");
     expect(pending.verificationUrl).toBe("https://my.example.test/connections/enroll?id=enroll-test");
-    expect(statSync(path.dirname(paperclipCloudConnectorIdentityPath())).mode & 0o777).toBe(0o700);
-    expect(statSync(paperclipCloudConnectorIdentityPath()).mode & 0o777).toBe(0o600);
-    expect(readFileSync(paperclipCloudConnectorIdentityPath(), "utf8")).not.toContain("approval-code");
+    expect(statSync(path.dirname(bionicCloudConnectorIdentityPath())).mode & 0o777).toBe(0o700);
+    expect(statSync(bionicCloudConnectorIdentityPath()).mode & 0o777).toBe(0o600);
+    expect(readFileSync(bionicCloudConnectorIdentityPath(), "utf8")).not.toContain("approval-code");
 
     await expect(completePaperclipCloudConnectorEnrollment({
       enrollmentId: "enroll-test",
@@ -92,7 +92,7 @@ describe("Paperclip Cloud self-host enrollment", () => {
       request: request as typeof fetch,
     });
     expect(active).toMatchObject({ configured: true, status: "active", origins: ["https://private.example.test"] });
-    const config = paperclipCloudConnectorConfigFromEnv({});
+    const config = bionicCloudConnectorConfigFromEnv({});
     expect(config).toMatchObject({ baseUrl: "https://my.example.test", environment: "development" });
     expect(requests).toHaveLength(2);
 
@@ -112,7 +112,7 @@ describe("Paperclip Cloud self-host enrollment", () => {
       origin: "http://private.example.test",
       request: vi.fn() as typeof fetch,
     })).rejects.toThrow(/requires HTTPS/);
-    expect(paperclipCloudConnectorEnrollmentStatus().status).toBe("not_configured");
+    expect(bionicCloudConnectorEnrollmentStatus().status).toBe("not_configured");
   });
 
   it.each([
@@ -125,8 +125,8 @@ describe("Paperclip Cloud self-host enrollment", () => {
     await expect(startPaperclipCloudConnectorEnrollment({
       origin: "https://private.example.test",
       env: {
-        PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.example.test",
-        PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "development",
+        BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.example.test",
+        BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "development",
       },
       request: vi.fn(async () => Response.json({
         enrollmentId: "enroll-test",
@@ -154,8 +154,8 @@ describe("Paperclip Cloud self-host enrollment", () => {
       companyId: "company-test",
       initiatedBy: "user:admin-test",
       env: {
-        PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.example.test",
-        PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "development",
+        BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.example.test",
+        BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "development",
       },
       request: request as typeof fetch,
     };
@@ -186,12 +186,12 @@ describe("Paperclip Cloud self-host enrollment", () => {
   });
 
   it("defaults an enrollment to the environment of the standard Cloud broker", () => {
-    expect(paperclipCloudConnectorEnrollmentStatus({})).toMatchObject({
-      brokerBaseUrl: "https://my.paperclip.app",
+    expect(bionicCloudConnectorEnrollmentStatus({})).toMatchObject({
+      brokerBaseUrl: "https://my.bionic.app",
       environment: "production",
     });
-    expect(paperclipCloudConnectorEnrollmentStatus({
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
+    expect(bionicCloudConnectorEnrollmentStatus({
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
     })).toMatchObject({ environment: "staging" });
   });
 
@@ -199,48 +199,48 @@ describe("Paperclip Cloud self-host enrollment", () => {
     const origin = "https://private.example.test";
     const productionRequest = vi.fn(async () => Response.json({
       enrollmentId: "enroll-production",
-      verificationUrl: "https://my.paperclip.app/connections/enroll?id=enroll-production",
+      verificationUrl: "https://my.bionic.app/connections/enroll?id=enroll-production",
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     }, { status: 201 }));
     await startPaperclipCloudConnectorEnrollment({
       origin,
-      env: { PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.paperclip.app" },
+      env: { BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.bionic.app" },
       request: productionRequest as typeof fetch,
     });
     const productionIdentity = loadPaperclipCloudConnectorIdentity()!;
 
-    expect(paperclipCloudConnectorEnrollmentStatus({
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
+    expect(bionicCloudConnectorEnrollmentStatus({
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
     })).toEqual({
       configured: false,
       status: "unverified",
-      brokerBaseUrl: "https://my-staging.paperclip.app",
+      brokerBaseUrl: "https://my-staging.bionic.app",
       instanceId: null,
       environment: "staging",
       origins: [],
     });
 
     const stagingRequest = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      expect(String(input)).toBe("https://my-staging.paperclip.app/v1/connector/enrollments");
+      expect(String(input)).toBe("https://my-staging.bionic.app/v1/connector/enrollments");
       expect(JSON.parse(String(init?.body))).toMatchObject({ environment: "staging", origin });
       return Response.json({
         enrollmentId: "enroll-staging",
-        verificationUrl: "https://my-staging.paperclip.app/connections/enroll?id=enroll-staging",
+        verificationUrl: "https://my-staging.bionic.app/connections/enroll?id=enroll-staging",
         expiresAt: new Date(Date.now() + 60_000).toISOString(),
       }, { status: 201 });
     });
     const stagingStatus = await startPaperclipCloudConnectorEnrollment({
       origin,
-      env: { PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app" },
+      env: { BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app" },
       request: stagingRequest as typeof fetch,
     });
     const stagingIdentity = loadPaperclipCloudConnectorIdentity()!;
 
     expect(stagingStatus).toMatchObject({
       status: "pending",
-      brokerBaseUrl: "https://my-staging.paperclip.app",
+      brokerBaseUrl: "https://my-staging.bionic.app",
       environment: "staging",
-      verificationUrl: "https://my-staging.paperclip.app/connections/enroll?id=enroll-staging",
+      verificationUrl: "https://my-staging.bionic.app/connections/enroll?id=enroll-staging",
     });
     expect(stagingIdentity.instanceId).not.toBe(productionIdentity.instanceId);
     expect(stagingIdentity.signPublicKey).not.toBe(productionIdentity.signPublicKey);
@@ -251,14 +251,14 @@ describe("Paperclip Cloud self-host enrollment", () => {
   it("fails closed when the configured target changes during callback or after activation", async () => {
     const origin = "https://private.example.test";
     const productionEnv = {
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.paperclip.app",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "production",
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.bionic.app",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "production",
     };
     const request = vi.fn(async (input: string | URL | Request) => {
       if (String(input).endsWith("/v1/connector/enrollments")) {
         return Response.json({
           enrollmentId: "enroll-production",
-          verificationUrl: "https://my.paperclip.app/connections/enroll?id=enroll-production",
+          verificationUrl: "https://my.bionic.app/connections/enroll?id=enroll-production",
           expiresAt: new Date(Date.now() + 60_000).toISOString(),
         }, { status: 201 });
       }
@@ -277,8 +277,8 @@ describe("Paperclip Cloud self-host enrollment", () => {
       approvalCode: "approval-code",
       state: pending.pending!.returnState,
       env: {
-        PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
-        PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+        BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
+        BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
       },
       request: changedTargetRequest as typeof fetch,
     })).rejects.toThrow(/Invalid or expired/);
@@ -294,8 +294,8 @@ describe("Paperclip Cloud self-host enrollment", () => {
     const activeIdentity = loadPaperclipCloudConnectorIdentity()!;
     const activeSwitchRequest = vi.fn();
     const stagingEnv = {
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
     };
 
     await expect(startPaperclipCloudConnectorEnrollment({
@@ -305,20 +305,20 @@ describe("Paperclip Cloud self-host enrollment", () => {
     })).rejects.toThrow(/another target/);
     expect(activeSwitchRequest).not.toHaveBeenCalled();
     expect(loadPaperclipCloudConnectorIdentity()).toEqual(activeIdentity);
-    expect(paperclipCloudConnectorConfigFromEnv(stagingEnv)).toBeNull();
+    expect(bionicCloudConnectorConfigFromEnv(stagingEnv)).toBeNull();
   });
 
   it("treats managed environment identity as an atomic override of local identity", async () => {
     const origin = "https://private.example.test";
     const productionEnv = {
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.paperclip.app",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "production",
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.bionic.app",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "production",
     };
     const request = vi.fn(async (input: string | URL | Request) => {
       if (String(input).endsWith("/v1/connector/enrollments")) {
         return Response.json({
           enrollmentId: "enroll-production",
-          verificationUrl: "https://my.paperclip.app/connections/enroll?id=enroll-production",
+          verificationUrl: "https://my.bionic.app/connections/enroll?id=enroll-production",
           expiresAt: new Date(Date.now() + 60_000).toISOString(),
         }, { status: 201 });
       }
@@ -340,23 +340,23 @@ describe("Paperclip Cloud self-host enrollment", () => {
     const localIdentity = loadPaperclipCloudConnectorIdentity()!;
 
     const managedEnv = {
-      PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID: "managed-staging-instance",
-      PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "managed-signing-key",
-      PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "managed-sealing-key",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
-      PAPERCLIP_PUBLIC_URL: "https://managed-stack.example.test",
+      BIONIC_CLOUD_CONNECTOR_INSTANCE_ID: "managed-staging-instance",
+      BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "managed-signing-key",
+      BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "managed-sealing-key",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
+      BIONIC_PUBLIC_URL: "https://managed-stack.example.test",
     };
-    expect(paperclipCloudConnectorEnrollmentStatus(managedEnv)).toEqual({
+    expect(bionicCloudConnectorEnrollmentStatus(managedEnv)).toEqual({
       configured: true,
       status: "active",
-      brokerBaseUrl: "https://my-staging.paperclip.app",
+      brokerBaseUrl: "https://my-staging.bionic.app",
       instanceId: "managed-staging-instance",
       environment: "staging",
       origins: ["https://managed-stack.example.test"],
     });
-    expect(paperclipCloudConnectorConfigFromEnv(managedEnv)).toMatchObject({
-      baseUrl: "https://my-staging.paperclip.app",
+    expect(bionicCloudConnectorConfigFromEnv(managedEnv)).toMatchObject({
+      baseUrl: "https://my-staging.bionic.app",
       instanceId: "managed-staging-instance",
       environment: "staging",
       signPrivateKey: "managed-signing-key",
@@ -365,24 +365,24 @@ describe("Paperclip Cloud self-host enrollment", () => {
     expect(loadPaperclipCloudConnectorIdentity()).toEqual(localIdentity);
 
     for (const omitted of [
-      "PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID",
-      "PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY",
-      "PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY",
-      "PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT",
+      "BIONIC_CLOUD_CONNECTOR_INSTANCE_ID",
+      "BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY",
+      "BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY",
+      "BIONIC_CLOUD_CONNECTOR_ENVIRONMENT",
     ] as const) {
       const partialManagedEnv: NodeJS.ProcessEnv = { ...managedEnv };
       delete partialManagedEnv[omitted];
-      expect(paperclipCloudConnectorEnrollmentStatus(partialManagedEnv)).toMatchObject({
+      expect(bionicCloudConnectorEnrollmentStatus(partialManagedEnv)).toMatchObject({
         configured: false,
         status: "unverified",
         instanceId: null,
         environment: "staging",
       });
-      expect(() => paperclipCloudConnectorConfigFromEnv(partialManagedEnv)).toThrow(/incomplete/);
+      expect(() => bionicCloudConnectorConfigFromEnv(partialManagedEnv)).toThrow(/incomplete/);
       expect(loadPaperclipCloudConnectorIdentity()).toEqual(localIdentity);
     }
 
-    expect(paperclipCloudConnectorConfigFromEnv(productionEnv)).toMatchObject({
+    expect(bionicCloudConnectorConfigFromEnv(productionEnv)).toMatchObject({
       baseUrl: localIdentity.brokerBaseUrl,
       instanceId: localIdentity.instanceId,
       environment: localIdentity.environment,
@@ -393,40 +393,40 @@ describe("Paperclip Cloud self-host enrollment", () => {
 
   it("rejects known Cloud broker and environment mismatches", () => {
     const managedIdentity = {
-      PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID: "managed-instance",
-      PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "managed-signing-key",
-      PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "managed-sealing-key",
+      BIONIC_CLOUD_CONNECTOR_INSTANCE_ID: "managed-instance",
+      BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "managed-signing-key",
+      BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "managed-sealing-key",
     };
     const mismatches = [
       {
         ...managedIdentity,
-        PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my.paperclip.app",
-        PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+        BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my.bionic.app",
+        BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
       },
       {
         ...managedIdentity,
-        PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
-        PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "production",
+        BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
+        BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "production",
       },
     ];
     for (const env of mismatches) {
-      expect(() => paperclipCloudConnectorEnrollmentStatus(env)).toThrow(/do not match/);
-      expect(() => paperclipCloudConnectorConfigFromEnv(env)).toThrow(/do not match/);
+      expect(() => bionicCloudConnectorEnrollmentStatus(env)).toThrow(/do not match/);
+      expect(() => bionicCloudConnectorConfigFromEnv(env)).toThrow(/do not match/);
     }
-    expect(() => paperclipCloudConnectorEnrollmentStatus({
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+    expect(() => bionicCloudConnectorEnrollmentStatus({
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
     })).toThrow(/do not match/);
   });
 
   it("does not create or complete self-host enrollment with managed identity configuration", async () => {
     const origin = "https://private.example.test";
     const localEnv = {
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
     };
     const enrollmentRequest = vi.fn(async () => Response.json({
       enrollmentId: "enroll-local",
-      verificationUrl: "https://my-staging.paperclip.app/connections/enroll?id=enroll-local",
+      verificationUrl: "https://my-staging.bionic.app/connections/enroll?id=enroll-local",
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     }, { status: 201 }));
     await startPaperclipCloudConnectorEnrollment({
@@ -437,9 +437,9 @@ describe("Paperclip Cloud self-host enrollment", () => {
     const pendingIdentity = loadPaperclipCloudConnectorIdentity()!;
     const managedEnv = {
       ...localEnv,
-      PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID: "managed-staging-instance",
-      PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "managed-signing-key",
-      PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "managed-sealing-key",
+      BIONIC_CLOUD_CONNECTOR_INSTANCE_ID: "managed-staging-instance",
+      BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "managed-signing-key",
+      BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "managed-sealing-key",
     };
     const managedRequest = vi.fn();
 
@@ -459,17 +459,17 @@ describe("Paperclip Cloud self-host enrollment", () => {
     expect(loadPaperclipCloudConnectorIdentity()).toEqual(pendingIdentity);
   });
 
-  it("does not treat legacy Paperclip ID keys as a Cloud enrollment", () => {
-    expect(paperclipCloudConnectorEnrollmentStatus({
-      PAPERCLIP_ID_CONNECTOR_INSTANCE_ID: "legacy-instance",
-      PAPERCLIP_ID_CONNECTOR_SIGN_PRIVATE_KEY: "legacy-signing-key",
-      PAPERCLIP_ID_CONNECTOR_SEAL_PRIVATE_KEY: "legacy-sealing-key",
-      PAPERCLIP_ID_CONNECTOR_ENVIRONMENT: "production",
-      PAPERCLIP_ID_CONNECTOR_BASE_URL: "https://id.paperclip.app",
+  it("does not treat legacy Bionic ID keys as a Cloud enrollment", () => {
+    expect(bionicCloudConnectorEnrollmentStatus({
+      BIONIC_ID_CONNECTOR_INSTANCE_ID: "legacy-instance",
+      BIONIC_ID_CONNECTOR_SIGN_PRIVATE_KEY: "legacy-signing-key",
+      BIONIC_ID_CONNECTOR_SEAL_PRIVATE_KEY: "legacy-sealing-key",
+      BIONIC_ID_CONNECTOR_ENVIRONMENT: "production",
+      BIONIC_ID_CONNECTOR_BASE_URL: "https://id.bionic.app",
     })).toMatchObject({
       configured: false,
       status: "not_configured",
-      brokerBaseUrl: "https://my.paperclip.app",
+      brokerBaseUrl: "https://my.bionic.app",
       instanceId: null,
     });
   });

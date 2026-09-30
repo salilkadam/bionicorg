@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS "user_secret_definitions" (
 	"description" text,
 	"status" text DEFAULT 'active' NOT NULL,
 	"provider" text DEFAULT 'local_encrypted' NOT NULL,
-	"managed_mode" text DEFAULT 'paperclip_managed' NOT NULL,
+	"managed_mode" text DEFAULT 'bionic_managed' NOT NULL,
 	"provider_config_id" uuid,
 	"provider_metadata" jsonb,
 	"usage_guidance" text,

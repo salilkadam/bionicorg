@@ -29,12 +29,12 @@ describe("extended ACP harness qualification", () => {
   });
   it("replaces ambient admission with the selected exact pairs and strips raw provider credentials from server", () => {
     const cell = selected[0]!;
-    const ambient = { PAPERCLIP_RUNNER_ACPX_QUALIFICATION: "ambient", CURSOR_AUTH_TOKEN: "cursor", CURSOR_API_KEY: "cursor-key", COPILOT_GITHUB_TOKEN: "copilot", GH_TOKEN: "github", GITHUB_TOKEN: "github" };
+    const ambient = { BIONIC_RUNNER_ACPX_QUALIFICATION: "ambient", CURSOR_AUTH_TOKEN: "cursor", CURSOR_API_KEY: "cursor-key", COPILOT_GITHUB_TOKEN: "copilot", GH_TOKEN: "github", GITHUB_TOKEN: "github" };
     const env = buildRunnerE2EProcessEnvironment(ambient, [cell]);
-    expect(JSON.parse(env.PAPERCLIP_RUNNER_ACPX_QUALIFICATION!)).toEqual([{ agent: "cursor", model: cell.profile.model }]);
+    expect(JSON.parse(env.BIONIC_RUNNER_ACPX_QUALIFICATION!)).toEqual([{ agent: "cursor", model: cell.profile.model }]);
     const server = buildPaperclipServerEnvironment(env);
-    for (const name of Object.keys(ambient).filter(name => name !== "PAPERCLIP_RUNNER_ACPX_QUALIFICATION")) expect(server[name]).toBeUndefined();
-    expect(buildRunnerE2EProcessEnvironment(ambient, []).PAPERCLIP_RUNNER_ACPX_QUALIFICATION).toBeUndefined();
+    for (const name of Object.keys(ambient).filter(name => name !== "BIONIC_RUNNER_ACPX_QUALIFICATION")) expect(server[name]).toBeUndefined();
+    expect(buildRunnerE2EProcessEnvironment(ambient, []).BIONIC_RUNNER_ACPX_QUALIFICATION).toBeUndefined();
     expect(() => buildRunnerE2EProcessEnvironment({}, [{ ...cell, suite: { ...cell.suite, manualOnly: false } }])).toThrow("explicit");
   });
   it("grades the actual file independently of the model's validation claim", () => {

@@ -5,9 +5,9 @@ export function slackBotNameForAgent(agentName: string): string {
     .replace(/[^a-z0-9._-]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 24);
-  return safeName || "paperclip-agent";
+  return safeName || "bionic-agent";
 }
 
 export function defaultSlackAppName(agentName: string): string {
-  return `${slackBotNameForAgent(agentName).slice(0, 25)}-paperclip`;
+  return `${slackBotNameForAgent(agentName).slice(0, 25)}-bionic`;
 }

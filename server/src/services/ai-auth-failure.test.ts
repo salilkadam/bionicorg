@@ -11,9 +11,9 @@ describe("AI authentication failure recovery", () => {
   it.each([
     ["codex_local", {}, "openai"],
     ["claude_local", {}, "anthropic"],
-    ["paperclip_runner", { provider: "codex" }, "openai"],
-    ["paperclip_runner", { provider: "acpx", acpxAgent: "claude" }, "anthropic"],
-    ["paperclip_runner", { provider: "acpx", acpxAgent: "grok" }, "xai"],
+    ["bionic_runner", { provider: "codex" }, "openai"],
+    ["bionic_runner", { provider: "acpx", acpxAgent: "claude" }, "anthropic"],
+    ["bionic_runner", { provider: "acpx", acpxAgent: "grok" }, "xai"],
     ["opencode_local", { model: "openrouter/model" }, "openrouter"],
   ] as const)("maps %s %j to %s", (adapter, config, provider) => {
     expect(aiBindingForAuthRecovery(adapter, config)).toMatchObject({ provider, mode: "responsible_user" });
@@ -21,6 +21,6 @@ describe("AI authentication failure recovery", () => {
   it("does not guess a provider for unsupported harnesses or routes", () => {
     expect(aiBindingForAuthRecovery("gemini_local", {})).toBeUndefined();
     expect(aiBindingForAuthRecovery("opencode_local", { model: "anthropic/claude" })).toBeUndefined();
-    expect(aiBindingForAuthRecovery("paperclip_runner", { provider: "acpx", acpxAgent: "custom" })).toBeUndefined();
+    expect(aiBindingForAuthRecovery("bionic_runner", { provider: "acpx", acpxAgent: "custom" })).toBeUndefined();
   });
 });

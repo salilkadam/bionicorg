@@ -3,7 +3,7 @@ import { addons } from "storybook/preview-api";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { expect, userEvent, within, waitFor } from "storybook/test";
-import { CONNECTABLE_APP_DEFINITIONS, type ConnectionIntentInteraction, type ToolConnection } from "@paperclipai/shared";
+import { CONNECTABLE_APP_DEFINITIONS, type ConnectionIntentInteraction, type ToolConnection } from "@bionicai/shared";
 import { ConnectionIntentInteractionBody } from "@/features/connections/ConnectionIntentInteractionBody";
 import { ConnectionSetupFlow, ConnectionSetupCompletionScreen, AccessStep, OAuthConnectStateScreen, type OAuthConnectPhase } from "@/features/connections/ConnectionSetupFlow";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -26,7 +26,7 @@ const connection = {
   uid: "notion/storybook", transport: "mcp_remote", authKind: "oauth", status: "active",
   enabled: true, healthStatus: "ok", credentialPolicy: "per_user",
   config: { sourceTemplateKey: "notion" }, transportConfig: { sourceTemplateKey: "notion" },
-  connectionKind: "managed", connectionPurpose: "tool", ownership: "customer", credentialSource: "paperclip_vault",
+  connectionKind: "managed", connectionPurpose: "tool", ownership: "customer", credentialSource: "bionic_vault",
   credentialSecretRefs: [], healthCheckedAt: null, lastError: null,
   createdByAgentId: null, createdByUserId: "user-board", createdAt: new Date("2026-09-07"), updatedAt: new Date("2026-09-07"),
 } satisfies ToolConnection;
@@ -68,7 +68,7 @@ const meta: Meta = {
       if (scenario.ai && url.pathname.endsWith("/ai-connections") && init?.method === "POST") return scenario.completeError
         ? Response.json({ error: "This key could not be verified. Check it and try again." }, { status: 422 })
         : Response.json({ connectionId: aiAccount.id, grantId: aiAccount.grantId });
-      if (url.pathname.endsWith("/agents")) return Response.json([{ id: pending.payload.requestingAgentId, companyId: pending.companyId, name: pending.payload.requestingAgentName, status: "active", adapterType: "paperclip_runner", role: "researcher" }]);
+      if (url.pathname.endsWith("/agents")) return Response.json([{ id: pending.payload.requestingAgentId, companyId: pending.companyId, name: pending.payload.requestingAgentName, status: "active", adapterType: "bionic_runner", role: "researcher" }]);
       if (url.pathname.startsWith("/api/connection-intents/")) {
         if (url.pathname.endsWith("setup-options")) {
           if (scenario.loading) return new Promise<Response>(() => {});

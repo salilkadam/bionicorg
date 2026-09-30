@@ -11,8 +11,8 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: /^@paperclipai\/paperclip-runner$/,
-        replacement: resolve(root, "packages/paperclip-runner/src/index.ts"),
+        find: /^@bionicai\/bionic-runner$/,
+        replacement: resolve(root, "packages/bionic-runner/src/index.ts"),
       },
     ],
   },

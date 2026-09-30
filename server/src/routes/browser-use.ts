@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
-import { issues, type Db } from "@paperclipai/db";
+import { issues, type Db } from "@bionicai/db";
 import {
   browserUseControlSchema,
   browserUseSettingsSchema,
   browserUseViewportSchema,
   browserUseViewerSchema,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   assertBoard,
   assertCompanyAccess,

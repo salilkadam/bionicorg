@@ -1,3 +1,3 @@
-module github.com/paperclipai/paperclip/tools/agent-shim
+module github.com/bionicai/bionic/tools/agent-shim
 
 go 1.22

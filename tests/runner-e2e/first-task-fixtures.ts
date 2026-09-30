@@ -83,9 +83,9 @@ export function firstTaskNativeRuntimePatch(
   if (agent.adapterConfig?.model == null) delete config.model;
   else config.model = agent.adapterConfig.model;
   return {
-    adapterType: "paperclip_runner",
+    adapterType: "bionic_runner",
     adapterConfig: normalizePaperclipOperationalSkillPreference(
-      "paperclip_runner",
+      "bionic_runner",
       config,
     ),
   };

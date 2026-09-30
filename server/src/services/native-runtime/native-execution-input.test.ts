@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { ExecutionContinuationEnvelope, AskUserQuestionsInteraction } from "@paperclipai/shared";
+import type { ExecutionContinuationEnvelope, AskUserQuestionsInteraction } from "@bionicai/shared";
 
 import { formatDurableQuestionResponseSummary } from "../question-response-delivery.js";
 import { nativeCompletionSource, buildNativeCompletionContract } from "./completion-contracts.js";
-import { renderPaperclipWakePrompt } from "@paperclipai/adapter-utils/server-utils";
+import { renderPaperclipWakePrompt } from "@bionicai/adapter-utils/server-utils";
 import { buildNativeExecutionInput } from "./native-execution-input.js";
 import { nativeRuntimeContextFixture } from "./runtime-context.test-fixture.js";
 
@@ -21,7 +21,7 @@ describe("LCA-05 explicit native work mode", () => {
         provider: "codex",
         codexReasoningEffort: "high",
         planningContext: workMode === "planning" ? { documentId: null, baseRevisionId: null, baseRevisionNumber: 0, markdown: "", sha256: "a".repeat(64), reviewContext: {} } : null,
-        completionContract: { id: "70000000-0000-4000-8000-000000000007", sha256: `sha256:${"a".repeat(64)}`, schemaVersion: "paperclip.run-result.v1", contract: { revision: "1", objective: "Deliver the requested work", criteria: [{ id: "output", requirement: "Deliver the requested work" }] } },
+        completionContract: { id: "70000000-0000-4000-8000-000000000007", sha256: `sha256:${"a".repeat(64)}`, schemaVersion: "bionic.run-result.v1", contract: { revision: "1", objective: "Deliver the requested work", criteria: [{ id: "output", requirement: "Deliver the requested work" }] } },
         runtimeContext: nativeRuntimeContextFixture(),
       });
       expect(input.task.workMode).toBe(workMode);
@@ -53,7 +53,7 @@ describe("native execution input external-chat framing", () => {
           status: "in_review",
         },
         externalChatQuestionResponse: {
-          schema: "paperclip.external_chat_question_response.v1",
+          schema: "bionic.external_chat_question_response.v1",
           interactionId,
           sourceRunId,
           responseDeliveryId: "10000000-0000-4000-8000-000000000011",
@@ -101,7 +101,7 @@ describe("native execution input external-chat framing", () => {
         completionContract: {
           id: "70000000-0000-4000-8000-000000000007",
           sha256: `sha256:${"a".repeat(64)}`,
-          schemaVersion: "paperclip.run-result.v1",
+          schemaVersion: "bionic.run-result.v1",
           contract: {
             revision: "1",
             objective: "Answer the user's selected choice",
@@ -296,7 +296,7 @@ describe("native execution input external-chat framing", () => {
           description: "Started from Discord.",
           workMode: "standard",
         },
-        taskPrompt: `Paperclip task context:\n- Title: ${JSON.stringify(staleRootTitle)}`,
+        taskPrompt: `Bionic task context:\n- Title: ${JSON.stringify(staleRootTitle)}`,
         resumedSession,
         wakePayload: {
           reason: "External chat message received",
@@ -342,7 +342,7 @@ describe("native execution input external-chat framing", () => {
         completionContract: {
           id: "70000000-0000-4000-8000-000000000007",
           sha256: `sha256:${"a".repeat(64)}`,
-          schemaVersion: "paperclip.run-result.v1",
+          schemaVersion: "bionic.run-result.v1",
           contract: {
             revision: "1",
             objective: "Respond to all pending comments in order",
@@ -415,7 +415,7 @@ describe("native execution input external-chat framing", () => {
         completionContract: {
           id: "70000000-0000-4000-8000-000000000007",
           sha256: `sha256:${"a".repeat(64)}`,
-          schemaVersion: "paperclip.run-result.v1",
+          schemaVersion: "bionic.run-result.v1",
           contract: {
             revision: "1",
             objective: "Prepare a file",
@@ -437,7 +437,7 @@ describe("native execution input external-chat framing", () => {
         "Preparation does not confirm provider delivery",
       );
       expect(input.task.prompt).toContain(
-        "Paperclip owns recovery navigation for unavailable GitHub attachments",
+        "Bionic owns recovery navigation for unavailable GitHub attachments",
       );
       expect(input.task.prompt).toContain(
         "after an accepted response, only when the current source remains authorized and a safe configured Board URL is available",
@@ -449,7 +449,7 @@ describe("native execution input external-chat framing", () => {
         "Do not invent a URL or promise that a link will appear",
       );
       expect(input.task.prompt).toContain(
-        "Briefly explain the unavailable input and ask the user to attach it directly to this Paperclip task or paste the needed text",
+        "Briefly explain the unavailable input and ask the user to attach it directly to this Bionic task or paste the needed text",
       );
       expect(input.task.prompt).toContain(
         "Never infer the file's contents or substitute an older file",
@@ -470,7 +470,7 @@ describe("native execution input external-chat framing", () => {
           wakePayload: { ...wake, ...patch },
         });
         expect(unrelated.task.prompt).not.toContain(
-          "Paperclip owns recovery navigation for unavailable GitHub attachments",
+          "Bionic owns recovery navigation for unavailable GitHub attachments",
         );
       }
     },
@@ -495,7 +495,7 @@ describe("native execution input external-chat framing", () => {
       acpxAgent: "claude",
       model: provider === "acpx" ? "claude-sonnet-5" : provider === "opencode" ? "openai/gpt-5.5" : "gpt-5.6-sol",
       completionContract: {
-        id: "70000000-0000-4000-8000-000000000007", sha256: `sha256:${"a".repeat(64)}`, schemaVersion: "paperclip.run-result.v1",
+        id: "70000000-0000-4000-8000-000000000007", sha256: `sha256:${"a".repeat(64)}`, schemaVersion: "bionic.run-result.v1",
         contract: { revision: "1", objective: "Write a welcome after the user's answer", criteria: [{ id: "objective", requirement: "Use the selected tone" }] },
       },
       runtimeContext: nativeRuntimeContextFixture(),
@@ -505,7 +505,7 @@ describe("native execution input external-chat framing", () => {
       : provider === "opencode" ? { kind: "opencode", permissionMode: "allow" }
       : { kind: "codex", approvalPolicy: "never" });
     expect(input.task.prompt).not.toContain("## Questions that need a user response");
-    expect(input.task.prompt).toContain("Use Paperclip's request_human_input for durable task questions.");
+    expect(input.task.prompt).toContain("Use Bionic's request_human_input for durable task questions.");
     expect(input.task.prompt).not.toContain("payload.questionSet");
   });
 
@@ -560,7 +560,7 @@ describe("native completion references", () => {
     normalizedSessionId: null,
     runtimeContext: nativeRuntimeContextFixture(),
     completionContract: {
-      id: "contract", sha256: "a".repeat(64), schemaVersion: "paperclip.completion-contract.v1",
+      id: "contract", sha256: "a".repeat(64), schemaVersion: "bionic.completion-contract.v1",
       contract: { revision: "1", objective: "Brief", criteria: [{ id: "objective", requirement: "Repeat. Repeat." }] },
       sources: [{ id: "objective", source }],
     },

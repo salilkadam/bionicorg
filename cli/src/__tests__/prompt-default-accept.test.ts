@@ -66,14 +66,14 @@ function validatorFor(message: string): NonNullable<CapturedTextOptions["validat
 
 const dbFixture: DatabaseConfig = {
   mode: "postgres",
-  connectionString: "postgres://user:pass@localhost:5432/paperclip",
-  embeddedPostgresDataDir: "/var/lib/paperclip/db",
+  connectionString: "postgres://user:pass@localhost:5432/bionic",
+  embeddedPostgresDataDir: "/var/lib/bionic/db",
   embeddedPostgresPort: 54329,
   backup: {
     enabled: false,
     intervalMinutes: 30,
     retentionDays: 7,
-    dir: "/var/lib/paperclip/backups",
+    dir: "/var/lib/bionic/backups",
   },
 };
 
@@ -142,7 +142,7 @@ describe("promptDatabase accepts defaults", () => {
     await expect(promptDatabase()).rejects.toThrow(/Connection string is required/);
 
     const connection = validatorFor("PostgreSQL connection string");
-    expect(connection("postgres://user:pass@localhost:5432/paperclip")).toBeUndefined();
+    expect(connection("postgres://user:pass@localhost:5432/bionic")).toBeUndefined();
     expect(connection("mysql://nope")).toBeTruthy();
   });
 });
@@ -189,10 +189,10 @@ describe("promptServer accepts defaults", () => {
 
     const { auth } = await promptServer({
       currentServer: { host: "0.0.0.0", port: 8443 },
-      currentAuth: { publicBaseUrl: "https://paperclip.example.com" },
+      currentAuth: { publicBaseUrl: "https://bionic.example.com" },
     });
 
-    expect(auth.publicBaseUrl).toBe("https://paperclip.example.com");
+    expect(auth.publicBaseUrl).toBe("https://bionic.example.com");
   });
 
   it("still requires a public base URL when no saved default exists", async () => {
@@ -201,8 +201,8 @@ describe("promptServer accepts defaults", () => {
     await expect(promptServer()).rejects.toThrow(/Public base URL is required/);
 
     const url = validatorFor("Public base URL");
-    expect(url("https://paperclip.example.com")).toBeUndefined();
-    expect(url("ftp://paperclip.example.com")).toBeTruthy();
+    expect(url("https://bionic.example.com")).toBeUndefined();
+    expect(url("ftp://bionic.example.com")).toBeTruthy();
     expect(url("not a url")).toBeTruthy();
   });
 });
@@ -226,7 +226,7 @@ describe("promptStorage accepts defaults", () => {
 
     const storage = await promptStorage();
 
-    expect(storage.s3.bucket).toBe("paperclip");
+    expect(storage.s3.bucket).toBe("bionic");
     expect(storage.s3.region).toBe("us-east-1");
 
     expect(validatorFor("S3 bucket")("   ")).toBeTruthy();

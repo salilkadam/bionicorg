@@ -110,11 +110,11 @@ describe("SidebarAccountMenu", () => {
     const commit = "8751e2de4626ff5e7355fe28b30509991cfff920";
 
     it.each([
-      ["paperclip.staging.paperclip.app", true],
-      ["another.staging.paperclip.app", true],
-      ["paperclip.paperclip.app", false],
+      ["bionic.staging.bionic.app", true],
+      ["another.staging.bionic.app", true],
+      ["bionic.bionic.app", false],
       ["localhost", false],
-      ["paperclip.staging.paperclip.app.example.com", false],
+      ["bionic.staging.bionic.app.example.com", false],
     ])("shows the running SHA only on staging: %s", async (hostname, visible) => {
       vi.stubGlobal("location", new URL(`https://${hostname}`));
       mockHealthApi.get.mockResolvedValue({ status: "ok", commit });
@@ -136,7 +136,7 @@ describe("SidebarAccountMenu", () => {
       if (visible) {
         expect(label?.textContent).toBe("SHA 8751e2d");
         expect(label?.previousElementSibling?.textContent).toBe("jane@example.com");
-        expect(label?.getAttribute("href")).toBe(`https://github.com/paperclipai/paperclip/commit/${commit}`);
+        expect(label?.getAttribute("href")).toBe(`https://github.com/bionicai/bionic/commit/${commit}`);
         expect(label?.getAttribute("aria-label")).toBe(`View commit ${commit} on GitHub`);
         expect(mockHealthApi.get).toHaveBeenCalledOnce();
       } else {
@@ -147,7 +147,7 @@ describe("SidebarAccountMenu", () => {
     });
 
     it("refreshes the running SHA each time the staging menu opens", async () => {
-      vi.stubGlobal("location", new URL("https://paperclip.staging.paperclip.app"));
+      vi.stubGlobal("location", new URL("https://bionic.staging.bionic.app"));
       const nextCommit = "3447609d2247e75e55d91493dda91a608364f672";
       mockHealthApi.get
         .mockResolvedValueOnce({ status: "ok", commit })
@@ -179,7 +179,7 @@ describe("SidebarAccountMenu", () => {
     });
 
     it("does not change the board health state when a menu refresh fails", async () => {
-      vi.stubGlobal("location", new URL("https://paperclip.staging.paperclip.app"));
+      vi.stubGlobal("location", new URL("https://bionic.staging.bionic.app"));
       mockHealthApi.get.mockRejectedValueOnce(new Error("Deploy in progress"));
       const queryClient = new QueryClient();
       const boardHealth = { status: "ok", commit };
@@ -205,7 +205,7 @@ describe("SidebarAccountMenu", () => {
     });
 
     it.each([null, undefined])("omits unavailable commit metadata (%s)", async (commit) => {
-      vi.stubGlobal("location", new URL("https://paperclip.staging.paperclip.app"));
+      vi.stubGlobal("location", new URL("https://bionic.staging.bionic.app"));
       mockHealthApi.get.mockResolvedValue({ status: "ok", commit });
       const queryClient = new QueryClient();
       const root = createRoot(container);
@@ -253,7 +253,7 @@ describe("SidebarAccountMenu", () => {
     const feedbackButton = container.querySelector<HTMLAnchorElement>(
       'a[aria-label="Share feedback"]',
     );
-    expect(feedbackButton?.getAttribute("href")).toBe("https://paperclip.ing/feedback");
+    expect(feedbackButton?.getAttribute("href")).toBe("https://bionic.ing/feedback");
     expect(feedbackButton?.getAttribute("target")).toBe("_blank");
     expect(feedbackButton?.classList).toContain("text-muted-foreground/50");
     expect(feedbackButton?.classList).not.toContain("text-border");
@@ -292,7 +292,7 @@ describe("SidebarAccountMenu", () => {
     const feedbackButton = container.querySelector<HTMLAnchorElement>(
       'a[aria-label="Share feedback"]',
     );
-    expect(feedbackButton?.getAttribute("href")).toBe("https://paperclip.ing/feedback");
+    expect(feedbackButton?.getAttribute("href")).toBe("https://bionic.ing/feedback");
     expect(feedbackButton?.getAttribute("target")).toBe("_blank");
     expect(feedbackButton?.classList).toContain("text-muted-foreground/50");
     expect(feedbackButton?.classList).not.toContain("text-border");
@@ -308,7 +308,7 @@ describe("SidebarAccountMenu", () => {
 
     const popover = document.body.querySelector('[data-slot="popover-content"]');
     expect(popover?.textContent).not.toContain("Feedback");
-    expect(popover?.querySelector('a[href="https://paperclip.ing/feedback"]')).toBeNull();
+    expect(popover?.querySelector('a[href="https://bionic.ing/feedback"]')).toBeNull();
 
     await act(async () => root.unmount());
   });
@@ -354,7 +354,7 @@ describe("SidebarAccountMenu", () => {
 
     const popover = document.body.querySelector('[data-slot="popover-content"]');
     expect(popover?.textContent).not.toContain("Feedback");
-    expect(popover?.querySelector('a[href="https://paperclip.ing/feedback"]')).toBeNull();
+    expect(popover?.querySelector('a[href="https://bionic.ing/feedback"]')).toBeNull();
 
     // Documentation still appears before the theme toggle.
     const menuText = popover?.textContent ?? "";
@@ -364,7 +364,7 @@ describe("SidebarAccountMenu", () => {
 
     // The popover header stays down to name + email: no "Account" badge, no version line.
     expect(popover?.textContent).not.toContain("Account");
-    expect(popover?.textContent).not.toContain("Paperclip v");
+    expect(popover?.textContent).not.toContain("Bionic v");
     expect(document.body.textContent).toContain("jane@example.com");
     expect(document.body.querySelector('[data-slot="popover-content"]')?.className)
       .toContain("w-(--profile-popover-width)");
@@ -407,7 +407,7 @@ describe("SidebarAccountMenu", () => {
       deploymentMode: "authenticated",
       cloud: {
         managed: true,
-        managedBy: "paperclip-cloud",
+        managedBy: "bionic-cloud",
         stackSlug: "acme-labs",
         cloudBaseUrl: "https://cloud.example.test",
       },

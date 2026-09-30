@@ -5,14 +5,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   listOpenCodeSkills,
   syncOpenCodeSkills,
-} from "@paperclipai/adapter-opencode-local/server";
+} from "@bionicai/adapter-opencode-local/server";
 
 async function makeTempDir(prefix: string): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), prefix));
 }
 
 describe("opencode local skill sync", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
+  const bionicKey = "bionicai/bionic/bionic";
   const cleanupDirs = new Set<string>();
 
   afterEach(async () => {
@@ -20,8 +20,8 @@ describe("opencode local skill sync", () => {
     cleanupDirs.clear();
   });
 
-  it("defaults and installs the operational Paperclip skill in the shared Claude/OpenCode skills home", async () => {
-    const home = await makeTempDir("paperclip-opencode-skill-sync-");
+  it("defaults and installs the operational Bionic skill in the shared Claude/OpenCode skills home", async () => {
+    const home = await makeTempDir("bionic-opencode-skill-sync-");
     cleanupDirs.add(home);
 
     const ctx = {
@@ -38,11 +38,11 @@ describe("opencode local skill sync", () => {
     const before = await listOpenCodeSkills(ctx);
     expect(before.mode).toBe("persistent");
     expect(before.warnings).toContain("OpenCode currently uses the shared Claude skills home (~/.claude/skills).");
-    expect(before.desiredSkills).toContain(paperclipKey);
-    expect(before.entries.find((entry) => entry.key === paperclipKey)?.state).toBe("missing");
+    expect(before.desiredSkills).toContain(bionicKey);
+    expect(before.entries.find((entry) => entry.key === bionicKey)?.state).toBe("missing");
 
-    const after = await syncOpenCodeSkills(ctx, [paperclipKey]);
-    expect(after.entries.find((entry) => entry.key === paperclipKey)?.state).toBe("installed");
-    expect((await fs.lstat(path.join(home, ".claude", "skills", "paperclip"))).isSymbolicLink()).toBe(true);
+    const after = await syncOpenCodeSkills(ctx, [bionicKey]);
+    expect(after.entries.find((entry) => entry.key === bionicKey)?.state).toBe("installed");
+    expect((await fs.lstat(path.join(home, ".claude", "skills", "bionic"))).isSymbolicLink()).toBe(true);
   });
 });

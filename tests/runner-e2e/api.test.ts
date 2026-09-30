@@ -8,7 +8,7 @@ const response = (status: number, data: unknown = {}): APIResponse => ({
 afterEach(() => vi.unstubAllEnvs());
 describe("fixture instruction revision fence", () => {
   function api(current: APIResponse, saved = response(200)) {
-    vi.stubEnv("PAPERCLIP_RUNNER_E2E_PORT", "3100");
+    vi.stubEnv("BIONIC_RUNNER_E2E_PORT", "3100");
     const request = { get: vi.fn(async () => current), put: vi.fn(async () => saved) };
     return { request, api: new RunnerApi(request as unknown as APIRequestContext) };
   }

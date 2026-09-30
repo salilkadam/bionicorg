@@ -28,7 +28,7 @@ import {
   projects,
   projectWorkspaces,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -80,11 +80,11 @@ async function runGit(cwd: string, args: string[]) {
 }
 
 async function createGitRepo() {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "paperclip-accepted-plan-repo-"));
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "bionic-accepted-plan-repo-"));
   await runGit(repoRoot, ["init"]);
   await runGit(repoRoot, ["checkout", "-B", "master"]);
-  await runGit(repoRoot, ["config", "user.email", "paperclip-test@example.com"]);
-  await runGit(repoRoot, ["config", "user.name", "Paperclip Test"]);
+  await runGit(repoRoot, ["config", "user.email", "bionic-test@example.com"]);
+  await runGit(repoRoot, ["config", "user.name", "Bionic Test"]);
   await writeFile(path.join(repoRoot, "README.md"), "accepted plan workspace refresh\n");
   await runGit(repoRoot, ["add", "README.md"]);
   await runGit(repoRoot, ["commit", "-m", "initial"]);
@@ -93,7 +93,7 @@ async function createGitRepo() {
 
 async function createGitRepoWithOrigin() {
   const repoRoot = await createGitRepo();
-  const originRoot = await mkdtemp(path.join(os.tmpdir(), "paperclip-accepted-plan-origin-"));
+  const originRoot = await mkdtemp(path.join(os.tmpdir(), "bionic-accepted-plan-origin-"));
   await runGit(originRoot, ["init", "--bare"]);
   await runGit(repoRoot, ["remote", "add", "origin", originRoot]);
   await runGit(repoRoot, ["push", "-u", "origin", "master"]);
@@ -107,7 +107,7 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
   const tempRoots: string[] = [];
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-accepted-plan-workspace-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-accepted-plan-workspace-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
@@ -420,11 +420,11 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
     };
     expect(adapterInput.runtime.sessionId).toBeNull();
     expect(adapterInput.runtime.sessionParams).toBeNull();
-    expect(adapterInput.context.paperclipWorkspace).toEqual(expect.objectContaining({
+    expect(adapterInput.context.bionicWorkspace).toEqual(expect.objectContaining({
       mode: "isolated_workspace",
       strategy: "git_worktree",
     }));
-    expect((adapterInput.context.paperclipWorkspace as { cwd: string }).cwd).not.toBe(repoRoot);
+    expect((adapterInput.context.bionicWorkspace as { cwd: string }).cwd).not.toBe(repoRoot);
 
     const refreshedIssue = await db
       .select({
@@ -637,7 +637,7 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
       | null = null;
     adapterExecute.mockImplementationOnce(async (input) => {
       const context = (input as { context?: Record<string, unknown> }).context ?? {};
-      const workspace = context.paperclipWorkspace as Record<string, unknown> | undefined;
+      const workspace = context.bionicWorkspace as Record<string, unknown> | undefined;
       const cwd = typeof workspace?.cwd === "string" ? workspace.cwd : null;
       const branchName = typeof workspace?.branchName === "string" ? workspace.branchName : null;
       const executionWorkspaceId =
@@ -843,8 +843,8 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
       otherActiveClaimIssueId: otherPlanningIssueId,
       otherActiveClaimIdentifier: "PAP-9302",
     }));
-    expect(adapterInput.context.paperclipTaskMarkdown).toContain("Make the plan only.");
-    expect(adapterInput.context.paperclipTaskMarkdown).not.toContain("Create child issues from the approved plan only");
+    expect(adapterInput.context.bionicTaskMarkdown).toContain("Make the plan only.");
+    expect(adapterInput.context.bionicTaskMarkdown).not.toContain("Create child issues from the approved plan only");
   }, 20_000);
 
   it("guards cross-issue accepted-plan retries even when the waking issue is standard work mode", async () => {
@@ -1004,8 +1004,8 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
       otherActiveClaimIssueId: otherPlanningIssueId,
       otherActiveClaimIdentifier: "PAP-9402",
     }));
-    expect(adapterInput.context.paperclipTaskMarkdown).toContain("Issue: \"PAP-9401\"");
-    expect(adapterInput.context.paperclipTaskMarkdown).not.toContain("Create child issues from the approved plan only");
+    expect(adapterInput.context.bionicTaskMarkdown).toContain("Issue: \"PAP-9401\"");
+    expect(adapterInput.context.bionicTaskMarkdown).not.toContain("Create child issues from the approved plan only");
   }, 20_000);
 
   it("preserves accepted-plan continuation resume state when the wake issue owns the in-flight claim", async () => {
@@ -1140,7 +1140,7 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
     };
     expect(adapterInput.runtime.sessionId).toBe("accepted-plan-retry-session");
     expect(adapterInput.context.acceptedPlanWakeRouting).toBeUndefined();
-    expect(adapterInput.context.paperclipTaskMarkdown).toContain(
+    expect(adapterInput.context.bionicTaskMarkdown).toContain(
       "Implement the accepted plan on this issue when the work is small and cohesive.",
     );
   }, 20_000);

@@ -3,19 +3,19 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AcpRuntimeOptions } from "acpx/runtime";
-import type { AdapterExecutionContext, AdapterRuntimeMcpAccess } from "@paperclipai/adapter-utils";
+import type { AdapterExecutionContext, AdapterRuntimeMcpAccess } from "@bionicai/adapter-utils";
 import {
   prepareAdapterExecutionTargetRuntime,
   startAdapterExecutionTargetPaperclipBridge,
   startAdapterExecutionTargetProcessSessionBridge,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 
 // Wrap the staging seam + both sandbox bridges in call-recording spies that
 // still delegate to the real implementations. This copies the execute.test.ts
 // harness verbatim so a startup test asserts the exact staging args and bridge
 // hand-off the engine threads without changing any real behavior.
-vi.mock("@paperclipai/adapter-utils/execution-target", async (importActual) => {
-  const actual = await importActual<typeof import("@paperclipai/adapter-utils/execution-target")>();
+vi.mock("@bionicai/adapter-utils/execution-target", async (importActual) => {
+  const actual = await importActual<typeof import("@bionicai/adapter-utils/execution-target")>();
   return {
     ...actual,
     prepareAdapterExecutionTargetRuntime: vi.fn(actual.prepareAdapterExecutionTargetRuntime),
@@ -29,7 +29,7 @@ import { runChildProcess } from "../server-utils.js";
 const tempRoots: string[] = [];
 
 async function makeTempRoot() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-acpx-skills-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-acpx-skills-"));
   tempRoots.push(root);
   return root;
 }
@@ -236,9 +236,9 @@ describe("ACPX engine startup characterization", () => {
       // in-sandbox process env rides there, not in the exec's own `env`.
       let launchPayload: Record<string, unknown> | null = null;
       (executionTarget as { runner: unknown }).runner = createLocalSandboxRunner((input) => {
-        if (input.env?.PAPERCLIP_SANDBOX_EXEC_CHANNEL === "bridge") {
+        if (input.env?.BIONIC_SANDBOX_EXEC_CHANNEL === "bridge") {
           const script = input.args?.[1] ?? "";
-          const match = script.match(/PAPERCLIP_PROCESS_SESSION_COMMAND_B64='([^']+)'/);
+          const match = script.match(/BIONIC_PROCESS_SESSION_COMMAND_B64='([^']+)'/);
           if (match) {
             launchPayload = JSON.parse(Buffer.from(match[1]!, "base64").toString("utf8")) as Record<
               string,
@@ -253,17 +253,17 @@ describe("ACPX engine startup characterization", () => {
         { authToken: "real-run-jwt", executionTarget },
       );
 
-      // The launch payload carries the MERGED paperclip bridge env: the queue
+      // The launch payload carries the MERGED bionic bridge env: the queue
       // transport mode, a loopback bridge base URL, and a minted bridge token.
       const payloadEnv = ((launchPayload as Record<string, unknown> | null)?.env ?? {}) as Record<
         string,
         unknown
       >;
-      expect(payloadEnv).toMatchObject({ PAPERCLIP_API_BRIDGE_MODE: "queue_v1" });
-      expect(String(payloadEnv.PAPERCLIP_API_URL ?? "")).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+      expect(payloadEnv).toMatchObject({ BIONIC_API_BRIDGE_MODE: "queue_v1" });
+      expect(String(payloadEnv.BIONIC_API_URL ?? "")).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
       // The minted bridge token is present and is NOT the host run JWT.
-      expect(payloadEnv.PAPERCLIP_API_KEY).toBeTruthy();
-      expect(payloadEnv.PAPERCLIP_API_KEY).not.toBe("real-run-jwt");
+      expect(payloadEnv.BIONIC_API_KEY).toBeTruthy();
+      expect(payloadEnv.BIONIC_API_KEY).not.toBe("real-run-jwt");
     });
 
     it("finalizes the launch env at the bridge merge: the process env carries the merged bridge values", async () => {
@@ -272,10 +272,10 @@ describe("ACPX engine startup characterization", () => {
       let launchPayload: Record<string, unknown> | null = null;
       let bridgeExecEnv: Record<string, string> | undefined;
       (executionTarget as { runner: unknown }).runner = createLocalSandboxRunner((input) => {
-        if (input.env?.PAPERCLIP_SANDBOX_EXEC_CHANNEL === "bridge") {
+        if (input.env?.BIONIC_SANDBOX_EXEC_CHANNEL === "bridge") {
           bridgeExecEnv = input.env;
           const script = input.args?.[1] ?? "";
-          const match = script.match(/PAPERCLIP_PROCESS_SESSION_COMMAND_B64='([^']+)'/);
+          const match = script.match(/BIONIC_PROCESS_SESSION_COMMAND_B64='([^']+)'/);
           if (match) {
             launchPayload = JSON.parse(Buffer.from(match[1]!, "base64").toString("utf8")) as Record<
               string,
@@ -297,13 +297,13 @@ describe("ACPX engine startup characterization", () => {
         string,
         unknown
       >;
-      expect(payloadEnv.PAPERCLIP_API_BRIDGE_MODE).toBe("queue_v1");
-      expect(payloadEnv.PAPERCLIP_API_KEY).toBeTruthy();
+      expect(payloadEnv.BIONIC_API_BRIDGE_MODE).toBe("queue_v1");
+      expect(payloadEnv.BIONIC_API_KEY).toBeTruthy();
       // The bridge-channel exec's OWN env is the sandbox transport channel, not the
       // agent process env: it does not carry the minted agent bridge key. This pins
       // that the merged agent env lives only in the finalized launch payload.
-      expect(bridgeExecEnv?.PAPERCLIP_SANDBOX_EXEC_CHANNEL).toBe("bridge");
-      expect(bridgeExecEnv?.PAPERCLIP_API_KEY).toBeUndefined();
+      expect(bridgeExecEnv?.BIONIC_SANDBOX_EXEC_CHANNEL).toBe("bridge");
+      expect(bridgeExecEnv?.BIONIC_API_KEY).toBeUndefined();
     });
   });
 
@@ -312,7 +312,7 @@ describe("ACPX engine startup characterization", () => {
   describe("session fingerprint and session key", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("forms the session key as paperclip:company:agent:taskKey:fingerprint and embeds the fingerprint", async () => {
+    it("forms the session key as bionic:company:agent:taskKey:fingerprint and embeds the fingerprint", async () => {
       const root = await makeTempRoot();
       const { result } = await runExecutor({
         agent: "custom",
@@ -326,7 +326,7 @@ describe("ACPX engine startup characterization", () => {
       expect(fp).toBeTruthy();
       // No taskId/issueId/workspaceId in the default context, so taskKey is "default".
       const sessionKey = (result.sessionParams as { sessionKey?: string }).sessionKey;
-      expect(sessionKey).toBe(`paperclip:company-1:agent-1:default:${fp}`);
+      expect(sessionKey).toBe(`bionic:company-1:agent-1:default:${fp}`);
     });
 
     it("keeps the fingerprint stable across two identical runs and a same-config new wake", async () => {
@@ -350,7 +350,7 @@ describe("ACPX engine startup characterization", () => {
 
       expect(fpOf(first.result)).toBeTruthy();
       expect(fpOf(identical.result)).toBe(fpOf(first.result));
-      // Per-wake PAPERCLIP_* churn does not reset the session fingerprint.
+      // Per-wake BIONIC_* churn does not reset the session fingerprint.
       expect(fpOf(newWake.result)).toBe(fpOf(first.result));
     });
 
@@ -401,7 +401,7 @@ describe("ACPX engine startup characterization", () => {
               context: {
                 taskId: "issue-1",
                 wakeReason: "issue_assigned",
-                paperclipSecrets: {
+                bionicSecrets: {
                   manifest: [
                     {
                       configPath: "env.API_TOKEN",
@@ -428,7 +428,7 @@ describe("ACPX engine startup characterization", () => {
               context: {
                 taskId: "issue-1",
                 wakeReason: "issue_assigned",
-                paperclipWorkspace: {
+                bionicWorkspace: {
                   cwd,
                   realization: {
                     additional: [
@@ -529,15 +529,15 @@ describe("ACPX engine startup characterization", () => {
       );
 
       // The process-session bridge receives its launch env as a DEFERRED thunk, the
-      // seam that lets its env-independent setup overlap the paperclip bridge start.
+      // seam that lets its env-independent setup overlap the bionic bridge start.
       const processArgs = vi.mocked(startAdapterExecutionTargetProcessSessionBridge).mock.calls[0]![0];
       expect(typeof processArgs.env).toBe("function");
 
       // Both bridges receive the SAME real (non-null) runtimeRootDir from staging.
-      const paperclipArgs = vi.mocked(startAdapterExecutionTargetPaperclipBridge).mock.calls[0]![0];
-      expect(paperclipArgs.runtimeRootDir).toBeTruthy();
-      expect(String(paperclipArgs.runtimeRootDir)).toContain(".paperclip-runtime");
-      expect(processArgs.runtimeRootDir).toBe(paperclipArgs.runtimeRootDir);
+      const bionicArgs = vi.mocked(startAdapterExecutionTargetPaperclipBridge).mock.calls[0]![0];
+      expect(bionicArgs.runtimeRootDir).toBeTruthy();
+      expect(String(bionicArgs.runtimeRootDir)).toContain(".bionic-runtime");
+      expect(processArgs.runtimeRootDir).toBe(bionicArgs.runtimeRootDir);
 
       // The ACP runtime + session/new both bind to the in-sandbox workspace cwd,
       // which the run resolves only after the bridges bring the sandbox up.
@@ -554,10 +554,10 @@ describe("ACPX engine startup characterization", () => {
 
     it("create_runtime failure: settles an error result, stops both bridges, releases the lease", async () => {
       const { stateDir, localCwd, executionTarget } = await setupRemoteSandbox();
-      const paperclipStop = vi.fn(async () => {});
+      const bionicStop = vi.fn(async () => {});
       const processStop = vi.fn(async () => {});
       vi.mocked(startAdapterExecutionTargetPaperclipBridge).mockImplementationOnce(
-        async () => ({ env: {}, stop: paperclipStop }) as never,
+        async () => ({ env: {}, stop: bionicStop }) as never,
       );
       vi.mocked(startAdapterExecutionTargetProcessSessionBridge).mockImplementationOnce(
         async () => ({ agentCommand: null, stop: processStop }) as never,
@@ -589,7 +589,7 @@ describe("ACPX engine startup characterization", () => {
       expect(result.exitCode).toBe(1);
       expect(result.resultJson?.phase).toBe("create_runtime");
       // Both live bridges stop exactly once and the per-session lease releases.
-      expect(paperclipStop).toHaveBeenCalledTimes(1);
+      expect(bionicStop).toHaveBeenCalledTimes(1);
       expect(processStop).toHaveBeenCalledTimes(1);
       expect(stagingLocks.size).toBe(0);
     });
@@ -598,7 +598,7 @@ describe("ACPX engine startup characterization", () => {
       const { stateDir, localCwd, executionTarget } = await setupRemoteSandbox();
       const stop = vi.fn(async () => {});
       vi.mocked(startAdapterExecutionTargetPaperclipBridge).mockImplementationOnce(async () => {
-        throw new Error("paperclip bridge boom");
+        throw new Error("bionic bridge boom");
       });
       vi.mocked(startAdapterExecutionTargetProcessSessionBridge).mockImplementationOnce(
         async () => ({ agentCommand: null, stop }) as never,
@@ -623,7 +623,7 @@ describe("ACPX engine startup characterization", () => {
           onMeta: async () => {},
           onEvent: async () => {},
         } as never),
-      ).rejects.toThrow("paperclip bridge boom");
+      ).rejects.toThrow("bionic bridge boom");
 
       // The concurrently-started process-session bridge was stopped exactly once.
       expect(stop).toHaveBeenCalledTimes(1);

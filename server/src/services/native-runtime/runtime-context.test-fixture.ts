@@ -1,18 +1,18 @@
 import {
   NATIVE_RUNTIME_ASSET_SCHEMA,
-  PAPERCLIP_EXECUTION_PROMPT,
-  PAPERCLIP_EXECUTION_PROMPT_REVISION,
+  BIONIC_EXECUTION_PROMPT,
+  BIONIC_EXECUTION_PROMPT_REVISION,
   canonicalNativeRuntimeContextDigest,
   nativeRuntimePromptDigest,
   type NativeRuntimeContextSnapshot,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 
 export function nativeRuntimeContextFixture(): NativeRuntimeContextSnapshot {
   const digest = "0".repeat(64);
   const context = {
     prompt: {
-      revision: PAPERCLIP_EXECUTION_PROMPT_REVISION,
-      text: PAPERCLIP_EXECUTION_PROMPT,
+      revision: BIONIC_EXECUTION_PROMPT_REVISION,
+      text: BIONIC_EXECUTION_PROMPT,
       digest: nativeRuntimePromptDigest(),
     },
     instructions: {
@@ -21,7 +21,7 @@ export function nativeRuntimeContextFixture(): NativeRuntimeContextSnapshot {
         schema: NATIVE_RUNTIME_ASSET_SCHEMA,
         digest,
         manifestDigest: digest,
-        rootPath: "/tmp/paperclip-runtime-context-fixture",
+        rootPath: "/tmp/bionic-runtime-context-fixture",
         fileCount: 1,
         totalBytes: 1,
       },

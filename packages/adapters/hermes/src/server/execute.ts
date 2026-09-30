@@ -2,7 +2,7 @@
  * Server-side execution logic for the Hermes Agent adapter.
  *
  * Spawns `hermes chat -q "..." -Q` as a child process, streams output,
- * and returns structured results to Paperclip.
+ * and returns structured results to Bionic.
  *
  * Verified CLI flags (hermes chat):
  *   -q/--query         single query (non-interactive)
@@ -25,7 +25,7 @@ import type {
   AdapterExecutionContext,
   AdapterExecutionResult,
   UsageSummary,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 
 import {
   runChildProcess,
@@ -33,13 +33,13 @@ import {
   buildRuntimeToolsEnv,
   renderTemplate,
   ensureAbsoluteDirectory,
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
-  DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE,
   joinPromptSections,
   selectPaperclipPromptSections,
   stringifyPaperclipWakePayload,
   isPaperclipRecoveryWakePayload,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 
 import {
   HERMES_CLI,
@@ -83,25 +83,25 @@ export function resolveHermesCommand(config: Record<string, unknown>): string {
 // ---------------------------------------------------------------------------
 
 const HERMES_DEFAULT_PROMPT_TEMPLATE = [
-  'You are "{{agent.name}}", an AI agent employee in a Paperclip-managed company.',
+  'You are "{{agent.name}}", an AI agent employee in a Bionic-managed company.',
   "",
-  "Paperclip runtime identity:",
+  "Bionic runtime identity:",
   "- Agent ID: {{agent.id}}",
   "- Company ID: {{agent.companyId}}",
   "- Run ID: {{run.id}}",
-  "- API base: {{paperclipApiUrl}}",
+  "- API base: {{bionicApiUrl}}",
   "",
-  "Paperclip API guidance:",
-  "- Use `curl` from the terminal for Paperclip API calls; browser/web extraction tools may not reach localhost.",
-  "- Use `$PAPERCLIP_API_URL`, `$PAPERCLIP_API_KEY`, and `$PAPERCLIP_RUN_ID`; do not hard-code local ports or copy secrets into comments.",
+  "Bionic API guidance:",
+  "- Use `curl` from the terminal for Bionic API calls; browser/web extraction tools may not reach localhost.",
+  "- Use `$BIONIC_API_URL`, `$BIONIC_API_KEY`, and `$BIONIC_RUN_ID`; do not hard-code local ports or copy secrets into comments.",
   "- Displayed command logs may redact secrets; rely on environment variables instead of printed token values.",
-  "- Include `-H \"Authorization: Bearer $PAPERCLIP_API_KEY\"` on API requests.",
-  "- Include `-H \"X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID\"` on mutating issue requests.",
+  "- Include `-H \"Authorization: Bearer $BIONIC_API_KEY\"` on API requests.",
+  "- Include `-H \"X-Bionic-Run-Id: $BIONIC_RUN_ID\"` on mutating issue requests.",
   "- For multiline comments or status updates, preserve newlines with `jq --arg` or a heredoc-fed helper rather than hand-escaping JSON.",
   "",
   "Safe multiline update pattern:",
   "```bash",
-  "api=\"${PAPERCLIP_API_URL%/}\"",
+  "api=\"${BIONIC_API_URL%/}\"",
   "case \"$api\" in */api) ;; *) api=\"$api/api\" ;; esac",
   "",
   "body=$(cat <<'MD'",
@@ -113,13 +113,13 @@ const HERMES_DEFAULT_PROMPT_TEMPLATE = [
   ")",
   "jq -n --arg status done --arg comment \"$body\" '{status:$status, comment:$comment}' | \\",
   "  curl -sS -X PATCH \"$api/issues/{{context.issueId}}\" \\",
-  "    -H \"Authorization: Bearer $PAPERCLIP_API_KEY\" \\",
-  "    -H \"X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID\" \\",
+  "    -H \"Authorization: Bearer $BIONIC_API_KEY\" \\",
+  "    -H \"X-Bionic-Run-Id: $BIONIC_RUN_ID\" \\",
   "    -H \"Content-Type: application/json\" \\",
   "    --data-binary @-",
   "```",
   "",
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
 ].join("\n");
 
 function renderConditionalSections(template: string, vars: Record<string, unknown>): string {
@@ -142,7 +142,7 @@ export function buildPrompt(
 ): string {
   const context = (ctx as any).context || {};
   const template = cfgString(config.promptTemplate) || (context.conversationMode === true
-    ? DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE
+    ? DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE
     : HERMES_DEFAULT_PROMPT_TEMPLATE);
   const taskId = cfgString(context.taskId) || cfgString(context.issueId) || cfgString(ctx.config?.taskId);
   const taskTitle = cfgString(context.taskTitle) || cfgString(ctx.config?.taskTitle) || "";
@@ -154,13 +154,13 @@ export function buildPrompt(
   const projectName = cfgString(context.projectName) || cfgString(ctx.config?.projectName) || "";
 
   // Build API URL — ensure it has the /api path
-  let paperclipApiUrl =
-    cfgString(config.paperclipApiUrl) ||
-    process.env.PAPERCLIP_API_URL ||
+  let bionicApiUrl =
+    cfgString(config.bionicApiUrl) ||
+    process.env.BIONIC_API_URL ||
     "http://127.0.0.1:3100/api";
   // Ensure /api suffix
-  if (!paperclipApiUrl.endsWith("/api")) {
-    paperclipApiUrl = paperclipApiUrl.replace(/\/+$/, "") + "/api";
+  if (!bionicApiUrl.endsWith("/api")) {
+    bionicApiUrl = bionicApiUrl.replace(/\/+$/, "") + "/api";
   }
 
   const { taskContextNote: taskContextMarkdown, wakePrompt } = selectPaperclipPromptSections(context, {
@@ -169,9 +169,9 @@ export function buildPrompt(
   });
   // Keep the historical variable available to custom templates. Automatic
   // assembly uses the ownership-aware assignment variant below.
-  const paperclipTaskMarkdown = cfgString(context.paperclipTaskMarkdown)?.trim() || "";
-  const sessionHandoffMarkdown = cfgString(context.paperclipSessionHandoffMarkdown)?.trim() || "";
-  const wakePayloadJson = stringifyPaperclipWakePayload(context.paperclipWake) || "";
+  const bionicTaskMarkdown = cfgString(context.bionicTaskMarkdown)?.trim() || "";
+  const sessionHandoffMarkdown = cfgString(context.bionicSessionHandoffMarkdown)?.trim() || "";
+  const wakePayloadJson = stringifyPaperclipWakePayload(context.bionicWake) || "";
 
   const vars: Record<string, unknown> = {
     agentId: ctx.agent?.id || "",
@@ -189,18 +189,18 @@ export function buildPrompt(
     commentId,
     wakeReason,
     projectName,
-    paperclipApiUrl,
-    paperclipWakePrompt: wakePrompt,
-    paperclipTaskMarkdown,
-    taskContext: paperclipTaskMarkdown,
+    bionicApiUrl,
+    bionicWakePrompt: wakePrompt,
+    bionicTaskMarkdown,
+    taskContext: bionicTaskMarkdown,
     taskContextMarkdown,
-    paperclipWakeJson: wakePayloadJson,
+    bionicWakeJson: wakePayloadJson,
     wakePayloadJson,
-    paperclipApiKeyEnv: "PAPERCLIP_API_KEY",
-    paperclipRunIdEnv: "PAPERCLIP_RUN_ID",
+    bionicApiKeyEnv: "BIONIC_API_KEY",
+    bionicRunIdEnv: "BIONIC_RUN_ID",
   };
 
-  const rendered = isPaperclipRecoveryWakePayload(context.paperclipWake)
+  const rendered = isPaperclipRecoveryWakePayload(context.bionicWake)
     ? ""
     : renderTemplate(renderConditionalSections(template, vars), vars);
   return joinPromptSections([
@@ -247,7 +247,7 @@ function cleanResponse(raw: string): string {
     .filter((line) => {
       const t = line.trim();
       if (!t) return true; // keep blank lines for paragraph separation
-      if (t.startsWith("[tool]") || t.startsWith("[hermes]") || t.startsWith("[paperclip]")) return false;
+      if (t.startsWith("[tool]") || t.startsWith("[hermes]") || t.startsWith("[bionic]")) return false;
       if (t.startsWith("session_id:")) return false;
       if (/^\[\d{4}-\d{2}-\d{2}T/.test(t)) return false;
       if (/^\[done\]\s*┊/.test(t)) return false;
@@ -354,19 +354,19 @@ export async function execute(
 
   // The server adds this runtime inventory at the run boundary. Requiring the
   // marker avoids touching a developer's real Hermes home in direct unit or
-  // library calls that did not opt into Paperclip runtime skills.
-  if (Object.prototype.hasOwnProperty.call(config, "paperclipRuntimeSkills")) {
+  // library calls that did not opt into Bionic runtime skills.
+  if (Object.prototype.hasOwnProperty.call(config, "bionicRuntimeSkills")) {
     try {
       const selectedSkills = await reconcileHermesPaperclipSkills(config);
       if (selectedSkills.length > 0) {
         await ctx.onLog(
           "stdout",
-          `[hermes] Reconciled ${selectedSkills.length} Paperclip-managed skill(s) into the Hermes skills home.\n`,
+          `[hermes] Reconciled ${selectedSkills.length} Bionic-managed skill(s) into the Hermes skills home.\n`,
         );
       }
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
-      await ctx.onLog("stderr", `[hermes] Cannot start without the required Paperclip-managed skills: ${reason}\n`);
+      await ctx.onLog("stderr", `[hermes] Cannot start without the required Bionic-managed skills: ${reason}\n`);
       throw err;
     }
   }
@@ -402,8 +402,8 @@ export async function execute(
     model,
   });
 
-  // ── Load agent instructions file (Paperclip instruction bundles) ──────
-  // Paperclip can materialize managed instructions into instructionsFilePath;
+  // ── Load agent instructions file (Bionic instruction bundles) ──────
+  // Bionic can materialize managed instructions into instructionsFilePath;
   // when present, inject that bundle into the Hermes prompt.
   const instructionsFilePath = cfgString(config.instructionsFilePath);
   let agentInstructions = "";
@@ -420,7 +420,7 @@ export async function execute(
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
       // Non-fatal: log to stdout with an explicit "Warning:" prefix so the
-      // Paperclip UI doesn't render this as a red error (stderr output is
+      // Bionic UI doesn't render this as a red error (stderr output is
       // surfaced as an error signal even when execution continues).
       await ctx.onLog(
         "stdout",
@@ -468,7 +468,7 @@ export async function execute(
   args.push("--source", "tool");
 
   // Bypass Hermes dangerous-command approval prompts.
-  // Paperclip agents run as non-interactive subprocesses with no TTY,
+  // Bionic agents run as non-interactive subprocesses with no TTY,
   // so approval prompts would always timeout and deny legitimate commands
   // (curl, python3 -c, etc.). Agents operate in a sandbox — the approval
   // system is designed for human-attended interactive sessions.
@@ -491,23 +491,23 @@ export async function execute(
     ...buildRuntimeToolsEnv(ctx.runtimeTools),
   };
 
-  if (ctx.runId) env.PAPERCLIP_RUN_ID = ctx.runId;
+  if (ctx.runId) env.BIONIC_RUN_ID = ctx.runId;
 
-  // PAPERCLIP_API_KEY is never accepted from config — the harness-minted run
-  // token is the only source of Paperclip API identity.
-  delete env.PAPERCLIP_API_KEY;
+  // BIONIC_API_KEY is never accepted from config — the harness-minted run
+  // token is the only source of Bionic API identity.
+  delete env.BIONIC_API_KEY;
   // Wake context travels in the prompt; drop both inherited and configured copies.
-  delete env.PAPERCLIP_WAKE_PAYLOAD_JSON;
-  if ((ctx as any).authToken) env.PAPERCLIP_API_KEY = (ctx as any).authToken;
+  delete env.BIONIC_WAKE_PAYLOAD_JSON;
+  if ((ctx as any).authToken) env.BIONIC_API_KEY = (ctx as any).authToken;
 
   // BUG FIX: Read task context from ctx.context (wake context), not ctx.config (adapter config)
   const ctxContext = (ctx as any).context || {};
   const envTaskId = cfgString(ctxContext.taskId) || cfgString(ctxContext.issueId) || cfgString(ctx.config?.taskId);
-  if (envTaskId) env.PAPERCLIP_TASK_ID = envTaskId;
+  if (envTaskId) env.BIONIC_TASK_ID = envTaskId;
   const envWakeReason = cfgString(ctxContext.wakeReason) || cfgString(ctx.config?.wakeReason);
-  if (envWakeReason) env.PAPERCLIP_WAKE_REASON = envWakeReason;
+  if (envWakeReason) env.BIONIC_WAKE_REASON = envWakeReason;
   const envCommentId = cfgString(ctxContext.commentId) || cfgString(ctxContext.wakeCommentId) || cfgString(ctx.config?.commentId);
-  if (envCommentId) env.PAPERCLIP_WAKE_COMMENT_ID = envCommentId;
+  if (envCommentId) env.BIONIC_WAKE_COMMENT_ID = envCommentId;
 
   // ── Resolve working directory ──────────────────────────────────────────
   const cwd =
@@ -532,7 +532,7 @@ export async function execute(
 
   // ── Execute ────────────────────────────────────────────────────────────
   // Hermes writes non-error noise to stderr (MCP init, INFO logs, etc).
-  // Paperclip renders all stderr as red/error in the UI.
+  // Bionic renders all stderr as red/error in the UI.
   // Wrap onLog to reclassify benign stderr lines as stdout.
   const wrappedOnLog = async (stream: "stdout" | "stderr", chunk: string) => {
     if (stream === "stderr") {
@@ -602,7 +602,7 @@ export async function execute(
     executionResult.summary = parsed.response.slice(0, 2000);
   }
 
-  // Set resultJson so Paperclip can persist run metadata (used for UI display + auto-comments)
+  // Set resultJson so Bionic can persist run metadata (used for UI display + auto-comments)
   executionResult.resultJson = {
     result: parsed.response || "",
     session_id: parsed.sessionId || null,

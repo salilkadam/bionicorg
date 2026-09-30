@@ -1,9 +1,9 @@
-# Paperclip Tailscale HTTPS broker
+# Bionic Tailscale HTTPS broker
 
-Least-privilege host broker that manages **only** Paperclip-owned, tailnet-only,
+Least-privilege host broker that manages **only** Bionic-owned, tailnet-only,
 same-number HTTPS-to-loopback listeners for managed branch runtimes.
 
-It exists so the Paperclip app/agent account never gains Tailscale operator
+It exists so the Bionic app/agent account never gains Tailscale operator
 authority (see [PAP-16989](../../)) while still getting automatic trusted HTTPS
 previews per branch runtime. Design: [PAP-17049](../../) plan; security contract:
 [PAP-17050](../../) threat-model verdict.
@@ -18,7 +18,7 @@ route are unchanged:
     "type": "tailscale_https",
     "hostname": "auto",
     "publicPort": "same",
-    "includePaperclipViteHmr": true,
+    "includeBionicViteHmr": true,
     "failurePolicy": "fail_closed"
   }
 }
@@ -46,16 +46,16 @@ mutation** and is never modified.
 
 The socket transport reads Linux `SO_PEERCRED` before admission, admits at most
 8 concurrent sockets per resolved UID, and reserves 4 of its 32 global slots
-for the configured Paperclip service UID. Connection deadlines destroy the
+for the configured Bionic service UID. Connection deadlines destroy the
 socket so timed-out peers cannot retain kernel-level connection slots. Missing
 or invalid native credentials fail closed; socket permissions are not used as
 a substitute identity.
 
-## One-time host installation (`paperclip-dev`)
+## One-time host installation (`bionic-dev`)
 
 These steps require **root** and must be run by CloudOps/host owner, not the
-Paperclip agent account. They install the broker as a dedicated
-Tailscale-operator service account distinct from the Paperclip app account.
+Bionic agent account. They install the broker as a dedicated
+Tailscale-operator service account distinct from the Bionic app account.
 
 1. **Preconditions.** Tailscale is installed and up on the node, the node has an
    HTTPS-capable trusted cert (MagicDNS + HTTPS enabled), and the existing
@@ -64,98 +64,98 @@ Tailscale-operator service account distinct from the Paperclip app account.
 2. **Create the dedicated operator account and socket group.**
 
    ```sh
-   sudo useradd --system --home /var/lib/paperclip-tailscale-broker \
-     --shell /usr/sbin/nologin paperclip-tsbroker
-   sudo groupadd --system paperclip-tsbroker-sock
-   # The Paperclip *app* service account must have this as its PRIMARY group so
+   sudo useradd --system --home /var/lib/bionic-tailscale-broker \
+     --shell /usr/sbin/nologin bionic-tsbroker
+   sudo groupadd --system bionic-tsbroker-sock
+   # The Bionic *app* service account must have this as its PRIMARY group so
    # its SO_PEERCRED gid matches the socket group (supplemental membership is
    # intentionally NOT accepted).
-   sudo usermod -g paperclip-tsbroker-sock <paperclip-app-account>
+   sudo usermod -g bionic-tsbroker-sock <bionic-app-account>
    ```
 
 3. **Grant Tailscale operator authority to the broker account only.**
 
    ```sh
-   sudo tailscale set --operator=paperclip-tsbroker
+   sudo tailscale set --operator=bionic-tsbroker
    ```
 
-   Do **not** grant `--operator` to the Paperclip app/agent account (that grant
+   Do **not** grant `--operator` to the Bionic app/agent account (that grant
    was explicitly rejected in PAP-16989).
 
-4. **Create state directories (not writable by the Paperclip app).** The
+4. **Create state directories (not writable by the Bionic app).** The
    packaged unit creates these automatically; for a manual install use:
 
    ```sh
-   sudo install -d -o paperclip-tsbroker -g paperclip-tsbroker-sock -m 0750 /run/paperclip-tailscale-broker
-   sudo install -d -o paperclip-tsbroker -g paperclip-tsbroker-sock -m 0700 /var/lib/paperclip-tailscale-broker
-   sudo install -d -o paperclip-tsbroker -g paperclip-tsbroker-sock -m 0700 /var/log/paperclip-tailscale-broker
+   sudo install -d -o bionic-tsbroker -g bionic-tsbroker-sock -m 0750 /run/bionic-tailscale-broker
+   sudo install -d -o bionic-tsbroker -g bionic-tsbroker-sock -m 0700 /var/lib/bionic-tailscale-broker
+   sudo install -d -o bionic-tsbroker -g bionic-tsbroker-sock -m 0700 /var/log/bionic-tailscale-broker
    ```
 
    The broker refuses to start if the registry path's parent is group/other
    writable.
 
-5. **Build, install the package under `/opt/paperclip`, and install the
+5. **Build, install the package under `/opt/bionic`, and install the
    packaged systemd unit.** The unit's `ExecStart` (and the doctor command
    below) run the build output from
-   `/opt/paperclip/packages/tailscale-https-broker/dist`, so copy it there
+   `/opt/bionic/packages/tailscale-https-broker/dist`, so copy it there
    explicitly. The Linux build requires a C compiler and Node.js headers to
    compile the dependency-free N-API `SO_PEERCRED` addon. The output is
    self-contained (Node builtins plus the compiled addon; no `node_modules`
    needed).
 
    ```sh
-   pnpm --filter @paperclipai/tailscale-https-broker build
-   sudo install -d -m 0755 /opt/paperclip/packages/tailscale-https-broker
+   pnpm --filter @bionicai/tailscale-https-broker build
+   sudo install -d -m 0755 /opt/bionic/packages/tailscale-https-broker
    sudo cp -r packages/tailscale-https-broker/dist \
-     /opt/paperclip/packages/tailscale-https-broker/
+     /opt/bionic/packages/tailscale-https-broker/
    sudo install -D -m 0644 \
-     packages/tailscale-https-broker/deploy/paperclip-tailscale-https-broker.service \
-     /etc/systemd/system/paperclip-tailscale-https-broker.service
-   sudo install -d -m 0750 /etc/paperclip
-   sudoedit /etc/paperclip/tailscale-https-broker.env
+     packages/tailscale-https-broker/deploy/bionic-tailscale-https-broker.service \
+     /etc/systemd/system/bionic-tailscale-https-broker.service
+   sudo install -d -m 0750 /etc/bionic
+   sudoedit /etc/bionic/tailscale-https-broker.env
    ```
 
    The packaged unit is equivalent to:
 
    ```ini
    [Unit]
-   Description=Paperclip Tailscale HTTPS broker
+   Description=Bionic Tailscale HTTPS broker
    After=tailscaled.service
    Requires=tailscaled.service
 
    [Service]
    Type=simple
-   User=paperclip-tsbroker
-   # Socket must end up 0660 paperclip-tsbroker:paperclip-tsbroker-sock. Set the group here and
+   User=bionic-tsbroker
+   # Socket must end up 0660 bionic-tsbroker:bionic-tsbroker-sock. Set the group here and
    # the broker chmods the socket to 0660 on bind.
-   Group=paperclip-tsbroker-sock
-   EnvironmentFile=/etc/paperclip/tailscale-https-broker.env
-   ExecStart=/usr/bin/node /opt/paperclip/packages/tailscale-https-broker/dist/main.js
+   Group=bionic-tsbroker-sock
+   EnvironmentFile=/etc/bionic/tailscale-https-broker.env
+   ExecStart=/usr/bin/node /opt/bionic/packages/tailscale-https-broker/dist/main.js
    Restart=on-failure
    NoNewPrivileges=true
    ProtectSystem=strict
-   ReadWritePaths=/run/paperclip-tailscale-broker /var/lib/paperclip-tailscale-broker /var/log/paperclip-tailscale-broker
+   ReadWritePaths=/run/bionic-tailscale-broker /var/lib/bionic-tailscale-broker /var/log/bionic-tailscale-broker
 
    [Install]
    WantedBy=multi-user.target
    ```
 
    Put the `BROKER_*` values from the table below in the environment file. Set
-   `PAPERCLIP_TAILSCALE_BROKER_SOCKET=/run/paperclip-tailscale-broker/broker.sock`
-   on the Paperclip service only if overriding its default.
+   `BIONIC_TAILSCALE_BROKER_SOCKET=/run/bionic-tailscale-broker/broker.sock`
+   on the Bionic service only if overriding its default.
 
    Environment variables (defaults in `src/config.ts`):
 
    | Var | Required | Default | Meaning |
    |-----|----------|---------|---------|
    | `BROKER_NODE_IDENTITY` | yes | — | hostname + boot id; a change forces quarantine + operator reconciliation |
-   | `BROKER_SERVICE_UID` | yes | — | UID of the Paperclip **app** account allowed to connect |
+   | `BROKER_SERVICE_UID` | yes | — | UID of the Bionic **app** account allowed to connect |
    | `BROKER_SERVICE_GID` | yes | — | GID of the dedicated socket group (caller's primary GID) |
-   | `BROKER_RUNTIME_UID` | yes | — | UID that owns Paperclip-managed runtime processes (normally the Paperclip app service account); only its loopback listeners are eligible |
+   | `BROKER_RUNTIME_UID` | yes | — | UID that owns Bionic-managed runtime processes (normally the Bionic app service account); only its loopback listeners are eligible |
    | `BROKER_TAILSCALE_BIN` | no | `/usr/bin/tailscale` | absolute path to the Tailscale CLI |
-   | `BROKER_SOCKET_PATH` | no | `/run/paperclip-tailscale-broker/broker.sock` | Unix socket path |
-   | `BROKER_REGISTRY_PATH` | no | `/var/lib/paperclip-tailscale-broker/registry.json` | root-owned `0600` ownership registry |
-   | `BROKER_AUDIT_PATH` | no | `/var/log/paperclip-tailscale-broker/audit.log` | append-only security audit log |
+   | `BROKER_SOCKET_PATH` | no | `/run/bionic-tailscale-broker/broker.sock` | Unix socket path |
+   | `BROKER_REGISTRY_PATH` | no | `/var/lib/bionic-tailscale-broker/registry.json` | root-owned `0600` ownership registry |
+   | `BROKER_AUDIT_PATH` | no | `/var/log/bionic-tailscale-broker/audit.log` | append-only security audit log |
    | `BROKER_PROTECTED_PORTS` | no | *(empty)* | comma/space separated ports the broker must **never** create, remove, or reclaim — even when its own registry holds a valid lease for them (see below) |
 
    ### `BROKER_PROTECTED_PORTS` — operator-declared preservation (PAP-17285)
@@ -185,17 +185,17 @@ Tailscale-operator service account distinct from the Paperclip app account.
    Confirm it took effect before trusting it — `--doctor` echoes the parsed set:
 
    ```sh
-   sudo -u paperclip-tsbroker \
-     env $(cat /etc/paperclip/tailscale-https-broker.env | xargs) \
-     node /opt/paperclip/packages/tailscale-https-broker/dist/main.js --doctor
+   sudo -u bionic-tsbroker \
+     env $(cat /etc/bionic/tailscale-https-broker.env | xargs) \
+     node /opt/bionic/packages/tailscale-https-broker/dist/main.js --doctor
    ```
 
 6. **Preflight (read-only, no mutation).**
 
    ```sh
-   sudo -u paperclip-tsbroker \
+   sudo -u bionic-tsbroker \
      BROKER_NODE_IDENTITY=$(hostname) BROKER_SERVICE_UID=... BROKER_SERVICE_GID=... BROKER_RUNTIME_UID=... \
-     node /opt/paperclip/packages/tailscale-https-broker/dist/main.js --doctor
+     node /opt/bionic/packages/tailscale-https-broker/dist/main.js --doctor
    ```
 
    Verifies: supported Tailscale CLI version, Serve status is readable, the
@@ -203,14 +203,14 @@ Tailscale-operator service account distinct from the Paperclip app account.
    node identity. Exit 0 = ready. It never mutates Serve state.
 
 7. **Enable.** `sudo systemctl daemon-reload && sudo systemctl enable --now
-   paperclip-tailscale-https-broker`. Confirm the socket is `0660
-   paperclip-tsbroker:paperclip-tsbroker-sock`.
+   bionic-tailscale-https-broker`. Confirm the socket is `0660
+   bionic-tsbroker:bionic-tsbroker-sock`.
 
 ## Upgrade
 
 Deploy new package output to
-`/opt/paperclip/packages/tailscale-https-broker/dist`, then
-`sudo systemctl restart paperclip-tailscale-https-broker`. On
+`/opt/bionic/packages/tailscale-https-broker/dist`, then
+`sudo systemctl restart bionic-tailscale-https-broker`. On
 restart the broker re-reads its root-owned registry and adopts only exact-lease
 matches; a changed `BROKER_NODE_IDENTITY` (host reimage / boot-id change) forces
 quarantine and operator reconciliation rather than silently re-adopting.
@@ -220,11 +220,11 @@ quarantine and operator reconciliation rather than silently re-adopting.
 Rollback disables new exposure and removes only broker-owned listeners; it never
 resets Serve or changes the primary route.
 
-1. Disable the exposure flag on the project runtime (Paperclip stops requesting
+1. Disable the exposure flag on the project runtime (Bionic stops requesting
    `expose`). Existing previews drain on runtime stop.
-2. Drain owned listeners: stop each managed runtime so Paperclip issues `remove`
+2. Drain owned listeners: stop each managed runtime so Bionic issues `remove`
    for its own leases (proven by handle).
-3. `sudo systemctl disable --now paperclip-tailscale-https-broker`.
+3. `sudo systemctl disable --now bionic-tailscale-https-broker`.
 4. Optional cleanup: remove the state dirs and `sudo tailscale set --operator=`
    to drop the operator grant. Do **not** run `tailscale serve reset` — remove
    only the specific per-port Serve entries if any remain.
@@ -243,7 +243,7 @@ redacted.
 ## Tests
 
 ```sh
-pnpm --filter @paperclipai/tailscale-https-broker test        # 72 tests
-pnpm --filter @paperclipai/tailscale-https-broker typecheck
-pnpm --filter @paperclipai/tailscale-https-broker build
+pnpm --filter @bionicai/tailscale-https-broker test        # 72 tests
+pnpm --filter @bionicai/tailscale-https-broker typecheck
+pnpm --filter @bionicai/tailscale-https-broker build
 ```

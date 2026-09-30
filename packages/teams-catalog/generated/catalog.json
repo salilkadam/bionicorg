@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "packageName": "@paperclipai/teams-catalog",
+  "packageName": "@bionicai/teams-catalog",
   "packageVersion": "0.1.0",
-  "generatedAt": "2026-06-04T18:03:41.262Z",
+  "generatedAt": "2026-09-30T21:14:43.288Z",
   "teams": [
     {
-      "id": "paperclipai:bundled:company-defaults:core-exec-team",
-      "key": "paperclipai/bundled/company-defaults/core-exec-team",
+      "id": "bionicai:bundled:company-defaults:core-exec-team",
+      "key": "bionicai/bundled/company-defaults/core-exec-team",
       "kind": "bundled",
       "category": "company-defaults",
       "slug": "core-exec-team",
       "name": "Core Exec Team",
-      "description": "Default leadership and engineering team for bootstrapping a Paperclip company with a CEO, CTO, QA Engineer, starter project, and a recurring CEO heartbeat review task.",
+      "description": "Default leadership and engineering team for bootstrapping a Bionic company with a CEO, CTO, QA Engineer, starter project, and a recurring CEO heartbeat review task.",
       "path": "catalog/bundled/company-defaults/core-exec-team",
       "entrypoint": "TEAM.md",
       "schema": "agentcompanies/v1",
@@ -55,8 +55,8 @@
             "cto"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:software-development:github-pr-workflow",
-          "catalogSkillKey": "paperclipai/bundled/software-development/github-pr-workflow"
+          "catalogSkillId": "bionicai:bundled:software-development:github-pr-workflow",
+          "catalogSkillKey": "bionicai/bundled/software-development/github-pr-workflow"
         },
         {
           "type": "catalog",
@@ -65,8 +65,8 @@
             "ceo"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:paperclip-operations:issue-triage",
-          "catalogSkillKey": "paperclipai/bundled/paperclip-operations/issue-triage"
+          "catalogSkillId": "bionicai:bundled:bionic-operations:issue-triage",
+          "catalogSkillKey": "bionicai/bundled/bionic-operations/issue-triage"
         },
         {
           "type": "catalog",
@@ -75,8 +75,8 @@
             "qa"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:quality:qa-acceptance",
-          "catalogSkillKey": "paperclipai/bundled/quality/qa-acceptance"
+          "catalogSkillId": "bionicai:bundled:quality:qa-acceptance",
+          "catalogSkillKey": "bionicai/bundled/quality/qa-acceptance"
         },
         {
           "type": "catalog",
@@ -86,8 +86,8 @@
             "cto"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:paperclip-operations:task-planning",
-          "catalogSkillKey": "paperclipai/bundled/paperclip-operations/task-planning"
+          "catalogSkillId": "bionicai:bundled:bionic-operations:task-planning",
+          "catalogSkillKey": "bionicai/bundled/bionic-operations/task-planning"
         }
       ],
       "envInputs": [],
@@ -96,26 +96,26 @@
         {
           "path": "TEAM.md",
           "kind": "team",
-          "sizeBytes": 2144,
-          "sha256": "4ab4f57f147e89a56a6753755d7ef142d91741b3c0159f2e53fb333cd2779eaf"
+          "sizeBytes": 2117,
+          "sha256": "056981d15a1ae9ebc29ea9a9d720b857a13a9f57ce059aace8a04d56b1457099"
         },
         {
           "path": "agents/ceo/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 2492,
-          "sha256": "50f580c51807762265f09c6fe7bf32d7701d64caeb30595bfd577b2f5087c21b"
+          "sizeBytes": 2483,
+          "sha256": "7598ee442f59665a76fb73d87875929eebd730b7ef21eb9b5464c6e372da906a"
         },
         {
           "path": "agents/cto/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 1449,
-          "sha256": "596e2e9fe08d7368b3b0cfe72c2635ea80444d92a2c0414157bfb0a17773fcaf"
+          "sizeBytes": 1446,
+          "sha256": "5943846857c7c9b631a25b117238127e7c6e63f67593ff704211fe6cc5745dbb"
         },
         {
           "path": "agents/qa/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 1307,
-          "sha256": "2a139b88b4b98516048395c569c1bc74fd31cdc2da65db410e9779b8d92c0343"
+          "sizeBytes": 1304,
+          "sha256": "c071a361331b6a2eb958d8c60a2f10bb65f40253d42e9f85e661dffbf2f74307"
         },
         {
           "path": "projects/first-project/PROJECT.md",
@@ -132,11 +132,11 @@
       ],
       "trustLevel": "markdown_only",
       "compatibility": "compatible",
-      "contentHash": "sha256:0f20e9d56124c1dc90a1e4b128fabd863538bcc935117220f719d9620f7c89f1"
+      "contentHash": "sha256:8273fd2518faa6bb1c55ed5a80a200828971eb84a47d9e31aa8b7785e12b5175"
     },
     {
-      "id": "paperclipai:bundled:product:product-design",
-      "key": "paperclipai/bundled/product/product-design",
+      "id": "bionicai:bundled:product:product-design",
+      "key": "bionicai/bundled/product/product-design",
       "kind": "bundled",
       "category": "product",
       "slug": "product-design",
@@ -182,8 +182,8 @@
             "ux-designer"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:optional:product:design-critique",
-          "catalogSkillKey": "paperclipai/optional/product/design-critique"
+          "catalogSkillId": "bionicai:optional:product:design-critique",
+          "catalogSkillKey": "bionicai/optional/product/design-critique"
         },
         {
           "type": "catalog",
@@ -192,8 +192,8 @@
             "ux-designer"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:paperclip-operations:task-planning",
-          "catalogSkillKey": "paperclipai/bundled/paperclip-operations/task-planning"
+          "catalogSkillId": "bionicai:bundled:bionic-operations:task-planning",
+          "catalogSkillKey": "bionicai/bundled/bionic-operations/task-planning"
         },
         {
           "type": "catalog",
@@ -202,8 +202,8 @@
             "ux-designer"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:product:wireframe",
-          "catalogSkillKey": "paperclipai/bundled/product/wireframe"
+          "catalogSkillId": "bionicai:bundled:product:wireframe",
+          "catalogSkillKey": "bionicai/bundled/product/wireframe"
         }
       ],
       "envInputs": [],
@@ -212,14 +212,14 @@
         {
           "path": "TEAM.md",
           "kind": "team",
-          "sizeBytes": 2074,
-          "sha256": "205be8d3ef6c1f5e73729207913c387eee4cc9379191c3ce6d943fcf9ca2545d"
+          "sizeBytes": 2056,
+          "sha256": "0b6749597b923527c5fffd586929615a7f9d408c6a5356cd3befe7b824582960"
         },
         {
           "path": "agents/ux-designer/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 2136,
-          "sha256": "f5a4b5696d8249e9f9d808a4373c2a1e6b07faa463e72f83fd9d5bed98d2022f"
+          "sizeBytes": 2133,
+          "sha256": "40f7412b0c997b4b9764db73de15c4510cebe7891f97a073816f95e30e51bb5c"
         },
         {
           "path": "projects/product-design/PROJECT.md",
@@ -236,11 +236,11 @@
       ],
       "trustLevel": "markdown_only",
       "compatibility": "compatible",
-      "contentHash": "sha256:15a04b36f31d4c9a391bb499c92e91fedfcc237cfa6c3d41ea3ddb441bc85c5b"
+      "contentHash": "sha256:ffe5cf53c0d728818b718892589e292c714fbb41c99c03d065782388c63b21d3"
     },
     {
-      "id": "paperclipai:bundled:software-development:product-engineering",
-      "key": "paperclipai/bundled/software-development/product-engineering",
+      "id": "bionicai:bundled:software-development:product-engineering",
+      "key": "bionicai/bundled/software-development/product-engineering",
       "kind": "bundled",
       "category": "software-development",
       "slug": "product-engineering",
@@ -290,8 +290,8 @@
             "senior-coder"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:docs:doc-maintenance",
-          "catalogSkillKey": "paperclipai/bundled/docs/doc-maintenance"
+          "catalogSkillId": "bionicai:bundled:docs:doc-maintenance",
+          "catalogSkillKey": "bionicai/bundled/docs/doc-maintenance"
         },
         {
           "type": "catalog",
@@ -301,8 +301,8 @@
             "senior-coder"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:software-development:github-pr-workflow",
-          "catalogSkillKey": "paperclipai/bundled/software-development/github-pr-workflow"
+          "catalogSkillId": "bionicai:bundled:software-development:github-pr-workflow",
+          "catalogSkillKey": "bionicai/bundled/software-development/github-pr-workflow"
         },
         {
           "type": "catalog",
@@ -311,8 +311,8 @@
             "qa"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:quality:qa-acceptance",
-          "catalogSkillKey": "paperclipai/bundled/quality/qa-acceptance"
+          "catalogSkillId": "bionicai:bundled:quality:qa-acceptance",
+          "catalogSkillKey": "bionicai/bundled/quality/qa-acceptance"
         },
         {
           "type": "catalog",
@@ -321,8 +321,8 @@
             "cto"
           ],
           "resolved": true,
-          "catalogSkillId": "paperclipai:bundled:paperclip-operations:task-planning",
-          "catalogSkillKey": "paperclipai/bundled/paperclip-operations/task-planning"
+          "catalogSkillId": "bionicai:bundled:bionic-operations:task-planning",
+          "catalogSkillKey": "bionicai/bundled/bionic-operations/task-planning"
         }
       ],
       "envInputs": [],
@@ -331,32 +331,32 @@
         {
           "path": "TEAM.md",
           "kind": "team",
-          "sizeBytes": 2583,
-          "sha256": "7204eeef78a48714dd3f82b82e171a4039adc6325e91a6bdf51a442105ee33b0"
+          "sizeBytes": 2562,
+          "sha256": "a50fb0b6c84e4b4e990610c3c2e87b692a42c6c2080c3bfa1888144a6cae333c"
         },
         {
-          "path": ".paperclip.yaml",
+          "path": ".bionic.yaml",
           "kind": "extension",
-          "sizeBytes": 81,
-          "sha256": "54babf05ba130ec54a143abf01581d99c0ac2936fd0d929bf0e0edd00e29d861"
+          "sizeBytes": 78,
+          "sha256": "8a23b31c0ab8c2afb8a5f37ece9a1cec87223980220290a7fb491b5ee8f134d0"
         },
         {
           "path": "agents/cto/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 1499,
-          "sha256": "0a1a73ec9e5008056bca0a26325131ded2fcf4c4680a5014ba1e13400b32c173"
+          "sizeBytes": 1496,
+          "sha256": "46d4dc65a404dde14d903fb7c68d8c62f72491c01708022ca10509fd5ea4fd89"
         },
         {
           "path": "agents/qa/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 1223,
-          "sha256": "2d5738f831aa772befa3471c844a0c9e611584be668e3ec82580ca9e92dc13fc"
+          "sizeBytes": 1220,
+          "sha256": "5ee7a3d082d823c14ffb34d4b6e21cb7e4eea3cec7daa1ffbffcfe5ff3d7b7eb"
         },
         {
           "path": "agents/senior-coder/AGENTS.md",
           "kind": "agent",
-          "sizeBytes": 1413,
-          "sha256": "b61071518755d9e584c099ae2082c7a78448d09586093ee91393082fe10872b5"
+          "sizeBytes": 1410,
+          "sha256": "32eab9f946fcd20e87c738849307fe354c559986aed541b3c79540fcdd15c5ca"
         },
         {
           "path": "projects/product-engineering/PROJECT.md",
@@ -373,11 +373,11 @@
       ],
       "trustLevel": "assets",
       "compatibility": "compatible",
-      "contentHash": "sha256:74ddeaeb11805835a4a67fc4530b048ab7f8aa1dc7d2b80acea139a933d158d3"
+      "contentHash": "sha256:8ab015755ed5d96922300ebf722422e88d91b0d120003dc4a6f9fb8f92600518"
     },
     {
-      "id": "paperclipai:optional:content:content-machine",
-      "key": "paperclipai/optional/content/content-machine",
+      "id": "bionicai:optional:content:content-machine",
+      "key": "bionicai/optional/content/content-machine",
       "kind": "optional",
       "category": "content",
       "slug": "content-machine",
@@ -431,8 +431,8 @@
         {
           "path": "TEAM.md",
           "kind": "team",
-          "sizeBytes": 1032,
-          "sha256": "f7c272c8b0c183fc840d49eb4851b7cdd1a30a5aa8d6415d215110f3238f6f13"
+          "sizeBytes": 1029,
+          "sha256": "7efca680fb5923ca2b8f13ed6de58539ba315f6341b36f70e1dec0932efb18a9"
         },
         {
           "path": "agents/content-lead/AGENTS.md",
@@ -461,7 +461,7 @@
       ],
       "trustLevel": "markdown_only",
       "compatibility": "compatible",
-      "contentHash": "sha256:06822cec5f2b6910cb37ba0ebd5e04ed5c7e34f77225564ddddc2470779cdaa6"
+      "contentHash": "sha256:a36fc6264674562b96186cd456e2fa7e0f91f803e819a3f6766cdae695039059"
     }
   ]
 }

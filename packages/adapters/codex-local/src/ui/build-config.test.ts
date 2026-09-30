@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCodexLocalConfig, buildPaperclipRunnerConfig } from "./build-config.js";
-import type { CreateConfigValues } from "@paperclipai/adapter-utils";
+import type { CreateConfigValues } from "@bionicai/adapter-utils";
 
 function makeValues(overrides: Partial<CreateConfigValues> = {}): CreateConfigValues {
   return {
@@ -36,11 +36,11 @@ function makeValues(overrides: Partial<CreateConfigValues> = {}): CreateConfigVa
 }
 
 describe("buildCodexLocalConfig", () => {
-  it.each([undefined, "approve-all", "approve-paperclip", "approve-reads", "deny-all"])(
+  it.each([undefined, "approve-all", "approve-bionic", "approve-reads", "deny-all"])(
     "defaults Grok to full auto while preserving an explicit %s permission mode",
     (acpxPermissionMode) => {
       const config = buildPaperclipRunnerConfig(makeValues({
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         model: "",
         adapterSchemaValues: { provider: "acpx", acpxAgent: "grok", acpxPermissionMode },
       }));
@@ -56,13 +56,13 @@ describe("buildCodexLocalConfig", () => {
   it.each(["", "grok-4.7-custom"])("retains the Grok harness and its model when normalizing runner fields (%s)", (model) => {
     const values = makeValues({
       model,
-      adapterSchemaValues: { provider: "acpx", acpxAgent: "grok", acpxPermissionMode: "approve-paperclip" },
+      adapterSchemaValues: { provider: "acpx", acpxAgent: "grok", acpxPermissionMode: "approve-bionic" },
     });
     expect(buildPaperclipRunnerConfig(values)).toMatchObject({
       provider: "acpx",
       acpxAgent: "grok",
       model: model || "grok-4.7",
-      acpxPermissionMode: "approve-paperclip",
+      acpxPermissionMode: "approve-bionic",
     });
     expect(values.adapterSchemaValues?.acpxAgent).toBe("grok");
   });
@@ -157,10 +157,10 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("persists bounded Codex permission and warm lifecycle values", () => {
     const config = buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       codexPermissionMode: "never",
-      paperclipRunnerLifecycleMode: "warm",
-      paperclipRunnerIdleTimeoutMs: 45_000,
+      bionicRunnerLifecycleMode: "warm",
+      bionicRunnerIdleTimeoutMs: 45_000,
     }));
 
     expect(config).toMatchObject({
@@ -184,7 +184,7 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("builds a qualified OpenCode profile from schema-backed values", () => {
     expect(buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       model: "",
       adapterSchemaValues: {
         provider: "opencode",
@@ -201,7 +201,7 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("does not let a stale schema model override the active Codex model", () => {
     expect(buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       model: "gpt-5.6-sol",
       adapterSchemaValues: {
         provider: "codex",
@@ -228,7 +228,7 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("does not materialize the unavailable ACPX Pi profile", () => {
     expect(buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       model: "",
       adapterSchemaValues: {
         provider: "acpx",
@@ -243,7 +243,7 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("builds a Claude Managed profile reference with explicit retention and spend controls", () => {
     const config = buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       model: "claude-sonnet-5",
       adapterSchemaValues: {
         provider: "claude_managed",
@@ -265,7 +265,7 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("builds an AgentCore profile reference with bounded invocation controls", () => {
     expect(buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       model: "",
       adapterSchemaValues: {
         provider: "aws_agentcore",
@@ -296,7 +296,7 @@ describe("buildPaperclipRunnerConfig", () => {
     ["timeoutSeconds", 301],
   ])("rejects an unsafe AgentCore %s value", (field, value) => {
     expect(() => buildPaperclipRunnerConfig(makeValues({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterSchemaValues: {
         provider: "aws_agentcore",
         agentCoreProfileId: "agentcore-primary",
@@ -315,8 +315,8 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("bounds warm lifecycle values to the shared safe default", () => {
     expect(buildPaperclipRunnerConfig(makeValues({
-      paperclipRunnerLifecycleMode: "warm",
-      paperclipRunnerIdleTimeoutMs: 86_400_001,
+      bionicRunnerLifecycleMode: "warm",
+      bionicRunnerIdleTimeoutMs: 86_400_001,
     }))).toMatchObject({
       lifecycleMode: "warm",
       idleTimeoutMs: 300_000,
@@ -325,8 +325,8 @@ describe("buildPaperclipRunnerConfig", () => {
 
   it("omits an idle timeout for turn-by-turn sessions", () => {
     const config = buildPaperclipRunnerConfig(makeValues({
-      paperclipRunnerLifecycleMode: "per_turn",
-      paperclipRunnerIdleTimeoutMs: 45_000,
+      bionicRunnerLifecycleMode: "per_turn",
+      bionicRunnerIdleTimeoutMs: 45_000,
     }));
 
     expect(config).not.toHaveProperty("idleTimeoutMs");

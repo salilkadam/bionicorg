@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
 export const DAYTONA_IMAGE_CONTENT_SCHEMA =
-  "paperclip-daytona-runner-image-content/v5";
+  "bionic-daytona-runner-image-content/v5";
 export const DAYTONA_IMAGE_PLATFORM = "linux/amd64";
 export const DAYTONA_IMAGE_DOCKERFILE_PATH = "docker/daytona-runner/Dockerfile";
 
@@ -24,42 +24,42 @@ export const DAYTONA_IMAGE_INPUT_PATHS = [
   "pnpm-workspace.yaml",
   "scripts/link-plugin-dev-sdk.mjs",
   "tsconfig.base.json",
-  "packages/paperclip-eval-kernel/package.json",
-  "packages/paperclip-eval-kernel/src",
-  "packages/paperclip-eval-kernel/tsconfig.json",
-  "packages/paperclip-runner/scripts/provision-grok.mjs",
-  "packages/paperclip-runner/package.json",
-  "packages/paperclip-runner/protocol",
-  "packages/paperclip-runner/runner/Cargo.lock",
-  "packages/paperclip-runner/runner/Cargo.toml",
-  "packages/paperclip-runner/runner/crates",
-  "packages/paperclip-runner/scripts/acpx-sidecar-contract.mjs",
-  "packages/paperclip-runner/scripts/build-provider-pack.mjs",
-  "packages/paperclip-runner/scripts/candidate-provider-pack.mjs",
-  "packages/paperclip-runner/scripts/build-verified-provider-entrypoints.mjs",
-  "packages/paperclip-runner/scripts/generate-acpx-sidecar-contract.mjs",
-  "packages/paperclip-runner/scripts/generate-protocol-schema-module.mjs",
-  "packages/paperclip-runner/src",
-  "packages/paperclip-runner/styles.css",
-  "packages/paperclip-runner/tsconfig.json",
-  "packages/paperclip-runner/tsconfig.surfaces.json",
+  "packages/bionic-eval-kernel/package.json",
+  "packages/bionic-eval-kernel/src",
+  "packages/bionic-eval-kernel/tsconfig.json",
+  "packages/bionic-runner/scripts/provision-grok.mjs",
+  "packages/bionic-runner/package.json",
+  "packages/bionic-runner/protocol",
+  "packages/bionic-runner/runner/Cargo.lock",
+  "packages/bionic-runner/runner/Cargo.toml",
+  "packages/bionic-runner/runner/crates",
+  "packages/bionic-runner/scripts/acpx-sidecar-contract.mjs",
+  "packages/bionic-runner/scripts/build-provider-pack.mjs",
+  "packages/bionic-runner/scripts/candidate-provider-pack.mjs",
+  "packages/bionic-runner/scripts/build-verified-provider-entrypoints.mjs",
+  "packages/bionic-runner/scripts/generate-acpx-sidecar-contract.mjs",
+  "packages/bionic-runner/scripts/generate-protocol-schema-module.mjs",
+  "packages/bionic-runner/src",
+  "packages/bionic-runner/styles.css",
+  "packages/bionic-runner/tsconfig.json",
+  "packages/bionic-runner/tsconfig.surfaces.json",
 ] as const;
 
 const ignoredRunnerDevelopmentDirectoryPaths = new Set([
-  "packages/paperclip-runner/devtools",
-  "packages/paperclip-runner/docs",
-  "packages/paperclip-runner/examples",
-  "packages/paperclip-runner/test",
-  "packages/paperclip-runner/test-fixtures",
-  "packages/paperclip-runner/test-support",
+  "packages/bionic-runner/devtools",
+  "packages/bionic-runner/docs",
+  "packages/bionic-runner/examples",
+  "packages/bionic-runner/test",
+  "packages/bionic-runner/test-fixtures",
+  "packages/bionic-runner/test-support",
 ]);
 
 const runnerDocumentationFilePattern = /\.md$/;
 const runnerTestFilePattern = /\.(?:spec|test)\.(?:[cm]?[jt]sx?)$/;
 const runnerRustIntegrationTestPathPattern =
-  /^packages\/paperclip-runner\/runner\/crates\/[^/]+\/tests(?:\/|$)/;
+  /^packages\/bionic-runner\/runner\/crates\/[^/]+\/tests(?:\/|$)/;
 const runnerSmokeScriptPattern =
-  /^packages\/paperclip-runner\/scripts\/[^/]+-smoke\.mjs$/;
+  /^packages\/bionic-runner\/scripts\/[^/]+-smoke\.mjs$/;
 
 export interface DaytonaImageContentOptions {
   repositoryRoot?: string;
@@ -67,7 +67,7 @@ export interface DaytonaImageContentOptions {
   platform?: string;
   baseImages?: readonly string[];
   frontendDigest?: string;
-  /** Must match the Docker PAPERCLIP_RUNNER_CANDIDATE_PROVIDERS build argument. */
+  /** Must match the Docker BIONIC_RUNNER_CANDIDATE_PROVIDERS build argument. */
   candidateProviders?: readonly string[];
 }
 
@@ -93,7 +93,7 @@ function shouldIgnore(relativePath: string): boolean {
 }
 
 function shouldIgnoreRunnerDevelopmentInput(relativePath: string): boolean {
-  if (!relativePath.startsWith("packages/paperclip-runner/")) return false;
+  if (!relativePath.startsWith("packages/bionic-runner/")) return false;
   if (ignoredRunnerDevelopmentDirectoryPaths.has(relativePath)) return true;
   return (
     runnerDocumentationFilePattern.test(relativePath) ||

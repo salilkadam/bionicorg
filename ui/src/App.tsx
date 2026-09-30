@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import type { ToolConnectionCredentialSource } from "@paperclipai/shared";
+import type { ToolConnectionCredentialSource } from "@bionicai/shared";
 import { Navigate, Outlet, Route, Routes, useActiveCompanyPrefix, useLocation, useParams } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n";
@@ -441,7 +441,7 @@ function boardRoutes(streamlinedUiEnabled: boolean) {
 }
 
 function AppsConnectEntryRoute({
-  credentialSource = "paperclip_vault",
+  credentialSource = "bionic_vault",
 }: {
   credentialSource?: ToolConnectionCredentialSource;
 } = {}) {
@@ -594,7 +594,7 @@ export function OnboardingRoutePage() {
             <p className="text-sm text-muted-foreground">
               {t("app.cloudCreateUnavailable", {
                 defaultValue:
-                  "Organizations are created in Paperclip Cloud. This instance can't reach it right now — try again from your Cloud portfolio.",
+                  "Organizations are created in Bionic Cloud. This instance can't reach it right now — try again from your Cloud portfolio.",
               })}
             </p>
           ) : (
@@ -723,7 +723,7 @@ function NoCompaniesStartPage() {
             <p className="text-sm text-muted-foreground">
               {t("app.cloudCreateUnavailable", {
                 defaultValue:
-                  "Organizations are created in Paperclip Cloud. This instance can't reach it right now — try again from your Cloud portfolio.",
+                  "Organizations are created in Bionic Cloud. This instance can't reach it right now — try again from your Cloud portfolio.",
               })}
             </p>
           ) : (

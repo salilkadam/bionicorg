@@ -1,5 +1,5 @@
 import { ConnectionSetupFlow } from "@/features/connections/ConnectionSetupFlow";
-import type { ToolConnectionCredentialSource } from "@paperclipai/shared";
+import type { ToolConnectionCredentialSource } from "@bionicai/shared";
 import { useCompany } from "@/context/CompanyContext";
 import { useNavigate, useParams, useSearchParams } from "@/lib/router";
 import { consumeSkillSourceReturn, skillSourceReturnPath } from "@/lib/skill-source-connect-return";
@@ -7,7 +7,7 @@ import { consumeSkillSourceReturn, skillSourceReturnPath } from "@/lib/skill-sou
 export { AccessStep, OAuthConnectStateScreen, type OAuthConnectPhase } from "@/features/connections/ConnectionSetupFlow";
 
 /** Full-page host for the same setup used by inline connection requests. */
-export function AppsConnect({ byoOnly = false, credentialSource = "paperclip_vault" }: {
+export function AppsConnect({ byoOnly = false, credentialSource = "bionic_vault" }: {
   byoOnly?: boolean;
   credentialSource?: ToolConnectionCredentialSource;
 } = {}) {

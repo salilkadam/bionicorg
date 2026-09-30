@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { IssueRecoveryAction } from "@paperclipai/shared";
-import { isNativeWorkspaceExportRepairCause } from "@paperclipai/shared";
+import type { IssueRecoveryAction } from "@bionicai/shared";
+import { isNativeWorkspaceExportRepairCause } from "@bionicai/shared";
 import { issuesApi } from "../api/issues";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";

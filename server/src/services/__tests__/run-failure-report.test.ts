@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import os from "node:os";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { agents, companies, createDb, heartbeatRuns, type Db } from "@paperclipai/db";
+import { agents, companies, createDb, heartbeatRuns, type Db } from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -41,7 +41,7 @@ describeEmbeddedPostgres("reportRunFailure", () => {
   let inheritedEnv: NodeJS.ProcessEnv;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-run-failure-report-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-run-failure-report-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
@@ -74,7 +74,7 @@ describeEmbeddedPostgres("reportRunFailure", () => {
     agentId = randomUUID();
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "responsible-user",
@@ -197,7 +197,7 @@ describeEmbeddedPostgres("reportRunFailure", () => {
     const secret = "opaque-registered-value";
     const run = buildRun({
       error: `connection failed: ${secret}`,
-      contextSnapshot: { paperclipSecretRedactions: [{ fingerprintSha256: "fixture", material: { encrypted: "fixture" } }] },
+      contextSnapshot: { bionicSecretRedactions: [{ fingerprintSha256: "fixture", material: { encrypted: "fixture" } }] },
       resultJson: { terminalSessionFailure: { category: "service", details: `upstream rejected ${secret}` } },
     });
     await db.insert(heartbeatRuns).values(run);
@@ -352,7 +352,7 @@ describeEmbeddedPostgres("reportRunFailure", () => {
     await seedCompanyAndAgent();
     const run = buildRun({
       status: "failed",
-      error: `connect failed: connectionString: "postgres://appuser:s3cr3t-pass@db.internal:5432/paperclip"`,
+      error: `connect failed: connectionString: "postgres://appuser:s3cr3t-pass@db.internal:5432/bionic"`,
     });
 
     await reportRunFailure(db, run);
@@ -392,8 +392,8 @@ describeEmbeddedPostgres("reportRunFailure", () => {
   });
 
   it("preserves a short error message with known public host settings", async () => {
-    vi.stubEnv("PAPERCLIP_DB_BACKUP_ENABLED", "false");
-    vi.stubEnv("PAPERCLIP_DB_BACKUP_RETENTION_DAYS", "1");
+    vi.stubEnv("BIONIC_DB_BACKUP_ENABLED", "false");
+    vi.stubEnv("BIONIC_DB_BACKUP_RETENTION_DAYS", "1");
     vi.stubEnv("GITHUB_RUN_ATTEMPT", "1");
     await seedCompanyAndAgent();
     const shortError = "the provider process exited with code 1";

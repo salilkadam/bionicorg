@@ -10,7 +10,7 @@ import type {
   HeartbeatRunEvent,
   ProviderTraceFieldMapping,
   ProviderTraceFrame,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   ArrowRight,
   Braces,
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { heartbeatsApi, type ProviderTraceInspection } from "@/api/heartbeats";
 import { accessApi } from "@/api/access";
-import { parsePaperclipRunnerStdoutLine } from "@/adapters/paperclip-runner";
+import { parsePaperclipRunnerStdoutLine } from "@/adapters/bionic-runner";
 import { TaskChatProtocolCard } from "@/components/task-chat/TaskChatProtocolCard";
 import type { TaskChatProtocolItem } from "@/components/task-chat/task-chat-model";
 import { transcriptToTaskChatItems } from "@/components/task-chat/transcript-adapter";
@@ -605,7 +605,7 @@ function ProductionSurfacePreview({ event, runId }: { event: HeartbeatRunEvent; 
   const prp = eventPrp(event);
   const ts = new Date(event.createdAt).toISOString();
   const entries = parsePaperclipRunnerStdoutLine(
-    JSON.stringify({ type: "paperclip.prp.event", event: prp }),
+    JSON.stringify({ type: "bionic.prp.event", event: prp }),
     ts,
   );
   const item = transcriptToTaskChatItems(entries, {

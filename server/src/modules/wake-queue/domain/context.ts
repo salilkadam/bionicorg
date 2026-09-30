@@ -7,10 +7,10 @@
 import { extractWakeCommentIds, WAKE_COMMENT_IDS_KEY } from "../../run-dispatch/index.js";
 import { readNonEmptyString } from "./values.js";
 
-const PAPERCLIP_WAKE_PAYLOAD_KEY = "paperclipWake";
-const PAPERCLIP_WAKE_COMMENT_KEY = "paperclipWakeComment";
-const PAPERCLIP_TASK_MARKDOWN_KEY = "paperclipTaskMarkdown";
-const PAPERCLIP_TASK_MARKDOWN_COMPACT_KEY = "paperclipTaskMarkdownCompact";
+const BIONIC_WAKE_PAYLOAD_KEY = "bionicWake";
+const BIONIC_WAKE_COMMENT_KEY = "bionicWakeComment";
+const BIONIC_TASK_MARKDOWN_KEY = "bionicTaskMarkdown";
+const BIONIC_TASK_MARKDOWN_COMPACT_KEY = "bionicTaskMarkdownCompact";
 
 const INTERACTION_CONTINUATION_CONTEXT_KEYS = [
   "interactionId",
@@ -140,10 +140,10 @@ export function enrichPromotedWakeContext(
   // shortcut for quarantined comment content) or duplicate it outside the
   // one place it is proven correct, so this function leaves the render to
   // dispatch and only guarantees the raw inputs survive.
-  delete contextSnapshot[PAPERCLIP_WAKE_PAYLOAD_KEY];
-  delete contextSnapshot[PAPERCLIP_WAKE_COMMENT_KEY];
-  delete contextSnapshot[PAPERCLIP_TASK_MARKDOWN_KEY];
-  delete contextSnapshot[PAPERCLIP_TASK_MARKDOWN_COMPACT_KEY];
+  delete contextSnapshot[BIONIC_WAKE_PAYLOAD_KEY];
+  delete contextSnapshot[BIONIC_WAKE_COMMENT_KEY];
+  delete contextSnapshot[BIONIC_TASK_MARKDOWN_KEY];
+  delete contextSnapshot[BIONIC_TASK_MARKDOWN_COMPACT_KEY];
   if (wakeCommentIds.length > 0) {
     const latestCommentId = wakeCommentIds[wakeCommentIds.length - 1];
     contextSnapshot[WAKE_COMMENT_IDS_KEY] = wakeCommentIds;

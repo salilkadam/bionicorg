@@ -22,7 +22,7 @@ import { fork, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { createInterface, type Interface as ReadlineInterface } from "node:readline";
-import type { PaperclipPluginManifestV1 } from "@paperclipai/shared";
+import type { PaperclipPluginManifestV1 } from "@bionicai/shared";
 import {
   JSONRPC_VERSION,
   JSONRPC_ERROR_CODES,
@@ -43,7 +43,7 @@ import {
   DUPLEX_CHANNEL_EXIT_NOTIFICATION,
   encodeChannelBytes,
   decodeChannelBytes,
-} from "@paperclipai/plugin-sdk";
+} from "@bionicai/plugin-sdk";
 import type {
   JsonRpcId,
   PluginInvocationContext,
@@ -57,8 +57,8 @@ import type {
   WorkerToHostMethodName,
   WorkerToHostMethods,
   InitializeParams,
-} from "@paperclipai/plugin-sdk";
-import { getActiveStepContext } from "@paperclipai/adapter-utils/acpx-engine/startup-timing";
+} from "@bionicai/plugin-sdk";
+import { getActiveStepContext } from "@bionicai/adapter-utils/acpx-engine/startup-timing";
 import {
   isLoginCommandKey,
   validateLoginSessionHome,
@@ -574,7 +574,7 @@ export interface LoginPtyOpenInput {
   loginCommandKey: LoginCommandKey;
   /**
    * The server-controlled, validated session home. The shape is exact:
-   * `/tmp/paperclip-adapter-login/<uuid>`.
+   * `/tmp/bionic-adapter-login/<uuid>`.
    */
   sessionHome: string;
 }
@@ -972,7 +972,7 @@ export function createPluginWorkerHandle(
   // A proactive plugin (e.g. the chat gateway) does company-scoped work from
   // its own timers/loops — not inside a host-issued top-level invocation
   // (onEvent/performAction/executeTool/configChanged). Those worker→host calls
-  // carry no `paperclipInvocationId`, so the governed-access gate
+  // carry no `bionicInvocationId`, so the governed-access gate
   // (host-client-factory.ts) rejects any company-scoped request with
   // "company context is required" (regression class from #9557). The host
   // authorizes a bounded set of companies — the plugin's configured companies,
@@ -1230,7 +1230,7 @@ export function createPluginWorkerHandle(
   // Complete mediation: the host and the worker share one stdio pipe, and the
   // worker process sees every active invocation id. So the host cannot prove
   // which concurrent invocation produced a notification, and it must NOT treat
-  // the worker-supplied `paperclipInvocationId` alone as proof of origin. The
+  // the worker-supplied `bionicInvocationId` alone as proof of origin. The
   // host validates the exact company scope instead: it delivers only while every
   // active execute route on this worker belongs to ONE company. When a second
   // company's execute overlaps, the host fails closed — it latches the active
@@ -1240,7 +1240,7 @@ export function createPluginWorkerHandle(
   // stream pauses while two companies overlap.
   function routeExecuteLogNotification(notification: JsonRpcNotification): void {
     const invocationId = readNonEmptyString(
-      (notification as { paperclipInvocationId?: unknown }).paperclipInvocationId,
+      (notification as { bionicInvocationId?: unknown }).bionicInvocationId,
     );
     const params = isRecord(notification.params) ? notification.params : {};
     const stream = params.stream;
@@ -2665,7 +2665,7 @@ export function createPluginWorkerHandle(
 
   function contextForWorkerMessage(message: JsonRpcRequest | JsonRpcNotification): WorkerHostCallContext {
     const invocationId = readNonEmptyString(
-      (message as { paperclipInvocationId?: unknown }).paperclipInvocationId,
+      (message as { bionicInvocationId?: unknown }).bionicInvocationId,
     );
     if (!invocationId) {
       // No host-issued invocation is being echoed. This is a genuinely
@@ -2876,7 +2876,7 @@ export function createPluginWorkerHandle(
       ...options.env,
       PATH: process.env.PATH ?? "",
       NODE_PATH: process.env.NODE_PATH ?? "",
-      PAPERCLIP_PLUGIN_ID: pluginId,
+      BIONIC_PLUGIN_ID: pluginId,
       NODE_ENV: process.env.NODE_ENV ?? "production",
       TZ: process.env.TZ ?? "UTC",
     };
@@ -3362,7 +3362,7 @@ export function createPluginWorkerHandle(
       try {
         const request = {
           ...createRequest(method, params, id),
-          ...(invocation ? { paperclipInvocation: invocation } : {}),
+          ...(invocation ? { bionicInvocation: invocation } : {}),
         };
         sendMessage(request);
       } catch (err) {
@@ -3469,7 +3469,7 @@ export function createPluginWorkerHandle(
           jsonrpc: JSONRPC_VERSION,
           method,
           params,
-          ...(invocation ? { paperclipInvocation: invocation } : {}),
+          ...(invocation ? { bionicInvocation: invocation } : {}),
         });
       } catch {
         clearInvocation(invocation);

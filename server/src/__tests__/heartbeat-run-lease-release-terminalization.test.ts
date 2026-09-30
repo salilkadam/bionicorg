@@ -8,7 +8,7 @@ import {
   heartbeatRunEvents,
   heartbeatRuns,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -35,7 +35,7 @@ describeEmbeddedPostgres("heartbeat terminalizeRunOnLeaseRelease", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-lease-release-terminal-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-lease-release-terminal-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
@@ -59,7 +59,7 @@ describeEmbeddedPostgres("heartbeat terminalizeRunOnLeaseRelease", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -156,7 +156,7 @@ describeEmbeddedPostgres("heartbeat terminalizeRunOnLeaseRelease", () => {
     const [run] = await db.update(heartbeatRuns).set({
       nativeIssueId: issueId,
       resultJson: { cancelledByActorType: "user", cancelledByUserId: "board", nativeCancellation: {
-        schema: "paperclip.native-cancellation.v1", runId, companyId, issueId, scope: "run",
+        schema: "bionic.native-cancellation.v1", runId, companyId, issueId, scope: "run",
         reasonCode: "cancellation_run_only", dispatched: true, dispatchState: "acknowledged",
         intentAuditId: randomUUID(), acknowledgementAuditId: randomUUID(),
       } },

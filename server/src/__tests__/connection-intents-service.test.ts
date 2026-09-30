@@ -25,12 +25,12 @@ import {
   toolProfileBindings,
   toolProfiles,
   userSecretDefinitions,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type { RuntimeToolsTokenClaims } from "../runtime-tools-token.js";
 import { wakeConnectionIntentAfterResolution } from "../routes/connection-intents.js";
 import { connectionIntentDeliveryService } from "../services/connection-intent-delivery.js";
 import { issueThreadInteractionService } from "../services/issue-thread-interactions.js";
-import { PaperclipRunnerToolAuthority } from "../services/native-runtime/paperclip-runner-tool-authority.js";
+import { PaperclipRunnerToolAuthority } from "../services/native-runtime/bionic-runner-tool-authority.js";
 import { materializeNativeInteractionResponses } from "../services/native-runtime/native-interaction-bridge.js";
 import { connectionIntentService } from "../services/connection-intents.js";
 import {
@@ -80,7 +80,7 @@ describeEmbeddedPostgres("connectionIntentService", () => {
   let runId!: string;
 
   beforeAll(async () => {
-    const tempDb = await startEmbeddedPostgresTestDatabase("paperclip-connection-intents-");
+    const tempDb = await startEmbeddedPostgresTestDatabase("bionic-connection-intents-");
     cleanup = tempDb.cleanup;
     connectionString = tempDb.connectionString;
     db = createDb(connectionString);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ExecutionBlocker } from "@paperclipai/shared";
+import type { ExecutionBlocker } from "@bionicai/shared";
 import { agentsApi } from "../api/agents";
 import { activityApi } from "../api/activity";
 import { queryKeys } from "../lib/queryKeys";

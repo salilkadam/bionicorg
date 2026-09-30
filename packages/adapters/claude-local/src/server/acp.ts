@@ -8,38 +8,38 @@ import type {
   AdapterEnvironmentTestResult,
   AdapterExecutionContext,
   AdapterExecutionResult,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import {
   parseLocalProcessFilesystemScope,
   parseLocalProcessNetworkScope,
-} from "@paperclipai/adapter-utils/local-process-sandbox";
+} from "@bionicai/adapter-utils/local-process-sandbox";
 import {
   ensureAdapterExecutionTargetCommandResolvable,
   ensureAdapterExecutionTargetDirectory,
   readAdapterExecutionTarget,
   resolveAdapterExecutionTargetCwd,
   runAdapterExecutionTargetProcess,
-} from "@paperclipai/adapter-utils/execution-target";
-import type { AdapterExecutionTarget } from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
+import type { AdapterExecutionTarget } from "@bionicai/adapter-utils/execution-target";
 import {
   DEFAULT_ACP_ENGINE_MODE,
   DEFAULT_ACP_ENGINE_NON_INTERACTIVE_PERMISSIONS,
   DEFAULT_ACP_ENGINE_PERMISSION_MODE,
   DEFAULT_ACP_ENGINE_WARM_HANDLE_IDLE_MS,
-} from "@paperclipai/adapter-utils/acpx-engine/constants";
+} from "@bionicai/adapter-utils/acpx-engine/constants";
 import type {
   AcpxEngineExecutorOptions,
   AcpxRemoteManagedHomeContext,
   AcpxRemoteManagedHomeResult,
   AcpxTerminalSessionFailure,
   AcpxTerminalFailureClassification,
-} from "@paperclipai/adapter-utils/acpx-engine/execute";
+} from "@bionicai/adapter-utils/acpx-engine/execute";
 import {
   asBoolean,
   asNumber,
   asString,
   parseObject,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 import {
   materializeRemoteClaudeConfig,
   prepareClaudeConfigSeed,
@@ -51,7 +51,7 @@ import {
   classifyThrownErrorClass,
   logSandboxProbeDiagnostic,
 } from "./probe-diagnostics.js";
-import { createWorkspaceRestoreTeardown } from "@paperclipai/adapter-utils/workspace-restore-teardown";
+import { createWorkspaceRestoreTeardown } from "@bionicai/adapter-utils/workspace-restore-teardown";
 import { buildLocalAdapterTestProbeEnv } from "./probe-env.js";
 import { detectClaudeLoginRequired, extractClaudeRetryNotBefore, isClaudeProviderQuotaError, parseClaudeStreamJson } from "./parse.js";
 import { buildClaudeProbePermissionArgs, claudeSandboxPermissionEnv } from "./permissions.js";
@@ -222,8 +222,8 @@ async function prepareClaudeRemoteManagedHome(
     createWorkspaceRestoreTeardown({
       stagedRuntime,
       onLog,
-      startMessage: "[paperclip] Restoring workspace changes from the sandbox.\n",
-      failurePrefix: "[paperclip] Claude ACP teardown workspace restore failed",
+      startMessage: "[bionic] Restoring workspace changes from the sandbox.\n",
+      failurePrefix: "[bionic] Claude ACP teardown workspace restore failed",
     });
   const envConfig = parseObject(input.config.env);
   const explicitClaudeConfigDir =
@@ -258,13 +258,13 @@ async function prepareClaudeRemoteManagedHome(
       env.CLAUDE_CONFIG_DIR = remappedConfigDir;
       await onLog(
         "stdout",
-        `[paperclip] Remapped operator CLAUDE_CONFIG_DIR from host path ${explicitClaudeConfigDir} onto the in-sandbox workspace path ${remappedConfigDir} for the remote ACP run.\n`,
+        `[bionic] Remapped operator CLAUDE_CONFIG_DIR from host path ${explicitClaudeConfigDir} onto the in-sandbox workspace path ${remappedConfigDir} for the remote ACP run.\n`,
       );
       return { stagedRuntime, teardown: registerWorkspaceSyncBack(stagedRuntime) };
     }
     await onLog(
       "stderr",
-      `[paperclip] operator-provided CLAUDE_CONFIG_DIR=${explicitClaudeConfigDir} is outside the staged workspace and cannot reach the remote sandbox; ignoring the host-only path and seeding the managed Claude config instead.\n`,
+      `[bionic] operator-provided CLAUDE_CONFIG_DIR=${explicitClaudeConfigDir} is outside the staged workspace and cannot reach the remote sandbox; ignoring the host-only path and seeding the managed Claude config instead.\n`,
     );
   }
 
@@ -292,12 +292,12 @@ async function prepareClaudeRemoteManagedHome(
 
   const remoteClaudeRuntimeRoot =
     stagedRuntime.runtimeRootDir ??
-    path.posix.join(stagedRuntime.workspaceRemoteDir ?? input.workspaceLocalDir, ".paperclip-runtime", "claude");
+    path.posix.join(stagedRuntime.workspaceRemoteDir ?? input.workspaceLocalDir, ".bionic-runtime", "claude");
   const remoteClaudeConfigSeedDir =
     stagedRuntime.assetDirs["config-seed"] ?? path.posix.join(remoteClaudeRuntimeRoot, "config-seed");
   const remoteClaudeConfigDir = path.posix.join(remoteClaudeRuntimeRoot, "config");
 
-  await onLog("stdout", `[paperclip] Materializing Claude auth/config into ${remoteClaudeConfigDir}.\n`);
+  await onLog("stdout", `[bionic] Materializing Claude auth/config into ${remoteClaudeConfigDir}.\n`);
   await materializeRemoteClaudeConfig({
     runId,
     target: executionTarget,
@@ -383,7 +383,7 @@ export function createClaudeAcpExecutor(options: ClaudeAcpExecutorOptions = {}):
   return async (ctx) => {
     let currentExecutor = executor;
     if (!currentExecutor) {
-      const { createAcpxEngineExecutor } = await import("@paperclipai/adapter-utils/acpx-engine/execute");
+      const { createAcpxEngineExecutor } = await import("@bionicai/adapter-utils/acpx-engine/execute");
       currentExecutor = createAcpxEngineExecutor(withClaudeAcpDefaults(options));
       executor = currentExecutor;
     }
@@ -643,7 +643,7 @@ export async function probeClaudeAcpSandboxLogin(input: {
       trustedEnv: process.env,
     });
     if (!built.command) {
-      return [buildAcpLoginProbeUnavailableCheck("Claude is not installed on the Paperclip host.")];
+      return [buildAcpLoginProbeUnavailableCheck("Claude is not installed on the Bionic host.")];
     }
     command = built.command;
     env = built.env;
@@ -741,7 +741,7 @@ export async function testClaudeAcpEnvironment(
       code: "claude_acp_remote_target",
       level: "info",
       message: "Claude ACP will run against the remote execution environment.",
-      hint: "Remote ACP requires a bidirectional process target such as SSH or Paperclip's sandbox process-session bridge.",
+      hint: "Remote ACP requires a bidirectional process target such as SSH or Bionic's sandbox process-session bridge.",
     });
   }
 

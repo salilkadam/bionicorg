@@ -2,13 +2,13 @@
 # Keep this script compatible with macOS's system Bash 3.2.
 set -euo pipefail
 
-base_cwd="${PAPERCLIP_WORKSPACE_BASE_CWD:?PAPERCLIP_WORKSPACE_BASE_CWD is required}"
-worktree_cwd="${PAPERCLIP_WORKSPACE_CWD:?PAPERCLIP_WORKSPACE_CWD is required}"
-paperclip_home="${PAPERCLIP_HOME:-$HOME/.paperclip}"
-paperclip_instance_id="${PAPERCLIP_INSTANCE_ID:-default}"
-paperclip_dir="$worktree_cwd/.paperclip"
-worktree_config_path="$paperclip_dir/config.json"
-seed_manifest_path="$paperclip_dir/seed-manifest.json"
+base_cwd="${BIONIC_WORKSPACE_BASE_CWD:?BIONIC_WORKSPACE_BASE_CWD is required}"
+worktree_cwd="${BIONIC_WORKSPACE_CWD:?BIONIC_WORKSPACE_CWD is required}"
+bionic_home="${BIONIC_HOME:-$HOME/.bionic}"
+bionic_instance_id="${BIONIC_INSTANCE_ID:-default}"
+bionic_dir="$worktree_cwd/.bionic"
+worktree_config_path="$bionic_dir/config.json"
+seed_manifest_path="$bionic_dir/seed-manifest.json"
 
 if [[ ! -d "$base_cwd" ]]; then
   echo "Base workspace does not exist: $base_cwd" >&2
@@ -69,20 +69,20 @@ if [[ ! -f "$worktree_config_path" ]]; then
   exit 1
 fi
 
-# The CLI derives the source from PAPERCLIP_WORKSPACE_BASE_CWD, which the control
+# The CLI derives the source from BIONIC_WORKSPACE_BASE_CWD, which the control
 # plane injects from the registered project-workspace row. A base workspace that is
 # a plain checkout carries no instance config of its own, so name the control plane's
 # own registered instance config explicitly. The seed manifest stays diagnostic
 # evidence only and must never choose the clone source.
-if [[ -L "$base_cwd/.paperclip" && ! -d "$base_cwd/.paperclip" ]]; then
-  echo "Registered base project workspace .paperclip is a broken symlink: $base_cwd/.paperclip" >&2
+if [[ -L "$base_cwd/.bionic" && ! -d "$base_cwd/.bionic" ]]; then
+  echo "Registered base project workspace .bionic is a broken symlink: $base_cwd/.bionic" >&2
   exit 1
 fi
 source_config_args=()
-if [[ ! -e "$base_cwd/.paperclip/config.json" && ! -L "$base_cwd/.paperclip/config.json" ]]; then
-  source_config_path="${PAPERCLIP_CONFIG:-$paperclip_home/instances/$paperclip_instance_id/config.json}"
+if [[ ! -e "$base_cwd/.bionic/config.json" && ! -L "$base_cwd/.bionic/config.json" ]]; then
+  source_config_path="${BIONIC_CONFIG:-$bionic_home/instances/$bionic_instance_id/config.json}"
   # A human may invoke this after sourcing `worktree env`, which points
-  # PAPERCLIP_CONFIG at the target. Naming the target as its own source is never
+  # BIONIC_CONFIG at the target. Naming the target as its own source is never
   # right, so leave the source to the CLI in that case.
   if [[ "$source_config_path" != "$worktree_config_path" ]]; then
     source_config_args=(--from-config "$source_config_path")
@@ -120,7 +120,7 @@ repair_base_workspace_install() {
   if command -v flock >/dev/null 2>&1 && [[ -d "$repair_lock_dir" ]]; then
     (
       cd "$base_cwd" || exit 1
-      exec 9>"$repair_lock_dir/paperclip-provision-repair.lock"
+      exec 9>"$repair_lock_dir/bionic-provision-repair.lock"
       flock 9
       if base_cli_healthy; then
         echo "Base workspace CLI became healthy while waiting for the repair lock; skipping reinstall." >&2
@@ -149,18 +149,18 @@ run_ensure_seeded() {
     return
   fi
 
-  if command -v pnpm >/dev/null 2>&1 && pnpm paperclipai --help >/dev/null 2>&1; then
+  if command -v pnpm >/dev/null 2>&1 && pnpm bionicai --help >/dev/null 2>&1; then
     (
       cd "$worktree_cwd" &&
-        pnpm paperclipai worktree ensure-seeded --config "$worktree_config_path" ${source_config_args[@]+"${source_config_args[@]}"}
+        pnpm bionicai worktree ensure-seeded --config "$worktree_config_path" ${source_config_args[@]+"${source_config_args[@]}"}
     )
     return
   fi
 
-  if command -v paperclipai >/dev/null 2>&1; then
+  if command -v bionicai >/dev/null 2>&1; then
     (
       cd "$worktree_cwd" &&
-        paperclipai worktree ensure-seeded --config "$worktree_config_path" ${source_config_args[@]+"${source_config_args[@]}"}
+        bionicai worktree ensure-seeded --config "$worktree_config_path" ${source_config_args[@]+"${source_config_args[@]}"}
     )
     return
   fi
@@ -173,7 +173,7 @@ if run_ensure_seeded; then
 else
   exit_code=$?
   if [[ "$exit_code" -eq 127 ]]; then
-    echo "No usable paperclipai CLI found; cannot seed the worktree database." >&2
+    echo "No usable bionicai CLI found; cannot seed the worktree database." >&2
   fi
   exit "$exit_code"
 fi

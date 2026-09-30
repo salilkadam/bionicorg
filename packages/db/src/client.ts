@@ -151,7 +151,7 @@ export interface DatabaseClientOptions {
   maxLifetimeSeconds?: number;
   /**
    * postgres.js `connection.application_name`, shown in
-   * `pg_stat_activity.application_name`. Lets an operator tell Paperclip's
+   * `pg_stat_activity.application_name`. Lets an operator tell Bionic's
    * pool apart from other clients of the same database (driver default:
    * `postgres.js`).
    */
@@ -167,7 +167,7 @@ export interface DatabaseClientOptions {
  */
 export const DEFAULT_DATABASE_IDLE_TIMEOUT_SECONDS = 60;
 /** `application_name` reported to PostgreSQL unless `DATABASE_APPLICATION_NAME` overrides it. */
-export const DEFAULT_DATABASE_APPLICATION_NAME = "paperclip";
+export const DEFAULT_DATABASE_APPLICATION_NAME = "bionic";
 
 function envBoolean(env: NodeJS.ProcessEnv, name: string): boolean | undefined {
   const value = env[name]?.trim().toLowerCase();
@@ -206,7 +206,7 @@ function envNonEmptyString(env: NodeJS.ProcessEnv, name: string): string | undef
  * adapt to their connection topology (pooled endpoints, network latency)
  * without editing source. Every variable is optional. This function returns
  * only the values the environment sets; `resolveDatabaseClientOptions` adds
- * Paperclip's own defaults on top, and the driver defaults apply to the rest
+ * Bionic's own defaults on top, and the driver defaults apply to the rest
  * — self-hosted setups need none of these.
  */
 export function databaseClientOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): DatabaseClientOptions {
@@ -228,7 +228,7 @@ export function databaseClientOptionsFromEnv(env: NodeJS.ProcessEnv = process.en
 }
 
 /**
- * Fills in Paperclip's defaults for the options the caller left unset: idle
+ * Fills in Bionic's defaults for the options the caller left unset: idle
  * connections are reaped after `DEFAULT_DATABASE_IDLE_TIMEOUT_SECONDS`, and the
  * pool identifies itself as `DEFAULT_DATABASE_APPLICATION_NAME`. Everything
  * else stays at the driver default. An explicit value (including
@@ -278,7 +278,7 @@ export function createDb(url: string, options?: DatabaseClientOptions) {
   // query instead of failing the request that happened to draw it.
   const db = drizzlePg(withTransientWriteRetry(sql), { schema });
   dedicatedDbFactories.set(db, () => createDb(url, {
-    ...resolved, maxConnections: 1, applicationName: "paperclip-workspace-finalization-lock",
+    ...resolved, maxConnections: 1, applicationName: "bionic-workspace-finalization-lock",
   }));
   return db;
 }

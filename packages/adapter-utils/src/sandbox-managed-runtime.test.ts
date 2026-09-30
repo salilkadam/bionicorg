@@ -195,8 +195,8 @@ async function git(cwd: string, args: string[]): Promise<string> {
 async function initGitRepo(repoDir: string): Promise<void> {
   await mkdir(repoDir, { recursive: true });
   await git(repoDir, ["init", "-q"]);
-  await git(repoDir, ["config", "user.name", "Paperclip Test"]);
-  await git(repoDir, ["config", "user.email", "test@paperclip.dev"]);
+  await git(repoDir, ["config", "user.name", "Bionic Test"]);
+  await git(repoDir, ["config", "user.email", "test@bionic.dev"]);
   await writeFile(path.join(repoDir, "README.md"), "root\n", "utf8");
   await git(repoDir, ["add", "README.md"]);
   await git(repoDir, ["commit", "-qm", "base"]);
@@ -341,11 +341,11 @@ describe("sandbox managed runtime", () => {
   const cleanupDirs: string[] = [];
 
   it.each(["host_current", "adopt_remote", "durable_seed"] as const)("stages and restores both project repositories with independent Git histories (%s)", async (mode) => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "paperclip-multi-repo-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "bionic-multi-repo-"));
     cleanupDirs.push(root);
     const local = path.join(root, "local");
     const remote = path.join(root, "remote");
-    const secondPath = ".paperclip-repositories/backend";
+    const secondPath = ".bionic-repositories/backend";
     for (const [relative, contents] of [["", "frontend"], [secondPath, "backend"]]) {
       const cwd = path.join(local, relative!);
       await mkdir(cwd, { recursive: true });
@@ -362,7 +362,7 @@ describe("sandbox managed runtime", () => {
       await git(cwd, ["commit", "-m", contents!]);
       await writeFile(path.join(cwd, "secret.txt"), "must stay local");
     }
-    await writeFile(path.join(local, ".git/info/exclude"), ".paperclip-repositories/\n");
+    await writeFile(path.join(local, ".git/info/exclude"), ".bionic-repositories/\n");
     await writeFile(path.join(local, secondPath, "dirty.txt"), "local edit");
     await writeFile(path.join(local, secondPath, "host-config.txt"), "excluded by operator");
     const seed = { workspaceArchivePath: path.join(root, "workspace.tar"), gitArchivePath: path.join(root, "git.tar") };
@@ -417,7 +417,7 @@ describe("sandbox managed runtime", () => {
 
   it("adopts a warm remote workspace without inbound overwrite and still merges outbound changes", async () => {
     const rootDir = await mkdtemp(
-      path.join(os.tmpdir(), "paperclip-sandbox-adopt-"),
+      path.join(os.tmpdir(), "bionic-sandbox-adopt-"),
     );
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -471,7 +471,7 @@ describe("sandbox managed runtime", () => {
 
   it("reconstructs a replacement workspace from the exact durable pre-turn seed", async () => {
     const rootDir = await mkdtemp(
-      path.join(os.tmpdir(), "paperclip-sandbox-durable-seed-"),
+      path.join(os.tmpdir(), "bionic-sandbox-durable-seed-"),
     );
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -539,32 +539,32 @@ describe("sandbox managed runtime", () => {
   });
 
   it("preserves excluded local workspace artifacts during restore mirroring", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-restore-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-restore-"));
     cleanupDirs.push(rootDir);
     const sourceDir = path.join(rootDir, "source");
     const targetDir = path.join(rootDir, "target");
     await mkdir(path.join(sourceDir, "src"), { recursive: true });
     await mkdir(path.join(targetDir, ".claude"), { recursive: true });
-    await mkdir(path.join(targetDir, ".paperclip-runtime"), { recursive: true });
+    await mkdir(path.join(targetDir, ".bionic-runtime"), { recursive: true });
     await writeFile(path.join(sourceDir, "src", "app.ts"), "export const value = 2;\n", "utf8");
     await writeFile(path.join(targetDir, "stale.txt"), "remove me\n", "utf8");
     await writeFile(path.join(targetDir, ".claude", "settings.json"), "{\"keep\":true}\n", "utf8");
     await writeFile(path.join(targetDir, ".claude.json"), "{\"keep\":true}\n", "utf8");
-    await writeFile(path.join(targetDir, ".paperclip-runtime", "state.json"), "{}\n", "utf8");
+    await writeFile(path.join(targetDir, ".bionic-runtime", "state.json"), "{}\n", "utf8");
 
     await mirrorDirectory(sourceDir, targetDir, {
-      preserveAbsent: [".paperclip-runtime", ".claude", ".claude.json"],
+      preserveAbsent: [".bionic-runtime", ".claude", ".claude.json"],
     });
 
     await expect(readFile(path.join(targetDir, "src", "app.ts"), "utf8")).resolves.toBe("export const value = 2;\n");
     await expect(readFile(path.join(targetDir, ".claude", "settings.json"), "utf8")).resolves.toBe("{\"keep\":true}\n");
     await expect(readFile(path.join(targetDir, ".claude.json"), "utf8")).resolves.toBe("{\"keep\":true}\n");
-    await expect(readFile(path.join(targetDir, ".paperclip-runtime", "state.json"), "utf8")).resolves.toBe("{}\n");
+    await expect(readFile(path.join(targetDir, ".bionic-runtime", "state.json"), "utf8")).resolves.toBe("{}\n");
     await expect(readFile(path.join(targetDir, "stale.txt"), "utf8")).rejects.toMatchObject({ code: "ENOENT" });
   });
 
   it("applies file mode on a staged sibling before renaming into place", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-copy-mode-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-copy-mode-"));
     cleanupDirs.push(rootDir);
     const sourceDir = path.join(rootDir, "source");
     const targetDir = path.join(rootDir, "target");
@@ -585,13 +585,13 @@ describe("sandbox managed runtime", () => {
     await expect(readFile(targetPath, "utf8")).resolves.toBe("#!/bin/sh\necho hello\n");
     expect(chmodMock).toHaveBeenCalledTimes(1);
     expect(renameMock).toHaveBeenCalledTimes(1);
-    expect(chmodMock.mock.calls[0]?.[0]).toContain(".paperclip-copy.");
+    expect(chmodMock.mock.calls[0]?.[0]).toContain(".bionic-copy.");
     expect(chmodMock.mock.calls[0]?.[0]).not.toBe(targetPath);
     expect(chmodMock.mock.invocationCallOrder[0]).toBeLessThan(renameMock.mock.invocationCallOrder[0]);
   });
 
   it("cleans up a staged sibling when chmod fails before rename", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-copy-cleanup-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-copy-cleanup-"));
     cleanupDirs.push(rootDir);
     const sourceDir = path.join(rootDir, "source");
     const targetDir = path.join(rootDir, "target");
@@ -615,13 +615,13 @@ describe("sandbox managed runtime", () => {
     expect(chmodMock).toHaveBeenCalledTimes(1);
     expect(renameMock).not.toHaveBeenCalled();
     const stagedPath = chmodMock.mock.calls[0]?.[0];
-    expect(stagedPath).toContain(".paperclip-copy.");
+    expect(stagedPath).toContain(".bionic-copy.");
     await expect(readFile(stagedPath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
     await expect(readFile(targetPath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
   });
 
   it("syncs workspace and assets through a provider-neutral sandbox client", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-managed-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-managed-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -695,8 +695,8 @@ describe("sandbox managed runtime", () => {
 
     await writeFile(path.join(remoteWorkspaceDir, "README.md"), "remote workspace\n", "utf8");
     await writeFile(path.join(remoteWorkspaceDir, "remote-only.txt"), "sync back\n", "utf8");
-    await mkdir(path.join(localWorkspaceDir, ".paperclip-runtime"), { recursive: true });
-    await writeFile(path.join(localWorkspaceDir, ".paperclip-runtime", "state.json"), "{}\n", "utf8");
+    await mkdir(path.join(localWorkspaceDir, ".bionic-runtime"), { recursive: true });
+    await writeFile(path.join(localWorkspaceDir, ".bionic-runtime", "state.json"), "{}\n", "utf8");
     await writeFile(path.join(localWorkspaceDir, "local-stale.txt"), "remove\n", "utf8");
     await prepared.restoreWorkspace();
 
@@ -704,7 +704,7 @@ describe("sandbox managed runtime", () => {
     await expect(readFile(path.join(localWorkspaceDir, "remote-only.txt"), "utf8")).resolves.toBe("sync back\n");
     await expect(readFile(path.join(localWorkspaceDir, "local-stale.txt"), "utf8")).resolves.toBe("remove\n");
     await expect(readFile(path.join(localWorkspaceDir, ".claude", "settings.json"), "utf8")).resolves.toBe("{\"local\":true}\n");
-    await expect(readFile(path.join(localWorkspaceDir, ".paperclip-runtime", "state.json"), "utf8")).resolves.toBe("{}\n");
+    await expect(readFile(path.join(localWorkspaceDir, ".bionic-runtime", "state.json"), "utf8")).resolves.toBe("{}\n");
     expect(runtimeStatuses).toEqual(expect.arrayContaining([
       "config_sync:Syncing workspace to environment",
       "config_sync:Syncing runtime assets to environment",
@@ -720,7 +720,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("falls back to the host-known byte count when the provider reports 0 for inbound workspace sync", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-zero-report-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-zero-report-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -770,7 +770,7 @@ describe("sandbox managed runtime", () => {
   it.each(["workspace", "git-workspace"])(
     "rejects an asset key that collides with the reserved %s archive name",
     async (reservedKey) => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-asset-key-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-asset-key-"));
       cleanupDirs.push(rootDir);
       const localWorkspaceDir = path.join(rootDir, "local-workspace");
       const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -806,7 +806,7 @@ describe("sandbox managed runtime", () => {
   it.each(["skills/nested", "skills\\nested", "..", "../escape"])(
     "rejects an asset key that is not a simple path segment: %s",
     async (unsafeKey) => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-asset-key-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-asset-key-"));
       cleanupDirs.push(rootDir);
       const localWorkspaceDir = path.join(rootDir, "local-workspace");
       const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -836,7 +836,7 @@ describe("sandbox managed runtime", () => {
   );
 
   it("syncs git-backed workspaces through a shallow standalone clone and keeps .git out of archives", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-git-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-git-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-worktree");
@@ -845,8 +845,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, ".gitignore"), "node_modules/\n*.secret\n", "utf8");
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "base\n", "utf8");
     await writeFile(path.join(sourceRepoDir, "clean.txt"), "from git\n", "utf8");
@@ -951,8 +951,8 @@ describe("sandbox managed runtime", () => {
     expect(workspaceMembers).not.toContain("clean.txt");
     expect(workspaceMembers.some((entry) => entry === "node_modules" || entry.startsWith("node_modules/"))).toBe(false);
 
-    await git(remoteWorkspaceDir, ["config", "user.name", "Paperclip Sandbox"]);
-    await git(remoteWorkspaceDir, ["config", "user.email", "sandbox@paperclip.dev"]);
+    await git(remoteWorkspaceDir, ["config", "user.name", "Bionic Sandbox"]);
+    await git(remoteWorkspaceDir, ["config", "user.email", "sandbox@bionic.dev"]);
     await git(remoteWorkspaceDir, ["add", "-A"]);
     await git(remoteWorkspaceDir, ["commit", "-m", "sandbox update"]);
     await writeFile(path.join(remoteWorkspaceDir, "tracked.txt"), "remote dirty\n", "utf8");
@@ -993,7 +993,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("repairs stale host index deletions when the sandbox restores a clean git worktree", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-clean-restore-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-clean-restore-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-worktree");
@@ -1002,8 +1002,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "kept.txt"), "kept\n", "utf8");
     await writeFile(path.join(sourceRepoDir, "restored.txt"), "restored\n", "utf8");
     await git(sourceRepoDir, ["add", "kept.txt", "restored.txt"]);
@@ -1068,7 +1068,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("does not fail clean restore checks when local working tree changes survive", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-preserved-local-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-preserved-local-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-worktree");
@@ -1076,8 +1076,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "kept.txt"), "base\n", "utf8");
     await git(sourceRepoDir, ["add", "kept.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
@@ -1092,7 +1092,7 @@ describe("sandbox managed runtime", () => {
         checkWorkingTreeClean: true,
       });
       expect(warnSpy).toHaveBeenCalledWith(
-        "[paperclip] Workspace restore preserved local working tree changes after clean sandbox restore.",
+        "[bionic] Workspace restore preserved local working tree changes after clean sandbox restore.",
       );
     } finally {
       warnSpy.mockRestore();
@@ -1104,7 +1104,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("excludes unignored dependency trees from git-backed workspace overlay archives", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-unignored-deps-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-unignored-deps-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-worktree");
@@ -1113,8 +1113,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await mkdir(path.join(sourceRepoDir, "src"), { recursive: true });
     await writeFile(path.join(sourceRepoDir, "src", "tracked.ts"), "export const tracked = true;\n", "utf8");
     await git(sourceRepoDir, ["add", "src/tracked.ts"]);
@@ -1214,7 +1214,7 @@ describe("sandbox managed runtime", () => {
   it.each(["symlink", "root_symlink", "root_alias", "root_alias_retarget", "case_alias", "EACCES", "EIO", "ENOENT"])("handles an overlay source changed after the snapshot: %s", async (change) => {
     // The runtime pins a realpath root before staging. Match that spelling so
     // injected I/O errors also reach the selected file on macOS's /var alias.
-    const rootDir = await fsPromises.realpath(await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-overlay-source-")));
+    const rootDir = await fsPromises.realpath(await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-overlay-source-")));
     cleanupDirs.push(rootDir);
     const workspaceLocalDir = path.join(rootDir, "workspace");
     await initGitRepo(workspaceLocalDir);
@@ -1313,7 +1313,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("excludes an anchor-workspace ignored file whose name has leading and trailing whitespace from the staged tree", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-ignored-whitespace-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-ignored-whitespace-"));
     cleanupDirs.push(rootDir);
     const workspaceLocalDir = path.join(rootDir, "workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1372,7 +1372,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("builds workspace/asset tarballs without a './' self-entry (so untar does not chmod/utime an unowned target dir)", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-tarself-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-tarself-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1450,7 +1450,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("excludes transient symlinked home dirs from the asset tar while keeping required content", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-home-tmp-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-home-tmp-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1542,7 +1542,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("emits throttled, labeled upload and restore progress with direction and percentages", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-progress-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-progress-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1626,7 +1626,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("creates valid empty workspace tarballs when the workspace is empty", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-empty-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-empty-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1682,7 +1682,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("provisions a contribution-less asset via a plain tar extract and restores it as a no-op", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-default-asset-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-default-asset-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1747,7 +1747,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("round-trips a non-codex asset through generic provision + restore contributions", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-seam-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-seam-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1829,7 +1829,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("rejects a provision stageFile.name that is not a simple basename", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-traversal-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-traversal-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1893,7 +1893,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("routes a custom-provisioned asset through a single syncIn operation with its post-upload command (native runner → 0 direct writeFile/run)", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-native-asset-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-native-asset-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -1992,8 +1992,8 @@ describe("sandbox managed runtime", () => {
     await expect(readFile(path.join(prepared.assetDirs.widget, "seed.txt"), "utf8")).resolves.toBe("seed\n");
   });
 
-  it("stages git and workspace via syncIn preserving .paperclip-runtime (native runner → 0 direct writeFile/run)", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-native-git-"));
+  it("stages git and workspace via syncIn preserving .bionic-runtime (native runner → 0 direct writeFile/run)", async () => {
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-native-git-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2001,15 +2001,15 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "tracked\n", "utf8");
     await git(sourceRepoDir, ["add", "tracked.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
     await git(sourceRepoDir, ["worktree", "add", "-b", "work", localWorkspaceDir, "HEAD"]);
-    // Pre-seed the sandbox with a `.paperclip-runtime` dir that MUST survive.
-    await mkdir(path.join(remoteWorkspaceDir, ".paperclip-runtime"), { recursive: true });
-    await writeFile(path.join(remoteWorkspaceDir, ".paperclip-runtime", "keep.txt"), "keep\n", "utf8");
+    // Pre-seed the sandbox with a `.bionic-runtime` dir that MUST survive.
+    await mkdir(path.join(remoteWorkspaceDir, ".bionic-runtime"), { recursive: true });
+    await writeFile(path.join(remoteWorkspaceDir, ".bionic-runtime", "keep.txt"), "keep\n", "utf8");
 
     const directWrites: string[] = [];
     const directRuns: string[] = [];
@@ -2063,21 +2063,21 @@ describe("sandbox managed runtime", () => {
     expect(byBase("workspace-upload.tar")).toBeDefined();
     expect(op.files.every((mapping) => mapping.kind === "file")).toBe(true);
     // The first post-upload command extracts the git history and preserves
-    // `.paperclip-runtime` while replacing the rest of the tree (wipe-except-preserved).
+    // `.bionic-runtime` while replacing the rest of the tree (wipe-except-preserved).
     const gitCommand = op.postUploadCommands![0].command;
-    expect(gitCommand).toContain(".paperclip-runtime");
+    expect(gitCommand).toContain(".bionic-runtime");
     expect(gitCommand).toContain("tar -xf");
 
     // The pre-seeded runtime dir survived the git+workspace staging.
     await expect(
-      readFile(path.join(remoteWorkspaceDir, ".paperclip-runtime", "keep.txt"), "utf8"),
+      readFile(path.join(remoteWorkspaceDir, ".bionic-runtime", "keep.txt"), "utf8"),
     ).resolves.toBe("keep\n");
     await expect(readFile(path.join(remoteWorkspaceDir, "tracked.txt"), "utf8")).resolves.toBe("tracked\n");
     expect(prepared.workspaceRemoteDir).toBe(remoteWorkspaceDir);
   });
 
-  it("the workspace wipe command preserves in-flight sync scratch tarballs (.paperclip-upload-*)", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-scratch-shape-"));
+  it("the workspace wipe command preserves in-flight sync scratch tarballs (.bionic-upload-*)", async () => {
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-scratch-shape-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2085,8 +2085,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "tracked\n", "utf8");
     await git(sourceRepoDir, ["add", "tracked.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
@@ -2130,11 +2130,11 @@ describe("sandbox managed runtime", () => {
     // scratch prefix so a concurrent referenced-project upload survives the wipe.
     const wipeCommand = captured[0].postUploadCommands![0].command;
     expect(wipeCommand).toContain("find ");
-    expect(wipeCommand).toContain("! -name '.paperclip-upload-*'");
+    expect(wipeCommand).toContain("! -name '.bionic-upload-*'");
   });
 
   it("the workspace wipe keeps an in-flight scratch tarball at the root but removes a stale sibling", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-scratch-race-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-scratch-race-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2142,17 +2142,17 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "tracked\n", "utf8");
     await git(sourceRepoDir, ["add", "tracked.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
     await git(sourceRepoDir, ["worktree", "add", "-b", "work", localWorkspaceDir, "HEAD"]);
-    // Pre-seed the sandbox root. `.paperclip-upload-test.tar` simulates a
+    // Pre-seed the sandbox root. `.bionic-upload-test.tar` simulates a
     // concurrent referenced-project scratch tarball in flight; `stale-junk.txt`
     // is an unrelated child that the wipe must remove.
     await mkdir(remoteWorkspaceDir, { recursive: true });
-    await writeFile(path.join(remoteWorkspaceDir, ".paperclip-upload-test.tar"), "scratch\n", "utf8");
+    await writeFile(path.join(remoteWorkspaceDir, ".bionic-upload-test.tar"), "scratch\n", "utf8");
     await writeFile(path.join(remoteWorkspaceDir, "stale-junk.txt"), "junk\n", "utf8");
 
     const client: SandboxManagedRuntimeClient = {
@@ -2192,7 +2192,7 @@ describe("sandbox managed runtime", () => {
     // The real `find` wipe ran through `sh -c`. The scratch tarball survived and
     // the unrelated sibling did not.
     await expect(
-      readFile(path.join(remoteWorkspaceDir, ".paperclip-upload-test.tar"), "utf8"),
+      readFile(path.join(remoteWorkspaceDir, ".bionic-upload-test.tar"), "utf8"),
     ).resolves.toBe("scratch\n");
     await expect(
       readFile(path.join(remoteWorkspaceDir, "stale-junk.txt"), "utf8"),
@@ -2200,7 +2200,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("issues one merged syncIn operation for a git-backed workspace stage-sync with two ordered extract commands", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-merged-git-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-merged-git-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2208,15 +2208,15 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "tracked\n", "utf8");
     await git(sourceRepoDir, ["add", "tracked.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
     await git(sourceRepoDir, ["worktree", "add", "-b", "work", localWorkspaceDir, "HEAD"]);
-    // Pre-seed the sandbox with a `.paperclip-runtime` dir that MUST survive.
-    await mkdir(path.join(remoteWorkspaceDir, ".paperclip-runtime"), { recursive: true });
-    await writeFile(path.join(remoteWorkspaceDir, ".paperclip-runtime", "keep.txt"), "keep\n", "utf8");
+    // Pre-seed the sandbox with a `.bionic-runtime` dir that MUST survive.
+    await mkdir(path.join(remoteWorkspaceDir, ".bionic-runtime"), { recursive: true });
+    await writeFile(path.join(remoteWorkspaceDir, ".bionic-runtime", "keep.txt"), "keep\n", "utf8");
 
     const client: SandboxManagedRuntimeClient = {
       makeDir: async (remotePath) => {
@@ -2275,11 +2275,11 @@ describe("sandbox managed runtime", () => {
     expect(op.files).toHaveLength(2);
     expect(op.files.every((mapping) => mapping.kind === "file")).toBe(true);
 
-    // Both tar targets live under `.paperclip-runtime`, so the git extract's wipe
-    // (which preserves `.paperclip-runtime`) cannot delete the overlay tar before
+    // Both tar targets live under `.bionic-runtime`, so the git extract's wipe
+    // (which preserves `.bionic-runtime`) cannot delete the overlay tar before
     // the overlay extract runs.
     for (const mapping of op.files) {
-      expect(mapping.targetPath).toContain("/.paperclip-runtime/");
+      expect(mapping.targetPath).toContain("/.bionic-runtime/");
     }
 
     // Two ordered extract commands: git history first (wipe-except-preserved),
@@ -2287,7 +2287,7 @@ describe("sandbox managed runtime", () => {
     const commands = op.postUploadCommands ?? [];
     expect(commands).toHaveLength(2);
     expect(commands[0].command).toContain("git-workspace-upload.tar");
-    expect(commands[0].command).toContain(".paperclip-runtime");
+    expect(commands[0].command).toContain(".bionic-runtime");
     expect(commands[0].command).toContain("find ");
     expect(commands[1].command).toContain("workspace-upload.tar");
     expect(commands[1].command).not.toContain("git-workspace-upload.tar");
@@ -2295,14 +2295,14 @@ describe("sandbox managed runtime", () => {
 
     // The pre-seeded runtime dir survived and the workspace overlay applied.
     await expect(
-      readFile(path.join(remoteWorkspaceDir, ".paperclip-runtime", "keep.txt"), "utf8"),
+      readFile(path.join(remoteWorkspaceDir, ".bionic-runtime", "keep.txt"), "utf8"),
     ).resolves.toBe("keep\n");
     await expect(readFile(path.join(remoteWorkspaceDir, "tracked.txt"), "utf8")).resolves.toBe("tracked\n");
   });
 
   it("the merged workspace confine guard covers both tar mappings (escape in either trips it)", () => {
-    const runtimeRoot = "/home/daytona/paperclip-workspace/.paperclip-runtime/test-adapter";
-    const tempRoot = "/tmp/paperclip-sandbox-sync-abc";
+    const runtimeRoot = "/home/daytona/bionic-workspace/.bionic-runtime/test-adapter";
+    const tempRoot = "/tmp/bionic-sandbox-sync-abc";
     const gitMapping = {
       sourcePath: `${tempRoot}/git-workspace.tar`,
       targetPath: `${runtimeRoot}/git-workspace-upload.tar`,
@@ -2361,7 +2361,7 @@ describe("sandbox managed runtime", () => {
   // workspace operation back into two — fails loudly here instead of silently
   // regressing the start path.
   it("collapses a representative codex_local start to two syncIn round-trips: one merged workspace op plus the asset op", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-sandbox-codex-roundtrip-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-sandbox-codex-roundtrip-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2372,8 +2372,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "tracked\n", "utf8");
     await git(sourceRepoDir, ["add", "tracked.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
@@ -2473,7 +2473,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("authors the advisory access intent rw on workspace, git, and asset inbound mappings", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-access-rw-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-access-rw-"));
     cleanupDirs.push(rootDir);
     const sourceRepoDir = path.join(rootDir, "source-repo");
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2484,8 +2484,8 @@ describe("sandbox managed runtime", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "tracked\n", "utf8");
     await git(sourceRepoDir, ["add", "tracked.txt"]);
     await git(sourceRepoDir, ["commit", "-m", "base"]);
@@ -2539,18 +2539,18 @@ describe("sandbox managed runtime", () => {
     // directory that the post-upload extract command fills: the workspace
     // directory for the workspace and git tars, and the asset directory for the
     // asset tar.
-    const remoteAssetDir = path.posix.join(remoteWorkspaceDir, ".paperclip-runtime", "test-adapter", "home");
+    const remoteAssetDir = path.posix.join(remoteWorkspaceDir, ".bionic-runtime", "test-adapter", "home");
     expect(findMapping("workspace-upload.tar")?.writablePath).toBe(remoteWorkspaceDir);
     expect(findMapping("git-workspace-upload.tar")?.writablePath).toBe(remoteWorkspaceDir);
     expect(findMapping("home-upload.tar")?.writablePath).toBe(remoteAssetDir);
   });
 
   it("authors the advisory access intent ro on referenced-project inbound mappings", async () => {
-    const flagKey = "PAPERCLIP_MULTI_PROJECT_WORKSPACE_SYNC";
+    const flagKey = "BIONIC_MULTI_PROJECT_WORKSPACE_SYNC";
     const priorFlag = process.env[flagKey];
     process.env[flagKey] = "1";
     try {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-access-ro-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-access-ro-"));
       cleanupDirs.push(rootDir);
       const localWorkspaceDir = path.join(rootDir, "local-workspace");
       const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -2604,11 +2604,11 @@ describe("sandbox managed runtime", () => {
   });
 
   it("reports the real transferred bytes for a referenced project's inbound staging", async () => {
-    const flagKey = "PAPERCLIP_MULTI_PROJECT_WORKSPACE_SYNC";
+    const flagKey = "BIONIC_MULTI_PROJECT_WORKSPACE_SYNC";
     const priorFlag = process.env[flagKey];
     process.env[flagKey] = "1";
     try {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-project-bytes-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-project-bytes-"));
       cleanupDirs.push(rootDir);
       const localWorkspaceDir = path.join(rootDir, "local-workspace");
       const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -2681,16 +2681,16 @@ describe("sandbox managed runtime", () => {
   // host filesystem (host FS stands in for the sandbox FS). The runner exposes no
   // native syncIn, so staging rides the base64/tar fallback, the same transport a
   // provider without native sync uses. In production the kill-switch
-  // `PAPERCLIP_MULTI_PROJECT_WORKSPACE_SYNC` gates whether run prep resolves any
+  // `BIONIC_MULTI_PROJECT_WORKSPACE_SYNC` gates whether run prep resolves any
   // referenced projects (OFF ⇒ none reach this layer). Enable it in-test only to
   // model the ON scenario, and prove multi-project isolation plus one-failure
   // isolation end-to-end.
   it("stages multiple referenced projects into isolated sandbox dirs end-to-end, skipping a failing source", async () => {
-    const flagKey = "PAPERCLIP_MULTI_PROJECT_WORKSPACE_SYNC";
+    const flagKey = "BIONIC_MULTI_PROJECT_WORKSPACE_SYNC";
     const priorFlag = process.env[flagKey];
     process.env[flagKey] = "1";
     try {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-e2e-additional-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-e2e-additional-"));
       cleanupDirs.push(rootDir);
 
       const localWorkspaceDir = path.join(rootDir, "local-workspace");
@@ -2738,7 +2738,7 @@ describe("sandbox managed runtime", () => {
         ],
       });
 
-      const runtimeRootDir = path.posix.join(remoteWorkspaceDir, ".paperclip-runtime", "test-adapter");
+      const runtimeRootDir = path.posix.join(remoteWorkspaceDir, ".bionic-runtime", "test-adapter");
 
       // The anchor workspace synced normally and stays byte-identical.
       await expect(readFile(path.join(remoteWorkspaceDir, "README.md"), "utf8")).resolves.toBe("anchor content\n");
@@ -2778,7 +2778,7 @@ describe("sandbox managed runtime", () => {
 
   describe("resolveReferencedSourceIgnore", () => {
     it("re-relativizes root-relative ignored paths to a nested localPath", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-nested-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-nested-"));
       cleanupDirs.push(rootDir);
       const repo = path.join(rootDir, "repo");
       await initGitRepo(repo);
@@ -2808,7 +2808,7 @@ describe("sandbox managed runtime", () => {
     });
 
     it("keeps today's fixed excludes for a non-Git source", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-nongit-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-nongit-"));
       cleanupDirs.push(rootDir);
       const plainDir = path.join(rootDir, "plain-project");
       await mkdir(plainDir, { recursive: true });
@@ -2818,7 +2818,7 @@ describe("sandbox managed runtime", () => {
     });
 
     it("fails closed on a real Git error instead of returning an unfiltered result", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-fail-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-fail-"));
       cleanupDirs.push(rootDir);
       const repo = path.join(rootDir, "repo");
       await initGitRepo(repo);
@@ -2841,7 +2841,7 @@ describe("sandbox managed runtime", () => {
 
     for (const sensitivePath of SENSITIVE_PATH_PROBES) {
       it(`redacts a caught Git error embedding ${sensitivePath} to the fixed category`, async () => {
-        const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-redact-caught-"));
+        const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-redact-caught-"));
         cleanupDirs.push(rootDir);
         const repo = path.join(rootDir, "repo");
         await initGitRepo(repo);
@@ -2869,7 +2869,7 @@ describe("sandbox managed runtime", () => {
       });
 
       it(`redacts a non-descendant toplevel embedding ${sensitivePath} to the fixed category`, async () => {
-        const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-redact-nondescendant-"));
+        const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-redact-nondescendant-"));
         cleanupDirs.push(rootDir);
         const localPath = path.join(rootDir, "referenced");
         await mkdir(localPath, { recursive: true });
@@ -2894,7 +2894,7 @@ describe("sandbox managed runtime", () => {
     }
 
     it("fails closed with a fixed category when the parsed ignored-entry count exceeds the bound", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-bound-count-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-bound-count-"));
       cleanupDirs.push(rootDir);
       const repo = path.join(rootDir, "repo");
       await initGitRepo(repo);
@@ -2921,7 +2921,7 @@ describe("sandbox managed runtime", () => {
     });
 
     it("fails closed with a fixed category when the total UTF-8 byte size of ignored paths exceeds the bound", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-bound-bytes-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-bound-bytes-"));
       cleanupDirs.push(rootDir);
       const repo = path.join(rootDir, "repo");
       await initGitRepo(repo);
@@ -2949,7 +2949,7 @@ describe("sandbox managed runtime", () => {
     });
 
     it("stages no bytes for either a count-breach or a byte-breach project, and stages a healthy sibling", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-bound-staging-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-bound-staging-"));
       cleanupDirs.push(rootDir);
       const localWorkspaceDir = path.join(rootDir, "local-workspace");
       const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -2985,7 +2985,7 @@ describe("sandbox managed runtime", () => {
         "byte-breach",
         "count-breach",
       ]);
-      const runtimeRootDir = path.posix.join(remoteWorkspaceDir, ".paperclip-runtime", "test-adapter");
+      const runtimeRootDir = path.posix.join(remoteWorkspaceDir, ".bionic-runtime", "test-adapter");
       await expect(readFile(path.join(runtimeRootDir, "project-count-breach", "should-never-ship.txt"), "utf8")).rejects
         .toMatchObject({ code: "ENOENT" });
       await expect(readFile(path.join(runtimeRootDir, "project-byte-breach", "should-never-ship.txt"), "utf8")).rejects
@@ -3106,7 +3106,7 @@ describe("sandbox managed runtime", () => {
     expect(escapeTarExcludeLiteral("wildcard*name")).toBe("wildcard\\*name");
     expect(escapeTarExcludeLiteral("question?mark")).toBe("question\\?mark");
 
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-glob-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-glob-"));
     cleanupDirs.push(rootDir);
     const referencedDir = path.join(rootDir, "referenced-project");
     await initGitRepo(referencedDir);
@@ -3130,7 +3130,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("never ships a Git-ignored secret in a referenced project's staged tree", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-secret-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-secret-"));
     cleanupDirs.push(rootDir);
     const referencedDir = path.join(rootDir, "referenced-project");
     await initGitRepo(referencedDir);
@@ -3149,7 +3149,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("stages no bytes for a project whose ignore resolution failed, and stages the rest", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-ignore-failed-skip-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-ignore-failed-skip-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -3179,13 +3179,13 @@ describe("sandbox managed runtime", () => {
     expect(Object.keys(prepared.additionalSourceDirs)).toEqual(["healthy"]);
     expect(prepared.additionalSourceFailures.map((failure) => failure.projectId)).toEqual(["failed"]);
     expect(prepared.additionalSourceFailures[0]!.error).toContain("boom: git status timed out");
-    const runtimeRootDir = path.posix.join(remoteWorkspaceDir, ".paperclip-runtime", "test-adapter");
+    const runtimeRootDir = path.posix.join(remoteWorkspaceDir, ".bionic-runtime", "test-adapter");
     await expect(readFile(path.join(runtimeRootDir, "project-failed", "should-never-ship.txt"), "utf8")).rejects
       .toMatchObject({ code: "ENOENT" });
   });
 
   it("builds the workspace tarball inside one host pack span for a usual workspace sync", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-pack-span-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-pack-span-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -3228,7 +3228,7 @@ describe("sandbox managed runtime", () => {
   });
 
   it("nests the host pack span under the stage.workspace task span", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-pack-nest-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-pack-nest-"));
     cleanupDirs.push(rootDir);
     const localWorkspaceDir = path.join(rootDir, "local-workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -3486,7 +3486,7 @@ describe("sandbox managed runtime inbound coordinator", () => {
     workspaceDir: string;
     dirOf: (name: string) => string;
   }> {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-inbound-coordinator-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-inbound-coordinator-"));
     cleanupDirs.push(rootDir);
     const workspaceDir = path.join(rootDir, "workspace");
     await mkdir(workspaceDir, { recursive: true });
@@ -3951,7 +3951,7 @@ describe("sandbox managed runtime outbound coordinator", () => {
     remoteWorkspaceDir: string;
     dirOf: (name: string) => string;
   }> {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-outbound-coordinator-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-outbound-coordinator-"));
     cleanupDirs.push(rootDir);
     const workspaceDir = path.join(rootDir, "workspace");
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
@@ -3995,9 +3995,9 @@ describe("sandbox managed runtime outbound coordinator", () => {
     const diagnostics = lines.filter((line) => line.includes("Workspace restore diagnostic:"));
     expect(diagnostics).toHaveLength(3);
     expect(diagnostics).toEqual(expect.arrayContaining([
-      '[paperclip] Workspace restore diagnostic: {"phase":"workspace","errorCode":"EACCES"}\n',
-      '[paperclip] Workspace restore diagnostic: {"phase":"asset","errorCode":"unknown","httpStatus":404}\n',
-      '[paperclip] Workspace restore diagnostic: {"phase":"asset","errorCode":"unknown"}\n',
+      '[bionic] Workspace restore diagnostic: {"phase":"workspace","errorCode":"EACCES"}\n',
+      '[bionic] Workspace restore diagnostic: {"phase":"asset","errorCode":"unknown","httpStatus":404}\n',
+      '[bionic] Workspace restore diagnostic: {"phase":"asset","errorCode":"unknown"}\n',
     ]));
     expect(diagnostics.join("")).not.toContain("private");
     expect(control.settled).toEqual(expect.arrayContaining(["workspace", "home", "private-asset"]));
@@ -4134,8 +4134,8 @@ describe("sandbox managed runtime outbound coordinator", () => {
     expect(tempA).toBeTruthy();
     expect(tempB).toBeTruthy();
     expect(tempA).not.toBe(tempB);
-    expect(tempA!).toContain("paperclip-sandbox-restore-");
-    expect(tempB!).toContain("paperclip-sandbox-restore-");
+    expect(tempA!).toContain("bionic-sandbox-restore-");
+    expect(tempB!).toContain("bionic-sandbox-restore-");
 
     control.release("asset-a");
     control.release("asset-b");
@@ -4329,8 +4329,8 @@ describe("sandbox git-bundle export transport", () => {
     await mkdir(sourceRepoDir, { recursive: true });
     await git(sourceRepoDir, ["init"]);
     await git(sourceRepoDir, ["checkout", "-b", "main"]);
-    await git(sourceRepoDir, ["config", "user.name", "Paperclip Test"]);
-    await git(sourceRepoDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(sourceRepoDir, ["config", "user.name", "Bionic Test"]);
+    await git(sourceRepoDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(sourceRepoDir, ".gitignore"), "node_modules/\n", "utf8");
     await writeFile(path.join(sourceRepoDir, "tracked.txt"), "base\n", "utf8");
     await git(sourceRepoDir, ["add", "-A"]);
@@ -4342,8 +4342,8 @@ describe("sandbox git-bundle export transport", () => {
   // Advance the sandbox history by one commit that also adds a new file. The
   // caller runs the restore after this, so the export moves this new history.
   async function commitInSandbox(remoteWorkspaceDir: string): Promise<void> {
-    await git(remoteWorkspaceDir, ["config", "user.name", "Paperclip Sandbox"]);
-    await git(remoteWorkspaceDir, ["config", "user.email", "sandbox@paperclip.dev"]);
+    await git(remoteWorkspaceDir, ["config", "user.name", "Bionic Sandbox"]);
+    await git(remoteWorkspaceDir, ["config", "user.email", "sandbox@bionic.dev"]);
     await writeFile(path.join(remoteWorkspaceDir, "remote-only.txt"), "from sandbox\n", "utf8");
     await git(remoteWorkspaceDir, ["add", "-A"]);
     await git(remoteWorkspaceDir, ["commit", "-m", "sandbox update"]);
@@ -4357,7 +4357,7 @@ describe("sandbox git-bundle export transport", () => {
 
   it("moves the bundle through one native syncOut file mapping, never through readFile", async () => {
     const capture: TransportCapture = { syncOutOperations: [], readFilePaths: [] };
-    const { localWorkspaceDir, remoteWorkspaceDir } = await setupGitBackedWorkspace("paperclip-bundle-native-");
+    const { localWorkspaceDir, remoteWorkspaceDir } = await setupGitBackedWorkspace("bionic-bundle-native-");
     const client = makeTransportClient(true, capture);
     const prepared = await prepareSandboxManagedRuntime({
       spec: gitSpec(remoteWorkspaceDir),
@@ -4387,7 +4387,7 @@ describe("sandbox git-bundle export transport", () => {
 
   it("reads the bundle through readFile when the client has no native syncOut", async () => {
     const capture: TransportCapture = { syncOutOperations: [], readFilePaths: [] };
-    const { localWorkspaceDir, remoteWorkspaceDir } = await setupGitBackedWorkspace("paperclip-bundle-fallback-");
+    const { localWorkspaceDir, remoteWorkspaceDir } = await setupGitBackedWorkspace("bionic-bundle-fallback-");
     const client = makeTransportClient(false, capture);
     const prepared = await prepareSandboxManagedRuntime({
       spec: gitSpec(remoteWorkspaceDir),
@@ -4411,7 +4411,7 @@ describe("sandbox git-bundle export transport", () => {
 
   it("retries the full bundle through the native branch when the delta misses its prerequisite", async () => {
     const capture: TransportCapture = { syncOutOperations: [], readFilePaths: [] };
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-bundle-retry-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-bundle-retry-"));
     cleanupDirs.push(rootDir);
     // A standalone host repository, so the test controls object reachability. A
     // linked worktree shares the source object store, and the boundary commit
@@ -4421,8 +4421,8 @@ describe("sandbox git-bundle export transport", () => {
     await mkdir(localWorkspaceDir, { recursive: true });
     await git(localWorkspaceDir, ["init"]);
     await git(localWorkspaceDir, ["checkout", "-b", "work"]);
-    await git(localWorkspaceDir, ["config", "user.name", "Paperclip Test"]);
-    await git(localWorkspaceDir, ["config", "user.email", "test@paperclip.dev"]);
+    await git(localWorkspaceDir, ["config", "user.name", "Bionic Test"]);
+    await git(localWorkspaceDir, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(localWorkspaceDir, "tracked.txt"), "base\n", "utf8");
     await git(localWorkspaceDir, ["add", "-A"]);
     await git(localWorkspaceDir, ["commit", "-m", "base"]);
@@ -4467,7 +4467,7 @@ describe("sandbox git-bundle export transport", () => {
 
   it("reports the real transferred bytes for the native git-history export and workspace restore", async () => {
     const capture: TransportCapture = { syncOutOperations: [], readFilePaths: [] };
-    const { localWorkspaceDir, remoteWorkspaceDir } = await setupGitBackedWorkspace("paperclip-restore-bytes-");
+    const { localWorkspaceDir, remoteWorkspaceDir } = await setupGitBackedWorkspace("bionic-restore-bytes-");
     const client = makeTransportClient(true, capture);
     const prepared = await prepareSandboxManagedRuntime({
       spec: gitSpec(remoteWorkspaceDir),

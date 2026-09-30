@@ -50,7 +50,7 @@ import type {
   IssueWorkMode,
   IssueWorkProduct,
   IssueAssigneeAdapterOverrides,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import type { ActiveRunForIssue, LiveRunForIssue } from "../api/heartbeats";
 import { findUIAdapter } from "../adapters/registry";
 import { useLiveRunTranscripts } from "./transcript/useLiveRunTranscripts";
@@ -201,7 +201,7 @@ import type {
   IssueCommentMetadata,
   IssueCommentPresentation,
   SourceTrustMetadata,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   describeToolInput,
   displayToolName,
@@ -211,7 +211,7 @@ import {
   summarizeToolInput,
   summarizeToolResult,
 } from "../lib/transcriptPresentation";
-import { buildAgentMentionHref } from "@paperclipai/shared";
+import { buildAgentMentionHref } from "@bionicai/shared";
 import { useComposerStop } from "@/hooks/useComposerStop";
 import { cn, formatDateTime, formatShortDate } from "../lib/utils";
 import { liveBlueBadge } from "../lib/status-colors";
@@ -539,7 +539,7 @@ interface IssueChatComposerProps {
 
 interface IssueChatThreadProps {
   /** Browser sessions are placed chronologically by the default task thread. */
-  browsers?: import("@paperclipai/shared").TaskBrowser[];
+  browsers?: import("@bionicai/shared").TaskBrowser[];
   onOpenBrowser?: (browserId: string) => void;
   hasOlderComments?: boolean;
   comments: IssueChatComment[];
@@ -1077,7 +1077,7 @@ const IssueChatTextPart = memo(function IssueChatTextPart({
     <WorkspaceFileMarkdownBody
       className={cn(
         "text-sm leading-6",
-        onAccent && "paperclip-markdown-on-accent",
+        onAccent && "bionic-markdown-on-accent",
       )}
       style={recessed ? { opacity: 0.55 } : undefined}
       softBreaks
@@ -1599,7 +1599,7 @@ const TOOL_ICON_MAP: Record<
   string,
   React.ComponentType<{ className?: string }>
 > = {
-  paperclip_provider_activity: ClipboardList,
+  bionic_provider_activity: ClipboardList,
 };
 
 function getToolIcon(
@@ -1622,7 +1622,7 @@ function IssueChatToolPart({
   isError?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  if (toolName === "paperclip_provider_activity") {
+  if (toolName === "bionic_provider_activity") {
     return (
       <IssueChatProviderActivity
         args={args}
@@ -2925,7 +2925,7 @@ function IssueChatFeedbackButtons({
           <DialogHeader>
             <DialogTitle>Save your feedback sharing preference</DialogTitle>
             <DialogDescription>
-              Choose whether voted AI outputs can be shared with Paperclip Labs.
+              Choose whether voted AI outputs can be shared with Bionic Labs.
               This answer becomes the default for future thumbs up and thumbs
               down votes.
             </DialogDescription>
@@ -3545,14 +3545,14 @@ function SystemNoticeCommentContent({
       ? (agentMap?.get(runAgentId)?.name ?? null)
       : null;
     if (authorType === "system") {
-      const label = runAgentName ?? "Paperclip";
+      const label = runAgentName ?? "Bionic";
       if (runAgentId && runId)
         return { label, href: `/agents/${runAgentId}/runs/${runId}` };
       return { label };
     }
     if (runAgentId && runId) {
       return {
-        label: authorName ?? runAgentName ?? "Paperclip",
+        label: authorName ?? runAgentName ?? "Bionic",
         href: `/agents/${runAgentId}/runs/${runId}`,
       };
     }

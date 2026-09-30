@@ -86,7 +86,7 @@ function signedSlackEventRequest(
     .update(`v0:${timestamp}:${body}`)
     .digest("hex")}`;
   return new Request(
-    "https://paperclip.example/api/chat-webhooks/public/slack",
+    "https://bionic.example/api/chat-webhooks/public/slack",
     {
       method: "POST",
       headers: {
@@ -113,17 +113,17 @@ describe("Chat SDK published adapter integration", () => {
     const providerConfigs = [
       {
         provider: "slack" as const,
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: { botToken: "xoxb-test", signingSecret: "secret" },
       },
       {
         provider: "github" as const,
-        userName: "paperclip-agent[bot]",
+        userName: "bionic-agent[bot]",
         credentials: { token: "github_pat_test", webhookSecret: "secret" },
       },
       {
         provider: "microsoft-teams" as const,
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -131,7 +131,7 @@ describe("Chat SDK published adapter integration", () => {
       },
       {
         provider: "telegram" as const,
-        userName: "paperclip_agent_bot",
+        userName: "bionic_agent_bot",
         credentials: { botToken: "123:test", secretToken: "secret" },
       },
     ];
@@ -181,7 +181,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "github",
-        userName: "paperclip-agent[bot]",
+        userName: "bionic-agent[bot]",
         credentials: { token: "github_pat_test", webhookSecret: "secret" },
       },
     });
@@ -218,7 +218,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "telegram",
-        userName: "paperclip_agent_bot",
+        userName: "bionic_agent_bot",
         credentials: {
           botToken: "123:test",
           secretToken: "telegram-webhook-secret",
@@ -254,7 +254,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -298,7 +298,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: { botToken: "xoxb-test", signingSecret: "secret" },
       },
     });
@@ -310,7 +310,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "discord",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           apiUrl: "https://discord.com/api/v10",
           applicationId: "123456789012345678",
@@ -333,11 +333,11 @@ describe("Chat SDK published adapter integration", () => {
           event: { type: string },
         ): Promise<void>;
       };
-      await slack.sendToResponseUrl("https://paperclip.test/slack", "delete");
-      await slack.forwardSocketEvent("https://paperclip.test/slack", {
+      await slack.sendToResponseUrl("https://bionic.test/slack", "delete");
+      await slack.forwardSocketEvent("https://bionic.test/slack", {
         body: { type: "events_api" },
       });
-      await discord.forwardGatewayEvent("https://paperclip.test/discord", {
+      await discord.forwardGatewayEvent("https://bionic.test/discord", {
         type: "MESSAGE_CREATE",
       });
       expect(providerFetch).toHaveBeenCalledTimes(3);
@@ -373,13 +373,13 @@ describe("Chat SDK published adapter integration", () => {
             { status: 201 },
           );
         }
-        if (url.endsWith("/repos/paperclipai/chat-e2e/issues/42/comments")) {
+        if (url.endsWith("/repos/bionicai/chat-e2e/issues/42/comments")) {
           commentAuthorizations.push(headers.get("authorization") ?? "");
           return Response.json(
             {
               id: 9_000 + commentAuthorizations.length,
               body: "safe reply",
-              user: { id: 9001, login: "maya-paperclip[bot]", type: "Bot" },
+              user: { id: 9001, login: "maya-bionic[bot]", type: "Bot" },
             },
             { status: 201 },
           );
@@ -396,7 +396,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "github",
-        userName: "maya-paperclip[bot]",
+        userName: "maya-bionic[bot]",
         credentials: {
           appId: "123456",
           botUserId: 9001,
@@ -413,11 +413,11 @@ describe("Chat SDK published adapter integration", () => {
       ): Promise<{ id: string }>;
     };
     try {
-      await adapter.postMessage("github:paperclipai/chat-e2e:issue:42", {
+      await adapter.postMessage("github:bionicai/chat-e2e:issue:42", {
         markdown: "first safe reply",
       });
       vi.setSystemTime(new Date(start.getTime() + 61 * 60_000));
-      await adapter.postMessage("github:paperclipai/chat-e2e:issue:42", {
+      await adapter.postMessage("github:bionicai/chat-e2e:issue:42", {
         markdown: "delayed safe reply",
       });
 
@@ -443,7 +443,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -476,7 +476,7 @@ describe("Chat SDK published adapter integration", () => {
       await runtime.initialize();
       const response = await runtime.handleWebhook(
         new Request(
-          "https://paperclip.example/api/chat-webhooks/public/slack",
+          "https://bionic.example/api/chat-webhooks/public/slack",
           {
             method: "POST",
             headers: {
@@ -516,7 +516,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -526,7 +526,7 @@ describe("Chat SDK published adapter integration", () => {
     });
     const body = new URLSearchParams({
       channel_id: "C-PAPERCLIP",
-      command: "/paperclip-agent",
+      command: "/bionic-agent",
       team_id: "T-PAPERCLIP",
       text: "investigate the release",
       trigger_id: "slash-trigger",
@@ -546,14 +546,14 @@ describe("Chat SDK published adapter integration", () => {
         async () =>
           await new Promise<never>(() => {
             // A regression to the upstream cold lookup would hold the provider
-            // acknowledgement open until Paperclip's webhook deadline.
+            // acknowledgement open until Bionic's webhook deadline.
           }),
       );
       adapter._client.users.info = usersInfo;
       const response = await Promise.race([
         runtime.handleWebhook(
           new Request(
-            "https://paperclip.example/api/chat-webhooks/public/slack",
+            "https://bionic.example/api/chat-webhooks/public/slack",
             {
               method: "POST",
               headers: {
@@ -573,14 +573,14 @@ describe("Chat SDK published adapter integration", () => {
       expect((response as Response).status).toBe(200);
       await expect((response as Response).json()).resolves.toEqual({
         response_type: "ephemeral",
-        text: "Paperclip received this command.",
+        text: "Bionic received this command.",
       });
       expect(usersInfo).not.toHaveBeenCalled();
       expect(onSlashCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: "slack",
           event: expect.objectContaining({
-            command: "/paperclip-agent",
+            command: "/bionic-agent",
             text: "investigate the release",
             user: expect.objectContaining({
               userId: "U-OPERATOR",
@@ -611,7 +611,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -641,7 +641,7 @@ describe("Chat SDK published adapter integration", () => {
       const previousMessage = {
         type: "message",
         user: "U-OPERATOR",
-        text: "@paperclip-agent original request",
+        text: "@bionic-agent original request",
         ts: "1788.500",
         thread_ts: "1788.400",
       };
@@ -659,7 +659,7 @@ describe("Chat SDK published adapter integration", () => {
             event_ts: "1788.600",
             message: {
               ...previousMessage,
-              text: "@paperclip-agent corrected request",
+              text: "@bionic-agent corrected request",
               edited: { user: "U-OPERATOR", ts: "1788.600" },
             },
             previous_message: previousMessage,
@@ -847,7 +847,7 @@ describe("Chat SDK published adapter integration", () => {
           persistence: memoryPersistence(),
           providerConfig: {
             provider: "slack",
-            userName: "paperclip-agent",
+            userName: "bionic-agent",
             credentials: {
               botToken: "xoxb-test",
               botUserId: "U-PAPERCLIP-BOT",
@@ -981,7 +981,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1077,7 +1077,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1175,7 +1175,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1256,7 +1256,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1342,7 +1342,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1440,7 +1440,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1574,7 +1574,7 @@ describe("Chat SDK published adapter integration", () => {
         persistence,
         providerConfig: {
           provider: "slack",
-          userName: "paperclip-agent",
+          userName: "bionic-agent",
           credentials: {
             botToken: "xoxb-test",
             botUserId: "U-PAPERCLIP-BOT",
@@ -1649,7 +1649,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1708,7 +1708,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1789,7 +1789,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1860,7 +1860,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-PAPERCLIP-BOT",
@@ -1959,7 +1959,7 @@ describe("Chat SDK published adapter integration", () => {
         persistence,
         providerConfig: {
           provider: "slack",
-          userName: "paperclip-agent",
+          userName: "bionic-agent",
           credentials: {
             botToken: "xoxb-test",
             botUserId: "U-PAPERCLIP-BOT",
@@ -2030,7 +2030,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "telegram",
-        userName: "paperclip_agent_bot",
+        userName: "bionic_agent_bot",
         credentials: {
           botToken: "123:test",
           secretToken: "telegram-webhook-secret",
@@ -2043,7 +2043,7 @@ describe("Chat SDK published adapter integration", () => {
         date: 1_788_700_000,
         chat: { id: -1004415501660, type: "supergroup", title: "Agent Lab" },
         from: { id: 417200359, is_bot: false, first_name: "Dotta" },
-        caption: "/task@paperclip_agent_bot inspect this file",
+        caption: "/task@bionic_agent_bot inspect this file",
         caption_entities: [{ offset: 0, length: 30, type: "bot_command" }],
         document: {
           file_id: "telegram-file-id",
@@ -2086,7 +2086,7 @@ describe("Chat SDK published adapter integration", () => {
     { label: "an absent Content-Length", contentLength: undefined },
     { label: "a misleading small Content-Length", contentLength: "4" },
   ])(
-    "stops Telegram attachment downloads at Paperclip's byte cap with $label",
+    "stops Telegram attachment downloads at Bionic's byte cap with $label",
     async ({ contentLength }) => {
       const providerFetch = vi.fn(async (input: string | URL | Request) => {
         const url = String(input);
@@ -2124,7 +2124,7 @@ describe("Chat SDK published adapter integration", () => {
         persistence,
         providerConfig: {
           provider: "telegram",
-          userName: "paperclip_agent_bot",
+          userName: "bionic_agent_bot",
           maxDownloadBytes: 5,
           credentials: {
             botToken: "123:test",
@@ -2186,7 +2186,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "telegram",
-        userName: "paperclip_agent_bot",
+        userName: "bionic_agent_bot",
         maxDownloadBytes: 10,
         credentials: {
           botToken: "123:test",
@@ -2323,7 +2323,7 @@ describe("Chat SDK published adapter integration", () => {
         persistence,
         providerConfig: {
           provider: "telegram",
-          userName: "paperclip_agent_bot",
+          userName: "bionic_agent_bot",
           credentials: {
             botToken: "123:test",
             secretToken: "telegram-webhook-secret",
@@ -2437,7 +2437,7 @@ describe("Chat SDK published adapter integration", () => {
         );
         const edited = await adapter.editMessage(threadId, "owned-progress", {
           markdown:
-            "This chat conversation is closed. The Paperclip task remains available.",
+            "This chat conversation is closed. The Bionic task remains available.",
         });
         expect(edited).toMatchObject({ id: "owned-progress", threadId });
         expect(put).toHaveBeenCalledTimes(1);
@@ -2448,7 +2448,7 @@ describe("Chat SDK published adapter integration", () => {
         expect(body).toMatchObject({
           type: "message",
           textFormat: "markdown",
-          text: "This chat conversation is closed. The Paperclip task remains available.",
+          text: "This chat conversation is closed. The Bionic task remains available.",
         });
         expect(body.attachments ?? []).toEqual([]);
         expect(body.suggestedActions).toBeUndefined();
@@ -2492,7 +2492,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-4000-8000-000000000511",
           appPassword: "secret",
@@ -2590,7 +2590,7 @@ describe("Chat SDK published adapter integration", () => {
         persistence,
         providerConfig: {
           provider: "telegram",
-          userName: "paperclip_agent_bot",
+          userName: "bionic_agent_bot",
           credentials: {
             botToken: "123:test",
             secretToken: "telegram-webhook-secret",
@@ -2667,7 +2667,7 @@ describe("Chat SDK published adapter integration", () => {
         persistence,
         providerConfig: {
           provider: "microsoft-teams",
-          userName: "Paperclip Agent",
+          userName: "Bionic Agent",
           credentials: {
             appId: "00000000-0000-4000-8000-000000000000",
             appPassword: "secret",
@@ -2723,7 +2723,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-4000-8000-000000000000",
           appPassword: "secret",
@@ -2762,14 +2762,14 @@ describe("Chat SDK published adapter integration", () => {
       provider: "slack",
       providerConfig: {
         provider: "slack" as const,
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botToken: "xoxb-test",
           botUserId: "U-BOT",
           signingSecret: "slack-signing-secret",
         },
       },
-      request: new Request("https://paperclip.test/webhook", {
+      request: new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "event_callback" }),
@@ -2779,14 +2779,14 @@ describe("Chat SDK published adapter integration", () => {
       provider: "github",
       providerConfig: {
         provider: "github" as const,
-        userName: "paperclip-agent[bot]",
+        userName: "bionic-agent[bot]",
         credentials: {
           botUserId: 1,
           token: "github_pat_test",
           webhookSecret: "github-webhook-secret",
         },
       },
-      request: new Request("https://paperclip.test/webhook", {
+      request: new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -2799,13 +2799,13 @@ describe("Chat SDK published adapter integration", () => {
       provider: "telegram",
       providerConfig: {
         provider: "telegram" as const,
-        userName: "paperclip_agent_bot",
+        userName: "bionic_agent_bot",
         credentials: {
           botToken: "123:test",
           secretToken: "telegram-webhook-secret",
         },
       },
-      request: new Request("https://paperclip.test/webhook", {
+      request: new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -2818,7 +2818,7 @@ describe("Chat SDK published adapter integration", () => {
       provider: "microsoft-teams",
       providerConfig: {
         provider: "microsoft-teams" as const,
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "teams-secret",
@@ -2826,7 +2826,7 @@ describe("Chat SDK published adapter integration", () => {
           appType: "SingleTenant" as const,
         },
       },
-      request: new Request("https://paperclip.test/webhook", {
+      request: new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "message", text: "forged" }),
@@ -2843,8 +2843,8 @@ describe("Chat SDK published adapter integration", () => {
             result: {
               id: 123,
               is_bot: true,
-              first_name: "Paperclip Agent",
-              username: "paperclip_agent_bot",
+              first_name: "Bionic Agent",
+              username: "bionic_agent_bot",
             },
           });
         }
@@ -2877,7 +2877,7 @@ describe("Chat SDK published adapter integration", () => {
       "https://github.com/user-attachments/assets/11111111-2222-3333-4444-555555555555";
     const existingBareUrl = "https://already-visible.example.test/log.txt";
     const markdown = [
-      `@paperclip-agent inspect [the build](${safeLink}).`,
+      `@bionic-agent inspect [the build](${safeLink}).`,
       `![failure.log](${safeImage})`,
       `Existing URL: ${existingBareUrl}`,
       "[unsafe](javascript:alert(1))",
@@ -2896,7 +2896,7 @@ describe("Chat SDK published adapter integration", () => {
       repository: {
         id: 202,
         name: "chat-e2e",
-        owner: { id: 303, login: "paperclipai", type: "Organization" },
+        owner: { id: 303, login: "bionicai", type: "Organization" },
       },
       sender: { id: 101, login: "operator", type: "User" },
     };
@@ -2913,7 +2913,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "github",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           botUserId: 999,
           token: "github_pat_test",
@@ -2924,7 +2924,7 @@ describe("Chat SDK published adapter integration", () => {
 
     try {
       const response = await runtime.handleWebhook(
-        new Request("https://paperclip.test/webhook", {
+        new Request("https://bionic.test/webhook", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -2962,7 +2962,7 @@ describe("Chat SDK published adapter integration", () => {
         payload.comment,
         payload.repository,
         42,
-        "github:paperclipai/chat-e2e:42:rc:4242",
+        "github:bionicai/chat-e2e:42:rc:4242",
       );
       expect(review.text).toContain(safeLink);
       expect(review.text).toContain(safeImage);
@@ -2983,7 +2983,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "teams-secret",
@@ -2995,7 +2995,7 @@ describe("Chat SDK published adapter integration", () => {
 
     try {
       const response = await runtime.handleWebhook(
-        new Request("https://paperclip.test/webhook", {
+        new Request("https://bionic.test/webhook", {
           method: "POST",
           headers: {
             authorization: `Bearer ${authorizationMarker}`,
@@ -3033,7 +3033,7 @@ describe("Chat SDK published adapter integration", () => {
       {
         providerConfig: {
           provider: "slack",
-          userName: "paperclip-agent",
+          userName: "bionic-agent",
           credentials: {
             botToken: "xoxb-never-persist",
             signingSecret: "slack-signing-never-persist",
@@ -3064,7 +3064,7 @@ describe("Chat SDK published adapter integration", () => {
       {
         providerConfig: {
           provider: "microsoft-teams",
-          userName: "Paperclip Agent",
+          userName: "Bionic Agent",
           credentials: {
             appId: "00000000-0000-0000-0000-000000000000",
             appPassword: "teams-password-never-persist",
@@ -3093,7 +3093,7 @@ describe("Chat SDK published adapter integration", () => {
       {
         providerConfig: {
           provider: "telegram",
-          userName: "paperclip_agent_bot",
+          userName: "bionic_agent_bot",
           credentials: {
             botToken: "123:telegram-never-persist",
             secretToken: "telegram-webhook-never-persist",
@@ -3172,7 +3172,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3196,7 +3196,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: { botToken: "token", signingSecret: "secret" },
       },
     });
@@ -3219,7 +3219,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3302,7 +3302,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence: state,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3310,7 +3310,7 @@ describe("Chat SDK published adapter integration", () => {
       },
     });
     await runtime.handleWebhook(
-      new Request("https://paperclip.test/webhook", {
+      new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "message", text: "initialize" }),
@@ -3353,7 +3353,7 @@ describe("Chat SDK published adapter integration", () => {
     await runtime.shutdown();
   });
 
-  it("persists Teams metadata only after Paperclip admits the authenticated activity", async () => {
+  it("persists Teams metadata only after Bionic admits the authenticated activity", async () => {
     const state = memoryPersistence();
     const tenantId = "00000000-0000-4000-8000-000000000622";
     const appId = "00000000-0000-4000-8000-000000000611";
@@ -3365,7 +3365,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence: state,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId,
           appPassword: "secret",
@@ -3375,7 +3375,7 @@ describe("Chat SDK published adapter integration", () => {
       },
     });
     await runtime.handleWebhook(
-      new Request("https://paperclip.test/webhook", {
+      new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "message", text: "initialize" }),
@@ -3471,7 +3471,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3573,7 +3573,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence: state,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3583,7 +3583,7 @@ describe("Chat SDK published adapter integration", () => {
       },
     });
     await runtime.handleWebhook(
-      new Request("https://paperclip.test/webhook", {
+      new Request("https://bionic.test/webhook", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "message", text: "initialize" }),
@@ -3695,7 +3695,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3735,7 +3735,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-4000-8000-000000000000",
           appPassword: "secret",
@@ -3786,7 +3786,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           appId: "00000000-0000-0000-0000-000000000000",
           appPassword: "secret",
@@ -3843,7 +3843,7 @@ describe("Chat SDK published adapter integration", () => {
       persistence,
       providerConfig: {
         provider: "microsoft-teams",
-        userName: "Paperclip Agent",
+        userName: "Bionic Agent",
         credentials: {
           apiUrl: configuredApiUrl,
           appId: "00000000-0000-0000-0000-000000000000",

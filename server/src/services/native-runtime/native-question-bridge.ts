@@ -1,22 +1,22 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
-import type { Db } from "@paperclipai/db";
-import { heartbeatRuns, issueThreadInteractions } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { heartbeatRuns, issueThreadInteractions } from "@bionicai/db";
 import type {
   AskUserQuestionsAnswer,
   AskUserQuestionsInteraction,
   AskUserQuestionsQuestionOption,
   PaperclipQuestionSetPayload,
   RespondIssueThreadInteraction,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 
-import type { PrpEvent } from "../../vendor/paperclip-runner/index.js";
+import type { PrpEvent } from "../../vendor/bionic-runner/index.js";
 import {
   parsePaperclipQuestionResponse,
   parsePaperclipQuestionSet,
   type PaperclipQuestionResponse,
   type PaperclipQuestionSet,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 import { logger } from "../../middleware/logger.js";
 import { unprocessable } from "../../errors.js";
 import { logActivity } from "../activity-log.js";
@@ -24,10 +24,10 @@ import { issueThreadInteractionService } from "../issue-thread-interactions.js";
 import { questionResponseDeliveryService } from "../question-response-delivery.js";
 import type { NativeRunStoreBinding } from "./native-run-coordinator-store.js";
 
-const QUESTION_KEY_PREFIX = "paperclip-runner-question:";
+const QUESTION_KEY_PREFIX = "bionic-runner-question:";
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/;
-const TEXT_ANSWER_OPTION_ID = "paperclip_text_answer";
-const CUSTOM_ANSWER_OPTION_ID = "paperclip_custom_answer";
+const TEXT_ANSWER_OPTION_ID = "bionic_text_answer";
+const CUSTOM_ANSWER_OPTION_ID = "bionic_custom_answer";
 export const NATIVE_QUESTION_CANCELLATION_CONTEXT_KEY = "nativeQuestionCancellation";
 
 type QueueCommand = (
@@ -148,7 +148,7 @@ function canonicalResponse(
 ): PaperclipQuestionResponse {
   const answerByQuestionId = new Map(answers.map((answer) => [answer.questionId, answer]));
   const response: PaperclipQuestionResponse = {
-    schema: "paperclip.question_response.v1",
+    schema: "bionic.question_response.v1",
     answers: {},
   };
   for (const question of questionSet.questions) {
@@ -217,7 +217,7 @@ export async function projectNativeRuntimeRequest(input: {
   const request = record(record(input.event.payload)?.request);
   if (
     !request
-    || request.schema !== "paperclip.runtime_request.v2"
+    || request.schema !== "bionic.runtime_request.v2"
     || request.status !== "pending"
     || typeof request.requestId !== "string"
     || !REQUEST_ID_PATTERN.test(request.requestId)

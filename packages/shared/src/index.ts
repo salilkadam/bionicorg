@@ -1757,7 +1757,7 @@ export {
   WEEKLY_RETENTION_PRESETS,
   MONTHLY_RETENTION_PRESETS,
   DEFAULT_BACKUP_RETENTION,
-  PAPERCLIP_CLOUD_MANAGED_BY,
+  BIONIC_CLOUD_MANAGED_BY,
 } from "./types/instance.js";
 
 export type {
@@ -1982,7 +1982,7 @@ export {
   suggestTasksResultSchema,
   askUserQuestionsQuestionOptionSchema,
   askUserQuestionsQuestionSchema,
-  paperclipQuestionSetPayloadSchema,
+  bionicQuestionSetPayloadSchema,
   askUserQuestionsPayloadSchema,
   askUserQuestionsAnswerSchema,
   askUserQuestionsResultSchema,
@@ -2550,7 +2550,7 @@ export {
 } from "./routine-variables.js";
 
 export {
-  paperclipConfigSchema,
+  bionicConfigSchema,
   configMetaSchema,
   llmConfigSchema,
   databaseBackupConfigSchema,

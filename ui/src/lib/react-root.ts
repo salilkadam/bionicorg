@@ -1,7 +1,7 @@
 import { createRoot, type Root } from "react-dom/client";
 
 export interface PaperclipReactRootHost {
-  __paperclipReactRoot?: Root;
+  __bionicReactRoot?: Root;
 }
 
 type CreateRoot = (container: Parameters<typeof createRoot>[0]) => Root;
@@ -16,9 +16,9 @@ export function getOrCreatePaperclipReactRoot(
   create: CreateRoot = createRoot,
 ): Root {
   const rootHost = host as PaperclipReactRootHost;
-  if (rootHost.__paperclipReactRoot) return rootHost.__paperclipReactRoot;
+  if (rootHost.__bionicReactRoot) return rootHost.__bionicReactRoot;
 
   const root = create(container);
-  rootHost.__paperclipReactRoot = root;
+  rootHost.__bionicReactRoot = root;
   return root;
 }

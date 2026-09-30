@@ -4,12 +4,12 @@ import { COGNEE_STDIO_TEMPLATE, cogneeCloudUrl, callCogneeCloud } from "./cognee
 import { HttpError } from "../errors.js";
 import { claimSlackRateLimitRetry } from "./connectors/slack-retry.js";
 import { resolveSlackTaskAuthority } from "./connectors/slack-authority.js";
-import { SLACK_TOOLS } from "@paperclipai/shared";
+import { SLACK_TOOLS } from "@bionicai/shared";
 import { slackToolsForSession } from "./connectors/slack-catalog.js";
 import { executeSlackTool } from "./connectors/slack.js";
 import { githubGuestBotConnectionForSession, githubBotToolsForSession } from "./chat-github-tools.js";
 import { githubChatReviewService } from "./chat-github-reviews.js";
-import { runIdentityContexts } from "@paperclipai/db";
+import { runIdentityContexts } from "@bionicai/db";
 import { captureRunIdentity } from "./run-identity.js";
 import { emitConnectionInvoked } from "./connector-telemetry.js";
 import { resolveManagedGitHubIdentitySelection } from "./git-credentials.js";
@@ -30,7 +30,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agents,
   approvals,
@@ -64,8 +64,8 @@ import {
   toolProfileEntries,
   toolProfiles,
   toolStdioCommandTemplates,
-} from "@paperclipai/db";
-import type { ToolRunContext } from "@paperclipai/plugin-sdk";
+} from "@bionicai/db";
+import type { ToolRunContext } from "@bionicai/plugin-sdk";
 import type {
   CreateToolMcpGateway,
   CreateToolMcpGatewayToken,
@@ -86,13 +86,13 @@ import type {
   ToolMcpGatewayTokenCreated,
   ToolMcpGatewayWithTokens,
   UpdateToolMcpGateway,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   isGitHubConnectorProfileId,
   isGoogleWorkspaceConnectorProfileId,
   type GitHubConnectorProfileId,
   type GoogleWorkspaceConnectorProfileId,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import type {
   AgentToolDescriptor,
   PluginToolDispatcher,
@@ -135,14 +135,14 @@ import {
   type ToolRuntimeSlotView,
 } from "./tool-runtime-supervisor.js";
 import { recordToolRuntimeAuditWriteFailure } from "./tool-runtime-metrics.js";
-import { isRetiredComposioConnection, RETIRED_COMPOSIO_MESSAGE } from "@paperclipai/shared";
+import { isRetiredComposioConnection, RETIRED_COMPOSIO_MESSAGE } from "@bionicai/shared";
 import {
   createPaperclipCloudConnector,
   isPaperclipCloudConnectorStrategy,
-  paperclipCloudConnectorConfigFromEnv,
+  bionicCloudConnectorConfigFromEnv,
   PaperclipCloudConnectorError,
   type PaperclipCloudConnector,
-} from "./paperclip-cloud-connector.js";
+} from "./bionic-cloud-connector.js";
 import {
   createVercelConnectClient,
   vercelGrantReference,
@@ -254,11 +254,11 @@ export type ToolGatewayProviderType =
   | "provider_rest"
   | "mcp_remote_http"
   | "mcp_local_stdio"
-  | "paperclip_self"
-  | "paperclip_plugin"
-  | "paperclip_virtual"
-  | "paperclip_github_chat"
-  | "paperclip_slack_chat";
+  | "bionic_self"
+  | "bionic_plugin"
+  | "bionic_virtual"
+  | "bionic_github_chat"
+  | "bionic_slack_chat";
 
 export interface ConnectedMcpGatewayMetadata {
   applicationId: string;
@@ -429,9 +429,9 @@ const BUILTIN_LOCAL_STDIO_RUNTIME_TEMPLATES: Record<
   string,
   Omit<LocalStdioRuntimeTemplate, "templateId">
 > = {
-  "paperclip.cognee-cloud": COGNEE_STDIO_TEMPLATE,
-  "paperclip.google-sheets": {
-    command: "paperclip-google-sheets-mcp-server",
+  "bionic.cognee-cloud": COGNEE_STDIO_TEMPLATE,
+  "bionic.google-sheets": {
+    command: "bionic-google-sheets-mcp-server",
     args: [],
     envKeys: [
       "GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON",
@@ -439,12 +439,12 @@ const BUILTIN_LOCAL_STDIO_RUNTIME_TEMPLATES: Record<
       "GOOGLE_SHEETS_ALLOWED_SPREADSHEET_IDS",
     ],
   },
-  "paperclip.echo-calculator-time": {
+  "bionic.echo-calculator-time": {
     command: null,
     args: [],
     envKeys: [],
   },
-  "paperclip.synthetic-todo-kv": {
+  "bionic.synthetic-todo-kv": {
     command: null,
     args: [],
     envKeys: [],
@@ -463,12 +463,12 @@ const sensitivePassthroughHeaderNames = new Set([
   "proxy-authorization",
   "cookie",
   "set-cookie",
-  "x-paperclip-tool-gateway-token",
+  "x-bionic-tool-gateway-token",
 ]);
 
 function isSensitivePassthroughHeader(name: string) {
   return (
-    name.startsWith("x-paperclip-") ||
+    name.startsWith("x-bionic-") ||
     sensitivePassthroughHeaderNames.has(name) ||
     sensitivePassthroughHeaderPattern.test(name)
   );
@@ -550,41 +550,41 @@ function mcpGatewayProtocolLimits(
   const envDefaults: McpGatewayProtocolLimitOptions = {
     authFailures: {
       windowMs: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_AUTH_FAILURE_WINDOW_MS,
+        process.env.BIONIC_MCP_GATEWAY_AUTH_FAILURE_WINDOW_MS,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.authFailures.windowMs,
       ),
       max: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_AUTH_FAILURE_LIMIT,
+        process.env.BIONIC_MCP_GATEWAY_AUTH_FAILURE_LIMIT,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.authFailures.max,
       ),
     },
     gatewayRequests: {
       windowMs: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_REQUEST_WINDOW_MS,
+        process.env.BIONIC_MCP_GATEWAY_REQUEST_WINDOW_MS,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.gatewayRequests.windowMs,
       ),
       max: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_REQUEST_LIMIT,
+        process.env.BIONIC_MCP_GATEWAY_REQUEST_LIMIT,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.gatewayRequests.max,
       ),
     },
     tokenRequests: {
       windowMs: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_TOKEN_REQUEST_WINDOW_MS,
+        process.env.BIONIC_MCP_GATEWAY_TOKEN_REQUEST_WINDOW_MS,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.tokenRequests.windowMs,
       ),
       max: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_TOKEN_REQUEST_LIMIT,
+        process.env.BIONIC_MCP_GATEWAY_TOKEN_REQUEST_LIMIT,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.tokenRequests.max,
       ),
     },
     sessionSetup: {
       windowMs: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_SESSION_SETUP_WINDOW_MS,
+        process.env.BIONIC_MCP_GATEWAY_SESSION_SETUP_WINDOW_MS,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.sessionSetup.windowMs,
       ),
       max: positiveInt(
-        process.env.PAPERCLIP_MCP_GATEWAY_SESSION_SETUP_LIMIT,
+        process.env.BIONIC_MCP_GATEWAY_SESSION_SETUP_LIMIT,
         DEFAULT_MCP_GATEWAY_PROTOCOL_LIMITS.sessionSetup.max,
       ),
     },
@@ -631,7 +631,7 @@ function safeClientMetadata(
   headers: Record<string, string | string[] | undefined> | undefined,
 ) {
   const clientName =
-    safeHeaderValue(headers, "x-paperclip-client-name", 120) ??
+    safeHeaderValue(headers, "x-bionic-client-name", 120) ??
     safeHeaderValue(headers, "mcp-client-name", 120) ??
     null;
   const correlationId =
@@ -930,31 +930,31 @@ const BUILTIN_TOOLS: ToolGatewayDescriptor[] = [
     risk: "write",
   },
   {
-    name: "paperclip-self:list_my_issues",
-    displayName: "List my Paperclip issues",
+    name: "bionic-self:list_my_issues",
+    displayName: "List my Bionic issues",
     description:
-      "Paperclip self-MCP read fixture that lists the authenticated agent's current issues.",
+      "Bionic self-MCP read fixture that lists the authenticated agent's current issues.",
     parametersSchema: {
       type: "object",
       properties: { limit: { type: "number" } },
       additionalProperties: false,
     },
-    pluginId: "paperclip-self",
-    providerType: "paperclip_self",
+    pluginId: "bionic-self",
+    providerType: "bionic_self",
     risk: "read",
   },
   {
-    name: "paperclip-self:get_issue_context",
+    name: "bionic-self:get_issue_context",
     displayName: "Get issue context",
     description:
-      "Paperclip self-MCP read fixture that returns scoped issue context and plan document metadata.",
+      "Bionic self-MCP read fixture that returns scoped issue context and plan document metadata.",
     parametersSchema: {
       type: "object",
       properties: { issueId: { type: "string" } },
       additionalProperties: false,
     },
-    pluginId: "paperclip-self",
-    providerType: "paperclip_self",
+    pluginId: "bionic-self",
+    providerType: "bionic_self",
     risk: "read",
   },
   {
@@ -991,7 +991,7 @@ const VIRTUAL_SEARCH_TOOLS: ToolGatewayDescriptor = {
   name: "search_tools",
   displayName: "Search available tools",
   description:
-    "Search the tools available through this Paperclip gateway without loading every target tool into the tool list.",
+    "Search the tools available through this Bionic gateway without loading every target tool into the tool list.",
   parametersSchema: {
     type: "object",
     properties: {
@@ -1000,8 +1000,8 @@ const VIRTUAL_SEARCH_TOOLS: ToolGatewayDescriptor = {
     },
     additionalProperties: false,
   },
-  pluginId: "paperclip-gateway",
-  providerType: "paperclip_virtual",
+  pluginId: "bionic-gateway",
+  providerType: "bionic_virtual",
   risk: "read",
 };
 
@@ -1009,7 +1009,7 @@ const VIRTUAL_RUN_TOOL: ToolGatewayDescriptor = {
   name: "run_tool",
   displayName: "Run a selected tool",
   description:
-    "Run a target tool by name after Paperclip applies the target tool's profile, policy, approval, and rate-limit checks.",
+    "Run a target tool by name after Bionic applies the target tool's profile, policy, approval, and rate-limit checks.",
   parametersSchema: {
     type: "object",
     properties: {
@@ -1019,8 +1019,8 @@ const VIRTUAL_RUN_TOOL: ToolGatewayDescriptor = {
     required: ["tool"],
     additionalProperties: false,
   },
-  pluginId: "paperclip-gateway",
-  providerType: "paperclip_virtual",
+  pluginId: "bionic-gateway",
+  providerType: "bionic_virtual",
   risk: "write",
 };
 
@@ -1039,9 +1039,9 @@ export function createToolGatewayService(
     /** Test seam for deterministic remote MCP protocol fixtures. */
     remoteHttpRequest?: (url: string, init: RequestInit) => Promise<Response>;
     /** Test seam for refreshing personal Gmail grants. */
-    paperclipCloudConnector?: PaperclipCloudConnector | null;
-    /** @deprecated Use paperclipCloudConnector. */
-    paperclipIdGmailConnector?: PaperclipCloudConnector | null;
+    bionicCloudConnector?: PaperclipCloudConnector | null;
+    /** @deprecated Use bionicCloudConnector. */
+    bionicIdGmailConnector?: PaperclipCloudConnector | null;
     /** Refreshes customer-owned/DCR OAuth grants before remote MCP execution. */
     oauthGrantRefresher?: (input: {
       companyId: string;
@@ -1112,15 +1112,15 @@ export function createToolGatewayService(
     }
   >();
   const configuredCloudConnector =
-    options.paperclipCloudConnector ?? options.paperclipIdGmailConnector;
+    options.bionicCloudConnector ?? options.bionicIdGmailConnector;
   const connectorWasProvided =
-    options.paperclipCloudConnector !== undefined ||
-    options.paperclipIdGmailConnector !== undefined;
+    options.bionicCloudConnector !== undefined ||
+    options.bionicIdGmailConnector !== undefined;
   let cachedCloudConnector = configuredCloudConnector ?? null;
   const currentCloudConnector = (): PaperclipCloudConnector | null => {
     if (cachedCloudConnector || connectorWasProvided)
       return cachedCloudConnector;
-    const config = paperclipCloudConnectorConfigFromEnv();
+    const config = bionicCloudConnectorConfigFromEnv();
     cachedCloudConnector = config
       ? createPaperclipCloudConnector({ config, now: options.now })
       : null;
@@ -1205,7 +1205,7 @@ export function createToolGatewayService(
   function pluginTools(): ToolGatewayDescriptor[] {
     return (pluginToolDispatcher?.listToolsForAgent() ?? []).map((tool) => ({
       ...tool,
-      providerType: "paperclip_plugin" as const,
+      providerType: "bionic_plugin" as const,
       risk: inferToolRisk(tool.name),
     }));
   }
@@ -2661,8 +2661,8 @@ export function createToolGatewayService(
       .filter(
         (candidate) =>
           session.agentId ||
-          (candidate.providerType !== "paperclip_self" &&
-            candidate.providerType !== "paperclip_plugin"),
+          (candidate.providerType !== "bionic_self" &&
+            candidate.providerType !== "bionic_plugin"),
       )
       .find((candidate) => candidate.name === toolName);
     if (!tool) {
@@ -2674,7 +2674,7 @@ export function createToolGatewayService(
       );
     }
     const guestBotConnection = await githubGuestBotConnectionForSession(db, session);
-    if (guestBotConnection && tool.connectionId && (tool.connectionId !== guestBotConnection || tool.providerType !== "paperclip_github_chat"))
+    if (guestBotConnection && tool.connectionId && (tool.connectionId !== guestBotConnection || tool.providerType !== "bionic_github_chat"))
       throw new ToolGatewayHttpError(403, "Sponsored GitHub runs can only use their bot's governed connection; sponsorship does not grant personal credentials", "guest_connection_denied");
     if (session.identityContextId && session.agentId && tool.connectionId) {
       const [connection] = await db
@@ -2872,7 +2872,7 @@ export function createToolGatewayService(
     const guestBotConnection = await githubGuestBotConnectionForSession(db, session);
     const allConnectedTools = (await connectedMcpToolsForCompany(
       session.companyId,
-    )).filter(tool => !guestBotConnection || !tool.connectionId || (tool.connectionId === guestBotConnection && tool.providerType === "paperclip_github_chat"));
+    )).filter(tool => !guestBotConnection || !tool.connectionId || (tool.connectionId === guestBotConnection && tool.providerType === "bionic_github_chat"));
     const onDemandTargets = allConnectedTools.filter(isOnDemandRemoteTool);
     const tools = [
       ...allTools(),
@@ -2882,8 +2882,8 @@ export function createToolGatewayService(
     ].filter(
       (tool) =>
         session.agentId ||
-        (tool.providerType !== "paperclip_self" &&
-          tool.providerType !== "paperclip_plugin"),
+        (tool.providerType !== "bionic_self" &&
+          tool.providerType !== "bionic_plugin"),
     );
     const decisions = await Promise.all(
       tools.map(async (tool) => {
@@ -2940,7 +2940,7 @@ export function createToolGatewayService(
   ) {
     const params = asRecord(parameters) ?? {};
 
-    if (tool.providerType === "paperclip_slack_chat") {
+    if (tool.providerType === "bionic_slack_chat") {
       if (!session.agentId || !session.runId || !session.issueId) throw new ToolGatewayHttpError(403, "Slack task binding required", "slack_task_required");
       try {
       const data = await executeSlackTool(db, { companyId: session.companyId, agentId: session.agentId, runId: session.runId, issueId: session.issueId, endpointId: String(asRecord(tool.providerMetadata)?.endpointId ?? ""), identityContextId: session.identityContextId, approvedInvocationId: session.approvedSlackInvocationId }, tool.upstreamToolName ?? "", parameters, fetch, invocationId);
@@ -2953,7 +2953,7 @@ export function createToolGatewayService(
         throw error;
       }
     }
-    if (tool.providerType === "paperclip_github_chat") {
+    if (tool.providerType === "bionic_github_chat") {
       const data = await githubChatReviewService(db).execute(session, tool.upstreamToolName ?? "", parameters, invocationId);
       return { content: JSON.stringify(data), data };
     }
@@ -3009,11 +3009,11 @@ export function createToolGatewayService(
       };
     }
 
-    if (tool.name === "paperclip-self:list_my_issues") {
+    if (tool.name === "bionic-self:list_my_issues") {
       if (!session.agentId) {
         throw new ToolGatewayHttpError(
           403,
-          "Paperclip self tools require an agent-scoped gateway session",
+          "Bionic self tools require an agent-scoped gateway session",
           "agent_context_required",
         );
       }
@@ -3042,11 +3042,11 @@ export function createToolGatewayService(
       };
     }
 
-    if (tool.name === "paperclip-self:get_issue_context") {
+    if (tool.name === "bionic-self:get_issue_context") {
       if (!session.agentId) {
         throw new ToolGatewayHttpError(
           403,
-          "Paperclip self tools require an agent-scoped gateway session",
+          "Bionic self tools require an agent-scoped gateway session",
           "agent_context_required",
         );
       }
@@ -3364,7 +3364,7 @@ export function createToolGatewayService(
     };
     for (const key of policy.metadataHeaders) {
       const value = values[key];
-      if (value) headers[`x-paperclip-${key.replace(/_/g, "-")}`] = value;
+      if (value) headers[`x-bionic-${key.replace(/_/g, "-")}`] = value;
     }
     return headers;
   }
@@ -3693,10 +3693,10 @@ export function createToolGatewayService(
       !rotationDue
     )
       return grant;
-    if (oauth.strategy === "paperclip_id_connector") {
-      // Paperclip ID used different endpoints, signing metadata, envelope
+    if (oauth.strategy === "bionic_id_connector") {
+      // Bionic ID used different endpoints, signing metadata, envelope
       // purposes, and a different Google client. Its refresh token cannot be
-      // exchanged through Paperclip Cloud. Let an unexpired access token finish
+      // exchanged through Bionic Cloud. Let an unexpired access token finish
       // its useful life, then require an explicit managed-connector enrollment
       // and provider reconnect instead of sending it to the wrong client.
       await db
@@ -3708,7 +3708,7 @@ export function createToolGatewayService(
         .where(eq(connectionGrants.id, grant.id));
       throw new ToolGatewayHttpError(
         409,
-        "Legacy authorization must be reconnected through Paperclip Cloud",
+        "Legacy authorization must be reconnected through Bionic Cloud",
         "connector_reauthorization_required",
         {
           connectionId: connection.id,
@@ -3787,7 +3787,7 @@ export function createToolGatewayService(
           ...(grant.providerTenant ?? {}),
           oauth: {
             ...(grant.providerTenant?.oauth ?? {}),
-            strategy: "paperclip_cloud_connector",
+            strategy: "bionic_cloud_connector",
             accessTokenExpiresAt: credentials.accessTokenExpiresAt,
             scopes: credentials.scopes,
             tokenType: credentials.tokenType,
@@ -4057,7 +4057,7 @@ export function createToolGatewayService(
     }
     if (
       connection.authKind === "oauth" &&
-      connection.credentialSource === "paperclip_vault" &&
+      connection.credentialSource === "bionic_vault" &&
       options.oauthGrantRefresher
     ) {
       try {
@@ -4296,7 +4296,7 @@ export function createToolGatewayService(
       detailsMarkdown:
         grantKind === "organization"
           ? "Vercel Connect reports that the shared organization identity needs authorization."
-          : "This run needs your personal authorization. Paperclip will not use another user's identity.",
+          : "This run needs your personal authorization. Bionic will not use another user's identity.",
       target: {
         type: "custom" as const,
         key: `connection:${connection.uid}:user:${userId}`,
@@ -4945,7 +4945,7 @@ export function createToolGatewayService(
         );
       }
     }
-    if (template.templateId === "paperclip.cognee-cloud") {
+    if (template.templateId === "bionic.cognee-cloud") {
       try { cogneeCloudUrl(env.COGNEE_BASE_URL ?? ""); }
       catch {
         throw new ToolGatewayHttpError(422, "Reconnect Cognee with the tenant API Base URL from its API Keys page.", "cognee_cloud_url_invalid");
@@ -4976,7 +4976,7 @@ export function createToolGatewayService(
     protocolParams?: Record<string, unknown>;
     timeoutMs: number;
   }): Promise<unknown> {
-    if (input.template.templateId === "paperclip.cognee-cloud") {
+    if (input.template.templateId === "bionic.cognee-cloud") {
       if (input.protocolMethod === "resources/list") return { resources: [] };
       if (input.protocolMethod === "prompts/list") return { prompts: [] };
       if (input.protocolMethod && input.protocolMethod !== "tools/call") {
@@ -5149,7 +5149,7 @@ export function createToolGatewayService(
       await request("initialize", {
         protocolVersion: "2024-11-05",
         capabilities: {},
-        clientInfo: { name: "paperclip-tool-gateway", version: "0.3.1" },
+        clientInfo: { name: "bionic-tool-gateway", version: "0.3.1" },
       });
       child.stdin.write(
         `${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized", params: {} })}\n`,
@@ -5228,7 +5228,7 @@ export function createToolGatewayService(
         headers: mcpHttpRequestHeaders(headers),
         body: JSON.stringify({
           jsonrpc: "2.0",
-          id: `paperclip-context-${randomUUID()}`,
+          id: `bionic-context-${randomUUID()}`,
           method: input.method,
           params: input.params,
         }),
@@ -5322,7 +5322,7 @@ export function createToolGatewayService(
       template,
       grant,
     );
-    if (template.templateId === "paperclip.cognee-cloud") {
+    if (template.templateId === "bionic.cognee-cloud") {
       return callLocalStdioMcp({ connection: input.connection, template, env,
         protocolMethod: input.method, protocolParams: input.params ?? {}, timeoutMs: DEFAULT_TOOL_TIMEOUT_MS });
     }
@@ -5358,13 +5358,13 @@ export function createToolGatewayService(
     connectionId: string,
     value: string,
   ) {
-    return `paperclip-${kind}://${connectionId}/${Buffer.from(value, "utf8").toString("base64url")}`;
+    return `bionic-${kind}://${connectionId}/${Buffer.from(value, "utf8").toString("base64url")}`;
   }
 
   function parseContextHandle(kind: "resource" | "prompt", value: unknown) {
     if (typeof value !== "string") return null;
     const match = value.match(
-      new RegExp(`^paperclip-${kind}://([0-9a-f-]{36})/([A-Za-z0-9_-]+)$`, "i"),
+      new RegExp(`^bionic-${kind}://([0-9a-f-]{36})/([A-Za-z0-9_-]+)$`, "i"),
     );
     if (!match) return null;
     try {
@@ -5495,7 +5495,7 @@ export function createToolGatewayService(
     tool: ToolGatewayDescriptor,
     options: { requireResolvedCredentials?: boolean } = {},
   ): Promise<Record<string, unknown> | null> {
-    if (tool.providerType === "paperclip_slack_chat") {
+    if (tool.providerType === "bionic_slack_chat") {
       if (!session.agentId || !session.runId || !session.issueId) throw new ToolGatewayHttpError(403, "Slack task binding required", "slack_task_required");
       const authority = await resolveSlackTaskAuthority(db, { companyId: session.companyId, agentId: session.agentId, runId: session.runId, issueId: session.issueId, endpointId: String(asRecord(tool.providerMetadata)?.endpointId ?? ""), identityContextId: session.identityContextId, approvedInvocationId: session.approvedSlackInvocationId });
       return { endpointId: authority.endpoint.id, userId: authority.userId, revision: authority.revision, identityContextId: authority.identityContextId };
@@ -5757,7 +5757,7 @@ export function createToolGatewayService(
         status: "awaiting_approval",
         errorCode: "elicitation_required",
         errorMessage:
-          "Remote MCP tool requested elicitation; Paperclip created an issue interaction for the response.",
+          "Remote MCP tool requested elicitation; Bionic created an issue interaction for the response.",
         updatedAt: now,
       })
       .where(eq(toolInvocations.id, input.invocationId));
@@ -5895,7 +5895,7 @@ export function createToolGatewayService(
     });
     let headers = builtHeaders.headers;
     let headerSummary = builtHeaders.summary;
-    const requestId = `paperclip-tool-${randomUUID()}`;
+    const requestId = `bionic-tool-${randomUUID()}`;
     const execution: RemoteHttpExecutionAudit = {
       transport: "mcp_remote",
       request: {
@@ -5991,7 +5991,7 @@ export function createToolGatewayService(
       if (
         response.status === 401 &&
         connection.authKind === "oauth" &&
-        connection.credentialSource === "paperclip_vault" &&
+        connection.credentialSource === "bionic_vault" &&
         isPaperclipCloudConnectorStrategy(oauth?.strategy)
       ) {
         credentialHeaders = {
@@ -6030,7 +6030,7 @@ export function createToolGatewayService(
       if (
         response.status === 401 &&
         connection.authKind === "oauth" &&
-        connection.credentialSource === "paperclip_vault" &&
+        connection.credentialSource === "bionic_vault" &&
         !isPaperclipCloudConnectorStrategy(oauth?.strategy) &&
         options.oauthGrantRefresher
       ) {
@@ -6314,10 +6314,10 @@ export function createToolGatewayService(
       grant,
     );
     const invoke = () => callLocalStdioMcp({ connection, entry, template, env, parameters,
-      timeoutMs: useProviderDefaultTimeout && template.templateId === "paperclip.cognee-cloud" ? 60_000 : ms });
+      timeoutMs: useProviderDefaultTimeout && template.templateId === "bionic.cognee-cloud" ? 60_000 : ms });
     // Cognee is a bundled HTTP client. Provider failures are tool failures, not
     // crashed local processes, and must never consume slots or restart budgets.
-    const result = template.templateId === "paperclip.cognee-cloud"
+    const result = template.templateId === "bionic.cognee-cloud"
       ? await invoke()
       : await runtimeSupervisor.useConnectionSlot(
       {
@@ -6342,7 +6342,7 @@ export function createToolGatewayService(
       },
     );
     return {
-      result: normalizeMcpToolResult(result, template.templateId === "paperclip.cognee-cloud" ? "cognee_cloud" : "local_stdio", template.templateId !== "paperclip.cognee-cloud"),
+      result: normalizeMcpToolResult(result, template.templateId === "bionic.cognee-cloud" ? "cognee_cloud" : "local_stdio", template.templateId !== "bionic.cognee-cloud"),
     };
   }
 
@@ -6396,7 +6396,7 @@ export function createToolGatewayService(
             },
           },
         },
-        notes: ["Use the full Paperclip origin before the endpoint path."],
+        notes: ["Use the full Bionic origin before the endpoint path."],
       },
       {
         client: "claude_desktop",
@@ -6456,7 +6456,7 @@ export function createToolGatewayService(
             },
           },
         },
-        notes: ["Use the full Paperclip origin before the endpoint path."],
+        notes: ["Use the full Bionic origin before the endpoint path."],
       },
     ];
   }
@@ -8005,7 +8005,7 @@ export function createToolGatewayService(
                   executionTimeoutMs,
                 )
               ).result
-            : tool.providerType !== "paperclip_plugin"
+            : tool.providerType !== "bionic_plugin"
               ? await runWithTimeout(
                   executeBuiltinTool(session, tool, parameters, invocation.id),
                   executionTimeoutMs,
@@ -9799,7 +9799,7 @@ export function createToolGatewayService(
         }
       }
       let tool = await findToolForSession(session, input.tool);
-      if (tool.providerType === "paperclip_slack_chat") {
+      if (tool.providerType === "bionic_slack_chat") {
         const definition = SLACK_TOOLS.find(t => t.name === tool.upstreamToolName);
         const args = definition?.schema.parse(input.parameters ?? {}) as Record<string, unknown> | undefined;
         if (!args) throw new ToolGatewayHttpError(403, "Unknown Slack operation", "slack_task_required");
@@ -9816,7 +9816,7 @@ export function createToolGatewayService(
 
       if (
         tool.name === "search_tools" &&
-        tool.providerType === "paperclip_virtual"
+        tool.providerType === "bionic_virtual"
       ) {
         const argumentValidation = validateToolContent({
           value: requestedParameters,
@@ -9848,7 +9848,7 @@ export function createToolGatewayService(
             agentId: session.agentId,
             issueId: session.issueId,
             runId: session.runId,
-            providerType: "paperclip_virtual",
+            providerType: "bionic_virtual",
             upstreamToolName: "search_tools",
             riskLevel: "read",
             toolName: "search_tools",
@@ -9907,7 +9907,7 @@ export function createToolGatewayService(
 
       if (
         tool.name === "run_tool" &&
-        tool.providerType === "paperclip_virtual"
+        tool.providerType === "bionic_virtual"
       ) {
         const { targetToolName, targetParameters } =
           virtualRunToolInput(requestedParameters);
@@ -10334,7 +10334,7 @@ export function createToolGatewayService(
           consumeRateLimit: true,
         });
         let accessDecision = await policyService.decide(decisionInput);
-        if (accessDecision.allowed && tool.providerType === "paperclip_slack_chat" && SLACK_TOOLS.some(t => t.name === tool.upstreamToolName && t.risk === "approval")) {
+        if (accessDecision.allowed && tool.providerType === "bionic_slack_chat" && SLACK_TOOLS.some(t => t.name === tool.upstreamToolName && t.risk === "approval")) {
           accessDecision = { ...accessDecision, allowed: false, decision: "require_approval", reasonCode: "requires_approval_policy", explanation: "Slack destructive actions, channel creation and invitations require approval." };
         }
         const recorded = await policyService.recordInvocation(
@@ -10343,7 +10343,7 @@ export function createToolGatewayService(
         );
         await policyService.writeAudit(decisionInput, accessDecision);
         invocationId = recorded.invocation.id;
-        const retryingSlackRateLimit = recorded.replayed && accessDecision.allowed && tool.providerType === "paperclip_slack_chat" && session.agentId && session.runId && session.issueId
+        const retryingSlackRateLimit = recorded.replayed && accessDecision.allowed && tool.providerType === "bionic_slack_chat" && session.agentId && session.runId && session.issueId
           ? await claimSlackRateLimitRetry(db, { companyId: session.companyId, agentId: session.agentId, runId: session.runId, issueId: session.issueId, endpointId: String(asRecord(tool.providerMetadata)?.endpointId ?? ""), identityContextId: session.identityContextId }, invocationId)
           : false;
         if (recorded.replayed && !retryingSlackRateLimit) {
@@ -10452,7 +10452,7 @@ export function createToolGatewayService(
       try {
         const executionTimeoutMs = timeoutMs(input.timeoutMs);
         if (
-          tool.providerType === "paperclip_plugin" &&
+          tool.providerType === "bionic_plugin" &&
           (!session.agentId || !session.runId)
         ) {
           throw new ToolGatewayHttpError(
@@ -10483,7 +10483,7 @@ export function createToolGatewayService(
               : null;
         const result = connectedMcpExecution
           ? connectedMcpExecution.result
-          : tool.providerType === "paperclip_plugin"
+          : tool.providerType === "bionic_plugin"
             ? await runWithTimeout(
                 pluginToolDispatcher!.executeTool(
                   tool.name,
@@ -10796,7 +10796,7 @@ export function createToolGatewayService(
 
       const tool = findStaticTool(input.tool);
 
-      if (tool.providerType !== "paperclip_plugin") {
+      if (tool.providerType !== "bionic_plugin") {
         throw new ToolGatewayHttpError(
           404,
           `Tool "${input.tool}" is not a plugin tool`,

@@ -20,8 +20,8 @@ import type {
   ToolConnectionTestCallStatus,
   ToolConnectionTestDecision,
   ToolUpstreamPending,
-} from "@paperclipai/shared";
-import { checkOAuthEndpointUrl } from "@paperclipai/shared";
+} from "@bionicai/shared";
+import { checkOAuthEndpointUrl } from "@bionicai/shared";
 import { Link } from "@/lib/router";
 import { toolsApi } from "@/api/tools";
 import { queryKeys } from "@/lib/queryKeys";
@@ -781,7 +781,7 @@ type RunOutcome = {
 };
 
 function testOutcomeStorageKey(connectionId: string, entry: ToolCatalogEntry, agentId: string): string {
-  return `paperclip:test-call:${connectionId}:${agentId}:${entry.id}:${entry.toolName}`;
+  return `bionic:test-call:${connectionId}:${agentId}:${entry.id}:${entry.toolName}`;
 }
 
 function loadStoredAskFirstOutcome(connectionId: string, entry: ToolCatalogEntry, agent: ToolConnectionTestAgent): RunOutcome | null {
@@ -831,14 +831,14 @@ function splitRequiredOptional(schema: JsonSchemaNode): JsonSchemaNode {
   const next: Record<string, JsonSchemaNode> = {};
   for (const [key, prop] of Object.entries(props)) {
     const presented = key === "code" && prop.type === "string" && !prop.format ? { ...prop, format: "textarea" } : prop;
-    next[key] = required.has(key) ? presented : { ...presented, "x-paperclip-advanced": true };
+    next[key] = required.has(key) ? presented : { ...presented, "x-bionic-advanced": true };
   }
   return { ...schema, properties: next };
 }
 
 const GUT_CHECK: Record<ToolConnectionTestDecision, (app: string, agent: string) => string> = {
   allowed: (app, agent) => `This runs a real call against ${app} as ${agent}.`,
-  ask_first: () => `Waiting for your OK before this call leaves Paperclip.`,
+  ask_first: () => `Waiting for your OK before this call leaves Bionic.`,
   off: (_app, agent) => `No call will be made — this action is off for ${agent}.`,
 };
 
@@ -1099,7 +1099,7 @@ function ProviderPendingResult({ pending, appName, connectionId, agent }: { pend
   return (
     <div role="status" className="space-y-3 rounded-md border border-border bg-muted/40 p-4 text-sm">
       <p className="font-medium">{pending.kind === "approval" ? "Approval needed" : "Authorization needed"} in {appName}</p>
-      <p className="text-muted-foreground">Paperclip allowed this call. The provider needs your input before it can continue.</p>
+      <p className="text-muted-foreground">Bionic allowed this call. The provider needs your input before it can continue.</p>
       {pending.links.map((link) => {
         const checked = checkOAuthEndpointUrl(link.url);
         return checked.ok ? <Button key={checked.url} variant="outline" asChild><a href={checked.url} target="_blank" rel="noopener noreferrer">Continue at {checked.host}</a></Button> : null;
@@ -1112,7 +1112,7 @@ function ProviderPendingResult({ pending, appName, connectionId, agent }: { pend
       {pending.resumeTool && agent ? <ProviderResumeControls pending={pending} connectionId={connectionId} agent={agent} onResult={setResumed} /> :
       <p className="text-muted-foreground">{pending.resumeTool
         ? `After approval, test the ${pending.resumeTool} action with this execution ID. Do not start the original action again.`
-        : "After authorizing, check the provider's result before using Run again. Paperclip will not repeat the call automatically."}</p>}
+        : "After authorizing, check the provider's result before using Run again. Bionic will not repeat the call automatically."}</p>}
     </div>
   );
 }

@@ -30,14 +30,14 @@ import {
   browserUseBrowsers,
   costEvents,
   financeEvents,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { toolAccessService } from "../services/tool-access.js";
 import { createToolGatewayService } from "../services/tool-gateway.js";
 import { browserUseViewports } from "../services/browser-use-viewport.js";
 import { browserUseService } from "../services/browser-use.js";
 import { applyConnectorSkills, prepareConnectorSkillDelivery, resolveConnectorAssignments } from "../services/connector-runtime.js";
 import { registerAssignedMcpGateway } from "../services/native-runtime/assigned-mcp-tools.js";
-import { listPaperclipSkillEntries } from "@paperclipai/adapter-utils/server-utils";
+import { listPaperclipSkillEntries } from "@bionicai/adapter-utils/server-utils";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
@@ -51,16 +51,16 @@ const actor = { actorType: "user" as const, actorId: "browser-reviewer" };
   () => {
     let db: ReturnType<typeof createDb>;
     let temp: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>>;
-    const originalApiUrl = process.env.PAPERCLIP_API_URL;
+    const originalApiUrl = process.env.BIONIC_API_URL;
     beforeAll(async () => {
-      process.env.PAPERCLIP_API_URL = "http://127.0.0.1:3100";
-      temp = await startEmbeddedPostgresTestDatabase("paperclip-browser-use-");
+      process.env.BIONIC_API_URL = "http://127.0.0.1:3100";
+      temp = await startEmbeddedPostgresTestDatabase("bionic-browser-use-");
       db = createDb(temp.connectionString);
     }, 30000);
     afterAll(async () => {
       await temp?.cleanup();
-      if (originalApiUrl === undefined) delete process.env.PAPERCLIP_API_URL;
-      else process.env.PAPERCLIP_API_URL = originalApiUrl;
+      if (originalApiUrl === undefined) delete process.env.BIONIC_API_URL;
+      else process.env.BIONIC_API_URL = originalApiUrl;
     });
     async function fixture(personal = false) {
       const [company] = await db
@@ -315,17 +315,17 @@ const actor = { actorType: "user" as const, actorId: "browser-reviewer" };
     }
     it("keeps Cloud instructions out of universal skills and unassigned runtime overlays", async () => {
       const skills = await listPaperclipSkillEntries(fileURLToPath(new URL("../", import.meta.url)), [fileURLToPath(new URL("../../../skills", import.meta.url))]);
-      expect(skills.some(skill => skill.runtimeName === "paperclip")).toBe(true);
+      expect(skills.some(skill => skill.runtimeName === "bionic")).toBe(true);
       expect(skills.some(skill => ["browser-use", "browser-use-cloud"].includes(skill.runtimeName))).toBe(false);
-      const base = { paperclipSkillSync: { desiredSkills: ["paperclipai/paperclip/browser-use", "paperclipai/paperclip/browser-use-cloud"] } };
+      const base = { bionicSkillSync: { desiredSkills: ["bionicai/bionic/browser-use", "bionicai/bionic/browser-use-cloud"] } };
       const unassigned = await applyConnectorSkills(base, [
-        { key: "paperclipai/paperclip/browser-use", runtimeName: "browser-use", source: "/retired-browser-skill" },
-        { key: "paperclipai/paperclip/browser-use-cloud", runtimeName: "browser-use-cloud", source: "/unassigned-cloud-skill" },
+        { key: "bionicai/bionic/browser-use", runtimeName: "browser-use", source: "/retired-browser-skill" },
+        { key: "bionicai/bionic/browser-use-cloud", runtimeName: "browser-use-cloud", source: "/unassigned-cloud-skill" },
         { key: "custom/browser-use", runtimeName: "browser-use", source: "/another-browser-skill" },
       ], []);
-      expect(unassigned.paperclipRuntimeSkills).toEqual([{ key: "custom/browser-use", runtimeName: "browser-use", source: "/another-browser-skill" }]);
-      expect(unassigned.paperclipConnectorSkillDigest).toBeNull();
-      expect(base.paperclipSkillSync.desiredSkills).toHaveLength(2);
+      expect(unassigned.bionicRuntimeSkills).toEqual([{ key: "custom/browser-use", runtimeName: "browser-use", source: "/another-browser-skill" }]);
+      expect(unassigned.bionicConnectorSkillDigest).toBeNull();
+      expect(base.bionicSkillSync.desiredSkills).toHaveLength(2);
     });
     it("delivers the Cloud skill only with authorized connection tools in a task run", async () => {
       const f = await fixture();
@@ -340,28 +340,28 @@ const actor = { actorType: "user" as const, actorId: "browser-reviewer" };
       expect(await resolveConnectorAssignments(db, { ...f.binding, agentId: unassignedAgent.id })).toEqual([]);
       expect(await resolveConnectorAssignments(db, { ...f.binding, companyId: randomUUID() })).toEqual([]);
       const assignments = await resolveConnectorAssignments(db, f.binding);
-      expect(assignments).toMatchObject([{ key: "browser-use-cloud", skillKey: "paperclipai/paperclip/browser-use-cloud", resources: [{ connectionId: f.connection.connectionId }] }]);
+      expect(assignments).toMatchObject([{ key: "browser-use-cloud", skillKey: "bionicai/bionic/browser-use-cloud", resources: [{ connectionId: f.connection.connectionId }] }]);
       const config = await applyConnectorSkills({}, [], assignments);
-      const skill = config.paperclipRuntimeSkills[0];
+      const skill = config.bionicRuntimeSkills[0];
       expect(skill.runtimeName).toBe("browser-use-cloud");
       const markdown = await readFile(path.join(skill.source, "SKILL.md"), "utf8");
       expect(markdown).toContain("name: browser-use-cloud");
       expect(markdown).toContain("browser_start");
       expect(markdown).toContain(f.connection.connectionId);
       expect(markdown).not.toContain("bu_fixture_secret");
-      for (const adapterType of ["paperclip_runner", "codex_local", "claude_local", "kimi_local"]) {
+      for (const adapterType of ["bionic_runner", "codex_local", "claude_local", "kimi_local"]) {
         const delivery = await prepareConnectorSkillDelivery({ ...config, engine: "cli" }, adapterType);
-        expect(delivery.config.paperclipRuntimeSkills).toEqual([skill]);
+        expect(delivery.config.bionicRuntimeSkills).toEqual([skill]);
       }
       const sharedHome = await prepareConnectorSkillDelivery(config, "cursor_local");
-      expect(sharedHome.config.paperclipRuntimeSkills).toEqual([]);
+      expect(sharedHome.config.bionicRuntimeSkills).toEqual([]);
       expect(sharedHome.instructions).toContain("name: browser-use-cloud");
-      expect(sharedHome.config.paperclipConnectorSkillDigest).toBe(config.paperclipConnectorSkillDigest);
+      expect(sharedHome.config.bionicConnectorSkillDigest).toBe(config.bionicConnectorSkillDigest);
       await db.update(connectionGrants).set({ status: "revoked" }).where(eq(connectionGrants.id, f.grant.id));
       expect(await resolveConnectorAssignments(db, f.binding)).toEqual([]);
-      const revoked = await applyConnectorSkills(config, config.paperclipRuntimeSkills, []);
-      expect(revoked.paperclipRuntimeSkills).toEqual([]);
-      expect(revoked.paperclipConnectorSkillDigest).toBeNull();
+      const revoked = await applyConnectorSkills(config, config.bionicRuntimeSkills, []);
+      expect(revoked.bionicRuntimeSkills).toEqual([]);
+      expect(revoked.bionicConnectorSkillDigest).toBeNull();
       expect((await prepareConnectorSkillDelivery(revoked, "cursor_local")).instructions).toBe("");
     });
     it("withholds Cloud instructions when connection tools are disabled", async () => {

@@ -4,7 +4,7 @@ import type {
   IssueQueuedCommentQueue,
   IssueQueuedCommentQueueState,
   IssueQueuedCommentSteeringDisposition,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 
 function record(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -77,8 +77,8 @@ export function normalizeIssueQueuedCommentQueue(
     revision:
       typeof source?.revision === "string" ? source.revision : "unavailable",
     protocol:
-      source?.protocol === "paperclip_runner_v1"
-        ? "paperclip_runner_v1"
+      source?.protocol === "bionic_runner_v1"
+        ? "bionic_runner_v1"
         : "legacy",
     steeringDisposition:
       typeof disposition === "string" &&
@@ -152,7 +152,7 @@ export function mergePendingIssueQueuedComments(params: {
     protocol,
     steeringDisposition:
       params.authoritativeQueue?.steeringDisposition ??
-      (protocol === "paperclip_runner_v1" && targetRunId
+      (protocol === "bionic_runner_v1" && targetRunId
         ? "temporarily_unavailable"
         : "unsupported"),
     entries,

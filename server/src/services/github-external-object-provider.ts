@@ -1,5 +1,5 @@
-import type { Db } from "@paperclipai/db";
-import type { ExternalObjectCanonicalUrl } from "@paperclipai/shared";
+import type { Db } from "@bionicai/db";
+import type { ExternalObjectCanonicalUrl } from "@bionicai/shared";
 import { DEFAULT_GITHUB_TOKEN_SECRET_NAMES } from "./git-credentials.js";
 import { ghFetch, gitHubApiBase } from "./github-fetch.js";
 import { secretService } from "./secrets.js";
@@ -391,7 +391,7 @@ export function createGitHubExternalObjectProvider(
         token = token?.trim() || null;
         const headers: Record<string, string> = {
           accept: "application/vnd.github+json",
-          "user-agent": "paperclip-external-object-resolver",
+          "user-agent": "bionic-external-object-resolver",
           "x-github-api-version": "2022-11-28",
         };
         if (token) headers.authorization = `Bearer ${token}`;

@@ -6,7 +6,7 @@ import { issueTreeControlService } from "../issue-tree-control.js";
 import { randomUUID } from "node:crypto";
 import { preserveNativeWorkspaceExportLease } from "./native-workspace-export-resume.js";
 import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   approvals,
   agentWakeupRequests,
@@ -22,9 +22,9 @@ import {
   statusDecisions,
   workAssessments,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { classifyNativeEvidence } from "./evidence-classifier.js";
-import type { PrpIgnoredAttentionRequest } from "@paperclipai/paperclip-runner";
+import type { PrpIgnoredAttentionRequest } from "@bionicai/bionic-runner";
 import {
   arbitrateNativeStatus,
   NATIVE_STATUS_ARBITER_POLICY_VERSION,
@@ -662,7 +662,7 @@ async function projectCommittedRun(input: {
               when ${heartbeatRuns.error} is not null or ${heartbeatRuns.errorCode} is not null
               then coalesce(${heartbeatRuns.resultJson}, '{}'::jsonb) || jsonb_build_object(
                 'recoveredExecutionFailure', jsonb_build_object(
-                  'schema', 'paperclip.recovered_execution_failure.v1',
+                  'schema', 'bionic.recovered_execution_failure.v1',
                   'errorCode', ${heartbeatRuns.errorCode},
                   'error', ${heartbeatRuns.error},
                   'observedAt', ${heartbeatRuns.updatedAt}
@@ -943,7 +943,7 @@ export async function repairCommittedNativeChatResponse(
       if (
         !accepted ||
         !decision ||
-        result.schema !== "paperclip.run_result.v1" ||
+        result.schema !== "bionic.run_result.v1" ||
         result.reportedWorkDisposition !== "yielded" ||
         record(result.continuation).kind !== "response_wake" ||
         !Array.isArray(result.attentionRequests) ||
@@ -1002,7 +1002,7 @@ export async function repairCommittedNativeChatResponse(
             {
               presentationDecision,
               nativeCommittedChatResponse: {
-                schema: "paperclip.native_committed_chat_response.v1",
+                schema: "bionic.native_committed_chat_response.v1",
                 resultId: accepted.id,
                 canonicalSha256: accepted.canonicalSha256,
                 decisionId: decision.id,

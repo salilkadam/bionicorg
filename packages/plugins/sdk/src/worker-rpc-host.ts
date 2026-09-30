@@ -47,7 +47,7 @@ import type {
   RequestCheckboxConfirmationInteraction,
   RequestConfirmationInteraction,
   SuggestTasksInteraction,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 
 import type { PaperclipPlugin } from "./define-plugin.js";
 import type {
@@ -310,7 +310,7 @@ export function runWorker(
  * ```ts
  * // worker-bootstrap.ts
  * import plugin from "./worker.js";
- * import { startWorkerRpcHost } from "@paperclipai/plugin-sdk";
+ * import { startWorkerRpcHost } from "@bionicai/plugin-sdk";
  *
  * startWorkerRpcHost({ plugin });
  * ```
@@ -352,7 +352,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
     (params: Record<string, unknown>, context: PluginPerformActionContext) => Promise<unknown>
   >();
   const toolHandlers = new Map<string, {
-    declaration: Pick<import("@paperclipai/shared").PluginToolDeclaration, "displayName" | "description" | "parametersSchema">;
+    declaration: Pick<import("@bionicai/shared").PluginToolDeclaration, "displayName" | "description" | "parametersSchema">;
     fn: (params: unknown, runCtx: ToolRunContext) => Promise<ToolResult>;
   }>();
 
@@ -433,7 +433,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
         const activeInvocation = invocationContextStorage.getStore();
         const request = {
           ...createRequest(method, params, id),
-          ...(activeInvocation ? { paperclipInvocationId: activeInvocation.id } : {}),
+          ...(activeInvocation ? { bionicInvocationId: activeInvocation.id } : {}),
         };
         sendMessage(request);
       } catch (err) {
@@ -450,7 +450,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
       const activeInvocation = invocationContextStorage.getStore();
       sendMessage({
         ...createNotification(method, params),
-        ...(activeInvocation ? { paperclipInvocationId: activeInvocation.id } : {}),
+        ...(activeInvocation ? { bionicInvocationId: activeInvocation.id } : {}),
       });
     } catch {
       // Swallow — the host may have closed stdin
@@ -1455,7 +1455,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
       tools: {
         register(
           name: string,
-          declaration: Pick<import("@paperclipai/shared").PluginToolDeclaration, "displayName" | "description" | "parametersSchema">,
+          declaration: Pick<import("@bionicai/shared").PluginToolDeclaration, "displayName" | "description" | "parametersSchema">,
           fn: (params: unknown, runCtx: ToolRunContext) => Promise<ToolResult>,
         ): void {
           toolHandlers.set(name, { declaration, fn });
@@ -1558,8 +1558,8 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
 
     try {
       const invoke = () => dispatchMethod(method, params);
-      const result = request.paperclipInvocation
-        ? await invocationContextStorage.run(request.paperclipInvocation, invoke)
+      const result = request.bionicInvocation
+        ? await invocationContextStorage.run(request.bionicInvocation, invoke)
         : await invoke();
       sendMessage(createSuccessResponse(id, result ?? null));
     } catch (err) {
@@ -2272,8 +2272,8 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
       // Dispatch host→worker push notifications
       const notif = message as JsonRpcNotification & { method: string; params?: unknown };
       const runNotification = (fn: () => void | Promise<void>) => {
-        if (notif.paperclipInvocation) {
-          return invocationContextStorage.run(notif.paperclipInvocation, fn);
+        if (notif.bionicInvocation) {
+          return invocationContextStorage.run(notif.bionicInvocation, fn);
         }
         return fn();
       };

@@ -23,7 +23,7 @@ import {
   issues,
   projects,
   projectWorkspaces,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -47,8 +47,8 @@ import {
 import { instanceSettingsService } from "../services/instance-settings.ts";
 
 // Exercise the real SSH lease and heartbeat paths without connecting to a host.
-vi.mock("@paperclipai/adapter-utils/ssh", async (importOriginal) => ({
-  ...await importOriginal<typeof import("@paperclipai/adapter-utils/ssh")>(),
+vi.mock("@bionicai/adapter-utils/ssh", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@bionicai/adapter-utils/ssh")>(),
   ensureSshWorkspaceReady: async (config: { remoteWorkspacePath: string }) => ({
     remoteCwd: config.remoteWorkspacePath,
   }),
@@ -92,10 +92,10 @@ describeEmbeddedPostgres("shared-workspace run serialization", () => {
   const executedInputs = new Map<string, AdapterExecutionContext>();
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-heartbeat-workspace-busy-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-heartbeat-workspace-busy-");
     db = createDb(tempDb.connectionString);
     heartbeat = heartbeatService(db);
-    workspaceCwd = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-workspace-busy-"));
+    workspaceCwd = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-workspace-busy-"));
     registerServerAdapter({
       type: WORKSPACE_BUSY_TEST_ADAPTER,
       execute: async (input) => {
@@ -246,7 +246,7 @@ describeEmbeddedPostgres("shared-workspace run serialization", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "responsible-user",
@@ -404,10 +404,10 @@ describeEmbeddedPostgres("shared-workspace run serialization", () => {
     const finishedRun = await waitForRunToLeaveActiveStates(run!.id);
     expect(finishedRun?.status).toBe("succeeded");
     expect(executedRunIds).toContain(run!.id);
-    expect(executedInputs.get(run!.id)?.context.paperclipTaskMarkdown).toContain(
+    expect(executedInputs.get(run!.id)?.context.bionicTaskMarkdown).toContain(
       `shared workspace is concurrently held by run ${fixture.holderRunId}`,
     );
-    expect(executedInputs.get(run!.id)?.context.paperclipTaskMarkdown).toContain(
+    expect(executedInputs.get(run!.id)?.context.bionicTaskMarkdown).toContain(
       "expect concurrent mutations, coordinate via commits",
     );
   });
@@ -486,7 +486,7 @@ describeEmbeddedPostgres("shared-workspace run serialization", () => {
     expect(finishedRun?.status).toBe("succeeded");
     expect(finishedRun?.errorCode).not.toBe(WORKSPACE_BUSY_ERROR_CODE);
     expect(executedRunIds).toContain(run!.id);
-    expect(executedInputs.get(run!.id)?.context.paperclipTaskMarkdown).toContain(
+    expect(executedInputs.get(run!.id)?.context.bionicTaskMarkdown).toContain(
       `shared workspace is concurrently held by run ${fixture.holderRunId}`,
     );
     expect((await heartbeat.getRun(fixture.holderRunId))?.status).toBe("running");
@@ -513,7 +513,7 @@ describeEmbeddedPostgres("shared-workspace run serialization", () => {
     const finishedRun = await waitForRunToLeaveActiveStates(run!.id);
     expect(finishedRun?.errorCode).not.toBe(WORKSPACE_BUSY_ERROR_CODE);
     expect(executedRunIds).toContain(run!.id);
-    expect((finishedRun?.contextSnapshot as Record<string, unknown>)?.paperclipTaskMarkdown).toContain(
+    expect((finishedRun?.contextSnapshot as Record<string, unknown>)?.bionicTaskMarkdown).toContain(
       `shared workspace is concurrently held by run ${fixture.holderRunId}`,
     );
     const retryRuns = await db

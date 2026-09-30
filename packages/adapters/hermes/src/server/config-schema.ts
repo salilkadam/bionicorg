@@ -1,4 +1,4 @@
-import type { AdapterConfigSchema } from "@paperclipai/adapter-utils";
+import type { AdapterConfigSchema } from "@bionicai/adapter-utils";
 
 import {
   DEFAULT_GRACE_SEC,
@@ -61,7 +61,7 @@ export function getConfigSchema(): AdapterConfigSchema {
         label: "Persist session",
         type: "toggle",
         default: true,
-        hint: "Resume Hermes sessions across Paperclip heartbeats.",
+        hint: "Resume Hermes sessions across Bionic heartbeats.",
       },
       {
         key: "worktreeMode",
@@ -82,7 +82,7 @@ export function getConfigSchema(): AdapterConfigSchema {
         label: "Quiet output",
         type: "toggle",
         default: true,
-        hint: "Pass Hermes --quiet for cleaner Paperclip run transcripts.",
+        hint: "Pass Hermes --quiet for cleaner Bionic run transcripts.",
       },
       {
         key: "verbose",
@@ -92,10 +92,10 @@ export function getConfigSchema(): AdapterConfigSchema {
         hint: "Pass Hermes --verbose.",
       },
       {
-        key: "paperclipApiUrl",
-        label: "Paperclip API URL",
+        key: "bionicApiUrl",
+        label: "Bionic API URL",
         type: "text",
-        hint: "Optional API base override. Defaults to PAPERCLIP_API_URL.",
+        hint: "Optional API base override. Defaults to BIONIC_API_URL.",
       },
       {
         key: "promptTemplate",

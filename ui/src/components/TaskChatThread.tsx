@@ -3,12 +3,12 @@ import {
   ISSUE_DETAIL_CONTENT_MEASURE,
   scheduleIssueDetailPaintMeasure,
 } from "@/lib/issue-detail-performance";
-import { hasWorkspaceRestoreFailure } from "@paperclipai/shared";
+import { hasWorkspaceRestoreFailure } from "@bionicai/shared";
 import { workspaceRestoreMarkerDetail } from "@/lib/workspace-restore-marker";
-import type { ActivityEvent, TaskBrowser } from "@paperclipai/shared";
+import type { ActivityEvent, TaskBrowser } from "@bionicai/shared";
 import { useProjectCreatedItems } from "@/hooks/useProjectCreatedItems";
 import { skillCreatedItems } from "@/components/task-chat/skill-created-items";
-import { requiresExecutionReconciliation } from "@paperclipai/shared";
+import { requiresExecutionReconciliation } from "@bionicai/shared";
 import { TaskChatExpansionState } from "@/components/task-chat/expansion-state";
 import { TaskChatScrollReady } from "@/components/task-chat/scroll-navigation";
 import {
@@ -44,9 +44,9 @@ import {
   isTerminalRunStatus,
   embedPlanDocumentAtWriteBoundary,
   omitProgressRepeatedByResponseAcrossSegments,
-  paperclipRunnerFinalResponse,
-  paperclipRunnerAcceptedResponseWake,
-  paperclipRunnerTimelineItems,
+  bionicRunnerFinalResponse,
+  bionicRunnerAcceptedResponseWake,
+  bionicRunnerTimelineItems,
   prependIssueBrief,
   settledRunChildren,
   splitTranscriptAtAnchors,
@@ -86,7 +86,7 @@ import type {
   FeedbackVoteValue,
   IssueDocument,
   IssueThreadInteraction,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   TaskChatThreadView,
   taskChatContentKey,
@@ -262,7 +262,7 @@ function isNativePaperclipRunnerRun(
     | undefined,
 ): boolean {
   return (
-    run?.runtimeMode === "native" && run.adapterType === "paperclip_runner"
+    run?.runtimeMode === "native" && run.adapterType === "bionic_runner"
   );
 }
 const LEGACY_WITHHELD_RUN_COMMENT =
@@ -287,7 +287,7 @@ function acceptedSemanticResult(
     if (!candidate || typeof candidate !== "object" || Array.isArray(candidate))
       continue;
     const result = candidate as Record<string, unknown>;
-    if (result.schema !== "paperclip.run_result.v1") continue;
+    if (result.schema !== "bionic.run_result.v1") continue;
     return result;
   }
   return null;
@@ -316,7 +316,7 @@ function presentationDecisionCommentId(
   if (!decision || typeof decision !== "object" || Array.isArray(decision))
     return undefined;
   const record = decision as Record<string, unknown>;
-  if (record.schema !== "paperclip.run_presentation_decision.v1")
+  if (record.schema !== "bionic.run_presentation_decision.v1")
     return undefined;
   return typeof record.commentId === "string" && record.commentId.trim()
     ? record.commentId
@@ -401,7 +401,7 @@ function resolvedWithoutUserFacingResponse(value: unknown): boolean {
     typeof decision === "object" &&
     !Array.isArray(decision) &&
     (decision as Record<string, unknown>).schema ===
-      "paperclip.run_presentation_decision.v1" &&
+      "bionic.run_presentation_decision.v1" &&
     (decision as Record<string, unknown>).chosenSource === "none",
   );
 }
@@ -1032,7 +1032,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
       if (comment.deletedAt || !comment.runId || !comment.id) continue;
       map.set(comment.runId, comment.id);
     }
-    // A settled Paperclip turn normally attaches to its durable final reply.
+    // A settled Bionic turn normally attaches to its durable final reply.
     // Same-turn steering splits that causal interval into timestamped segments,
     // so each segment must stay unanchored and interleave around the injected
     // human bubble through the chronological assembler.
@@ -1544,7 +1544,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
       const sourceAcceptedResponseWake =
         source.status === "succeeded" &&
         !sourceHasPendingAttention &&
-        paperclipRunnerAcceptedResponseWake(parsedSource, source.id);
+        bionicRunnerAcceptedResponseWake(parsedSource, source.id);
       const sourceYielded =
         (acceptedSemanticResultDisposition(meta?.resultJson) === "yielded" ||
           entries.some(
@@ -1760,7 +1760,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
               standaloneHeader: true,
               animateFold: liveSeenRef.current.has(source.id),
               items: [],
-              finalResponse: paperclipRunnerFinalResponse([], {
+              finalResponse: bionicRunnerFinalResponse([], {
                 runId: source.id,
                 agentName: meta?.agentName,
                 fallbackSummary: acceptedSummary,
@@ -1847,14 +1847,14 @@ export function TaskChatThread(props: TaskChatThreadProps) {
           segment,
           parsed,
           timelineItems: sourceIsPaperclipRunner
-            ? paperclipRunnerTimelineItems(parsed)
+            ? bionicRunnerTimelineItems(parsed)
             : parsed,
         };
       });
       const sourceResponseText =
         sourceIsPaperclipRunner && !sourceYielded
           ? (sourcePresentationText ??
-            paperclipRunnerFinalResponse(parsedSource, {
+            bionicRunnerFinalResponse(parsedSource, {
               runId: source.id,
               agentName: meta?.agentName,
               fallbackSummary: acceptedSummary,
@@ -1884,12 +1884,12 @@ export function TaskChatThread(props: TaskChatThreadProps) {
               ? // A steering anchor may split acceptance from its terminal.
                 // Keep the whole-run proof and render its answer exactly once.
                 segmentIndex === lastPopulatedSegmentIndex
-                ? paperclipRunnerFinalResponse(parsedSource, {
+                ? bionicRunnerFinalResponse(parsedSource, {
                     runId: source.id,
                     agentName: meta?.agentName,
                   })
                 : undefined
-              : paperclipRunnerFinalResponse(parsed, {
+              : bionicRunnerFinalResponse(parsed, {
                   runId: source.id,
                   agentName: meta?.agentName,
                   fallbackSummary:
@@ -1992,7 +1992,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
               : parsedTranscript;
           const children = settledRunChildren(
             isNativePaperclipRunnerRun(liveRun)
-              ? paperclipRunnerTimelineItems(parsed)
+              ? bionicRunnerTimelineItems(parsed)
               : parsed,
           );
           if (children.length === 0) continue;
@@ -2173,9 +2173,9 @@ export function TaskChatThread(props: TaskChatThreadProps) {
   const tailRunSource = tailRunId
     ? runs.find((run) => run.id === tailRunId)
     : undefined;
-  const paperclipRunnerTail = isNativePaperclipRunnerRun(tailRunSource);
+  const bionicRunnerTail = isNativePaperclipRunnerRun(tailRunSource);
   const suppressPaperclipRunnerTailFinal = Boolean(
-    paperclipRunnerTail &&
+    bionicRunnerTail &&
     (acceptedSemanticResultDisposition(
       tailRunId ? linkedRunMetaById.get(tailRunId)?.resultJson : null,
     ) === "yielded" ||
@@ -2195,7 +2195,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
     !logsAreInitiallyHydrating,
   );
   const tailTimelineAnchors = tailRunId
-    ? paperclipRunnerTail
+    ? bionicRunnerTail
       ? (steeringAnchorsByRun.get(tailRunId) ?? [])
       : (legacyTimelineAnchorsByRun.get(tailRunId) ?? [])
     : [];
@@ -2487,7 +2487,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
     currentPendingInputs[0] ??
     null;
   const interactionDraftKey = selectedPendingInput
-    ? `paperclip:task-input:${issueId ?? "unknown"}:${selectedPendingInput.key}`
+    ? `bionic:task-input:${issueId ?? "unknown"}:${selectedPendingInput.key}`
     : undefined;
   const openPendingTakeover = useCallback(() => {
     if (!pendingReminderInputs.some(input => input.key === selectedPendingInput?.key)) {
@@ -2521,7 +2521,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
   const runtimeComposerDisabledReason = composerDisabledReason ?? undefined;
   const assigneeUsesPaperclipRunner = Boolean(
     issueAssigneeAgentId &&
-    agentMap?.get(issueAssigneeAgentId)?.adapterType === "paperclip_runner",
+    agentMap?.get(issueAssigneeAgentId)?.adapterType === "bionic_runner",
   );
   const [runnerSubmissionPending, setRunnerSubmissionPending] = useState(false);
   useEffect(() => {
@@ -2976,7 +2976,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
                         <>
                           {tailRunId || optimisticRunnerStartup ? (
                             <div data-testid="task-chat-live-transcript">
-                              {paperclipRunnerTail ||
+                              {bionicRunnerTail ||
                               optimisticRunnerStartup ? (
                                 <TaskChatRunnerTurn
                                   runId={tailRunId}
@@ -3001,7 +3001,7 @@ export function TaskChatThread(props: TaskChatThreadProps) {
                                     suppressPaperclipRunnerTailFinal
                                   }
                                   continuedAfterSteering={
-                                    paperclipRunnerTail &&
+                                    bionicRunnerTail &&
                                     tailTimelineAnchors.length > 0
                                   }
                                   onRuntimeRequestDecision={

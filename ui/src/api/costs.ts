@@ -11,7 +11,7 @@ import type {
   FinanceByKind,
   FinanceEvent,
   ProviderQuotaResult,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { api } from "./client";
 
 function dateParams(from?: string, to?: string): string {

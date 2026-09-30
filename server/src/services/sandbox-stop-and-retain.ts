@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, sql, type SQL } from "drizzle-orm";
-import { environmentLeases, type Db } from "@paperclipai/db";
+import { environmentLeases, type Db } from "@bionicai/db";
 import { isBuiltinSandboxProvider } from "./sandbox-provider-runtime.js";
 import { remoteTerminationReceipt } from "./remote-execution-termination.js";
 import { hasNativeWorkspaceExportResume, readNativeWorkspaceExportResume, settleNativeWorkspaceExportResume } from "./native-runtime/native-workspace-export-resume.js";
@@ -23,7 +23,7 @@ export function readStopOnlyCleanup(lease: Lease) {
   const value = lease.metadata?.[SANDBOX_STOP_AND_RETAIN_KEY];
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const intent = value as Record<string, unknown>;
-  if (intent.schema !== "paperclip.sandbox-stop-and-retain.v1"
+  if (intent.schema !== "bionic.sandbox-stop-and-retain.v1"
     || intent.companyId !== lease.companyId || intent.runId !== lease.heartbeatRunId || !lease.heartbeatRunId
     || intent.leaseId !== lease.id || intent.provider !== lease.provider || !lease.provider
     || intent.providerLeaseId !== lease.providerLeaseId || !lease.providerLeaseId
@@ -41,7 +41,7 @@ export function readStopOnlyCleanup(lease: Lease) {
  * an explicit stop into ordinary destructive release. Invalid pins stay pending. */
 export async function prepareSandboxStopAndRetain(db: Db, lease: Lease) {
   const requestId = randomUUID(), now = new Date();
-  const intent = { schema: "paperclip.sandbox-stop-and-retain.v1", requestId,
+  const intent = { schema: "bionic.sandbox-stop-and-retain.v1", requestId,
     companyId: lease.companyId, runId: lease.heartbeatRunId, leaseId: lease.id,
     provider: lease.provider, providerLeaseId: lease.providerLeaseId,
     ...(lease.provider && isBuiltinSandboxProvider(lease.provider) && !lease.metadata?.sandboxProviderPlugin && lease.metadata?.pluginId == null
@@ -75,7 +75,7 @@ export async function settleStopOnlyCleanup(db: Db, lease: Lease, options: { att
     releasedAt: now, lastUsedAt: now, updatedAt: now,
     metadata: sql`(${environmentLeases.metadata} - 'remoteExecutionTermination' ${removeIntent}) || ${JSON.stringify({
       ...(stopped ? { remoteExecutionTermination: receipt, sandboxStopAndRetainReceipt: {
-        schema: "paperclip.sandbox-stop-and-retain-receipt.v1", requestId: intent.requestId,
+        schema: "bionic.sandbox-stop-and-retain-receipt.v1", requestId: intent.requestId,
         companyId: lease.companyId, runId: lease.heartbeatRunId, leaseId: lease.id,
         provider: lease.provider, providerLeaseId: lease.providerLeaseId,
         ...(intent.pluginId ? { pluginId: intent.pluginId, method: "environmentStopLease" }

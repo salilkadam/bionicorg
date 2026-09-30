@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "rows": [
+    {
+      "id": "mcp:bionicMe",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicMe",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L290:bionicme",
+      "primaryDisposition": "control_plane_owned",
+      "semanticOperation": "injected_actor_context",
+      "expectedMockState": "runtime_decision_record"
+    },
+    {
+      "id": "mcp:bionicInboxLite",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicInboxLite",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L296:bionicinboxlite",
+      "primaryDisposition": "control_plane_owned",
+      "semanticOperation": "runner_work_selection",
+      "expectedMockState": "runtime_decision_record"
+    },
+    {
+      "id": "mcp:bionicListAgents",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListAgents",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L302:bioniclistagents",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "list_agents",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListSkills",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListSkills",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L308:bioniclistskills",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "list_company_skills",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetAgent",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetAgent",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L314:bionicgetagent",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_agent",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListIssues",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListIssues",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L323:bioniclistissues",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "search_tasks",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetIssue",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetIssue",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L338:bionicgetissue",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "get_task_context",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetHeartbeatContext",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetHeartbeatContext",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L344:bionicgetheartbeatcontext",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "get_task_context",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListComments",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListComments",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L353:bioniclistcomments",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "get_task_history",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetComment",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetComment",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L366:bionicgetcomment",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "get_task_history",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListIssueApprovals",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListIssueApprovals",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L373:bioniclistissueapprovals",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "get_task_context",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListDocuments",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListDocuments",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L379:bioniclistdocuments",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "list_documents",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetDocument",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetDocument",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L385:bionicgetdocument",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "read_document",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListDocumentRevisions",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListDocumentRevisions",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L392:bioniclistdocumentrevisions",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "list_document_revisions",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListProjects",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListProjects",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L402:bioniclistprojects",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "list_projects",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetProject",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetProject",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L408:bionicgetproject",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_project",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetIssueWorkspaceRuntime",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetIssueWorkspaceRuntime",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L417:bionicgetissueworkspaceruntime",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_workspace_runtime",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicControlIssueWorkspaceServices",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicControlIssueWorkspaceServices",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L423:bioniccontrolissueworkspaceservices",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "control_workspace_service",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicWaitForIssueWorkspaceService",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicWaitForIssueWorkspaceService",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L440:bionicwaitforissueworkspaceservice",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "wait_for_workspace_service",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListGoals",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListGoals",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L466:bioniclistgoals",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "list_goals",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetGoal",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetGoal",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L472:bionicgetgoal",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_goal",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListApprovals",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListApprovals",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L478:bioniclistapprovals",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "list_approvals",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicCreateApproval",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicCreateApproval",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L487:bioniccreateapproval",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "request_approval",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetApproval",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetApproval",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L496:bionicgetapproval",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_approval",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicGetApprovalIssues",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicGetApprovalIssues",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L502:bionicgetapprovalissues",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_approval_context",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicListApprovalComments",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicListApprovalComments",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L508:bioniclistapprovalcomments",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "get_approval_context",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicCreateIssue",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicCreateIssue",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L514:bioniccreateissue",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "create_task",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicUpdateIssue",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicUpdateIssue",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L521:bionicupdateissue",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "semantic_task_disposition",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicCheckoutIssue",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicCheckoutIssue",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L528:bioniccheckoutissue",
+      "primaryDisposition": "control_plane_owned",
+      "semanticOperation": "atomic_checkout",
+      "expectedMockState": "runtime_decision_record"
+    },
+    {
+      "id": "mcp:bionicReleaseIssue",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicReleaseIssue",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L540:bionicreleaseissue",
+      "primaryDisposition": "control_plane_owned",
+      "semanticOperation": "runtime_release",
+      "expectedMockState": "runtime_decision_record"
+    },
+    {
+      "id": "mcp:bionicAddComment",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicAddComment",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L546:bionicaddcomment",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "report_progress",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicSuggestTasks",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicSuggestTasks",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L553:bionicsuggesttasks",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "request_human_input",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicAskUserQuestions",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicAskUserQuestions",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L565:bionicaskuserquestions",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "request_human_input",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicRequestConfirmation",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicRequestConfirmation",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L577:bionicrequestconfirmation",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "request_human_input",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicRequestCheckboxConfirmation",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicRequestCheckboxConfirmation",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L589:bionicrequestcheckboxconfirmation",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "request_human_input",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicUpsertIssueDocument",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicUpsertIssueDocument",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L601:bionicupsertissuedocument",
+      "primaryDisposition": "always_agent_tool",
+      "semanticOperation": "write_document",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicRestoreIssueDocumentRevision",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicRestoreIssueDocumentRevision",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L612:bionicrestoreissuedocumentrevision",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "restore_document_revision",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicLinkIssueApproval",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicLinkIssueApproval",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L627:bioniclinkissueapproval",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "link_approval",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicUnlinkIssueApproval",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicUnlinkIssueApproval",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L636:bionicunlinkissueapproval",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "unlink_approval",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicApprovalDecision",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicApprovalDecision",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L646:bionicapprovaldecision",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "decide_approval",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicAddApprovalComment",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicAddApprovalComment",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L668:bionicaddapprovalcomment",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "comment_on_approval",
+      "expectedMockState": "operation_result"
+    },
+    {
+      "id": "mcp:bionicApiRequest",
+      "kind": "legacy_mcp_tool",
+      "name": "bionicApiRequest",
+      "sourceAnchor": "packages/mcp-server/src/tools.ts#L677:bionicapirequest",
+      "primaryDisposition": "optional_agent_tool",
+      "semanticOperation": "test_only_api_escape_hatch",
+      "expectedMockState": "operation_result"
+    }
+  ]
+}

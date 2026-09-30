@@ -124,8 +124,8 @@ describe("AuthPage", () => {
     return { root, queryClient };
   }
 
-  it.each(["https://my.paperclip.app", "https://my-staging.paperclip.app"])("recovers Cloud auth through %s without rendering an instance form", async (origin) => {
-    healthMock.mockResolvedValue({ cloud: { managed: true, managedBy: "paperclip-cloud", cloudBaseUrl: origin, stackSlug: "team" } });
+  it.each(["https://my.bionic.app", "https://my-staging.bionic.app"])("recovers Cloud auth through %s without rendering an instance form", async (origin) => {
+    healthMock.mockResolvedValue({ cloud: { managed: true, managedBy: "bionic-cloud", cloudBaseUrl: origin, stackSlug: "team" } });
     const { root } = await mount("/auth?next=%2FTEST%2Fissues%2FTEST-1%3Ftab%3Dactivity%23comment");
     await vi.waitFor(() => expect(beginCloudSignInMock).toHaveBeenCalledTimes(1));
     const target = new URL(beginCloudSignInMock.mock.calls[0][0]);
@@ -153,16 +153,16 @@ describe("AuthPage", () => {
   });
 
   it("offers a manual Cloud retry after the automatic recovery limit", async () => {
-    healthMock.mockResolvedValue({ cloud: { managed: true, managedBy: "paperclip-cloud", cloudBaseUrl: "https://my.paperclip.app", stackSlug: "team" } });
+    healthMock.mockResolvedValue({ cloud: { managed: true, managedBy: "bionic-cloud", cloudBaseUrl: "https://my.bionic.app", stackSlug: "team" } });
     beginCloudSignInMock.mockReturnValue(false);
     const { root } = await mount();
-    await vi.waitFor(() => expect(container.textContent).toContain("Continue to Paperclip Cloud"));
+    await vi.waitFor(() => expect(container.textContent).toContain("Continue to Bionic Cloud"));
     expect(container.querySelector("form")).toBeNull();
     await act(() => root.unmount());
   });
 
   it("keeps incomplete Cloud configuration out of the instance form", async () => {
-    healthMock.mockResolvedValue({ cloud: { managed: true, managedBy: "paperclip-cloud", cloudBaseUrl: null, stackSlug: null } });
+    healthMock.mockResolvedValue({ cloud: { managed: true, managedBy: "bionic-cloud", cloudBaseUrl: null, stackSlug: null } });
     const { root } = await mount();
     await vi.waitFor(() => expect(container.textContent).toContain("Cloud sign-in is unavailable"));
     expect(container.querySelector("form")).toBeNull();

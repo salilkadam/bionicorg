@@ -1,6 +1,6 @@
-import { createProjectSchema, createIssueSchema } from "@paperclipai/shared";
+import { createProjectSchema, createIssueSchema } from "@bionicai/shared";
 import { z } from "zod";
-import { CAPABILITY_SEMANTIC_TOOL_CATALOG } from "../vendor/paperclip-runner/index.js";
+import { CAPABILITY_SEMANTIC_TOOL_CATALOG } from "../vendor/bionic-runner/index.js";
 import { badRequest } from "../errors.js";
 
 export const PROJECT_TOOL_NAMES = ["create_project", "list_project_repositories", "list_projects"];

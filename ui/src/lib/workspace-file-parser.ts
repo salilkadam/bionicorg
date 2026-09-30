@@ -1,4 +1,4 @@
-import type { WorkspaceFileSelector } from "@paperclipai/shared";
+import type { WorkspaceFileSelector } from "@bionicai/shared";
 
 export interface ParsedWorkspaceFileRef {
   path: string;

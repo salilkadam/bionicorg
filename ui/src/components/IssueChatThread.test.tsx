@@ -13,7 +13,7 @@ import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Agent } from "@paperclipai/shared";
+import type { Agent } from "@bionicai/shared";
 import { CommentSubmissionUnknownError } from "../lib/comment-submit-result";
 import { loadDraft, preserveDraftInTab, settleDraftSubmission } from "../lib/composer-draft";
 import {
@@ -504,7 +504,7 @@ describe("IssueChatThread", () => {
     expect(markdownBodyRenderMock).toHaveBeenCalledWith(
       expect.objectContaining({
         children: "1. **Readable** markdown on blue",
-        className: expect.stringContaining("paperclip-markdown-on-accent"),
+        className: expect.stringContaining("bionic-markdown-on-accent"),
       }),
     );
 
@@ -3082,7 +3082,7 @@ describe("IssueChatThread", () => {
     });
   });
 
-  it("renders the transcript directly from stable Paperclip messages", () => {
+  it("renders the transcript directly from stable Bionic messages", () => {
     const root = createRoot(container);
 
     act(() => {

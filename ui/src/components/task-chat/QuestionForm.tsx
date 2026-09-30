@@ -9,7 +9,7 @@ import {
 import type {
   PaperclipQuestionResponse,
   PaperclipQuestionSet,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import type { MentionOption } from "@/components/MarkdownEditor";
 import { MarkdownBody } from "@/components/MarkdownBody";
 import { Button } from "@/components/ui/button";
@@ -395,7 +395,7 @@ export function QuestionForm({
     setError(null);
     try {
       await onSubmit({
-        schema: "paperclip.question_response.v1",
+        schema: "bionic.question_response.v1",
         answers: structuredClone(responseAnswers),
       });
       if (draftKey) clearDraft(draftKey);

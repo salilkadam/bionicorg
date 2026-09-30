@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { QUALIFIED_ACPX_PROFILES } from "../../packages/paperclip-runner/src/drivers/acpx/qualified-profiles.js";
-import { QUALIFIED_OPENCODE_MODEL } from "../../packages/paperclip-runner/src/drivers/opencode/opencode-server-driver.js";
+import { QUALIFIED_ACPX_PROFILES } from "../../packages/bionic-runner/src/drivers/acpx/qualified-profiles.js";
+import { QUALIFIED_OPENCODE_MODEL } from "../../packages/bionic-runner/src/drivers/opencode/opencode-server-driver.js";
 import {
   directAcceptanceProfiles,
   nativeAcceptanceProfiles,

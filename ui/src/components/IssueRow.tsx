@@ -1,6 +1,6 @@
-import { requiresExecutionReconciliation } from "@paperclipai/shared";
+import { requiresExecutionReconciliation } from "@bionicai/shared";
 import type { ReactNode } from "react";
-import type { ExternalObjectSummary, Issue, IssueRecoveryAction } from "@paperclipai/shared";
+import type { ExternalObjectSummary, Issue, IssueRecoveryAction } from "@bionicai/shared";
 import { Link } from "@/lib/router";
 import { Archive, Flag } from "lucide-react";
 import {

@@ -91,7 +91,7 @@ export interface DurableRunLogStoreOptions {
 // detail. Live append/tail stays on the pod-local file (fast, no per-chunk PUT);
 // on finalize the complete .ndjson is uploaded to object storage; on read we try
 // local first and fall back to S3 when the local file is gone. This is the fix
-// for "Run log not found" after a deploy/restart (the /paperclip data dir is an
+// for "Run log not found" after a deploy/restart (the /bionic data dir is an
 // emptyDir in cloud_tenant mode -- persistence is disabled to avoid the
 // operator's privileged selinux-relabel init container in our hardened ns).
 //
@@ -468,7 +468,7 @@ export function createDurableRunLogStore(options: DurableRunLogStoreOptions): Ru
 }
 
 // Build the run-log S3 mirror from dedicated RUN_LOG_S3_* env. Deliberately
-// separate from PAPERCLIP_STORAGE_PROVIDER so enabling durable run logs does
+// separate from BIONIC_STORAGE_PROVIDER so enabling durable run logs does
 // NOT redirect the product's workspace/file storage (smaller blast radius).
 // Unset RUN_LOG_S3_BUCKET -> no mirror -> local-only (safe degrade). Creds come
 // from the standard AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY chain.

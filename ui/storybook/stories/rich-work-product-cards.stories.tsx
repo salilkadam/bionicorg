@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { IssueAttachment, IssueWorkProduct } from "@paperclipai/shared";
+import type { IssueAttachment, IssueWorkProduct } from "@bionicai/shared";
 import { expect } from "storybook/test";
 import { RichWorkProductCard } from "../../src/components/task-chat/RichWorkProductCard";
 import { TaskChatBubble } from "../../src/components/task-chat/TaskChatBubble";
@@ -45,8 +45,8 @@ const KINDS: CardKind[] = [
     type: "pull_request",
     provider: "github",
     title: "Add rich work-product cards",
-    url: "https://github.com/paperclipai/paperclip/pull/12717",
-    metadata: { repo: "paperclipai/paperclip", number: 12717, baseRef: "master", headRef: "rich-cards" },
+    url: "https://github.com/bionicai/bionic/pull/12717",
+    metadata: { repo: "bionicai/bionic", number: 12717, baseRef: "master", headRef: "rich-cards" },
   },
   {
     id: "commit",
@@ -54,7 +54,7 @@ const KINDS: CardKind[] = [
     type: "commit",
     provider: "github",
     title: "Render kind-specific work products",
-    url: "https://github.com/paperclipai/paperclip/commit/9c12ae7b41e5",
+    url: "https://github.com/bionicai/bionic/commit/9c12ae7b41e5",
     metadata: { sha: "9c12ae7b41e5", branch: "rich-cards" },
   },
   {
@@ -63,14 +63,14 @@ const KINDS: CardKind[] = [
     type: "branch",
     provider: "github",
     title: "rich-cards",
-    url: "https://github.com/paperclipai/paperclip/tree/rich-cards",
-    metadata: { repository: "paperclipai/paperclip", branch: "rich-cards" },
+    url: "https://github.com/bionicai/bionic/tree/rich-cards",
+    metadata: { repository: "bionicai/bionic", branch: "rich-cards" },
   },
   {
     id: "artifact-file",
     label: "Artifact · file",
     type: "artifact",
-    provider: "paperclip",
+    provider: "bionic",
     title: "interaction-map.pdf",
     url: "/api/attachments/story-file/content",
     metadata: { contentType: "application/pdf", byteSize: 48_120 },
@@ -79,7 +79,7 @@ const KINDS: CardKind[] = [
     id: "artifact-image",
     label: "Artifact · image",
     type: "artifact",
-    provider: "paperclip",
+    provider: "bionic",
     title: "thread-preview.png",
     url: IMAGE_PREVIEW,
     metadata: { contentType: "image/png", byteSize: 204_800, openPath: IMAGE_PREVIEW },
@@ -88,7 +88,7 @@ const KINDS: CardKind[] = [
     id: "document",
     label: "Document",
     type: "document",
-    provider: "paperclip",
+    provider: "bionic",
     title: "Implementation plan",
     url: "/PAP/issues/PAP-18213#document-plan",
     metadata: { revisionNumber: 4 },
@@ -99,14 +99,14 @@ const KINDS: CardKind[] = [
     type: "preview_url",
     provider: "custom",
     title: "Rich cards preview",
-    url: "https://preview.paperclip.ing/rich-cards",
+    url: "https://preview.bionic.ing/rich-cards",
     metadata: {},
   },
   {
     id: "runtime-service",
     label: "Runtime service",
     type: "runtime_service",
-    provider: "paperclip",
+    provider: "bionic",
     title: "Storybook",
     url: "http://localhost:6006",
     metadata: { service: "storybook", port: 6006 },
@@ -259,7 +259,7 @@ function attachment(id: string, name: string, contentType: string, byteSize: num
     issueId: "issue-storybook",
     issueCommentId: "message-storybook",
     assetId: `asset-${id}`,
-    provider: "paperclip",
+    provider: "bionic",
     objectKey: id,
     contentType,
     byteSize,

@@ -1,7 +1,7 @@
 const HONEYCOMB_QUERY_URL =
-  "https://ui.honeycomb.io/paperclip/environments/test/datasets/paperclip/";
+  "https://ui.honeycomb.io/bionic/environments/test/datasets/bionic/";
 
-export const HONEYCOMB_RUN_HASH_ATTRIBUTE = "paperclip.task.run.run_id";
+export const HONEYCOMB_RUN_HASH_ATTRIBUTE = "bionic.task.run.run_id";
 
 export async function hashPaperclipRunId(
   runId: string,
@@ -25,7 +25,7 @@ export function buildHoneycombRunQueryUrl(runIdHash: string): string {
     calculations: [{ op: "COUNT" }],
     breakdowns: ["trace.trace_id"],
     filters: [
-      { column: "service.name", op: "=", value: "paperclip" },
+      { column: "service.name", op: "=", value: "bionic" },
       { column: "name", op: "=", value: "task.run" },
       { column: HONEYCOMB_RUN_HASH_ATTRIBUTE, op: "=", value: runIdHash },
     ],

@@ -26,7 +26,7 @@ const companyState = vi.hoisted(() => ({
   companies: [
     {
       id: "company-1",
-      name: "Paperclip",
+      name: "Bionic",
       status: "active",
       issuePrefix: "PAP",
     },
@@ -34,7 +34,7 @@ const companyState = vi.hoisted(() => ({
   selectedCompanyId: "company-1",
   selectedCompany: {
     id: "company-1",
-    name: "Paperclip",
+    name: "Bionic",
     status: "active",
     issuePrefix: "PAP",
   },
@@ -721,7 +721,7 @@ describe("NewIssueDialog", () => {
       id: "project-1", name: "Alpha", workspaces: [],
       executionWorkspacePolicy: { enabled: true, defaultMode: "isolated_workspace" },
     }]);
-    localStorage.setItem("paperclip:issue-draft", JSON.stringify({
+    localStorage.setItem("bionic:issue-draft", JSON.stringify({
       title: "Draft task", description: "", status: "todo", priority: "medium", assigneeValue: "",
       reviewerValue: "", approverValue: "", projectId: "project-1",
       selectedExecutionWorkspaceId: "stale-workspace", executionWorkspaceMode: "reuse_existing",
@@ -1429,7 +1429,7 @@ describe("NewIssueDialog", () => {
     await flush();
 
     const menu = document.createElement("div");
-    menu.setAttribute("data-paperclip-floating-ui", "");
+    menu.setAttribute("data-bionic-floating-ui", "");
     const option = document.createElement("button");
     menu.appendChild(option);
     document.body.appendChild(menu);
@@ -1546,7 +1546,7 @@ describe("NewIssueDialog", () => {
       enableIsolatedWorkspaces: false,
     });
     localStorage.setItem(
-      "paperclip:issue-draft",
+      "bionic:issue-draft",
       JSON.stringify({
         title: "Watched task",
         description: "",

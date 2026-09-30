@@ -5,7 +5,7 @@ import {
   expandHomePrefix,
   resolveDefaultBackupDir,
   resolvePaperclipConfigPathForInstance,
-} from "@paperclipai/shared/home-paths";
+} from "@bionicai/shared/home-paths";
 
 type PartialConfig = {
   database?: {
@@ -49,7 +49,7 @@ function resolveConnectionString(config: PartialConfig | null): string {
   }
 
   const port = resolveEmbeddedPort(config);
-  return `postgres://paperclip:paperclip@127.0.0.1:${port}/paperclip`;
+  return `postgres://bionic:bionic@127.0.0.1:${port}/bionic`;
 }
 
 function resolveBackupDir(config: PartialConfig | null): string {
@@ -80,7 +80,7 @@ async function main() {
       connectionString,
       backupDir,
       retention: { dailyDays: retentionDays, weeklyWeeks: 4, monthlyMonths: 1 },
-      filenamePrefix: "paperclip",
+      filenamePrefix: "bionic",
     });
 
     console.log(`Backup saved: ${formatDatabaseBackupResult(result)}`);

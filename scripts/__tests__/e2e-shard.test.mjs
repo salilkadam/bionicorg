@@ -29,7 +29,7 @@ function readTrustedPrWorkflow() {
   const caller = readFileSync(prCallerWorkflow, "utf8");
   assert.match(
     caller,
-    /^\s+uses: paperclipai\/paperclip\/\.github\/workflows\/pr-trusted\.yml@master\s*$/m,
+    /^\s+uses: bionicai\/bionic\/\.github\/workflows\/pr-trusted\.yml@master\s*$/m,
     "pr.yml must call the trusted workflow from CODEOWNERS-protected master",
   );
   // Validate proposed workflow changes locally; CI executes the merged master version.
@@ -63,7 +63,7 @@ function runStackScope(stack, prBaseRef) {
     .split("\n")
     .map((line) => line.replace(/^ {10}/, ""))
     .join("\n");
-  const scratch = mkdtempSync(path.join(tmpdir(), "paperclip-stack-scope-"));
+  const scratch = mkdtempSync(path.join(tmpdir(), "bionic-stack-scope-"));
   const output = path.join(scratch, "github-output");
 
   try {
@@ -220,7 +220,7 @@ test("the trusted PR workflow limits full CI to merge-relevant stack layers", ()
   for (const jobId of [
     "typecheck_release_registry",
     "general_tests",
-    "verify_paperclip_runner",
+    "verify_bionic_runner",
     "build",
     "verify_serialized_server",
     "canary_dry_run",
@@ -242,14 +242,14 @@ test("the trusted PR workflow limits full CI to merge-relevant stack layers", ()
   const verify = jobs.get("verify");
   assert.match(
     verify,
-    /^ {4}needs: \[gate, policy, typecheck_release_registry, general_tests, verify_paperclip_runner, build, docker_context_integrity\]$/m,
+    /^ {4}needs: \[gate, policy, typecheck_release_registry, general_tests, verify_bionic_runner, build, docker_context_integrity\]$/m,
   );
   assert.match(verify, /POLICY_RESULT: \$\{\{ needs\.policy\.result \}\}/);
   assert.match(verify, /test "\$TYPECHECK_RELEASE_REGISTRY_RESULT" = "skipped"/);
   assert.match(verify, /test "\$GENERAL_TESTS_RESULT" = "skipped"/);
   // Runner verification must participate in the legacy aggregate required
   // check, or a runner regression could be merged while `verify` succeeds.
-  assert.match(verify, /RUNNER_VERIFICATION_RESULT: \$\{\{ needs\.verify_paperclip_runner\.result \}\}/);
+  assert.match(verify, /RUNNER_VERIFICATION_RESULT: \$\{\{ needs\.verify_bionic_runner\.result \}\}/);
   assert.match(verify, /test "\$RUNNER_VERIFICATION_RESULT" = "success"/);
   assert.match(verify, /test "\$RUNNER_VERIFICATION_RESULT" = "skipped"/);
   assert.match(verify, /test "\$BUILD_RESULT" = "skipped"/);

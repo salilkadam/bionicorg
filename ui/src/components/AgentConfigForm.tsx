@@ -1,5 +1,5 @@
 import { AiConnectionField } from "./ai-connections/AiConnectionField";
-import { aiConnectionBindingSchema } from "@paperclipai/shared";
+import { aiConnectionBindingSchema } from "@bionicai/shared";
 import { testAgentSetup } from "@/lib/test-agent-setup";
 import { setupEfforts } from "../lib/agent-setup-fields";
 import { RuntimeTestCard } from "./RuntimeTestCard";
@@ -18,8 +18,8 @@ import type {
   EnvBinding,
   EnvSecretRefBinding,
   Environment,
-} from "@paperclipai/shared";
-import { AGENT_DEFAULT_MAX_CONCURRENT_RUNS, supportedEnvironmentDriversForAdapter, isValidBrowserCode, ADAPTER_AUTH_MISSING_CHECK_CODE } from "@paperclipai/shared";
+} from "@bionicai/shared";
+import { AGENT_DEFAULT_MAX_CONCURRENT_RUNS, supportedEnvironmentDriversForAdapter, isValidBrowserCode, ADAPTER_AUTH_MISSING_CHECK_CODE } from "@bionicai/shared";
 import type { AdapterModel } from "../api/agents";
 import { agentsApi } from "../api/agents";
 import { ApiError } from "../api/client";
@@ -30,12 +30,12 @@ import { assetsApi } from "../api/assets";
 import {
   DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
   DEFAULT_CODEX_LOCAL_MODEL,
-} from "@paperclipai/adapter-codex-local";
-import { DEFAULT_CLAUDE_LOCAL_MODEL } from "@paperclipai/adapter-claude-local";
-import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
-import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
-import { DEFAULT_KIMI_LOCAL_MODEL } from "@paperclipai/adapter-kimi-local";
-import { DEFAULT_OPENCODE_LOCAL_MODEL } from "@paperclipai/adapter-opencode-local";
+} from "@bionicai/adapter-codex-local";
+import { DEFAULT_CLAUDE_LOCAL_MODEL } from "@bionicai/adapter-claude-local";
+import { DEFAULT_CURSOR_LOCAL_MODEL } from "@bionicai/adapter-cursor-local";
+import { DEFAULT_GEMINI_LOCAL_MODEL } from "@bionicai/adapter-gemini-local";
+import { DEFAULT_KIMI_LOCAL_MODEL } from "@bionicai/adapter-kimi-local";
+import { DEFAULT_OPENCODE_LOCAL_MODEL } from "@bionicai/adapter-opencode-local";
 import {
   Popover,
   PopoverContent,
@@ -97,14 +97,14 @@ import { codexReasoningEffortOptions } from "../lib/codex-reasoning-effort";
 
 /* ---- Create mode values ---- */
 
-// Canonical type lives in @paperclipai/adapter-utils; re-exported here
+// Canonical type lives in @bionicai/adapter-utils; re-exported here
 // so existing imports from this file keep working.
-export type { CreateConfigValues } from "@paperclipai/adapter-utils";
+export type { CreateConfigValues } from "@bionicai/adapter-utils";
 import {
-  PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES,
-  paperclipRunnerTransitionConfig,
+  BIONIC_RUNNER_PERMISSION_CAPABILITIES,
+  bionicRunnerTransitionConfig,
   type CreateConfigValues,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import { Badge } from "@/components/ui/badge";
 
 /* ---- Props ---- */
@@ -173,14 +173,14 @@ const emptyOverlay: AgentConfigOverlay = {
 const EMPTY_ENV: Record<string, EnvBinding> = {};
 
 export function supportsAdapterModelRefresh(adapterType: string): boolean {
-  return adapterType === "claude_local" || adapterType === "codex_local" || adapterType === "paperclip_runner" || adapterType === "opencode_local";
+  return adapterType === "claude_local" || adapterType === "codex_local" || adapterType === "bionic_runner" || adapterType === "opencode_local";
 }
 
 export function resolvePaperclipRunnerTransitionModel(
   previousAdapterType: string,
   previousModel: unknown,
 ): string {
-  return paperclipRunnerTransitionConfig(previousAdapterType, previousModel).model as string;
+  return bionicRunnerTransitionConfig(previousAdapterType, previousModel).model as string;
 }
 
 function isOverlayDirty(o: AgentConfigOverlay): boolean {
@@ -400,7 +400,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     // their current value in edit mode, but the picker does not offer a fresh
     // native selection until the explicit experimental opt-in is known true.
     if (experimentalSettings?.enableNativeRunner !== true) {
-      next.add("paperclip_runner");
+      next.add("bionic_runner");
     }
     return next;
   }, [disabledTypes, experimentalSettings?.enableNativeRunner]);
@@ -884,10 +884,10 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
   const inheritedEnvironmentLabel = instanceDefaultEnvironment
     ? environmentDisplayLabel(instanceDefaultEnvironment)
     : managedSandboxOnly
-      ? "Paperclip Computer"
+      ? "Bionic Computer"
       : "Local";
 
-  const runnerProvider = adapterType === "paperclip_runner"
+  const runnerProvider = adapterType === "bionic_runner"
     ? String(isCreate ? props.values.adapterSchemaValues?.provider ?? "codex"
       : eff("adapterConfig", "provider", config.provider === "acpx" && config.acpxAgent === "codex" ? "codex" : config.provider ?? "codex"))
     : undefined;
@@ -926,7 +926,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
       }
       return agentsApi.detectModel(selectedCompanyId, adapterType);
     },
-    enabled: Boolean(selectedCompanyId && isLocal && adapterType !== "opencode_local" && adapterType !== "paperclip_runner"),
+    enabled: Boolean(selectedCompanyId && isLocal && adapterType !== "opencode_local" && adapterType !== "bionic_runner"),
   });
   const detectedModel = detectedModelData?.model ?? null;
   const detectedModelCandidates = detectedModelData?.candidates ?? [];
@@ -1065,7 +1065,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
         (overlay.runtime.runtimeConfig as Record<string, unknown> | undefined)?.aiConnection ?? props.agent.runtimeConfig.aiConnection,
       ).data;
       if (props.compactTestFeedback) {
-        const providerAdapter = adapterType === "paperclip_runner"
+        const providerAdapter = adapterType === "bionic_runner"
           ? adapterConfig.provider === "codex" ? "codex_local"
             : adapterConfig.provider === "acpx" && adapterConfig.acpxAgent === "grok" ? "grok_local"
             : adapterConfig.provider === "acpx" && adapterConfig.acpxAgent === "claude" ? "claude_local"
@@ -1307,7 +1307,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           : eff("adapterConfig", thinkingEffortKey, String(config[thinkingEffortKey] ?? ""));
   const showThinkingEffort = adapterType !== "gemini_local"
     && adapterType !== "cursor_cloud"
-    && adapterType !== "paperclip_runner";
+    && adapterType !== "bionic_runner";
   const codexSearchEnabled = adapterType === "codex_local"
     ? (isCreate ? Boolean(val!.search) : eff("adapterConfig", "search", Boolean(config.search)))
     : false;
@@ -1613,7 +1613,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                       nextValues.model = DEFAULT_CURSOR_LOCAL_MODEL;
                     } else if (t === "opencode_local") {
                       nextValues.model = DEFAULT_OPENCODE_LOCAL_MODEL;
-                    } else if (t === "paperclip_runner") {
+                    } else if (t === "bionic_runner") {
                       nextValues.model = DEFAULT_CODEX_LOCAL_MODEL;
                     }
                     set!(nextValues);
@@ -1633,7 +1633,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                               ? DEFAULT_OPENCODE_LOCAL_MODEL
                             : t === "cursor"
                               ? DEFAULT_CURSOR_LOCAL_MODEL
-                            : t === "paperclip_runner"
+                            : t === "bionic_runner"
                               ? resolvePaperclipRunnerTransitionModel(adapterType, config.model)
                               : "",
                         effort: "",
@@ -1645,9 +1645,9 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                               dangerouslyBypassApprovalsAndSandbox:
                                 DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
                             }
-                          : t === "paperclip_runner"
+                          : t === "bionic_runner"
                             ? {
-                                ...paperclipRunnerTransitionConfig(adapterType, eff("adapterConfig", "model", config.model)),
+                                ...bionicRunnerTransitionConfig(adapterType, eff("adapterConfig", "model", config.model)),
                               }
                           : {}),
                       },
@@ -1658,7 +1658,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
             </Field>
           )}
 
-          {!isCreate && selectedCompanyId && <AiConnectionField companyId={selectedCompanyId} agentId={props.agent.id} agentName={props.agent.name} adapterType={adapterType === "paperclip_runner" ? eff("adapterConfig", "provider", config.provider) === "codex" ? "codex_local" : eff("adapterConfig", "provider", config.provider) === "opencode" ? "opencode_local" : eff("adapterConfig", "provider", config.provider) === "acpx" && eff("adapterConfig", "acpxAgent", config.acpxAgent) === "grok" ? "grok_local" : eff("adapterConfig", "provider", config.provider) === "acpx" && eff("adapterConfig", "acpxAgent", config.acpxAgent) === "claude" ? "claude_local" : adapterType : adapterType}
+          {!isCreate && selectedCompanyId && <AiConnectionField companyId={selectedCompanyId} agentId={props.agent.id} agentName={props.agent.name} adapterType={adapterType === "bionic_runner" ? eff("adapterConfig", "provider", config.provider) === "codex" ? "codex_local" : eff("adapterConfig", "provider", config.provider) === "opencode" ? "opencode_local" : eff("adapterConfig", "provider", config.provider) === "acpx" && eff("adapterConfig", "acpxAgent", config.acpxAgent) === "grok" ? "grok_local" : eff("adapterConfig", "provider", config.provider) === "acpx" && eff("adapterConfig", "acpxAgent", config.acpxAgent) === "claude" ? "claude_local" : adapterType : adapterType}
             value={aiConnectionBindingSchema.safeParse((overlay.runtime.runtimeConfig as Record<string, unknown> | undefined)?.aiConnection ?? runtimeConfig.aiConnection).data}
             model={String(eff("adapterConfig", "model", config.model) ?? "")} environmentId={currentDefaultEnvironmentId || undefined} legacy
             onChange={binding => mark("runtime", "runtimeConfig", { ...runtimeConfig, aiConnection: binding })} />}
@@ -1741,13 +1741,13 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 open={modelOpen}
                 onOpenChange={setModelOpen}
                 defaultLabel={adapterType === "claude_local" ? `Default (${DEFAULT_CLAUDE_LOCAL_MODEL})` : undefined}
-                allowDefault={adapterType !== "opencode_local" && adapterType !== "pi_local" && adapterType !== "paperclip_runner"}
+                allowDefault={adapterType !== "opencode_local" && adapterType !== "pi_local" && adapterType !== "bionic_runner"}
                 required={adapterType === "opencode_local" || adapterType === "pi_local"}
                 groupByProvider={adapterType === "opencode_local" || adapterType === "pi_local"}
                 creatable
                 detectedModel={detectedModel}
                 detectedModelCandidates={[]}
-                onDetectModel={adapterType === "opencode_local" || adapterType === "paperclip_runner"
+                onDetectModel={adapterType === "opencode_local" || adapterType === "bionic_runner"
                   ? undefined
                   : async () => {
                       const result = await refetchDetectedModel();
@@ -2128,7 +2128,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
               <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-xs text-foreground">
                 <Bug className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span>
-                  Raw tracing is on for future runs. Paperclip keeps at most 64 MiB per run and automatically deletes it after 24 hours.
+                  Raw tracing is on for future runs. Bionic keeps at most 64 MiB per run and automatically deletes it after 24 hours.
                 </span>
               </div>
             ) : null}
@@ -2265,7 +2265,7 @@ export type AdapterLoginDescriptor = {
 // correctly, and the first thing to rot would have been the timeout and
 // cleanup paths, which are the ones nobody exercises by hand.
 export type AdapterLoginPanelProps = AdapterLoginDescriptor & {
-  aiConnection?: import("@paperclipai/shared").AiConnectionLoginIntent;
+  aiConnection?: import("@bionicai/shared").AiConnectionLoginIntent;
   onStored?: (storedSessionId: string) => void;
   onApplyStored?: () => void;
   // Applies the non-secret Codex account-binding claim from an authenticated

@@ -248,7 +248,7 @@ export async function runContinuationFlow(input: {
       const parentRun = runs.find((r) => r.contextSnapshot?.issueId === issue!.id);
       await seedContinuationContext({
         isolatedRoot: path.dirname(input.workspacePath),
-        recordedCwd: parentRun?.contextSnapshot?.paperclipWorkspace?.cwd,
+        recordedCwd: parentRun?.contextSnapshot?.bionicWorkspace?.cwd,
         body: scenario.context,
       });
     }

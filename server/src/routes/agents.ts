@@ -1,27 +1,27 @@
 import { connectionIntentService } from "../services/connection-intents.js";
-import { completeConnectionIntentSchema } from "@paperclipai/shared";
+import { completeConnectionIntentSchema } from "@bionicai/shared";
 import { agentFileStore, agentFileTokenFromHash } from "../services/agent-file-store.js";
 import { pipeline } from "node:stream/promises";
-import { resolveAgentAppearance, agentAvatarUrl } from "@paperclipai/shared";
+import { resolveAgentAppearance, agentAvatarUrl } from "@bionicai/shared";
 import { listOpenRouterModels } from "../services/openrouter-models.js";
 import { prepareManagedAiRuntime, assertManagedAiProjectAuth, stripAiAuthBindings } from "../services/ai-connection-runtime.js";
-import { ADAPTER_AUTH_MISSING_CHECK_CODE, AI_CONNECTION_CAPABILITIES, aiConnectionBindingSchema, type AiConnectionBinding } from "@paperclipai/shared";
-import { toolConnections } from "@paperclipai/db";
+import { ADAPTER_AUTH_MISSING_CHECK_CODE, AI_CONNECTION_CAPABILITIES, aiConnectionBindingSchema, type AiConnectionBinding } from "@bionicai/shared";
+import { toolConnections } from "@bionicai/db";
 import { aiConnectionService } from "../services/ai-connections.js";
 import { defaultAiConnectionForHire } from "../services/agent-ai-connection-default.js";
 import { assertAiConnectionCreateAccess, canInstallSharedAiConnectionForNewAgent, responsibleUserForAiRequest, validateAiApiKey } from "./ai-connections.js";
-import { isAiConnectionCompatible } from "@paperclipai/shared";
+import { isAiConnectionCompatible } from "@bionicai/shared";
 import { applyConnectorSkills, resolveConnectorAssignments, annotateConnectorSkills, isConnectorSkill } from "../services/connector-runtime.js";
 import { getExecutionBlocker } from "../services/execution-blocker.js";
-import { paperclipRunnerTransitionConfig, normalizeLegacyRunnerProvider, isPaperclipRunnerProvider } from "@paperclipai/adapter-utils";
+import { bionicRunnerTransitionConfig, normalizeLegacyRunnerProvider, isPaperclipRunnerProvider } from "@bionicai/adapter-utils";
 import { executionProjectionForRun, executionProjectionsForRuns } from "../services/execution-projection.js";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { generateKeyPairSync, randomUUID } from "node:crypto";
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import type { ChatChannelService } from "../services/chat-channels.js";
-import { activityLog, agents as agentsTable, chatConversations, companies, heartbeatRuns, issues as issuesTable, projects as projectsTable } from "@paperclipai/db";
+import { activityLog, agents as agentsTable, chatConversations, companies, heartbeatRuns, issues as issuesTable, projects as projectsTable } from "@bionicai/db";
 import { and, desc, eq, inArray, not, sql } from "drizzle-orm";
 import { sha256Digest } from "../services/feedback-redaction.js";
 import {
@@ -56,17 +56,17 @@ import {
   submitBrowserCodeRequestSchema,
   toAccountHandle,
   type AgentAdapterType,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   isForbiddenConfigEnvKey,
   normalizePaperclipRunnerAdapterConfig,
-  PAPERCLIP_OPERATIONAL_SKILL_KEY,
+  BIONIC_OPERATIONAL_SKILL_KEY,
   parseObject,
   resolvePaperclipInstanceRootForAdapter,
   readPaperclipSkillSyncPreference,
   writePaperclipSkillSyncPreference,
-} from "@paperclipai/adapter-utils/server-utils";
-import { trackAgentCreated } from "@paperclipai/shared/telemetry";
+} from "@bionicai/adapter-utils/server-utils";
+import { trackAgentCreated } from "@bionicai/shared/telemetry";
 import { validate } from "../middleware/validate.js";
 import { inheritNativeRunnerAdapterConfig } from "../services/native-runtime/native-agent-runtime-inheritance.js";
 import { agentInstructionRevisionService } from "../services/agent-instruction-revisions.js";
@@ -92,7 +92,7 @@ import {
   workspaceOperationService,
 } from "../services/index.js";
 import { badRequest, conflict, forbidden, HttpError, notFound, unprocessable } from "../errors.js";
-import { ONBOARDING_FIRST_TASK_SKILL_KEY, PAPERCLIP_CORE_SKILL_KEYS } from "../services/company-skills.js";
+import { ONBOARDING_FIRST_TASK_SKILL_KEY, BIONIC_CORE_SKILL_KEYS } from "../services/company-skills.js";
 import { createRunSecretRedactionRegistry } from "../services/run-secret-redaction.js";
 import { assertAuthenticated, assertBoard, assertCompanyAccess, assertInstanceAdmin, buildActorSecretContext, getAccessibleResource, getActorInfo, hasCompanyAccess } from "./authz.js";
 import { runAdapterLoginStartSpine } from "./adapter-login-route-spine.js";
@@ -106,13 +106,13 @@ import { environmentService } from "../services/environments.js";
 import { resolveEnvironmentExecutionTarget } from "../services/environment-execution-target.js";
 import { environmentRuntimeService } from "../services/environment-runtime.js";
 import { resolvePluginSandboxProviderDriverByKey } from "../services/plugin-environment-driver.js";
-import type { AdapterExecutionTarget } from "@paperclipai/adapter-utils/execution-target";
+import type { AdapterExecutionTarget } from "@bionicai/adapter-utils/execution-target";
 import type {
   AdapterEnvironmentCheck,
   AdapterEnvironmentTestResult,
-} from "@paperclipai/adapter-utils";
-import { evaluateCodexCredentialReadiness } from "@paperclipai/adapter-codex-local/server";
-import type { AdapterAuthSignal, AdapterAuthSignalResponse, CodexAccountBindingClaim } from "@paperclipai/shared";
+} from "@bionicai/adapter-utils";
+import { evaluateCodexCredentialReadiness } from "@bionicai/adapter-codex-local/server";
+import type { AdapterAuthSignal, AdapterAuthSignalResponse, CodexAccountBindingClaim } from "@bionicai/shared";
 import { getDisabledAdapterTypes } from "../services/adapter-plugin-store.js";
 import { skillVersionSelectionMap } from "../services/runtime-skill-selections.js";
 import { isFixedClaudeOAuthBinding, secretService } from "../services/secrets.js";
@@ -143,7 +143,7 @@ import {
   parseHarnessRuntimeRequestResolution,
   type HarnessRuntimeRequestKind,
   type HarnessRuntimeRequestResolution,
-} from "../vendor/paperclip-runner/index.js";
+} from "../vendor/bionic-runner/index.js";
 import {
   queueRunnerPrpRuntimeRequestResolution,
   RunnerPrpRuntimeRequestResolutionError,
@@ -164,7 +164,7 @@ import {
   isTruthyRuntimeEnvValue,
   resolveWorktreeRunExecutionActivationState,
 } from "../services/instance-settings.js";
-import { runClaudeLogin } from "@paperclipai/adapter-claude-local/server";
+import { runClaudeLogin } from "@bionicai/adapter-claude-local/server";
 import { createInviteRateLimiter } from "../services/invite-rate-limit.js";
 import {
   SetupTokenSessionService,
@@ -199,12 +199,12 @@ import type {
   ClaudeOAuthTokenStatusResponse,
   ClaudeSetupTokenOverwrite,
   SetupTokenTransportAdvisory,
-} from "@paperclipai/shared";
-import { SETUP_TOKEN_TRANSPORT_ADVISORY_CODE } from "@paperclipai/shared";
+} from "@bionicai/shared";
+import { SETUP_TOKEN_TRANSPORT_ADVISORY_CODE } from "@bionicai/shared";
 import {
   DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
   DEFAULT_CODEX_LOCAL_MODEL,
-} from "@paperclipai/adapter-codex-local";
+} from "@bionicai/adapter-codex-local";
 import {
   checkStagedCredentialReadiness,
   promoteDeviceLoginCredential,
@@ -212,11 +212,11 @@ import {
   resolveManagedCodexHomeDir,
   withAccountHomeSecretMutationLock,
   withCodexAccountHomePromotionLock,
-} from "@paperclipai/adapter-codex-local/server";
+} from "@bionicai/adapter-codex-local/server";
 import {
   checkStagedGrokCredentialReadiness,
   promoteGrokDeviceLoginCredential,
-} from "@paperclipai/adapter-grok-local/server";
+} from "@bionicai/adapter-grok-local/server";
 import {
   AdapterAuthSessionConflictError,
   createDeviceLoginService,
@@ -227,12 +227,12 @@ import {
   DEVICE_LOGIN_PROVIDER_UNSUPPORTED_CODE,
   type CredentialPromotion,
 } from "../services/device-login-service.js";
-import type { AdapterAuthSessionOwnerResponse } from "@paperclipai/shared";
-import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
-import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
-import { DEFAULT_KIMI_LOCAL_MODEL } from "@paperclipai/adapter-kimi-local";
-import { DEFAULT_OPENCODE_LOCAL_MODEL } from "@paperclipai/adapter-opencode-local";
-import { requireOpenCodeModelId } from "@paperclipai/adapter-opencode-local/server";
+import type { AdapterAuthSessionOwnerResponse } from "@bionicai/shared";
+import { DEFAULT_CURSOR_LOCAL_MODEL } from "@bionicai/adapter-cursor-local";
+import { DEFAULT_GEMINI_LOCAL_MODEL } from "@bionicai/adapter-gemini-local";
+import { DEFAULT_KIMI_LOCAL_MODEL } from "@bionicai/adapter-kimi-local";
+import { DEFAULT_OPENCODE_LOCAL_MODEL } from "@bionicai/adapter-opencode-local";
+import { requireOpenCodeModelId } from "@bionicai/adapter-opencode-local/server";
 import {
   loadDefaultAgentInstructionsBundle,
   resolveDefaultAgentInstructionsBundleRole,
@@ -307,8 +307,8 @@ function readLiveRunsQueryInt(value: unknown, max: number, fallback = 0) {
 function readRunIssueId(context: Record<string, unknown> | null) {
   const directIssueId = context?.issueId;
   if (typeof directIssueId === "string" && isUuidLike(directIssueId)) return directIssueId;
-  const paperclipIssue = readObject(context?.paperclipIssue);
-  const nestedIssueId = paperclipIssue?.id;
+  const bionicIssue = readObject(context?.bionicIssue);
+  const nestedIssueId = bionicIssue?.id;
   return typeof nestedIssueId === "string" && isUuidLike(nestedIssueId) ? nestedIssueId : null;
 }
 
@@ -428,7 +428,7 @@ async function anySecretNamesAccountHome(
 // Serializes hire requests that share a company and run, so a retried POST
 // cannot race its original past the idempotency lookup: the lookup, the create
 // and the activity record all happen inside the held section. In-process is
-// the right scope because a Paperclip instance serves its API from one
+// the right scope because a Bionic instance serves its API from one
 // process, and the lock is keyed narrowly enough that unrelated hires never
 // wait on each other.
 const hireRunLocks = new Map<string, Promise<void>>();
@@ -738,8 +738,8 @@ export function agentRoutes(
   const agentFiles = agentFileStore(db);
   const instructionRevisions = agentInstructionRevisionService(db);
   const instructionWorkingCopies = agentInstructionWorkingCopyService(db);
-  function instructionFileDetail(snapshot: import("@paperclipai/shared").AgentInstructionSnapshot,
-    receipt?: import("@paperclipai/shared").AgentInstructionCommitReceipt) {
+  function instructionFileDetail(snapshot: import("@bionicai/shared").AgentInstructionSnapshot,
+    receipt?: import("@bionicai/shared").AgentInstructionCommitReceipt) {
     const path = snapshot.revision.entryFile;
     return { path, content: snapshot.content, contentHash: snapshot.revision.contentHash, size: snapshot.revision.byteLength, revision: snapshot.revision, receipt,
       language: path.toLowerCase().endsWith(".md") ? "markdown" : "text", markdown: path.toLowerCase().endsWith(".md"),
@@ -748,7 +748,7 @@ export function agentRoutes(
   const companySkills = companySkillService(db);
   const workspaceOperations = workspaceOperationService(db);
   const instanceSettings = instanceSettingsService(db);
-  const strictSecretsMode = process.env.PAPERCLIP_SECRETS_STRICT_MODE === "true";
+  const strictSecretsMode = process.env.BIONIC_SECRETS_STRICT_MODE === "true";
 
   // The company-scoped adapter login-session service. It runs the device-login
   // flow in a fresh trusted sandbox and holds the one-time prompt in memory. The
@@ -1187,7 +1187,7 @@ export function agentRoutes(
     if ((await instanceSettings.getExperimental()).enableManagedSandboxOnly === true) {
       const managed = await environmentsSvc.findManagedSandboxEnvironment(companyId);
       if (!managed) {
-        throw unprocessable("The managed sandbox is unavailable. Restore Paperclip Computer and retry.", {
+        throw unprocessable("The managed sandbox is unavailable. Restore Bionic Computer and retry.", {
           code: "managed_sandbox_unavailable",
         });
       }
@@ -1200,7 +1200,7 @@ export function agentRoutes(
    * Resolve the execution target the adapter should run its test probes against.
    *
    * - No environmentId / local environment → returns a local target so the
-   *   adapter probes the Paperclip host (legacy behavior).
+   *   adapter probes the Bionic host (legacy behavior).
    * - SSH environment → builds an SSH execution target from the environment
    *   config so the adapter probes the remote box. No lease is required:
    *   the SSH spec is fully derived from the saved environment config.
@@ -1569,7 +1569,7 @@ export function agentRoutes(
       "template_ref_kind",
     ]);
     const detailParts = [
-      `paperclipLeaseId=${input.lease.id}`,
+      `bionicLeaseId=${input.lease.id}`,
       input.lease.providerLeaseId ? `providerLeaseId=${input.lease.providerLeaseId}` : null,
       provider ? `provider=${provider}` : null,
       sandboxId ? `sandboxId=${sandboxId}` : null,
@@ -2178,7 +2178,7 @@ export function agentRoutes(
    * (hire + create), as opposed to the paths that operate on an existing one.
    *
    * A disabled adapter is one this instance cannot run — most often because a
-   * declarative registry (PAPERCLIP_ADAPTERS) curated it out, which
+   * declarative registry (BIONIC_ADAPTERS) curated it out, which
    * reconcileAdapterAvailability turns into a disabled type at boot. Registered
    * but disabled still passes assertKnownAdapterType, so an agent could be
    * created on it and then fail EVERY run at lease time with
@@ -2192,12 +2192,12 @@ export function agentRoutes(
    */
   async function assertSelectableAdapterType(type: string | null | undefined): Promise<string> {
     const adapterType = assertKnownAdapterType(type);
-    if (adapterType === "paperclip_runner") {
+    if (adapterType === "bionic_runner") {
       const experimental = await instanceSettings.getExperimental();
       if (experimental.enableNativeRunner !== true) {
         throw unprocessable(
-          "Paperclip Runner is experimental and disabled on this instance.",
-          { code: "paperclip_runner_rollout_disabled" },
+          "Bionic Runner is experimental and disabled on this instance.",
+          { code: "bionic_runner_rollout_disabled" },
         );
       }
     }
@@ -2218,7 +2218,7 @@ export function agentRoutes(
     adapterType: string,
     adapterConfig: Record<string, unknown>,
   ): Promise<void> {
-    if (adapterType !== "paperclip_runner") return;
+    if (adapterType !== "bionic_runner") return;
     let profile;
     try {
       profile = resolvePaperclipRunnerProviderProfile(adapterConfig);
@@ -2249,15 +2249,15 @@ export function agentRoutes(
     nextAdapterConfig: Record<string, unknown>;
   }): Record<string, unknown> {
     if (
-      input.nextAdapterType !== "paperclip_runner"
+      input.nextAdapterType !== "bionic_runner"
       || input.previousAdapterType === input.nextAdapterType
     ) {
       return input.nextAdapterConfig;
     }
-    const defaults = paperclipRunnerTransitionConfig(input.previousAdapterType, input.previousAdapterConfig.model, input.nextAdapterConfig.provider);
+    const defaults = bionicRunnerTransitionConfig(input.previousAdapterType, input.previousAdapterConfig.model, input.nextAdapterConfig.provider);
     if (!["claude_local", "codex_local", "opencode_local"].includes(input.previousAdapterType)
       && !isPaperclipRunnerProvider(input.nextAdapterConfig.provider)) {
-      throw unprocessable("Select a Paperclip Runner provider before converting this agent.");
+      throw unprocessable("Select a Bionic Runner provider before converting this agent.");
     }
     const next = { ...defaults, ...input.nextAdapterConfig };
     if (!asNonEmptyString(next.model)) next.model = defaults.model;
@@ -2515,8 +2515,8 @@ export function agentRoutes(
 
   function codexLocalAgentHome(companyId: string, agentId: string): string {
     const instanceRoot = resolvePaperclipInstanceRootForAdapter({
-      homeDir: asNonEmptyString(process.env.PAPERCLIP_HOME) ?? undefined,
-      instanceId: asNonEmptyString(process.env.PAPERCLIP_INSTANCE_ID) ?? undefined,
+      homeDir: asNonEmptyString(process.env.BIONIC_HOME) ?? undefined,
+      instanceId: asNonEmptyString(process.env.BIONIC_INSTANCE_ID) ?? undefined,
       env: process.env,
     });
     return path.resolve(instanceRoot, "companies", companyId, "agents", agentId, "codex-home");
@@ -2634,7 +2634,7 @@ export function agentRoutes(
     adapterConfig: Record<string, unknown>,
   ): Record<string, unknown> {
     const next = { ...adapterConfig };
-    if (adapterType === "paperclip_runner") {
+    if (adapterType === "bionic_runner") {
       return normalizePaperclipRunnerAdapterConfig(adapterType, next);
     }
     if (adapterType === "codex_local") {
@@ -2669,7 +2669,7 @@ export function agentRoutes(
     adapterType: string | null | undefined,
     adapterConfig: Record<string, unknown>,
   ) {
-    if (adapterType === "paperclip_runner") {
+    if (adapterType === "bionic_runner") {
       await assertFreshPaperclipRunnerProvider(companyId, adapterType, adapterConfig);
       return;
     }
@@ -2944,11 +2944,11 @@ export function agentRoutes(
   }
 
   // CEO and board-created onboarding chief-of-staff instructions assume the
-  // core paperclip skills (board coordination, planning, hiring, memory).
+  // core bionic skills (board coordination, planning, hiring, memory).
   // Union them into these skills-capable hires/creates so their desired skills
   // match their instructions. Optional role
   // skills remain removable afterwards. Legacy adapters separately guarantee
-  // the Paperclip operational skill as a runtime invariant.
+  // the Bionic operational skill as a runtime invariant.
   function defaultRoleSkillSelections(
     role: string | null | undefined,
     adapterType: string,
@@ -2958,10 +2958,10 @@ export function agentRoutes(
     const adapter = findActiveServerAdapter(adapterType);
     if (!adapter?.listSkills && !adapter?.syncSkills) return undefined;
     const keys = boardOnboardingFirstAgent
-      ? [...PAPERCLIP_CORE_SKILL_KEYS, ONBOARDING_FIRST_TASK_SKILL_KEY]
-      : PAPERCLIP_CORE_SKILL_KEYS;
+      ? [...BIONIC_CORE_SKILL_KEYS, ONBOARDING_FIRST_TASK_SKILL_KEY]
+      : BIONIC_CORE_SKILL_KEYS;
     return keys
-      .filter((key) => adapterType !== "paperclip_runner" || key !== PAPERCLIP_OPERATIONAL_SKILL_KEY)
+      .filter((key) => adapterType !== "bionic_runner" || key !== BIONIC_OPERATIONAL_SKILL_KEY)
       .map((key) => ({ key, versionId: null }));
   }
 
@@ -3031,7 +3031,7 @@ export function agentRoutes(
     });
     return {
       ...config,
-      paperclipRuntimeSkills: runtimeSkillEntries,
+      bionicRuntimeSkills: runtimeSkillEntries,
     };
   }
 
@@ -3091,8 +3091,8 @@ export function agentRoutes(
       requestedSkillEntries,
       mode,
     ).filter(
-      (entry) => !isConnectorSkill(entry.key) && (adapterType !== "paperclip_runner"
-        || entry.key.trim().toLowerCase() !== PAPERCLIP_OPERATIONAL_SKILL_KEY),
+      (entry) => !isConnectorSkill(entry.key) && (adapterType !== "bionic_runner"
+        || entry.key.trim().toLowerCase() !== BIONIC_OPERATIONAL_SKILL_KEY),
     );
     const desiredSkills = desiredSkillEntries.map((entry) => entry.key);
     const resolvedKeys = new Set([
@@ -3253,10 +3253,10 @@ export function agentRoutes(
       res.json(await listOpenRouterModels(refresh));
       return;
     }
-    if (type === "paperclip_runner" && provider && !isPaperclipRunnerProvider(provider)) {
-      throw unprocessable("Unknown Paperclip Runner provider");
+    if (type === "bionic_runner" && provider && !isPaperclipRunnerProvider(provider)) {
+      throw unprocessable("Unknown Bionic Runner provider");
     }
-    const modelAdapterType = type === "paperclip_runner"
+    const modelAdapterType = type === "bionic_runner"
       ? provider === "acpx" || provider === "claude_managed" ? "claude_local"
         : provider === "opencode" ? "opencode_local"
           : provider === "aws_agentcore" ? type : "codex_local"
@@ -3433,7 +3433,7 @@ export function agentRoutes(
       // the probe treats "***REDACTED***" as a value to persist.
       let adapterConfigForTest = inputAdapterConfig;
       if (savedAgent) {
-        const providerAdapter = savedAgent.adapterType === "paperclip_runner"
+        const providerAdapter = savedAgent.adapterType === "bionic_runner"
           ? inputAdapterConfig.provider === "codex"
             ? "codex_local"
             : inputAdapterConfig.provider === "acpx" && inputAdapterConfig.acpxAgent === "claude"
@@ -3642,7 +3642,7 @@ export function agentRoutes(
 
   // The codex_local branch of the auth-signal read. The host filesystem check
   // (`evaluateCodexCredentialReadiness` against `process.env`) describes only
-  // the Paperclip host, so it is authoritative for the null-environment and
+  // the Bionic host, so it is authoritative for the null-environment and
   // "local" driver cases, where the host is the execution target. For a
   // non-local environment (a sandbox), the host's own credential state says
   // nothing about that sandbox, so the route checks the environment's own
@@ -3915,7 +3915,7 @@ export function agentRoutes(
       { materializeMissing: false },
     );
     const connectorAssignments = await resolveConnectorAssignments(db, { companyId: agent.companyId, agentId: agent.id });
-    const connectorConfig = await applyConnectorSkills(runtimeSkillConfig, runtimeSkillConfig.paperclipRuntimeSkills, connectorAssignments);
+    const connectorConfig = await applyConnectorSkills(runtimeSkillConfig, runtimeSkillConfig.bionicRuntimeSkills, connectorAssignments);
     const snapshot = await adapter.listSkills({
       agentId: agent.id,
       companyId: agent.companyId,
@@ -4202,7 +4202,7 @@ export function agentRoutes(
     const worktreeActivation = await resolveWorktreeRunExecutionActivationState({
       getExperimental: () => instanceSettingsService(db).getExperimental(),
     });
-    const isWorktreeRuntime = isTruthyRuntimeEnvValue(process.env.PAPERCLIP_IN_WORKTREE);
+    const isWorktreeRuntime = isTruthyRuntimeEnvValue(process.env.BIONIC_IN_WORKTREE);
     const eligibleRows = !isWorktreeRuntime
       ? rows
       : worktreeActivation.armed
@@ -4356,7 +4356,7 @@ export function agentRoutes(
     });
     if (
       rollbackAdapterType !== existing.adapterType ||
-      rollbackAdapterType === "paperclip_runner"
+      rollbackAdapterType === "bionic_runner"
     ) {
       await assertFreshPaperclipRunnerProvider(
         existing.companyId,
@@ -4480,8 +4480,8 @@ export function agentRoutes(
       if (req.actor.type !== "agent" || !req.actor.agentId) {
         throw forbidden("Only an agent can inherit native runtime settings from the caller");
       }
-      if (hireInput.adapterType !== "paperclip_runner") {
-        throw unprocessable("inheritRuntimeFrom=caller requires adapterType=paperclip_runner");
+      if (hireInput.adapterType !== "bionic_runner") {
+        throw unprocessable("inheritRuntimeFrom=caller requires adapterType=bionic_runner");
       }
       const requestedConfig = (hireInput.adapterConfig ?? {}) as Record<string, unknown>;
       const requestedRuntime = (hireInput.runtimeConfig ?? {}) as Record<string, unknown>;
@@ -4492,8 +4492,8 @@ export function agentRoutes(
       if (!caller || caller.companyId !== companyId) {
         throw forbidden("The caller agent is not in this company");
       }
-      if (caller.adapterType !== "paperclip_runner") {
-        throw unprocessable("The caller must use the paperclip_runner adapter");
+      if (caller.adapterType !== "bionic_runner") {
+        throw unprocessable("The caller must use the bionic_runner adapter");
       }
       hireInput.adapterConfig = inheritNativeRunnerAdapterConfig(caller.adapterConfig);
       hireInput.defaultEnvironmentId = caller.defaultEnvironmentId ?? null;
@@ -5500,16 +5500,16 @@ export function agentRoutes(
           nextAdapterConfig: rawEffectiveAdapterConfig,
         });
       }
-      if (requestedAdapterType === "paperclip_runner") {
+      if (requestedAdapterType === "bionic_runner") {
         rawEffectiveAdapterConfig = normalizePaperclipRunnerAdapterConfig(requestedAdapterType, rawEffectiveAdapterConfig);
       }
       const existingRunnerProvider =
-        existing.adapterType === "paperclip_runner"
+        existing.adapterType === "bionic_runner"
           ? existingAdapterConfig.provider
           : undefined;
       if (
         changingAdapterType ||
-        (requestedAdapterType === "paperclip_runner" &&
+        (requestedAdapterType === "bionic_runner" &&
           (requestedAdapterConfig !== null ||
             rawEffectiveAdapterConfig.provider !== existingRunnerProvider))
       ) {
@@ -6406,7 +6406,7 @@ export function agentRoutes(
   /**
    * Assesses the setup-token confidential transport. The product
    * owner set a non-negotiable requirement: do not force TLS. Many users run
-   * Paperclip over plain HTTP on a home server or a Tailscale tailnet. So the
+   * Bionic over plain HTTP on a home server or a Tailscale tailnet. So the
    * route does not block a non-confidential transport. It returns a non-blocking
    * advisory instead, and the route attaches it to the confidential response.
    * The client shows a visible disclaimer and lets the login proceed. The
@@ -7078,7 +7078,7 @@ export function agentRoutes(
             resolution = { action };
           } else if (
             action === "submit" &&
-            candidate?.response?.schema === "paperclip.question_response.v1" &&
+            candidate?.response?.schema === "bionic.question_response.v1" &&
             candidate.response.answers &&
             typeof candidate.response.answers === "object" &&
             !Array.isArray(candidate.response.answers)

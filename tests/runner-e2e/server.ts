@@ -17,13 +17,13 @@ function required(name: string) {
   return value;
 }
 
-const logPath = required("PAPERCLIP_RUNNER_E2E_SERVER_LOG");
-const temporaryRoot = required("PAPERCLIP_RUNNER_E2E_TEMP_ROOT");
-const paperclipHome = required("PAPERCLIP_HOME");
-const configPath = required("PAPERCLIP_CONFIG");
-const port = required("PAPERCLIP_RUNNER_E2E_PORT");
+const logPath = required("BIONIC_RUNNER_E2E_SERVER_LOG");
+const temporaryRoot = required("BIONIC_RUNNER_E2E_TEMP_ROOT");
+const bionicHome = required("BIONIC_HOME");
+const configPath = required("BIONIC_CONFIG");
+const port = required("BIONIC_RUNNER_E2E_PORT");
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const paperclipCli = path.join(repositoryRoot, "tests/runner-e2e/server-entry.ts");
+const bionicCli = path.join(repositoryRoot, "tests/runner-e2e/server-entry.ts");
 const {
   controlDirectory,
   restartRequestPath,
@@ -37,35 +37,35 @@ const serverEnvironment = buildPaperclipServerEnvironment(process.env, {
   // Keep provider caches attempt-private without changing Playwright's browser
   // cache lookup in the parent process.
   XDG_CACHE_HOME: path.join(temporaryRoot, "xdg-cache"),
-  PAPERCLIP_HOME: paperclipHome,
-  PAPERCLIP_CONFIG: configPath,
-  PAPERCLIP_INSTANCE_ID: required("PAPERCLIP_INSTANCE_ID"),
-  PAPERCLIP_AGENT_JWT_SECRET: required("PAPERCLIP_AGENT_JWT_SECRET"),
-  PAPERCLIP_DECISION_SIGNING_SECRET: required(
-    "PAPERCLIP_DECISION_SIGNING_SECRET",
+  BIONIC_HOME: bionicHome,
+  BIONIC_CONFIG: configPath,
+  BIONIC_INSTANCE_ID: required("BIONIC_INSTANCE_ID"),
+  BIONIC_AGENT_JWT_SECRET: required("BIONIC_AGENT_JWT_SECRET"),
+  BIONIC_DECISION_SIGNING_SECRET: required(
+    "BIONIC_DECISION_SIGNING_SECRET",
   ),
-  PAPERCLIP_TOOL_ACTION_SIGNING_SECRET: required(
-    "PAPERCLIP_TOOL_ACTION_SIGNING_SECRET",
+  BIONIC_TOOL_ACTION_SIGNING_SECRET: required(
+    "BIONIC_TOOL_ACTION_SIGNING_SECRET",
   ),
   BETTER_AUTH_SECRET: required("BETTER_AUTH_SECRET"),
-  PAPERCLIP_BIND: "loopback",
-  PAPERCLIP_BIND_HOST: "127.0.0.1",
-  PAPERCLIP_DEPLOYMENT_MODE: "local_trusted",
-  PAPERCLIP_DEPLOYMENT_EXPOSURE: "private",
+  BIONIC_BIND: "loopback",
+  BIONIC_BIND_HOST: "127.0.0.1",
+  BIONIC_DEPLOYMENT_MODE: "local_trusted",
+  BIONIC_DEPLOYMENT_EXPOSURE: "private",
   SERVE_UI: "true",
-  PAPERCLIP_STORAGE_PROVIDER: "local_disk",
-  PAPERCLIP_STORAGE_LOCAL_DIR: path.join(temporaryRoot, "storage"),
-  PAPERCLIP_SECRETS_PROVIDER: "local_encrypted",
-  PAPERCLIP_SECRETS_STRICT_MODE: "true",
-  PAPERCLIP_DB_BACKUP_ENABLED: "false",
-  PAPERCLIP_DB_BACKUP_DIR: path.join(temporaryRoot, "backups"),
+  BIONIC_STORAGE_PROVIDER: "local_disk",
+  BIONIC_STORAGE_LOCAL_DIR: path.join(temporaryRoot, "storage"),
+  BIONIC_SECRETS_PROVIDER: "local_encrypted",
+  BIONIC_SECRETS_STRICT_MODE: "true",
+  BIONIC_DB_BACKUP_ENABLED: "false",
+  BIONIC_DB_BACKUP_DIR: path.join(temporaryRoot, "backups"),
   // Onboarding normally opens the app after listen. Browser ownership belongs
   // to Playwright in this harness, so never create a developer desktop tab.
-  PAPERCLIP_OPEN_ON_LISTEN: "false",
+  BIONIC_OPEN_ON_LISTEN: "false",
 });
 assertIsolatedServerEnvironment(serverEnvironment, {
   temporaryRoot,
-  paperclipHome,
+  bionicHome,
   configPath,
 });
 const definedServerEnvironment = Object.fromEntries(
@@ -107,17 +107,17 @@ function describeChildExit(candidate: ChildProcess) {
 
 function startServer() {
   if (shutdownRequested()) {
-    throw new Error("Refusing to start Paperclip after wrapper shutdown");
+    throw new Error("Refusing to start Bionic after wrapper shutdown");
   }
   const candidate = spawn(
     process.execPath,
-    runnerE2ETypeScriptProcessArgs(repositoryRoot, paperclipCli, ["onboard", "--yes", "--run"]),
+    runnerE2ETypeScriptProcessArgs(repositoryRoot, bionicCli, ["onboard", "--yes", "--run"]),
     {
       cwd: repositoryRoot,
       env: definedServerEnvironment,
       stdio: ["ignore", "pipe", "pipe"],
       // Stay in the launcher-created process group. That lets the launcher stop
-      // Playwright, this wrapper, Paperclip, embedded Postgres, and runner children
+      // Playwright, this wrapper, Bionic, embedded Postgres, and runner children
       // as one verified tree even if graceful web-server shutdown stalls.
       detached: false,
     },
@@ -136,7 +136,7 @@ function startServer() {
     childErrors.set(candidate, error);
     if (!expectedStops.has(candidate) && !shutdownRequested()) {
       unexpectedChildFailure = new Error(
-        `Paperclip server spawn failed: ${error.message}`,
+        `Bionic server spawn failed: ${error.message}`,
       );
     }
   });
@@ -144,7 +144,7 @@ function startServer() {
     appendLog(`\n${describeChildExit(candidate)}\n`);
     if (!expectedStops.has(candidate) && !shutdownRequested()) {
       unexpectedChildFailure = new Error(
-        `Paperclip server stopped unexpectedly: ${describeChildExit(candidate)}`,
+        `Bionic server stopped unexpectedly: ${describeChildExit(candidate)}`,
       );
     }
   });
@@ -196,7 +196,7 @@ async function stopServer(
     candidate.kill(signal);
   } catch {
     if (childExited(candidate) || childErrors.has(candidate)) return;
-    throw new Error("Could not signal the Paperclip server to stop");
+    throw new Error("Could not signal the Bionic server to stop");
   }
   if (await waitForExit(candidate, gracefulStopTimeoutMs)) return;
 
@@ -207,10 +207,10 @@ async function stopServer(
     candidate.kill("SIGKILL");
   } catch {
     if (childExited(candidate) || childErrors.has(candidate)) return;
-    throw new Error("Could not force the Paperclip server to stop");
+    throw new Error("Could not force the Bionic server to stop");
   }
   if (!(await waitForExit(candidate, 5_000))) {
-    throw new Error("Paperclip server did not exit after SIGKILL");
+    throw new Error("Bionic server did not exit after SIGKILL");
   }
 }
 
@@ -219,11 +219,11 @@ async function waitForHealth(candidate: ChildProcess) {
   const healthUrl = `http://127.0.0.1:${port}/api/health`;
   while (Date.now() < deadline) {
     if (shutdownRequested()) {
-      throw new Error("Wrapper shutdown interrupted the Paperclip restart");
+      throw new Error("Wrapper shutdown interrupted the Bionic restart");
     }
     if (childErrors.has(candidate) || childExited(candidate)) {
       throw new Error(
-        `Replacement Paperclip server could not start: ${describeChildExit(candidate)}`,
+        `Replacement Bionic server could not start: ${describeChildExit(candidate)}`,
       );
     }
     try {
@@ -237,7 +237,7 @@ async function waitForHealth(candidate: ChildProcess) {
     await delay(250);
   }
   throw new Error(
-    `Replacement Paperclip server did not become healthy within ${restartTimeoutMs}ms`,
+    `Replacement Bionic server did not become healthy within ${restartTimeoutMs}ms`,
   );
 }
 
@@ -246,7 +246,7 @@ async function waitForHealthToStop() {
   const deadline = Date.now() + gracefulStopTimeoutMs;
   while (Date.now() < deadline) {
     if (shutdownRequested()) {
-      throw new Error("Wrapper shutdown interrupted the Paperclip restart");
+      throw new Error("Wrapper shutdown interrupted the Bionic restart");
     }
     try {
       await fetch(healthUrl, { signal: AbortSignal.timeout(500) });
@@ -256,7 +256,7 @@ async function waitForHealthToStop() {
     await delay(100);
   }
   throw new Error(
-    "The old Paperclip server remained healthy after its launcher exited",
+    "The old Bionic server remained healthy after its launcher exited",
   );
 }
 
@@ -311,26 +311,26 @@ async function writeRestartAck(
 
 async function restartServer(requestId: string) {
   activeRestartRequestId = requestId;
-  appendLog(`\nRestart request ${requestId}: stopping Paperclip\n`);
+  appendLog(`\nRestart request ${requestId}: stopping Bionic\n`);
   const previous = child;
-  if (!previous) throw new Error("No Paperclip server is available to restart");
+  if (!previous) throw new Error("No Bionic server is available to restart");
   await stopServer(previous);
   if (child === previous) child = null;
   // Do not mistake an orphaned old server for a healthy replacement. The port
   // must stop answering before the next launcher is allowed to start.
   await waitForHealthToStop();
   if (shutdownRequested()) {
-    throw new Error("Wrapper shutdown interrupted the Paperclip restart");
+    throw new Error("Wrapper shutdown interrupted the Bionic restart");
   }
 
-  appendLog(`Restart request ${requestId}: starting Paperclip\n`);
+  appendLog(`Restart request ${requestId}: starting Bionic\n`);
   const replacement = startServer();
   await waitForHealth(replacement);
   if (shutdownRequested()) {
-    throw new Error("Wrapper shutdown interrupted the Paperclip restart");
+    throw new Error("Wrapper shutdown interrupted the Bionic restart");
   }
   await writeRestartAck(requestId, "ready");
-  appendLog(`Restart request ${requestId}: Paperclip is healthy\n`);
+  appendLog(`Restart request ${requestId}: Bionic is healthy\n`);
   activeRestartRequestId = null;
 }
 
@@ -343,13 +343,13 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
     try {
       child.kill(signal);
     } catch {
-      // The Paperclip process may already have exited.
+      // The Bionic process may already have exited.
     }
   });
 }
 
 async function supervise() {
-  const executionIds: string[] = JSON.parse(process.env.PAPERCLIP_RUNNER_E2E_EXECUTION_IDS ?? "[]");
+  const executionIds: string[] = JSON.parse(process.env.BIONIC_RUNNER_E2E_EXECUTION_IDS ?? "[]");
   if (executionIds.some(id => id.includes(".legacy-claude.local."))) {
     definedServerEnvironment.PATH = await qualifyLegacyClaudeCli(temporaryRoot, definedServerEnvironment);
   }
@@ -398,7 +398,7 @@ try {
       await stopServer(running);
     } catch (stopError) {
       appendLog(
-        `Failed to stop Paperclip after supervisor failure: ${stopError instanceof Error ? stopError.message : String(stopError)}\n`,
+        `Failed to stop Bionic after supervisor failure: ${stopError instanceof Error ? stopError.message : String(stopError)}\n`,
       );
     }
   }

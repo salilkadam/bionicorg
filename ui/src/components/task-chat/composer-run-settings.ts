@@ -1,8 +1,8 @@
-import { codexLocalReasoningEffortsForModel, isCodexLocalFastModeSupported, isCodexLocalKnownModel } from "@paperclipai/adapter-codex-local";
-import { claudeLocalReasoningEffortsForModel } from "@paperclipai/adapter-claude-local";
-import { DEFAULT_GROK_LOCAL_MODEL, grokLocalReasoningEffortsForModel } from "@paperclipai/adapter-grok-local";
-import { DEFAULT_KIMI_LOCAL_MODEL, modelSupportsEffort, KIMI_SUPPORTED_EFFORTS } from "@paperclipai/adapter-kimi-local";
-import { aiConnectionBindingSchema, type Agent, type IssueAssigneeAdapterOverrides } from "@paperclipai/shared";
+import { codexLocalReasoningEffortsForModel, isCodexLocalFastModeSupported, isCodexLocalKnownModel } from "@bionicai/adapter-codex-local";
+import { claudeLocalReasoningEffortsForModel } from "@bionicai/adapter-claude-local";
+import { DEFAULT_GROK_LOCAL_MODEL, grokLocalReasoningEffortsForModel } from "@bionicai/adapter-grok-local";
+import { DEFAULT_KIMI_LOCAL_MODEL, modelSupportsEffort, KIMI_SUPPORTED_EFFORTS } from "@bionicai/adapter-kimi-local";
+import { aiConnectionBindingSchema, type Agent, type IssueAssigneeAdapterOverrides } from "@bionicai/shared";
 
 export interface ComposerRunSettings {
   model: string | null;
@@ -18,7 +18,7 @@ export const EFFORT_LABELS: Record<string, string> = {
 
 const MODEL_ADAPTERS = new Set([
   "claude_local", "codex_local", "opencode_local", "pi_local", "kimi_local",
-  "gemini_local", "cursor", "cursor_cloud", "grok_local", "hermes_local", "paperclip_runner",
+  "gemini_local", "cursor", "cursor_cloud", "grok_local", "hermes_local", "bionic_runner",
 ]);
 
 export function supportsComposerModel(agent: Agent | undefined): boolean {
@@ -27,7 +27,7 @@ export function supportsComposerModel(agent: Agent | undefined): boolean {
 
 export function composerCatalogProvider(agent: Agent | undefined): string | undefined {
   if (!agent) return undefined;
-  if (agent.adapterType === "paperclip_runner") return String(agent.adapterConfig.provider ?? "codex");
+  if (agent.adapterType === "bionic_runner") return String(agent.adapterConfig.provider ?? "codex");
   if (agent.adapterType !== "opencode_local") return undefined;
   const binding = aiConnectionBindingSchema.safeParse(agent.runtimeConfig?.aiConnection).data;
   const configuredModel = agent.adapterConfig.model;
@@ -40,7 +40,7 @@ export function composerEfforts(agent: Agent | undefined, model: string, catalog
   const effectiveModel = model.trim() || (agent.adapterType === "grok_local" ? DEFAULT_GROK_LOCAL_MODEL
     : agent.adapterType === "kimi_local" ? DEFAULT_KIMI_LOCAL_MODEL : "");
   if (!effectiveModel) return [];
-  if (agent.adapterType === "codex_local" || (agent.adapterType === "paperclip_runner" && composerCatalogProvider(agent) === "codex")) {
+  if (agent.adapterType === "codex_local" || (agent.adapterType === "bionic_runner" && composerCatalogProvider(agent) === "codex")) {
     return isCodexLocalKnownModel(effectiveModel) ? codexLocalReasoningEffortsForModel(effectiveModel) : [];
   }
   if (!catalogIds.includes(effectiveModel)) return [];
@@ -60,7 +60,7 @@ export function readComposerRunSettings(overrides: IssueAssigneeAdapterOverrides
   const config = overrides?.adapterConfig ?? {};
   const effortKey = composerEffortKey(adapterType);
   const effortValue = effortKey && (config[effortKey]
-    ?? (adapterType === "codex_local" || adapterType === "paperclip_runner" ? config.reasoningEffort ?? config.effort : undefined));
+    ?? (adapterType === "codex_local" || adapterType === "bionic_runner" ? config.reasoningEffort ?? config.effort : undefined));
   return {
     model: typeof config.model === "string" ? config.model : null,
     effort: typeof effortValue === "string" ? effortValue : null,
@@ -69,7 +69,7 @@ export function readComposerRunSettings(overrides: IssueAssigneeAdapterOverrides
 }
 
 function composerEffortKey(adapterType: string | undefined): string | null {
-  if (adapterType === "codex_local" || adapterType === "paperclip_runner") return "modelReasoningEffort";
+  if (adapterType === "codex_local" || adapterType === "bionic_runner") return "modelReasoningEffort";
   if (adapterType === "claude_local" || adapterType === "kimi_local") return "effort";
   if (adapterType === "grok_local") return "reasoningEffort";
   if (adapterType === "pi_local") return "thinking";

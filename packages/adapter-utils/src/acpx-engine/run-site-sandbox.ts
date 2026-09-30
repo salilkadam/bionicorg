@@ -27,7 +27,7 @@ import type {
   AdapterExecutionTargetProcessSessionBridgeHandle,
   AdapterManagedRuntimeAsset,
   PreparedAdapterExecutionTargetRuntime,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import type {
   AcpRunContext,
   AcquiredRunResources,
@@ -130,7 +130,7 @@ export interface SandboxRunSiteOptions {
   readonly publishStagedProjectHints: (stagedProjectDirs: Record<string, string>) => void;
   readonly onReuseLog: () => Promise<void>;
 
-  /** Start the host-side paperclip callback bridge. */
+  /** Start the host-side bionic callback bridge. */
   readonly startPaperclipBridge: (
     runtimeRootDir: string | null,
   ) => Promise<AdapterExecutionTargetPaperclipBridgeHandle | null>;
@@ -140,7 +140,7 @@ export interface SandboxRunSiteOptions {
     launchEnv: () => Promise<Record<string, string>>;
   }) => Promise<AdapterExecutionTargetProcessSessionBridgeHandle | null>;
   /** Wrap each concurrent bridge start in the run's startup step timer. */
-  readonly measureBridgeStep: <T>(step: "bridge.paperclip" | "bridge.process-session", run: () => Promise<T>) => Promise<T>;
+  readonly measureBridgeStep: <T>(step: "bridge.bionic" | "bridge.process-session", run: () => Promise<T>) => Promise<T>;
   /**
    * Finalize the run's branded launch environment from the bridge contribution.
    * The engine owns `finalizeLaunchEnvironment`, so it stays the sole consumer of
@@ -174,7 +174,7 @@ export interface SandboxRunSite {
   /** The staged workspace the run installed or reused, or null before `placeWorkspace`. */
   readonly staged: StagedWorkspace | null;
   /**
-   * The paperclip callback bridge the run started, or null before
+   * The bionic callback bridge the run started, or null before
    * `startTransport` or on the host lane. `startTransport` sets it before it
    * rethrows a partial-bring-up failure, so an abandon path can stop the bridge
    * that started when its sibling threw.
@@ -329,28 +329,28 @@ export function createSandboxRunSite(options: SandboxRunSiteOptions): SandboxRun
     async startTransport(): Promise<SandboxRunSiteTransport> {
       // Bring up both host-side bridges concurrently. Their remote subtrees are
       // disjoint, so their env-independent setup overlaps. The one real
-      // dependency — the paperclip bridge's returned env must reach the
+      // dependency — the bionic bridge's returned env must reach the
       // process-session launch — is sequenced by `launchEnv`, a memoized thunk the
       // process-session bridge awaits right before its launch.
       const stagedRootDir = staged?.stagedRuntime.runtimeRootDir ?? null;
-      const paperclipStart = options.measureBridgeStep("bridge.paperclip", () =>
+      const bionicStart = options.measureBridgeStep("bridge.bionic", () =>
         options.startPaperclipBridge(stagedRootDir),
       );
-      // The single sequencing point (paperclip env → process-session launch),
+      // The single sequencing point (bionic env → process-session launch),
       // memoized so the merge runs exactly once whether the process-session bridge
       // consumes it at launch or `startTransport` finalizes it below.
       let launchEnvPromise: Promise<Record<string, string>> | null = null;
       let launchEnv: Record<string, string> = {};
       const finalizeLaunchEnv = (): Promise<Record<string, string>> =>
         (launchEnvPromise ??= (async () => {
-          const paperclip = await paperclipStart;
-          // The paperclip bridge token is run-scoped: it lives for this run only and
+          const bionic = await bionicStart;
+          // The bionic bridge token is run-scoped: it lives for this run only and
           // never enters a reuse payload (Amendment B). The site hands it to the
           // engine's `finalizeLaunchEnv`, the sole consumer of a contribution, and
           // retains nothing.
           const contributions: LaunchEnvironmentContribution[] = [];
-          if (paperclip) {
-            contributions.push({ scope: "run", env: paperclip.env } as unknown as RunScopedContribution);
+          if (bionic) {
+            contributions.push({ scope: "run", env: bionic.env } as unknown as RunScopedContribution);
             await options.onPaperclipBridgeLog();
           }
           launchEnv = options.finalizeLaunchEnv(contributions);
@@ -360,12 +360,12 @@ export function createSandboxRunSite(options: SandboxRunSiteOptions): SandboxRun
         options.startProcessSessionBridge({ runtimeRootDir: stagedRootDir, launchEnv: finalizeLaunchEnv }),
       );
       // Settle BOTH starts, so a partial failure can stop whichever bridge started.
-      const [paperclip, processSession] = await Promise.allSettled([paperclipStart, processSessionStart]);
-      controlBridge = paperclip.status === "fulfilled" ? paperclip.value : null;
+      const [bionic, processSession] = await Promise.allSettled([bionicStart, processSessionStart]);
+      controlBridge = bionic.status === "fulfilled" ? bionic.value : null;
       agentBridge = processSession.status === "fulfilled" ? processSession.value : null;
       const failure =
-        paperclip.status === "rejected"
-          ? paperclip.reason
+        bionic.status === "rejected"
+          ? bionic.reason
           : processSession.status === "rejected"
             ? processSession.reason
             : null;

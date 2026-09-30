@@ -52,7 +52,7 @@ describe("connection intent OAuth callback document", () => {
       );
       expect(html).toContain('"interactionId":"interaction-123"');
       expect(html).toContain(`"outcome":"${outcome}"`);
-      expect(html).toContain('"type":"paperclip.connection-intent.oauth"');
+      expect(html).toContain('"type":"bionic.connection-intent.oauth"');
       expect(html).not.toMatch(
         /connectionId|authorizationUrl|bearer|token|credential/i,
       );

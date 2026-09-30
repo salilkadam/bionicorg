@@ -39,7 +39,7 @@ test("chaos verification isolates callers that verify the same source commit", (
 test("canary reuses exact-source proof while stable keeps full verification", () => {
   const releaseWorkflow = readWorkflow("release.yml");
   const canary = releaseWorkflow.split("  verify_canary:\n")[1].split("\n  publish_canary:")[0];
-  assert.match(canary, /github\.repository == 'paperclipai\/paperclip' && github\.event_name == 'push' && github\.ref == 'refs\/heads\/master'/);
+  assert.match(canary, /github\.repository == 'bionicai\/bionic' && github\.event_name == 'push' && github\.ref == 'refs\/heads\/master'/);
   assert.match(canary, /actions: read/);
   assert.match(canary, /ref: \$\{\{ github\.sha \}\}/);
   assert.match(canary, /SOURCE_SHA: \$\{\{ github\.sha \}\}/);
@@ -160,7 +160,7 @@ test("published canaries are gated by the exact-version onboarding browser smoke
   );
   assert.match(
     releaseWorkflow,
-    /name: Smoke exact published canary through onboarding\n\s+env:\n\s+PAPERCLIP_CANARY_SMOKE_SERVER_LOG: \$\{\{ runner\.temp \}\}\/canary-onboarding-server\.log/,
+    /name: Smoke exact published canary through onboarding\n\s+env:\n\s+BIONIC_CANARY_SMOKE_SERVER_LOG: \$\{\{ runner\.temp \}\}\/canary-onboarding-server\.log/,
   );
   assert.match(
     releaseWorkflow,
@@ -191,7 +191,7 @@ test("release smoke workflow extends the container readiness budget for CI", () 
     "utf8",
   );
 
-  // CI containers cold-install paperclipai and embedded postgres, so the
+  // CI containers cold-install bionicai and embedded postgres, so the
   // workflow must extend the harness's local-default readiness budget.
   assert.match(smokeWorkflow, /SMOKE_READY_TIMEOUT_SECONDS=\d+/);
   const ciBudget = Number(
@@ -208,7 +208,7 @@ test("release smoke workflow extends the container readiness budget for CI", () 
   );
   assert.match(
     harness,
-    /wait_for_http "\$PAPERCLIP_PUBLIC_URL\/api\/health" "\$SMOKE_READY_TIMEOUT_SECONDS" 1/,
+    /wait_for_http "\$BIONIC_PUBLIC_URL\/api\/health" "\$SMOKE_READY_TIMEOUT_SECONDS" 1/,
   );
 });
 
@@ -222,12 +222,12 @@ test("release verify workflow covers the same split test surface as stable PR ve
   );
   assert.match(verifyWorkflow, /pnpm -r typecheck/);
   assert.match(verifyWorkflow, /pnpm build/);
-  const runnerScripts = JSON.parse(readFileSync(path.join(repoRoot, "packages/paperclip-runner/package.json"), "utf8")).scripts;
+  const runnerScripts = JSON.parse(readFileSync(path.join(repoRoot, "packages/bionic-runner/package.json"), "utf8")).scripts;
   const runnerChecks = [...verifyWorkflow.matchAll(/^            checks: (.+)$/gm)]
     .flatMap(([, checks]) => checks.split(" "));
   assert.deepEqual(runnerChecks, runnerScripts["check:all"].split(" && ")
     .map((command) => command.replace(/^pnpm run /, "")));
-  assert.match(verifyWorkflow, /pnpm --filter @paperclipai\/paperclip-runner "\$check"/);
+  assert.match(verifyWorkflow, /pnpm --filter @bionicai\/bionic-runner "\$check"/);
   assert.match(verifyWorkflow, /runner_workflow_evals:/);
   assert.match(verifyWorkflow, /runner_chaos_evals:/);
   assert.match(
@@ -412,7 +412,7 @@ test("Runner eval workflows pin actions and gate paid live execution", () => {
   assert.ok(runnerBlock, "expected Runner chaos test command");
   assert.ok(serverBlock, "expected server chaos test command");
   for (const [base, block] of [
-    [path.join(repoRoot, "packages/paperclip-runner"), runnerBlock],
+    [path.join(repoRoot, "packages/bionic-runner"), runnerBlock],
     [path.join(repoRoot, "server"), serverBlock],
   ]) {
     const listedTestPaths =
@@ -436,16 +436,16 @@ test("Runner eval workflows pin actions and gate paid live execution", () => {
 test("direct Grok qualification installs the pinned binary and scopes the selected credential", () => {
   const workflow = readWorkflow("runner-protocol-live-evals.yml");
   assert.ok(workflow.includes("XAI_API_KEY: ${{ matrix.credentialName == 'XAI_API_KEY' && secrets.XAI_API_KEY || '' }}"));
-  assert.ok(workflow.includes("if [ -f packages/paperclip-runner/scripts/provision-grok.mjs ]; then"));
-  assert.ok(workflow.indexOf("sudo node packages/paperclip-runner/scripts/provision-grok.mjs /opt/paperclip/providers/grok/1.0.13/grok") < workflow.indexOf("pnpm --filter @paperclipai/paperclip-runner deploy --prod"));
-  assert.ok(workflow.includes("PAPERCLIP_ACPX_GROK_AUTH_JSON_SECRET: ${{ matrix.credentialName == 'PAPERCLIP_ACPX_GROK_AUTH_JSON_SECRET' && secrets.GROK_AUTH_JSON || '' }}"));
+  assert.ok(workflow.includes("if [ -f packages/bionic-runner/scripts/provision-grok.mjs ]; then"));
+  assert.ok(workflow.indexOf("sudo node packages/bionic-runner/scripts/provision-grok.mjs /opt/bionic/providers/grok/1.0.13/grok") < workflow.indexOf("pnpm --filter @bionicai/bionic-runner deploy --prod"));
+  assert.ok(workflow.includes("BIONIC_ACPX_GROK_AUTH_JSON_SECRET: ${{ matrix.credentialName == 'BIONIC_ACPX_GROK_AUTH_JSON_SECRET' && secrets.GROK_AUTH_JSON || '' }}"));
   assert.equal((workflow.match(/secrets\.GROK_AUTH_JSON/gu) ?? []).length, 1);
 });
 
 test("direct protocol concurrency override only lowers the configured ceiling", () => {
   const workflow = readWorkflow("runner-protocol-live-evals.yml");
   const start = workflow.indexOf('          if [ -n "${REQUESTED_MAX_PARALLEL:-}" ]; then');
-  const end = workflow.indexOf("          node packages/paperclip-runner/scripts/runner-protocol-eval-campaign.mjs catalog", start);
+  const end = workflow.indexOf("          node packages/bionic-runner/scripts/runner-protocol-eval-campaign.mjs catalog", start);
   assert.ok(start > 0 && end > start);
   const script = workflow.slice(start, end) + '\nprintf "%s" "$MAX_PARALLEL"\n';
   for (const [requested, expected] of [["", "8"], ["2", "2"], ["8", "8"], ["1", null], ["9", null], ["0", null], ["-1", null], ["2.5", null], ["garbage", null], ["9999999999999999999999", null]]) {

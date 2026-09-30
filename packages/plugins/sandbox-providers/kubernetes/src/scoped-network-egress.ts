@@ -46,11 +46,11 @@ export async function createScopedNetworkEgressPolicy(input: {
   if (input.mode === "cilium") {
     const manifest = buildCiliumNetworkPolicyManifest({
       namespace: input.namespace,
-      paperclipServerNamespace: "",
+      bionicServerNamespace: "",
       egressAllowFqdns: input.grant.allowFqdns,
       egressAllowCidrs: input.grant.allowCidrs,
       name,
-      endpointSelector: { "paperclip.io/run-id": input.runId },
+      endpointSelector: { "bionic.io/run-id": input.runId },
       includeBaseRules: false,
       ownerReferences: [input.ownerReference],
     });
@@ -64,11 +64,11 @@ export async function createScopedNetworkEgressPolicy(input: {
   } else {
     const [, manifest] = buildNetworkPolicyManifests({
       namespace: input.namespace,
-      paperclipServerNamespace: "",
+      bionicServerNamespace: "",
       egressAllowFqdns: input.grant.allowFqdns,
       egressAllowCidrs: input.grant.allowCidrs,
       name,
-      podSelector: { "paperclip.io/run-id": input.runId },
+      podSelector: { "bionic.io/run-id": input.runId },
       includeBaseRules: false,
       ownerReferences: [input.ownerReference],
     });

@@ -1,9 +1,9 @@
 import { useWorkspaceIsolationControls } from "@/hooks/useWorkspaceIsolationControls";
 import { AgentAvatar } from "@/components/AgentAvatar";
-import { normalizeLegacyRunnerProvider } from "@paperclipai/adapter-utils";
+import { normalizeLegacyRunnerProvider } from "@bionicai/adapter-utils";
 import { memo, useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent, type CSSProperties, type DragEvent, type RefObject } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { AgentEnvConfig, EnvBinding, IssueWorkMode } from "@paperclipai/shared";
+import type { AgentEnvConfig, EnvBinding, IssueWorkMode } from "@bionicai/shared";
 import { useDialog } from "../context/DialogContext";
 import { useCompany } from "../context/CompanyContext";
 import { executionWorkspacesApi } from "../api/execution-workspaces";
@@ -85,7 +85,7 @@ import { getTrustPreset } from "../lib/trust-policy-ui";
 import { ReusableExecutionWorkspaceSelect } from "./ReusableExecutionWorkspaceSelect";
 import { codexReasoningEffortOptions } from "../lib/codex-reasoning-effort";
 
-const DRAFT_KEY = "paperclip:issue-draft";
+const DRAFT_KEY = "bionic:issue-draft";
 const DEBOUNCE_MS = 800;
 
 type VisualViewportLayout = {
@@ -623,7 +623,7 @@ export function NewIssueDialog() {
     });
   }, [agents, companyMembers?.users, orderedProjects]);
 
-  const catalogProvider = assigneeAdapterType === "paperclip_runner" ? String(normalizeLegacyRunnerProvider(selectedAssigneeAgent?.adapterConfig ?? {}).provider ?? "codex") : undefined;
+  const catalogProvider = assigneeAdapterType === "bionic_runner" ? String(normalizeLegacyRunnerProvider(selectedAssigneeAgent?.adapterConfig ?? {}).provider ?? "codex") : undefined;
   const { data: assigneeAdapterModels } = useQuery({
     queryKey:
       effectiveCompanyId && assigneeAdapterType
@@ -1413,7 +1413,7 @@ export function NewIssueDialog() {
           // their default prevented. Telling Radix "this event is handled" skips
           // that preventDefault, restoring popover scroll and autocomplete taps.
           const target = event.detail.originalEvent.target as HTMLElement | null;
-          if (target?.closest("[data-radix-popper-content-wrapper], [data-paperclip-floating-ui]")) {
+          if (target?.closest("[data-radix-popper-content-wrapper], [data-bionic-floating-ui]")) {
             event.preventDefault();
           }
         }}

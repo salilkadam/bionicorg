@@ -34,7 +34,7 @@ test.describe("Onboarding wizard", () => {
     // resumable draft here so this ordinary browser condition is covered when
     // the company-list invalidation runs after the create request.
     await page.addInitScript(() => {
-      localStorage.setItem("paperclip-onboarding-state", JSON.stringify({
+      localStorage.setItem("bionic-onboarding-state", JSON.stringify({
         step: 1,
         companyName: "",
         createdCompanyId: null,

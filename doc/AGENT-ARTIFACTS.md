@@ -1,7 +1,7 @@
 # Agent Artifact Upload Workflow
 
 Generated files that a board user or reviewer should inspect as deliverables
-must be attached to the Paperclip issue before the agent chooses a final
+must be attached to the Bionic issue before the agent chooses a final
 disposition. A local workspace path is not enough, because cloud users and
 reviewers often cannot access the agent's disk.
 
@@ -16,29 +16,29 @@ binds it to the response. Generic API tools and a legacy API key are unnecessary
 Wait for the receipt. It includes `attachmentId`, `contentPath`, and
 `downloadPath`, along with the existing command, revision, entity references,
 and disposition. Reuse the original key after an ambiguous result. A receipt
-confirms storage and response binding in Paperclip; it does not confirm delivery
+confirms storage and response binding in Bionic; it does not confirm delivery
 to an external chat provider. If registration fails, use the returned error to
 resolve the failure or explain the limitation; do not describe a workspace path
 as an uploaded file.
 
 ## Legacy adapters
 
-Use Bash to run the helper bundled with the Paperclip skill from the repo root; installed skill files may not retain executable permissions:
+Use Bash to run the helper bundled with the Bionic skill from the repo root; installed skill files may not retain executable permissions:
 
 ```sh
-bash skills/paperclip/scripts/paperclip-upload-artifact.sh path/to/output.webm \
+bash skills/bionic/scripts/bionic-upload-artifact.sh path/to/output.webm \
   --title "Walkthrough render" \
   --summary "Rendered walkthrough for review"
 ```
 
-The helper uses the authenticated Paperclip API from the current heartbeat
+The helper uses the authenticated Bionic API from the current heartbeat
 environment:
 
-- `PAPERCLIP_API_URL`
-- `PAPERCLIP_API_KEY`
-- `PAPERCLIP_COMPANY_ID`
-- `PAPERCLIP_TASK_ID`
-- `PAPERCLIP_RUN_ID`
+- `BIONIC_API_URL`
+- `BIONIC_API_KEY`
+- `BIONIC_COMPANY_ID`
+- `BIONIC_TASK_ID`
+- `BIONIC_RUN_ID`
 
 It uploads the file to
 `POST /api/companies/{companyId}/issues/{issueId}/attachments` and creates an
@@ -61,7 +61,7 @@ unregistered user input attachments remain in the conversation.
 Use uploaded artifacts for deliverables: videos, PDFs, screenshots, archives,
 reports, rendered HTML, or any file the board should inspect without needing the
 agent's checkout. Attachment-backed artifact work products set `type` to
-`artifact` and `provider` to `paperclip`, with metadata canonicalized from the
+`artifact` and `provider` to `bionic`, with metadata canonicalized from the
 uploaded `attachmentId`.
 
 Use `workspace_file` metadata only for important files that intentionally remain
@@ -90,10 +90,10 @@ Expected work product metadata shape:
 `column` are optional. `relativePath` must be relative to that workspace root;
 do not store host-local absolute paths as workspace references.
 
-Workspace file links resolve only inside registered Paperclip workspaces. The
+Workspace file links resolve only inside registered Bionic workspaces. The
 default target is the current issue's execution workspace first, then its
 project workspace. A link may target another same-company project workspace only
-when it carries both that `projectId` and `workspaceId`. Paperclip does not
+when it carries both that `projectId` and `workspaceId`. Bionic does not
 resolve arbitrary machine-wide filesystem paths, absolute host paths, home
 paths, or relative paths that escape the selected workspace.
 
@@ -102,15 +102,15 @@ paths, or relative paths that escape the selected workspace.
 When a task produces a user-inspectable deliverable file:
 
 1. Generate and verify the file locally.
-2. Upload it with `skills/paperclip/scripts/paperclip-upload-artifact.sh`.
+2. Upload it with `skills/bionic/scripts/bionic-upload-artifact.sh`.
 3. Keep the artifact work product unless the file is incidental; pass
    `--no-work-product` only for supporting files that should not be promoted.
 4. Link the printed attachment URL in the final issue comment.
 5. Then set the final issue status.
 
 For a response that is explicitly intended for an external chat conversation,
-also pass each intended file with `paperclipai issue comment --attachment-id
-<id>`. Paperclip binds only those exact uploaded files to that comment; other
+also pass each intended file with `bionicai issue comment --attachment-id
+<id>`. Bionic binds only those exact uploaded files to that comment; other
 task attachments remain internal.
 
 Final comments should name and link the uploaded artifact or work product, not
@@ -125,7 +125,7 @@ available, not the preferred way to deliver files to users.
 Upload an `.mp4` render:
 
 ```sh
-bash skills/paperclip/scripts/paperclip-upload-artifact.sh dist/demo.mp4 \
+bash skills/bionic/scripts/bionic-upload-artifact.sh dist/demo.mp4 \
   --title "Demo video render" \
   --summary "MP4 render for board review"
 ```
@@ -133,7 +133,7 @@ bash skills/paperclip/scripts/paperclip-upload-artifact.sh dist/demo.mp4 \
 Upload a `.webm` render:
 
 ```sh
-bash skills/paperclip/scripts/paperclip-upload-artifact.sh out/walkthrough.webm \
+bash skills/bionic/scripts/bionic-upload-artifact.sh out/walkthrough.webm \
   --title "Walkthrough video" \
   --summary "WebM walkthrough render"
 ```
@@ -142,7 +142,7 @@ The helper detects `.mp4`, `.webm`, and `.mov` content types. If a renderer uses
 an unusual extension, pass the MIME type explicitly:
 
 ```sh
-bash skills/paperclip/scripts/paperclip-upload-artifact.sh render.bin \
+bash skills/bionic/scripts/bionic-upload-artifact.sh render.bin \
   --title "Demo video render" \
   --content-type video/mp4
 ```
@@ -153,9 +153,9 @@ If the helper is unavailable, use the same API shape:
 
 ```sh
 curl -sS -X POST \
-  "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues/$PAPERCLIP_TASK_ID/attachments" \
-  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
-  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  "$BIONIC_API_URL/api/companies/$BIONIC_COMPANY_ID/issues/$BIONIC_TASK_ID/attachments" \
+  -H "Authorization: Bearer $BIONIC_API_KEY" \
+  -H "X-Bionic-Run-Id: $BIONIC_RUN_ID" \
   -F 'file=@"dist/demo.mp4";type=video/mp4'
 ```
 
@@ -163,14 +163,14 @@ Then create a work product when the uploaded file is the deliverable:
 
 ```sh
 curl -sS -X POST \
-  "$PAPERCLIP_API_URL/api/issues/$PAPERCLIP_TASK_ID/work-products" \
-  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
-  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  "$BIONIC_API_URL/api/issues/$BIONIC_TASK_ID/work-products" \
+  -H "Authorization: Bearer $BIONIC_API_KEY" \
+  -H "X-Bionic-Run-Id: $BIONIC_RUN_ID" \
   -H "Content-Type: application/json" \
   --data-binary @artifact-work-product.json
 ```
 
-Use `type: "artifact"`, `provider: "paperclip"`, and metadata containing the
+Use `type: "artifact"`, `provider: "bionic"`, and metadata containing the
 uploaded `attachmentId`. The server canonicalizes `contentType`, `byteSize`,
 `contentPath`, `openPath`, `downloadPath`, and `originalFilename`.
 
@@ -196,11 +196,11 @@ To run the same suite on disposable Daytona sandboxes, install the standalone
 Daytona plugin's dependencies and set `DAYTONA_API_KEY` in the test process:
 
 ```sh
-PAPERCLIP_FILE_DELIVERY_DAYTONA=1 pnpm exec vitest run server/src/__tests__/file-delivery-bridges.test.ts
+BIONIC_FILE_DELIVERY_DAYTONA=1 pnpm exec vitest run server/src/__tests__/file-delivery-bridges.test.ts
 ```
 
 The live fixture deletes each sandbox before checking that its attachments
-remain downloadable from Paperclip. It does not run unless explicitly enabled.
+remain downloadable from Bionic. It does not run unless explicitly enabled.
 
 ## Text attachment previews
 

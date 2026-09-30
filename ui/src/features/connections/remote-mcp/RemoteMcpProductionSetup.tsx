@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { REMOTE_MCP_CONNECTOR_METHODS, type ToolConnection } from "@paperclipai/shared";
+import { REMOTE_MCP_CONNECTOR_METHODS, type ToolConnection } from "@bionicai/shared";
 import { RemoteMcpAccountChoice } from "./RemoteMcpAccountChoice";
 import { readConnectionIntentOAuthOutcome, type ConnectionSetupFlowProps } from "../ConnectionSetupFlow";
 import { agentsApi } from "@/api/agents";
@@ -31,8 +31,8 @@ export function RemoteMcpProductionSetup({ providerId, connection, host = "page"
   const [searchParams] = useSearchParams();
   const oauthOutcome = connection ? searchParams.get("oauth") : null;
   const queries = useQueryClient();
-  const accessDraftKey = `paperclip:mcp-access-draft:${selectedCompanyId}:${interactionId || providerId}`;
-  const intentDraftKey = `paperclip:mcp-intent-draft:${selectedCompanyId}:${interactionId}`;
+  const accessDraftKey = `bionic:mcp-access-draft:${selectedCompanyId}:${interactionId || providerId}`;
+  const intentDraftKey = `bionic:mcp-intent-draft:${selectedCompanyId}:${interactionId}`;
   const popup = useRef<Window | null>(null);
   useEffect(() => () => {
     popup.current?.close();
@@ -97,7 +97,7 @@ export function RemoteMcpProductionSetup({ providerId, connection, host = "page"
     // Reserve the window while handling the click so popup blockers do not
     // discard the later OAuth response. URL/token-only providers never need it.
     if (!saveDraft && host === "dialog" && state.auth === "auto" && (!popup.current || popup.current.closed)) {
-      popup.current = window.open("about:blank", "paperclip-connection-oauth", "popup,width=720,height=760,resizable=yes,scrollbars=yes");
+      popup.current = window.open("about:blank", "bionic-connection-oauth", "popup,width=720,height=760,resizable=yes,scrollbars=yes");
     }
     busy.current = true;
     edit({ connectStatus: "connecting", notice: null });

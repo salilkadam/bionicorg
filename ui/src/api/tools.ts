@@ -63,7 +63,7 @@ import type {
   ConnectionGrantsResponse,
   ToolConnectionCreateCapabilities,
   ToolAppMetadataPreflightResult,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { api } from "./client";
 
 /**

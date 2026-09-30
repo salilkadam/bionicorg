@@ -8,7 +8,7 @@ import {
   UserRound,
   UserRoundPen,
 } from "lucide-react";
-import type { DeploymentMode } from "@paperclipai/shared";
+import type { DeploymentMode } from "@bionicai/shared";
 import { Link } from "@/lib/router";
 import { authApi } from "@/api/auth";
 import { queryKeys } from "@/lib/queryKeys";
@@ -24,8 +24,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { SidebarServerInfo } from "./SidebarServerInfo";
 
 const PROFILE_SETTINGS_PATH = "/company/settings/instance/profile";
-const DOCS_URL = "https://docs.paperclip.ing/";
-const FEEDBACK_URL = "https://paperclip.ing/feedback";
+const DOCS_URL = "https://docs.bionic.ing/";
+const FEEDBACK_URL = "https://bionic.ing/feedback";
 
 interface SidebarAccountMenuProps {
   deploymentMode?: DeploymentMode;
@@ -179,7 +179,7 @@ export function SidebarAccountMenu({
                 {stagingCommit ? (
                   <a
                     className="block truncate font-mono text-(length:--text-micro) leading-(--profile-popover-meta-line-height) text-muted-foreground hover:underline focus-visible:underline"
-                    href={`https://github.com/paperclipai/paperclip/commit/${stagingCommit}`}
+                    href={`https://github.com/bionicai/bionic/commit/${stagingCommit}`}
                     target="_blank"
                     rel="noreferrer"
                     aria-label={`View commit ${stagingCommit} on GitHub`}
@@ -208,7 +208,7 @@ export function SidebarAccountMenu({
               />
               <MenuAction
                 label="Documentation"
-                description="Open Paperclip docs in a new tab."
+                description="Open Bionic docs in a new tab."
                 icon={BookOpen}
                 href={DOCS_URL}
                 external

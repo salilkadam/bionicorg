@@ -8,9 +8,9 @@ import { describe, expect, it } from "vitest";
  *
  * The server build runs scripts/write-build-stamp.mjs, which stamps the built
  * commit into dist/build-info.json. The build context has no .git, so the
- * script reads PAPERCLIP_BUILD_COMMIT instead. Docker exposes an ARG to the
+ * script reads BIONIC_BUILD_COMMIT instead. Docker exposes an ARG to the
  * next RUN as an environment variable, but an ARG goes out of scope at the end
- * of its stage. So the build stage must declare `ARG PAPERCLIP_BUILD_COMMIT`
+ * of its stage. So the build stage must declare `ARG BIONIC_BUILD_COMMIT`
  * before the server build; the production ARG alone stamps nothing, because
  * the server build already ran in the earlier stage.
  *
@@ -46,7 +46,7 @@ it("keeps per-build runtime metadata out of the weekly CLI-install cache", () =>
   expect(entrypoint).toBeGreaterThan(tools);
   expect(epoch).toBeGreaterThanOrEqual(0);
   expect(epoch).toBeLessThan(tools);
-  for (const name of ["PAPERCLIP_BUILD_VERSION", "PAPERCLIP_BUILD_COMMIT"]) {
+  for (const name of ["BIONIC_BUILD_VERSION", "BIONIC_BUILD_COMMIT"]) {
     const declarations = [...production.matchAll(new RegExp(`^ARG ${name}\\b`, "gm"))];
     expect(declarations).toHaveLength(1);
     expect(declarations[0].index).toBeGreaterThan(entrypoint);
@@ -56,22 +56,22 @@ it("keeps per-build runtime metadata out of the weekly CLI-install cache", () =>
 });
 
 describe("docker build-stamp wiring", () => {
-  it("declares PAPERCLIP_BUILD_COMMIT in the build stage before the server build", () => {
+  it("declares BIONIC_BUILD_COMMIT in the build stage before the server build", () => {
     const build = stageBody(dockerfile, "build");
-    const argIdx = build.search(/^ARG PAPERCLIP_BUILD_COMMIT\b/m);
-    const serverBuildIdx = build.search(/^RUN pnpm --filter @paperclipai\/server build\b/m);
-    expect(argIdx, "build stage must declare ARG PAPERCLIP_BUILD_COMMIT").toBeGreaterThanOrEqual(0);
+    const argIdx = build.search(/^ARG BIONIC_BUILD_COMMIT\b/m);
+    const serverBuildIdx = build.search(/^RUN pnpm --filter @bionicai\/server build\b/m);
+    expect(argIdx, "build stage must declare ARG BIONIC_BUILD_COMMIT").toBeGreaterThanOrEqual(0);
     expect(serverBuildIdx, "build stage must run the server build").toBeGreaterThanOrEqual(0);
     expect(
       argIdx,
-      "ARG PAPERCLIP_BUILD_COMMIT must precede the server build so the stamp script reads it",
+      "ARG BIONIC_BUILD_COMMIT must precede the server build so the stamp script reads it",
     ).toBeLessThan(serverBuildIdx);
   });
 
-  it("passes PAPERCLIP_BUILD_COMMIT as a build-arg for standard and explicit preview builds", () => {
+  it("passes BIONIC_BUILD_COMMIT as a build-arg for standard and explicit preview builds", () => {
     for (const [name, source] of [["standard", workflow], ["preview", previewWorkflow]]) {
       expect(source, `${name} must pass the source commit into the image build`)
-        .toMatch(/^\s*PAPERCLIP_BUILD_COMMIT=\$\{\{ (?:github.sha|inputs.source_ref) \}\}$/m);
+        .toMatch(/^\s*BIONIC_BUILD_COMMIT=\$\{\{ (?:github.sha|inputs.source_ref) \}\}$/m);
     }
   });
 });
@@ -84,23 +84,23 @@ describe("Docker Rust dependency cache", () => {
     const dependencies = stageBody(dockerfile, "runner-deps");
     expect(chef).toContain("FROM rust-toolchain AS rust-chef");
     expect(chef).toMatch(/cargo install cargo-chef --version \d+\.\d+\.\d+ --locked/);
-    expect(planner).toContain("COPY packages/paperclip-runner/runner ./runner");
+    expect(planner).toContain("COPY packages/bionic-runner/runner ./runner");
     expect(planner).toContain("cargo chef prepare --recipe-path /tmp/runner-recipe.json");
     expect(dependencies).toContain("FROM rust-chef AS runner-deps");
     expect(dependencies).toContain("COPY --from=runner-plan /tmp/runner-recipe.json /tmp/runner-recipe.json");
-    expect(dependencies).toContain("cargo chef cook --release --locked --package paperclip-runner-core --bin paperclip-runnerd");
-    expect(dependencies).not.toMatch(/COPY .*\.\/runner|COPY .*\.\/protocol|COPY \. \.|PAPERCLIP_BUILD_COMMIT/);
+    expect(dependencies).toContain("cargo chef cook --release --locked --package bionic-runner-core --bin bionic-runnerd");
+    expect(dependencies).not.toMatch(/COPY .*\.\/runner|COPY .*\.\/protocol|COPY \. \.|BIONIC_BUILD_COMMIT/);
   });
 
   it("rebuilds real workspace code and embedded protocol inputs after cooking dependencies", () => {
     const native = stageBody(dockerfile, "runner-build");
     expect(native).toContain("FROM runner-deps AS runner-build");
     for (const source of ["runner", "protocol"]) {
-      expect(native.indexOf(`COPY packages/paperclip-runner/${source} ./${source}`))
+      expect(native.indexOf(`COPY packages/bionic-runner/${source} ./${source}`))
         .toBeLessThan(native.indexOf("cargo build --release"));
-      expect(native).toContain(`COPY packages/paperclip-runner/${source} ./${source}`);
+      expect(native).toContain(`COPY packages/bionic-runner/${source} ./${source}`);
     }
-    expect(native).toContain("cargo build --release --manifest-path runner/Cargo.toml --locked -p paperclip-runner-core --bin paperclip-runnerd");
+    expect(native).toContain("cargo build --release --manifest-path runner/Cargo.toml --locked -p bionic-runner-core --bin bionic-runnerd");
     expect(stageBody(dockerfile, "build")).toContain("FROM runner-build AS build");
   });
 });
@@ -110,17 +110,17 @@ describe("Cloud remote provider pack", () => {
   it("ships a build-owned pack without provisioning Grok on the controller", () => {
     const pack = stageBody(dockerfile, "cloud-provider-pack");
     const cloud = stageBody(dockerfile, "cloud");
-    expect(pack).toContain('PAPERCLIP_RUNNER_SOURCE_REVISION="${PAPERCLIP_BUILD_COMMIT}"');
+    expect(pack).toContain('BIONIC_RUNNER_SOURCE_REVISION="${BIONIC_BUILD_COMMIT}"');
     expect(pack).toContain("build-provider-pack.mjs /provider-pack");
-    expect(pack).toContain('if [ -n "${PAPERCLIP_BUILD_COMMIT}" ]; then');
+    expect(pack).toContain('if [ -n "${BIONIC_BUILD_COMMIT}" ]; then');
     expect(pack).toContain("mkdir -p /provider-pack");
     expect(pack).toContain("Skipping remote provider pack");
-    expect(cloud).toContain("--from=cloud-provider-pack /provider-pack /opt/paperclip-runner/provider-pack");
+    expect(cloud).toContain("--from=cloud-provider-pack /provider-pack /opt/bionic-runner/provider-pack");
     expect(cloud).not.toContain("--chown=node:node --from=cloud-provider-pack");
-    expect(cloud).toContain("chmod -R a+rX /opt/paperclip-runner/provider-pack");
+    expect(cloud).toContain("chmod -R a+rX /opt/bionic-runner/provider-pack");
     expect(cloud).toContain("gosu 65534:65534 node");
     expect(cloud).toContain("Object.values(manifest.payload.artifacts)");
-    expect(cloud).toContain("PAPERCLIP_RUNNER_REMOTE_PROVIDER_PACK_PATH=/opt/paperclip-runner/provider-pack");
+    expect(cloud).toContain("BIONIC_RUNNER_REMOTE_PROVIDER_PACK_PATH=/opt/bionic-runner/provider-pack");
     expect(dockerfile).not.toContain("provision-grok.mjs");
   });
 });

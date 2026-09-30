@@ -267,7 +267,7 @@ async function restartIsolatedPaperclipServer(input: {
 }
 
 const executionIds = (() => {
-  const encoded = process.env.PAPERCLIP_RUNNER_E2E_EXECUTION_IDS;
+  const encoded = process.env.BIONIC_RUNNER_E2E_EXECUTION_IDS;
   if (encoded) {
     const parsed = JSON.parse(encoded) as unknown;
     if (
@@ -276,24 +276,24 @@ const executionIds = (() => {
       parsed.some((value) => typeof value !== "string")
     ) {
       throw new Error(
-        "PAPERCLIP_RUNNER_E2E_EXECUTION_IDS must be a non-empty JSON string array",
+        "BIONIC_RUNNER_E2E_EXECUTION_IDS must be a non-empty JSON string array",
       );
     }
     return parsed;
   }
-  const single = process.env.PAPERCLIP_RUNNER_E2E_EXECUTION_ID;
+  const single = process.env.BIONIC_RUNNER_E2E_EXECUTION_ID;
   if (!single)
-    throw new Error("PAPERCLIP_RUNNER_E2E_EXECUTION_IDS is required");
+    throw new Error("BIONIC_RUNNER_E2E_EXECUTION_IDS is required");
   return [single];
 })();
 const executions = executionIds.map(runnerExecutionById);
 // Direct Playwright invocation must enforce the same admission boundary as
 // launch.ts before reading any provider credential from the environment.
 assertRunnerE2EPrerequisites(executions);
-const attempt = Number(process.env.PAPERCLIP_RUNNER_E2E_ATTEMPT ?? "1");
-const temporaryRoot = process.env.PAPERCLIP_RUNNER_E2E_TEMP_ROOT;
-const privateRoot = process.env.PAPERCLIP_RUNNER_E2E_PRIVATE_DIR;
-const workspacePath = process.env.PAPERCLIP_RUNNER_E2E_WORKSPACE;
+const attempt = Number(process.env.BIONIC_RUNNER_E2E_ATTEMPT ?? "1");
+const temporaryRoot = process.env.BIONIC_RUNNER_E2E_TEMP_ROOT;
+const privateRoot = process.env.BIONIC_RUNNER_E2E_PRIVATE_DIR;
+const workspacePath = process.env.BIONIC_RUNNER_E2E_WORKSPACE;
 if (!temporaryRoot || !privateRoot || !workspacePath)
   throw new Error("Runner E2E temporary/private/workspace paths are required");
 
@@ -837,7 +837,7 @@ for (const execution of executions) {
         executionNonce: nonce,
         workspacePath,
         credentials,
-        daytonaImage: process.env.PAPERCLIP_E2E_DAYTONA_IMAGE,
+        daytonaImage: process.env.BIONIC_E2E_DAYTONA_IMAGE,
       });
 
       if (execution.suite.id === "api-response-reading") {
@@ -1361,7 +1361,7 @@ for (const execution of executions) {
             requestId: restartRequestId,
             deadlineAt,
           });
-          const documentSentinel = `__paperclip_runner_restart_${nonce.replaceAll("-", "_")}`;
+          const documentSentinel = `__bionic_runner_restart_${nonce.replaceAll("-", "_")}`;
           await page.evaluate(
             (key) => Reflect.set(window, key, true),
             documentSentinel,
@@ -1648,7 +1648,7 @@ for (const execution of executions) {
           }
           const journalEvidence = execution.suite.id === "daytona-journal-continuity" && completedTurn === 1
             ? await largeJournalEvidence({
-                stateRoot: path.join(process.env.PAPERCLIP_HOME!, "instances", process.env.PAPERCLIP_INSTANCE_ID!, "runtime", "paperclip-runner", "durable-sessions"),
+                stateRoot: path.join(process.env.BIONIC_HOME!, "instances", process.env.BIONIC_INSTANCE_ID!, "runtime", "bionic-runner", "durable-sessions"),
                 runId: chronologicalRuns.at(-1)!.id,
                 minimumBytes: 2 * 1024 * 1024,
                 minimumCompletedStimulusCalls: 240,
@@ -1800,7 +1800,7 @@ for (const execution of executions) {
             ? Date.parse(candidate.finishedAt)
             : Number.NaN;
           const acquisition = record(
-            record(candidate.contextSnapshot).paperclipEnvironment,
+            record(candidate.contextSnapshot).bionicEnvironment,
           ).sandboxLeaseAcquisition;
           const acquisitionOutcome = record(acquisition).outcome;
           return {
@@ -2018,15 +2018,15 @@ for (const execution of executions) {
       }
 
       const context = record(run.contextSnapshot);
-      const environmentContext = record(context.paperclipEnvironment);
-      const workspaceContext = record(context.paperclipWorkspace);
+      const environmentContext = record(context.bionicEnvironment);
+      const workspaceContext = record(context.bionicWorkspace);
       const environmentDriver =
         environmentContext.driver ?? persistedEnvironment.driver;
       const observedEnvironment =
         environmentDriver === "sandbox" ? "daytona" : environmentDriver;
       const observedRuntimeMode =
         run.runtimeMode ??
-        (persistedAgent.adapterType === "paperclip_runner"
+        (persistedAgent.adapterType === "bionic_runner"
           ? "native"
           : "legacy");
       const matcherObservation = {
@@ -2149,7 +2149,7 @@ for (const execution of executions) {
       }
       if (execution.task.flow === "warm_three_turn") {
         const runEnvironmentContexts = selectedRuns.map((candidate) =>
-          record(record(candidate.contextSnapshot).paperclipEnvironment),
+          record(record(candidate.contextSnapshot).bionicEnvironment),
         );
         const leaseIds = runEnvironmentContexts.map((entry) => entry.leaseId);
         const acquisitionOutcomes = runEnvironmentContexts.map(
@@ -2157,7 +2157,7 @@ for (const execution of executions) {
         );
         const projectWorkspaceIds = selectedRuns.map(
           (candidate) =>
-            record(record(candidate.contextSnapshot).paperclipWorkspace)
+            record(record(candidate.contextSnapshot).bionicWorkspace)
               .workspaceId,
         );
         const executionWorkspaceIds = selectedRuns.map(
@@ -2733,7 +2733,7 @@ for (const execution of executions) {
         fallbackFinishedAt: new Date(finishedAtMs),
       });
       const resultWithoutBilling: RunnerE2EResult = {
-        schema: "paperclip.runner-e2e.result/v2",
+        schema: "bionic.runner-e2e.result/v2",
         executionId: execution.id,
         suiteId: execution.suite.id,
         suiteDefinitionHash: execution.suiteDefinitionHash,

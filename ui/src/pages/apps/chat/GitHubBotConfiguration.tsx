@@ -6,7 +6,7 @@ import {
   type GitHubChatConfiguration,
   type GitHubReviewPolicy,
   type GitHubAllowedPerson,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { accessApi } from "@/api/access";
 import { chatEndpointsApi } from "@/api/chatEndpoints";
 import { githubChatApi } from "@/api/githubChat";
@@ -221,7 +221,7 @@ export function GitHubPolicyEditor({
           }
         />
         <p className="text-xs text-muted-foreground">
-          Paperclip supplies repository, PR, base and head commits, sender, and
+          Bionic supplies repository, PR, base and head commits, sender, and
           prior head as typed context. Saved revisions remain attached to review
           activity.
         </p>
@@ -295,7 +295,7 @@ export function GitHubPolicyEditor({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="github-rating">Paperclip Review check</Label>
+        <Label htmlFor="github-rating">Bionic Review check</Label>
         <select
           id="github-rating"
           className={githubSelectClass}
@@ -317,9 +317,9 @@ export function GitHubPolicyEditor({
           <option value="report">Report only</option>
         </select>
         <p className="text-xs text-muted-foreground">
-          Paperclip computes the result for the exact reviewed commit.
+          Bionic computes the result for the exact reviewed commit.
           Incomplete reviews cannot pass. To require it before merging, select
-          “Paperclip Review” in your GitHub branch protection or ruleset
+          “Bionic Review” in your GitHub branch protection or ruleset
           settings and choose this bot’s GitHub App as the expected source. Run
           a review first so the check appears in GitHub’s selector.
         </p>
@@ -581,7 +581,7 @@ export function GitHubAccessEditor({
             Automatic PR reviews start off.
           </p>
           {(links.data ?? [])
-            .filter((link) => link.status === "linked" && link.paperclipUserId)
+            .filter((link) => link.status === "linked" && link.bionicUserId)
             .map((link) => (
               <Button
                 className="mr-2"
@@ -589,7 +589,7 @@ export function GitHubAccessEditor({
                 variant="outline"
                 disabled={configuration.people.some(
                   (p) =>
-                    p.kind === "member" && p.userId === link.paperclipUserId,
+                    p.kind === "member" && p.userId === link.bionicUserId,
                 )}
                 onClick={() => {
                   const id = link.githubUserId;
@@ -601,14 +601,14 @@ export function GitHubAccessEditor({
                   }
                   add({
                     kind: "member",
-                    userId: link.paperclipUserId!,
+                    userId: link.bionicUserId!,
                     githubUserId: id,
                     login: link.githubLogin ?? link.externalLabel,
                     automaticReviews: false,
                   });
                 }}
               >
-                {link.paperclipUserLabel ?? link.externalLabel}
+                {link.bionicUserLabel ?? link.externalLabel}
               </Button>
             ))}
           <Button variant="ghost" onClick={() => setKind(null)}>

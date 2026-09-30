@@ -7748,8 +7748,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "paperclip_user_id": {
-          "name": "paperclip_user_id",
+        "bionic_user_id": {
+          "name": "bionic_user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -7811,7 +7811,7 @@
               "nulls": "last"
             },
             {
-              "expression": "paperclip_user_id",
+              "expression": "bionic_user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11741,7 +11741,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'paperclip_managed'"
+          "default": "'bionic_managed'"
         },
         "external_ref": {
           "name": "external_ref",
@@ -20143,7 +20143,7 @@
             }
           ],
           "isUnique": true,
-          "where": "\"environments\".\"driver\" = 'sandbox' AND (\"environments\".\"metadata\" ->> 'managedByPaperclip')::boolean = true",
+          "where": "\"environments\".\"driver\" = 'sandbox' AND (\"environments\".\"metadata\" ->> 'managedByBionic')::boolean = true",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -21570,21 +21570,21 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'paperclip-feedback-envelope-v2'"
+          "default": "'bionic-feedback-envelope-v2'"
         },
         "bundle_version": {
           "name": "bundle_version",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'paperclip-feedback-bundle-v2'"
+          "default": "'bionic-feedback-bundle-v2'"
         },
         "payload_version": {
           "name": "payload_version",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'paperclip-feedback-v1'"
+          "default": "'bionic-feedback-v1'"
         },
         "payload_digest": {
           "name": "payload_digest",
@@ -43801,7 +43801,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'paperclip_vault'"
+          "default": "'bionic_vault'"
         },
         "external_credential": {
           "name": "external_credential",
@@ -44072,11 +44072,11 @@
         },
         "tool_connections_credential_source_check": {
           "name": "tool_connections_credential_source_check",
-          "value": "\"tool_connections\".\"credential_source\" in ('paperclip_vault', 'vercel_connect')"
+          "value": "\"tool_connections\".\"credential_source\" in ('bionic_vault', 'vercel_connect')"
         },
         "tool_connections_credential_source_one_of_check": {
           "name": "tool_connections_credential_source_one_of_check",
-          "value": "(\n      (\"tool_connections\".\"credential_source\" = 'paperclip_vault' and \"tool_connections\".\"external_credential\" is null)\n      or\n      (\"tool_connections\".\"credential_source\" = 'vercel_connect' and \"tool_connections\".\"external_credential\" is not null and jsonb_array_length(\"tool_connections\".\"credential_refs\") = 0 and jsonb_array_length(\"tool_connections\".\"credential_secret_refs\") = 0)\n    )"
+          "value": "(\n      (\"tool_connections\".\"credential_source\" = 'bionic_vault' and \"tool_connections\".\"external_credential\" is null)\n      or\n      (\"tool_connections\".\"credential_source\" = 'vercel_connect' and \"tool_connections\".\"external_credential\" is not null and jsonb_array_length(\"tool_connections\".\"credential_refs\") = 0 and jsonb_array_length(\"tool_connections\".\"credential_secret_refs\") = 0)\n    )"
         },
         "tool_connections_credential_policy_check": {
           "name": "tool_connections_credential_policy_check",
@@ -48080,7 +48080,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'paperclip_managed'"
+          "default": "'bionic_managed'"
         },
         "provider_config_id": {
           "name": "provider_config_id",

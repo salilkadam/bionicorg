@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import type { IssueComment, IssueQueuedCommentQueue } from "@paperclipai/shared";
+import type { IssueComment, IssueQueuedCommentQueue } from "@bionicai/shared";
 
-const QUEUE_CONTEXT_KEY = "_paperclipWakeContext";
+const QUEUE_CONTEXT_KEY = "_bionicWakeContext";
 const QUEUE_IDS_KEY = "wakeCommentIds";
 
 function record(value: unknown): Record<string, unknown> {
@@ -91,28 +91,28 @@ export function withQueuedCommentIdsInRunContext(
 
   // These projections are generated immediately before dispatch. Any queue
   // mutation must force them to be rebuilt from the canonical comment ids.
-  delete context.paperclipWake;
-  delete context.paperclipWakeComment;
-  delete context.paperclipTaskMarkdown;
-  delete context.paperclipTaskMarkdownCompact;
-  delete context.paperclipTaskMarkdownAssignment;
-  delete context.paperclipTaskMarkdownAssignmentCompact;
-  delete context.paperclipTurnContext;
+  delete context.bionicWake;
+  delete context.bionicWakeComment;
+  delete context.bionicTaskMarkdown;
+  delete context.bionicTaskMarkdownCompact;
+  delete context.bionicTaskMarkdownAssignment;
+  delete context.bionicTaskMarkdownAssignmentCompact;
+  delete context.bionicTurnContext;
   return context;
 }
 
-export type QueuedCommentQueueProtocol = "paperclip_runner_v1" | "legacy";
+export type QueuedCommentQueueProtocol = "bionic_runner_v1" | "legacy";
 
 export type QueuedCommentQueueSteeringDecision =
   | { protocol: QueuedCommentQueueProtocol; kind: "unsupported" }
   | { protocol: QueuedCommentQueueProtocol; kind: "temporarily_unavailable" }
   /** Only the caller can probe the live runner. `steeringRunId` names the run to probe. */
-  | { protocol: "paperclip_runner_v1"; kind: "probe"; steeringRunId: string };
+  | { protocol: "bionic_runner_v1"; kind: "probe"; steeringRunId: string };
 
 /**
  * Decides the queue protocol and the steering answer for one queued-comment
  * queue, from plain facts. This is the one place that resolves the
- * `paperclip_runner_v1`/`legacy` protocol and the steering answer; every
+ * `bionic_runner_v1`/`legacy` protocol and the steering answer; every
  * caller that builds a queue response must call this function instead of
  * repeating the rule.
  *
@@ -141,11 +141,11 @@ export function decideQueuedCommentQueueSteering(facts: {
 
   const protocol: QueuedCommentQueueProtocol =
     persistedRuntimeMode === "native"
-      || (persistedRuntimeMode === null && facts.assignedAgentAdapterType === "paperclip_runner")
-      ? "paperclip_runner_v1"
+      || (persistedRuntimeMode === null && facts.assignedAgentAdapterType === "bionic_runner")
+      ? "bionic_runner_v1"
       : "legacy";
 
-  if (protocol !== "paperclip_runner_v1") {
+  if (protocol !== "bionic_runner_v1") {
     return { protocol, kind: "unsupported" };
   }
 

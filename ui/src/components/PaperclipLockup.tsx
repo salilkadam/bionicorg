@@ -6,8 +6,8 @@ interface PaperclipLockupProps extends Omit<SVGProps<SVGSVGElement>, "children">
 }
 
 /**
- * The full Paperclip lockup — mark plus wordmark — from the brand asset
- * (`paperclip_lockup_dark_mode alt.svg`). The export is white-filled for dark
+ * The full Bionic lockup — mark plus wordmark — from the brand asset
+ * (`bionic_lockup_dark_mode alt.svg`). The export is white-filled for dark
  * chrome; here every path fills `currentColor`, so the one geometry follows
  * the theme the way the brand system expects ("one vocabulary, two surfaces").
  * The viewBox is cropped to the artwork's content bounds — the export carries
@@ -17,7 +17,7 @@ interface PaperclipLockupProps extends Omit<SVGProps<SVGSVGElement>, "children">
  */
 export function PaperclipLockup({
   decorative = false,
-  title = "Paperclip",
+  title = "Bionic",
   className,
   ...rest
 }: PaperclipLockupProps) {

@@ -5,8 +5,8 @@ import {
   cleanupGitHubOperationLaunchers,
   prepareGitHubOperationLaunchers,
   startAdapterExecutionTargetPaperclipBridge,
-} from "@paperclipai/adapter-utils/execution-target";
-import { githubBrokerEnvironment } from "@paperclipai/adapter-utils/github-launcher";
+} from "@bionicai/adapter-utils/execution-target";
+import { githubBrokerEnvironment } from "@bionicai/adapter-utils/github-launcher";
 
 type Binding = { companyId: string; agentId: string; issueId: string; runId: string };
 type LauncherInput = Parameters<typeof prepareGitHubOperationLaunchers>[0];
@@ -83,7 +83,7 @@ export async function createNativeGitHubAccess(input: {
       cleanupGitHubOperationLaunchers(location),
     ]);
     if (results.some(result => result.status === "rejected")) {
-      await input.onLog?.("stderr", "[paperclip] GitHub session cleanup incomplete.\n").catch(() => undefined);
+      await input.onLog?.("stderr", "[bionic] GitHub session cleanup incomplete.\n").catch(() => undefined);
     }
   })();
   try {
@@ -98,7 +98,7 @@ export async function createNativeGitHubAccess(input: {
       bridge = await startBridge({
         ...location,
         runtimeRootDir: input.target?.kind === "remote"
-          ? path.posix.join(input.target.remoteCwd, ".paperclip-runtime", "github", location.runId)
+          ? path.posix.join(input.target.remoteCwd, ".bionic-runtime", "github", location.runId)
           : null,
         adapterKey: "native-github",
         hostApiToken: token,
@@ -113,17 +113,17 @@ export async function createNativeGitHubAccess(input: {
       // the supervisor retries transport setup on the next run.
       ready = false;
       await new Promise<void>(resolve => server.close(() => resolve()));
-      await input.onLog?.("stderr", "[paperclip] GitHub runtime transport unavailable; continuing without managed GitHub access.\n").catch(() => undefined);
+      await input.onLog?.("stderr", "[bionic] GitHub runtime transport unavailable; continuing without managed GitHub access.\n").catch(() => undefined);
     }
     const env = await prepareGitHubOperationLaunchers({
       ...location, cwd: input.cwd,
       env: {
         ...githubBrokerEnvironment({ PATH: input.env.PATH }, {
-          url: ready ? bridge?.env.PAPERCLIP_API_URL ?? url : "",
-          token: ready ? bridge?.env.PAPERCLIP_API_KEY ?? token : "",
+          url: ready ? bridge?.env.BIONIC_API_URL ?? url : "",
+          token: ready ? bridge?.env.BIONIC_API_KEY ?? token : "",
         }),
         // Never retain an old run's bridge authentication override.
-        PAPERCLIP_GITHUB_BRIDGE_TOKEN: ready ? bridge?.env.PAPERCLIP_API_KEY ?? token : "",
+        BIONIC_GITHUB_BRIDGE_TOKEN: ready ? bridge?.env.BIONIC_API_KEY ?? token : "",
       },
     });
     return {

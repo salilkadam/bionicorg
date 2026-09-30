@@ -2,7 +2,7 @@ import type {
   AdapterExecutionContext,
   AdapterExecutionResult,
   UsageSummary,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import {
   asNumber,
   asString,
@@ -11,8 +11,8 @@ import {
   selectPaperclipPromptSections,
   isPaperclipRecoveryWakePayload,
   stringifyPaperclipWakePayload,
-  paperclipWakeCommentsArePromptOwned,
-} from "@paperclipai/adapter-utils/server-utils";
+  bionicWakeCommentsArePromptOwned,
+} from "@bionicai/adapter-utils/server-utils";
 import {
   ADAPTER_TYPE,
   DEFAULT_EVENT_RECONNECT_MS,
@@ -71,8 +71,8 @@ const SENSITIVE_KEY_PATTERN =
   /(^|[_-])(auth|authorization|token|secret|password|api[_-]?key|private[_-]?key)([_-]|$)/i;
 const BEARER_TOKEN_PATTERN = /Bearer\s+\S+/gi;
 const HERMES_SESSION_KEY_HEADER_PATTERN = /(X-Hermes-Session-Key\s*[:=]\s*)([^\s,;]+)/gi;
-const PAPERCLIP_SESSION_KEY_PATTERN =
-  /\bpaperclip:(?:company:[A-Za-z0-9-]+:agent:[A-Za-z0-9-]+(?::(?:issue|run):[A-Za-z0-9-]+)?|run:[A-Za-z0-9-]+)\b/gi;
+const BIONIC_SESSION_KEY_PATTERN =
+  /\bbionic:(?:company:[A-Za-z0-9-]+:agent:[A-Za-z0-9-]+(?::(?:issue|run):[A-Za-z0-9-]+)?|run:[A-Za-z0-9-]+)\b/gi;
 
 const TERMINAL_STATUSES = new Set([
   "completed",
@@ -157,13 +157,13 @@ export function resolveSessionKey(input: {
 }): string | null {
   if (input.strategy === "none") return null;
   if (input.strategy === "agent") {
-    return `paperclip:company:${input.companyId}:agent:${input.agentId}`;
+    return `bionic:company:${input.companyId}:agent:${input.agentId}`;
   }
   if (input.strategy === "run") {
-    return `paperclip:run:${input.runId}`;
+    return `bionic:run:${input.runId}`;
   }
   const issuePart = input.issueId ? `issue:${input.issueId}` : `run:${input.runId}`;
-  return `paperclip:company:${input.companyId}:agent:${input.agentId}:${issuePart}`;
+  return `bionic:company:${input.companyId}:agent:${input.agentId}:${issuePart}`;
 }
 
 function stringifyForLog(value: unknown, maxChars = 4_000): string {
@@ -175,7 +175,7 @@ function sanitizeSensitiveText(value: string): string {
   return value
     .replace(BEARER_TOKEN_PATTERN, "Bearer [redacted]")
     .replace(HERMES_SESSION_KEY_HEADER_PATTERN, "$1[redacted]")
-    .replace(PAPERCLIP_SESSION_KEY_PATTERN, "[redacted-session-key]");
+    .replace(BIONIC_SESSION_KEY_PATTERN, "[redacted-session-key]");
 }
 
 function escapeRegExp(value: string): string {
@@ -263,7 +263,7 @@ function buildHeaders(input: {
   };
 }
 
-function buildInput(ctx: AdapterExecutionContext, paperclipApiUrl: string | null): string {
+function buildInput(ctx: AdapterExecutionContext, bionicApiUrl: string | null): string {
   // Stable session keys (issue/agent strategy) resume the same remote Hermes
   // conversation across runs; a stored session id from a prior run means that
   // conversation already received the task brief, so pick the compact
@@ -278,31 +278,31 @@ function buildInput(ctx: AdapterExecutionContext, paperclipApiUrl: string | null
     // gateway prompt shape and avoid adding a second contract on resume.
     includeExecutionContract: false,
   });
-  const wakePayloadJson = paperclipWakeCommentsArePromptOwned(ctx.context)
+  const wakePayloadJson = bionicWakeCommentsArePromptOwned(ctx.context)
     ? null
-    : stringifyPaperclipWakePayload(ctx.context.paperclipWake, {
+    : stringifyPaperclipWakePayload(ctx.context.bionicWake, {
         omitIssueDescription: Boolean(taskMarkdown),
       });
-  const sessionHandoff = nonEmpty(ctx.context.paperclipSessionHandoffMarkdown);
+  const sessionHandoff = nonEmpty(ctx.context.bionicSessionHandoffMarkdown);
   const issueWorkMode = readPaperclipIssueWorkModeFromContext(ctx.context);
   const lines = [
-    `You are ${ctx.agent.name}, an AI agent employee in a Paperclip-managed company.`,
+    `You are ${ctx.agent.name}, an AI agent employee in a Bionic-managed company.`,
     "",
-    "Paperclip runtime identity:",
+    "Bionic runtime identity:",
     `- Agent ID: ${ctx.agent.id}`,
     `- Company ID: ${ctx.agent.companyId}`,
     `- Run ID: ${ctx.runId}`,
-    ...(paperclipApiUrl ? [`- Paperclip API URL: ${paperclipApiUrl}`] : []),
+    ...(bionicApiUrl ? [`- Bionic API URL: ${bionicApiUrl}`] : []),
     ...(issueWorkMode ? [`- Issue work mode: ${issueWorkMode}`] : []),
     "",
-    ...(ctx.context.conversationMode === true || isPaperclipRecoveryWakePayload(ctx.context.paperclipWake)
+    ...(ctx.context.conversationMode === true || isPaperclipRecoveryWakePayload(ctx.context.bionicWake)
       ? []
       : [
           "Execution contract:",
           "- Take concrete action in this run when the task is actionable.",
           "- Do not stop at a plan unless the issue asks for planning only.",
           "- Leave durable progress and update the issue to a clear final disposition.",
-          "- Use X-Paperclip-Run-Id on mutating Paperclip API requests when a Paperclip API key is available.",
+          "- Use X-Bionic-Run-Id on mutating Bionic API requests when a Bionic API key is available.",
           "",
         ]),
     wakePrompt,
@@ -322,16 +322,16 @@ function buildInput(ctx: AdapterExecutionContext, paperclipApiUrl: string | null
 }
 
 function buildRunBody(ctx: AdapterExecutionContext, sessionKey: string | null): Record<string, unknown> {
-  const paperclipApiUrl = nonEmpty(ctx.config.paperclipApiUrl);
+  const bionicApiUrl = nonEmpty(ctx.config.bionicApiUrl);
   const payloadTemplate = parseObject(ctx.config.payloadTemplate);
   const configuredInput = nonEmpty(payloadTemplate.input);
   const input = configuredInput && ctx.context.conversationMode === true
-    ? `${configuredInput}\n\n${buildInput(ctx, paperclipApiUrl)}`
-    : configuredInput ?? buildInput(ctx, paperclipApiUrl);
+    ? `${configuredInput}\n\n${buildInput(ctx, bionicApiUrl)}`
+    : configuredInput ?? buildInput(ctx, bionicApiUrl);
   const instructions =
     nonEmpty(ctx.config.instructions) ??
     nonEmpty(payloadTemplate.instructions) ??
-    "Follow the Paperclip wake instructions exactly. Do not expose secrets in logs, comments, or final output.";
+    "Follow the Bionic wake instructions exactly. Do not expose secrets in logs, comments, or final output.";
   return {
     ...payloadTemplate,
     input,

@@ -102,5 +102,5 @@ SET
 FROM duplicates
 WHERE wake."id" = duplicates."id";--> statement-breakpoint
 DROP INDEX IF EXISTS "agent_wakeup_requests_question_response_delivery_idempotency_uq";--> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: Drizzle migrations run transactionally, so CONCURRENTLY is unavailable. The selective duplicate repair above preserves historical evidence and the expanded predicate must commit atomically before board and external-chat resolvers share the canonical interaction wake key.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: Drizzle migrations run transactionally, so CONCURRENTLY is unavailable. The selective duplicate repair above preserves historical evidence and the expanded predicate must commit atomically before board and external-chat resolvers share the canonical interaction wake key.
 CREATE UNIQUE INDEX IF NOT EXISTS "agent_wakeup_requests_question_response_delivery_idempotency_uq" ON "agent_wakeup_requests" USING btree ("company_id","idempotency_key") WHERE ("agent_wakeup_requests"."idempotency_key" LIKE 'question-response:%' OR "agent_wakeup_requests"."idempotency_key" LIKE 'interaction:%') AND "agent_wakeup_requests"."status" NOT IN ('skipped', 'failed', 'cancelled');

@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import { assets, issueAttachments, issueWorkProducts, type Db } from "@paperclipai/db";
-import type { PrpStructuredRunResult } from "../../vendor/paperclip-runner/index.js";
+import { assets, issueAttachments, issueWorkProducts, type Db } from "@bionicai/db";
+import type { PrpStructuredRunResult } from "../../vendor/bionic-runner/index.js";
 
 function evidenceRefs(value: unknown): string[] {
   if (!Array.isArray(value)) return [];

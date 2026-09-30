@@ -26,7 +26,7 @@ import {
   nativeRunFinalizations,
   nativeRunResults,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   acpxRuntimeSessionDirectoryName,
   resolveAcpxRuntimeRoot,
@@ -38,7 +38,7 @@ import {
   type NativeExecutionInputV1,
   type NativeExecutionInput,
   type PrpEvent,
-} from "@paperclipai/paperclip-runner";
+} from "@bionicai/bionic-runner";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { nativeSha256 } from "./canonical.js";
@@ -47,7 +47,7 @@ import {
   NativeSessionCleanupQuarantinedError,
   NativeProviderTerminalFailure,
   NativeSessionProtocolIntegrityError,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 import * as issueServiceModule from "../issues.js";
 import {
   createNativeHarnessBackupStamp,
@@ -105,7 +105,7 @@ type RunnerTransportOptions = {
   provider?: "codex" | "opencode" | "acpx";
   opencodePermissionMode?: "allow" | "ask" | "deny";
   acpxAgent?: "claude" | "codex";
-  acpxPermissionMode?: "approve-all" | "approve-paperclip" | "approve-reads" | "deny-all";
+  acpxPermissionMode?: "approve-all" | "approve-bionic" | "approve-reads" | "deny-all";
   resumeActiveTurnId?: string | null;
   resumeProviderSession?: {
     driverSessionId: string;
@@ -126,14 +126,14 @@ type RunnerTransportOptions = {
 };
 
 const durableControlPlaneState = (identity: Record<string, unknown>) => ({
-  schema: "paperclip.runner.durable.control-plane-state.v1",
+  schema: "bionic.runner.durable.control-plane-state.v1",
   identity,
 });
 const durableRunnerState = (
   identity: Record<string, unknown>,
   lifecycle: string,
 ) => ({
-  schema: "paperclip.runner.durable.state.v1",
+  schema: "bionic.runner.durable.state.v1",
   ...identity,
   lifecycle,
 });
@@ -187,19 +187,19 @@ const state = vi.hoisted(() => ({
     async (): Promise<Record<string, unknown> | null> => null,
   ),
   assertCurrentWakeCommentsRead: vi.fn(async () => undefined),
-  resolveRunnerBinary: vi.fn(() => "/tmp/paperclip-runnerd"),
+  resolveRunnerBinary: vi.fn(() => "/tmp/bionic-runnerd"),
   release: null as null | (() => void),
 }));
 
 const grokCopyBack = vi.hoisted(() => vi.fn(async (_input: { readSandboxAuth: () => Promise<Buffer>; hostHomeDir: string }) => undefined));
-vi.mock("@paperclipai/adapter-grok-local/server", async importOriginal => ({
-  ...await importOriginal<typeof import("@paperclipai/adapter-grok-local/server")>(),
+vi.mock("@bionicai/adapter-grok-local/server", async importOriginal => ({
+  ...await importOriginal<typeof import("@bionicai/adapter-grok-local/server")>(),
   copyBackGrokAuth: grokCopyBack,
 }));
 
-vi.mock("../../vendor/paperclip-runner/index.js", async (importOriginal) => {
+vi.mock("../../vendor/bionic-runner/index.js", async (importOriginal) => {
   const original = await importOriginal<
-    typeof import("../../vendor/paperclip-runner/index.js")
+    typeof import("../../vendor/bionic-runner/index.js")
   >();
   return {
     ...original,
@@ -213,14 +213,14 @@ vi.mock("../../vendor/paperclip-runner/index.js", async (importOriginal) => {
   };
 });
 
-vi.mock("@paperclipai/adapter-codex-local/server", async (importOriginal) => ({
+vi.mock("@bionicai/adapter-codex-local/server", async (importOriginal) => ({
   ...(await importOriginal<
-    typeof import("@paperclipai/adapter-codex-local/server")
+    typeof import("@bionicai/adapter-codex-local/server")
   >()),
   copyBackCodexAuth: state.copyBackCodexAuth,
 }));
 
-vi.mock("./paperclip-runner-tool-authority.js", () => ({
+vi.mock("./bionic-runner-tool-authority.js", () => ({
   PaperclipRunnerToolAuthority: class {
     readonly binding: Record<string, unknown>;
 
@@ -332,7 +332,7 @@ import {
 
 beforeEach(() => {
   state.createAssignedMcpTools.mockReset();
-  state.resolveRunnerBinary.mockReset().mockReturnValue("/tmp/paperclip-runnerd");
+  state.resolveRunnerBinary.mockReset().mockReturnValue("/tmp/bionic-runnerd");
   state.resolveCurrentWakeCommentsBinding.mockReset().mockResolvedValue(null);
   state.assertCurrentWakeCommentsRead.mockReset().mockResolvedValue(undefined);
 });
@@ -481,10 +481,10 @@ describe("remote controller restart adoption", () => {
   });
   it("wires remote adoption when only controller state survived on the host", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-remote-reattach-"),
+      join(tmpdir(), "bionic-remote-reattach-"),
     );
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const current = {
       ...execution,
       binding: { ...execution.binding, runId: "run" },
@@ -521,8 +521,8 @@ describe("remote controller restart adoption", () => {
       expect(await readdir(root)).toContain("control-plane");
       expect(await readdir(root)).not.toContain("runner");
     } finally {
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(stateBase, { recursive: true, force: true });
     }
   });
@@ -543,7 +543,7 @@ describe("remote controller restart adoption", () => {
   it("rejects a marker that cannot prove its process generation", async () => {
     const { target, execute } = fixture();
     const original = execute.getMockImplementation()!;
-    execute.mockImplementation(async request => request.args[2] === "paperclip-runner-recovery-identity"
+    execute.mockImplementation(async request => request.args[2] === "bionic-runner-recovery-identity"
       ? { stdout: "nonce\n123\n2026-09-19T10:00:00.000Z\nrunner\n", stderr: "", exitCode: 0, timedOut: false }
       : original(request));
     await expect(verifyRemoteRunnerReattachment({ claim, target: target as never, identity, runId: "run", normalizedSessionId: "session" }))
@@ -566,10 +566,10 @@ describe("remote controller restart adoption", () => {
       await writeFile(join(proc, "sys/kernel/random/boot_id"), "abcd-1234\n");
       await writeFile(markerPath, marker);
       execute.mockImplementation(async request => {
-        if (request.args[2] === "paperclip-runner-recovery-identity") {
+        if (request.args[2] === "bionic-runner-recovery-identity") {
           return { stdout: marker, stderr: "", exitCode: 0, timedOut: false };
         }
-        if (request.args[2] !== "paperclip-runner-recovery-check") return original(request);
+        if (request.args[2] !== "bionic-runner-recovery-check") return original(request);
         // Run the actual ownership shell against controlled Linux proc files.
         // kill -0 still checks a real live PID; only its generation changes.
         const args = [...request.args];
@@ -654,7 +654,7 @@ describe("remote runner process supervision", () => {
         bypassSession?: boolean;
       }) => {
         const label = input.args?.[2];
-        if (label === "paperclip-runner-launch") {
+        if (label === "bionic-runner-launch") {
           launchNonce = input.args?.[4] ?? "";
           return {
             exitCode: 0,
@@ -664,7 +664,7 @@ describe("remote runner process supervision", () => {
             stderr: "",
           };
         }
-        if (label === "paperclip-runner-process-identity") {
+        if (label === "bionic-runner-process-identity") {
           return {
             exitCode: 0,
             signal: null,
@@ -673,7 +673,7 @@ describe("remote runner process supervision", () => {
             stderr: "",
           };
         }
-        if (label === "paperclip-runner-monitor") {
+        if (label === "bionic-runner-monitor") {
           return {
             exitCode: 3,
             signal: null,
@@ -682,12 +682,12 @@ describe("remote runner process supervision", () => {
             stderr: "",
           };
         }
-        if (label === "paperclip-runner-diagnostics") {
+        if (label === "bionic-runner-diagnostics") {
           return {
             exitCode: 0,
             signal: null,
             timedOut: false,
-            stdout: "paperclip-runnerd: provider transport closed",
+            stdout: "bionic-runnerd: provider transport closed",
             stderr: "",
           };
         }
@@ -705,7 +705,7 @@ describe("remote runner process supervision", () => {
             stderr: "",
           };
         }
-        if (label === "paperclip-runner-signal") {
+        if (label === "bionic-runner-signal") {
           if (signalOutcome !== "delivered") throw new Error("Sandbox with ID test-deleted-sandbox not found");
           return {
             exitCode: 0,
@@ -731,7 +731,7 @@ describe("remote runner process supervision", () => {
         remoteCwd: "/workspace",
       },
       runner: { execute } as never,
-      remoteBinary: "/runtime/paperclip-runnerd",
+      remoteBinary: "/runtime/bionic-runnerd",
       processIdentityPath: "/runtime/runner-process.identity",
       stateDirectory: "/runtime",
       diagnosticsDirectory: "/runtime/diagnostics",
@@ -741,18 +741,18 @@ describe("remote runner process supervision", () => {
     });
 
     const handle = launcher({
-      command: "/controller/paperclip-runnerd",
+      command: "/controller/bionic-runnerd",
       args: ["--runner-id", "runner-remote"],
       cwd: "/controller",
       environment: {},
     });
     await expect(handle.completion).resolves.toMatchObject({
       code: null,
-      stderr: "paperclip-runnerd: provider transport closed",
+      stderr: "bionic-runnerd: provider transport closed",
     });
 
     const launch = execute.mock.calls.find(
-      ([input]) => input.args?.[2] === "paperclip-runner-launch",
+      ([input]) => input.args?.[2] === "bionic-runner-launch",
     )?.[0];
     expect(launch).toMatchObject({
       timeoutMs: 20_000,
@@ -776,7 +776,7 @@ describe("remote runner process supervision", () => {
       expect(
         execute.mock.calls.some(
           ([input]) =>
-            input.args?.[2] === "paperclip-runner-signal" &&
+            input.args?.[2] === "bionic-runner-signal" &&
             input.args?.[1]?.includes('kill -KILL "$expected_pid"'),
         ),
       ).toBe(true),
@@ -801,7 +801,7 @@ describe("remote runner process supervision", () => {
       const execute = vi.fn(
         async (input: { command?: string; args?: string[] }) => {
           const label = input.args?.[2];
-          if (label === "paperclip-runner-launch") {
+          if (label === "bionic-runner-launch") {
             launchNonce = input.args?.[4] ?? "";
             return {
               exitCode: 0,
@@ -811,7 +811,7 @@ describe("remote runner process supervision", () => {
               stderr: "",
             };
           }
-          if (label === "paperclip-runner-process-identity") {
+          if (label === "bionic-runner-process-identity") {
             return {
               exitCode: 3,
               signal: null,
@@ -820,7 +820,7 @@ describe("remote runner process supervision", () => {
               stderr: "",
             };
           }
-          if (label === "paperclip-runner-identity-failure-cleanup") {
+          if (label === "bionic-runner-identity-failure-cleanup") {
             expect(input.args?.[4]).toBe(launchNonce);
             return {
               exitCode: 0,
@@ -842,7 +842,7 @@ describe("remote runner process supervision", () => {
           remoteCwd: "/workspace",
         },
         runner: { execute } as never,
-        remoteBinary: "/runtime/paperclip-runnerd",
+        remoteBinary: "/runtime/bionic-runnerd",
         processIdentityPath: "/runtime/runner-process.identity",
         stateDirectory: "/runtime",
         diagnosticsDirectory: "/runtime/diagnostics",
@@ -850,7 +850,7 @@ describe("remote runner process supervision", () => {
       });
 
       const handle = launcher({
-        command: "/controller/paperclip-runnerd",
+        command: "/controller/bionic-runnerd",
         args: ["--runner-id", "runner-remote"],
         cwd: "/controller",
         environment: {},
@@ -863,7 +863,7 @@ describe("remote runner process supervision", () => {
 
       const cleanup = execute.mock.calls.find(
         ([call]) =>
-          call.args?.[2] === "paperclip-runner-identity-failure-cleanup",
+          call.args?.[2] === "bionic-runner-identity-failure-cleanup",
       )?.[0];
       expect(cleanup).toMatchObject({
         bypassSession: true,
@@ -890,11 +890,11 @@ describe("remote runner process supervision", () => {
           const label = input.args?.[2];
           return {
             exitCode:
-              label === "paperclip-runner-launch"
+              label === "bionic-runner-launch"
                 ? 0
-                : label === "paperclip-runner-process-identity"
+                : label === "bionic-runner-process-identity"
                   ? 3
-                  : label === "paperclip-runner-identity-failure-cleanup"
+                  : label === "bionic-runner-identity-failure-cleanup"
                     ? 4
                     : 1,
             signal: null,
@@ -913,7 +913,7 @@ describe("remote runner process supervision", () => {
           remoteCwd: "/workspace",
         },
         runner: { execute } as never,
-        remoteBinary: "/runtime/paperclip-runnerd",
+        remoteBinary: "/runtime/bionic-runnerd",
         processIdentityPath: "/runtime/runner-process.identity",
         stateDirectory: "/runtime",
         diagnosticsDirectory: "/runtime/diagnostics",
@@ -921,7 +921,7 @@ describe("remote runner process supervision", () => {
       });
 
       const handle = launcher({
-        command: "/controller/paperclip-runnerd",
+        command: "/controller/bionic-runnerd",
         args: ["--runner-id", "runner-remote"],
         cwd: "/controller",
         environment: {},
@@ -944,7 +944,7 @@ describe("native incomplete-bootstrap evidence", () => {
     await mkdir(controlPlaneRoot, { recursive: true });
     const statePath = join(controlPlaneRoot, "control-plane-state.json");
     const base = {
-      schema: "paperclip.runner.durable.control-plane-state.v1",
+      schema: "bionic.runner.durable.control-plane-state.v1",
       connectionCount: 0,
       committedEvents: [],
       commands: [
@@ -1046,7 +1046,7 @@ describe("remote provider pack manifest", () => {
   };
 
   it("accepts a fully digested pack and rejects artifact tampering", async () => {
-    const root = await mkdtemp(join(tmpdir(), "paperclip-provider-pack-"));
+    const root = await mkdtemp(join(tmpdir(), "bionic-provider-pack-"));
     await mkdir(join(root, "dist", "cli"), { recursive: true });
     await mkdir(join(root, "node_modules", "node", "bin"), { recursive: true });
     await mkdir(join(root, "node_modules", ".bin"), { recursive: true });
@@ -1141,7 +1141,7 @@ describe("remote provider pack manifest", () => {
       writeFile(
         join(root, "provider-pack.json"),
         JSON.stringify({
-          schema: "paperclip-runner/remote-provider-pack/v1",
+          schema: "bionic-runner/remote-provider-pack/v1",
           digest: `sha256:${createHash("sha256").update(canonical(payload)).digest("hex")}`,
           payload,
         }),
@@ -1232,7 +1232,7 @@ describe("provider pack read diagnostics", () => {
   });
 
   it("classifies a JSON null manifest as incompatible instead of a TypeError", async () => {
-    const root = await mkdtemp(join(tmpdir(), "paperclip-null-pack-"));
+    const root = await mkdtemp(join(tmpdir(), "bionic-null-pack-"));
     try {
       await writeFile(join(root, "provider-pack.json"), "null");
       expect(() => readRemoteProviderPackManifest(root)).toThrow(
@@ -1242,7 +1242,7 @@ describe("provider pack read diagnostics", () => {
   });
 
   it.each(["missing", "invalid_json", "invalid_path_type"])("reports %s without putting the path in the terminal message", async (reason) => {
-    const root = await mkdtemp(join(tmpdir(), "paperclip-private-pack-"));
+    const root = await mkdtemp(join(tmpdir(), "bionic-private-pack-"));
     try {
       const manifestPath = join(root, "provider-pack.json");
       if (reason === "invalid_json") await writeFile(manifestPath, "{ private-invalid-json");
@@ -1352,7 +1352,7 @@ describe("verified native harness backups", () => {
       cwd: "/workspace",
       repoUrl: "https://example.test/repo.git",
       repoRef: "main",
-      branchName: "paperclip/test",
+      branchName: "bionic/test",
     },
     session: {
       normalizedSessionId: "native-session",
@@ -1463,7 +1463,7 @@ describe("verified native harness backups", () => {
   });
 
   it("accepts a complete digest-matched backup and rejects corruption", async () => {
-    const root = await mkdtemp(join(tmpdir(), "paperclip-harness-backup-"));
+    const root = await mkdtemp(join(tmpdir(), "bionic-harness-backup-"));
     try {
       const current = join(root, "failover-backups", "current");
       await mkdir(join(current, "runner"), { recursive: true });
@@ -1541,7 +1541,7 @@ describe("verified native harness backups", () => {
 
   it("rejects a backup whose provider identity or harness contract changed", async () => {
     const root = await mkdtemp(
-      join(tmpdir(), "paperclip-harness-backup-identity-"),
+      join(tmpdir(), "bionic-harness-backup-identity-"),
     );
     try {
       const current = join(root, "failover-backups", "current");
@@ -1570,9 +1570,9 @@ describe("verified native harness backups", () => {
   });
 
   it("verifies the lease stamp and all backup directory digests before replacement", async () => {
-    const stateBase = await mkdtemp(join(tmpdir(), "paperclip-harness-stamp-"));
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const stateBase = await mkdtemp(join(tmpdir(), "bionic-harness-stamp-"));
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     try {
       const sessionScopeId = "native-session-scope-v2";
       const sessionRoot = join(
@@ -1629,9 +1629,9 @@ describe("verified native harness backups", () => {
       expect(verifyNativeHarnessBackupStamp(stamp, "sandbox-1")).toBe(false);
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -1639,10 +1639,10 @@ describe("verified native harness backups", () => {
 
   it("rejects a digest-valid legacy stamp for remote lease authorization", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-legacy-harness-stamp-"),
+      join(tmpdir(), "bionic-legacy-harness-stamp-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     try {
       const legacyRoot = join(
         stateBase,
@@ -1679,7 +1679,7 @@ describe("verified native harness backups", () => {
       expect(
         verifyNativeHarnessBackupStamp(
           {
-            schema: "paperclip.native-harness-backup-stamp.v1",
+            schema: "bionic.native-harness-backup-stamp.v1",
             normalizedSessionId: "native-session",
             runnerInstanceId: "runner-1",
             manifestSha256: `sha256:${createHash("sha256").update(manifestBytes).digest("hex")}`,
@@ -1690,9 +1690,9 @@ describe("verified native harness backups", () => {
       ).toBe(false);
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -1746,7 +1746,7 @@ describe("split durable provider checkpoint identity", () => {
           "acpx_runtime",
         ),
         providerState: {
-          schema: "paperclip.runner.acpx-provider-state.v3",
+          schema: "bionic.runner.acpx-provider-state.v3",
           lifecycle: "suspended",
           activeTurnId: null,
           providerExitUnconfirmed: false,
@@ -1779,7 +1779,7 @@ describe("split durable provider checkpoint identity", () => {
         providerSessionIdentityFromDurableProviderState({
           execution: execution({ kind: provider }, driverKind),
           providerState: {
-            schema: "paperclip.runner.codex-provider-state.v1",
+            schema: "bionic.runner.codex-provider-state.v1",
             lifecycle: "prepared",
             config: { provider, driver: driverKind },
             threadId: "driver-session-1",
@@ -1809,7 +1809,7 @@ describe("split durable provider checkpoint identity", () => {
     );
     for (const providerState of [
       {
-        schema: "paperclip.runner.acpx-provider-state.v3",
+        schema: "bionic.runner.acpx-provider-state.v3",
         lifecycle: "turn_active",
         activeTurnId: "turn-1",
         providerExitUnconfirmed: false,
@@ -1837,7 +1837,7 @@ describe("split durable provider checkpoint identity", () => {
         },
       },
       {
-        schema: "paperclip.runner.acpx-provider-state.v3",
+        schema: "bionic.runner.acpx-provider-state.v3",
         lifecycle: "suspended",
         activeTurnId: null,
         providerExitUnconfirmed: false,
@@ -1885,7 +1885,7 @@ describe("split durable provider checkpoint identity", () => {
         providerSessionIdentityFromDurableProviderState({
           execution: execution({ kind: provider }, `${provider}_driver`),
           providerState: {
-            schema: "paperclip.runner.managed-provider-state.v1",
+            schema: "bionic.runner.managed-provider-state.v1",
             lifecycle: "suspended",
             normalizedSessionId: "native-session",
             descriptor: { kind: provider, config: {} },
@@ -1974,7 +1974,7 @@ describe("remote provider checkpoint snapshots", () => {
     await syncRemoteRunnerDirectoryOut({
       runner: { execute, syncOut } as never,
       sourcePath: "/remote/session/filesystem/codex-home",
-      targetPath: "/tmp/paperclip-checkpoint-test-codex-home",
+      targetPath: "/tmp/bionic-checkpoint-test-codex-home",
       mode: 0o700,
       excludeEntries: ["tmp", ".tmp", "auth.json", "config.toml"],
     });
@@ -2000,14 +2000,14 @@ describe("remote provider checkpoint snapshots", () => {
     const batch = syncOut.mock.calls[0]?.[0]?.[0];
     expect(batch?.files[0]).toMatchObject({
       sourcePath: expect.stringMatching(
-        /^\/remote\/session\/filesystem\/\.paperclip-checkpoint-/,
+        /^\/remote\/session\/filesystem\/\.bionic-checkpoint-/,
       ),
-      targetPath: "/tmp/paperclip-checkpoint-test-codex-home",
+      targetPath: "/tmp/bionic-checkpoint-test-codex-home",
       kind: "directory",
       mode: 0o700,
     });
     expect(String(execute.mock.calls[2]?.[0]?.args?.[1])).toMatch(
-      /^rm -rf -- '\/remote\/session\/filesystem\/\.paperclip-checkpoint-/,
+      /^rm -rf -- '\/remote\/session\/filesystem\/\.bionic-checkpoint-/,
     );
   });
 
@@ -2030,7 +2030,7 @@ describe("remote provider checkpoint snapshots", () => {
     await syncRemoteRunnerDirectoryOut({
       runner: { execute, syncOut } as never,
       sourcePath: "/remote/session/filesystem/acpx",
-      targetPath: "/tmp/paperclip-checkpoint-test-acpx",
+      targetPath: "/tmp/bionic-checkpoint-test-acpx",
       mode: 0o700,
       excludeEntries: excluded,
     });
@@ -2055,7 +2055,7 @@ describe("remote provider checkpoint snapshots", () => {
       syncRemoteRunnerDirectoryOut({
         runner: { execute, syncOut: vi.fn() } as never,
         sourcePath: "/remote/codex-home",
-        targetPath: "/tmp/paperclip-checkpoint-invalid-codex-home",
+        targetPath: "/tmp/bionic-checkpoint-invalid-codex-home",
         mode: 0o700,
         excludeEntries: ["../outside"],
       }),
@@ -2063,7 +2063,7 @@ describe("remote provider checkpoint snapshots", () => {
   });
 
   it("rejects unsafe fallback archives without replacing durable state", async () => {
-    const root = await mkdtemp(join(tmpdir(), "paperclip-checkpoint-unsafe-"));
+    const root = await mkdtemp(join(tmpdir(), "bionic-checkpoint-unsafe-"));
     const archiveSource = join(root, "archive-source");
     const targetPath = join(root, "durable-target");
     try {
@@ -2111,7 +2111,7 @@ describe("remote provider checkpoint snapshots", () => {
 describe("remote provider checkpoint restores", () => {
   it("does not upload excluded Codex scratch trees or credentials", async () => {
     const sourcePath = await mkdtemp(
-      join(tmpdir(), "paperclip-codex-restore-source-"),
+      join(tmpdir(), "bionic-codex-restore-source-"),
     );
     try {
       await mkdir(join(sourcePath, "sessions"), { recursive: true });
@@ -2170,7 +2170,7 @@ describe("remote provider checkpoint restores", () => {
 
 describe("remote preinstalled executable discovery", () => {
   it("stages a relative-path CLI shim without changing its installation or losing arguments", async () => {
-    const root = await mkdtemp(join(tmpdir(), "paperclip-codex-shim-"));
+    const root = await mkdtemp(join(tmpdir(), "bionic-codex-shim-"));
     try {
       const installation = join(root, "image install's bin");
       const target = join(root, "workspace", "bin", "codex");
@@ -2205,13 +2205,13 @@ describe("remote preinstalled executable discovery", () => {
   it("accepts one normalized absolute executable path", () => {
     expect(
       parseRemoteExecutableCandidate(
-        "/home/daytona/.local/bin/paperclip-runnerd\n",
+        "/home/daytona/.local/bin/bionic-runnerd\n",
       ),
-    ).toBe("/home/daytona/.local/bin/paperclip-runnerd");
+    ).toBe("/home/daytona/.local/bin/bionic-runnerd");
   });
 
   it.each([
-    "paperclip-runnerd\n",
+    "bionic-runnerd\n",
     "/safe/path\n/unexpected/second-line\n",
     "/safe/path with spaces\n",
     "/safe/path;touch-bad\n",
@@ -2221,7 +2221,7 @@ describe("remote preinstalled executable discovery", () => {
 
   it("does not accept a merely contract-compatible runnerd when a build-owned artifact is configured", () => {
     expect(
-      mayUsePreinstalledRunnerArtifact("/artifacts/paperclip-runnerd"),
+      mayUsePreinstalledRunnerArtifact("/artifacts/bionic-runnerd"),
     ).toBe(false);
     expect(mayUsePreinstalledRunnerArtifact("  ")).toBe(true);
     expect(mayUsePreinstalledRunnerArtifact(undefined)).toBe(true);
@@ -2264,9 +2264,9 @@ describe("remote runner build metadata", () => {
   });
 
   const current = {
-    schema: "paperclip-runner/runnerd-build-metadata/v1",
-    binaryName: "paperclip-runnerd",
-    packageName: "@paperclipai/paperclip-runner",
+    schema: "bionic-runner/runnerd-build-metadata/v1",
+    binaryName: "bionic-runnerd",
+    packageName: "@bionicai/bionic-runner",
     binaryContractVersion: 2,
     durableSessionCapabilities: ["unlimited_runtime", "connection_lease_renewal"],
     prpTransportModes: ["dial_ws_loopback", "dial_wss", "listen_ws"],
@@ -2361,7 +2361,7 @@ describe("required remote checkpoint completion", () => {
 
 describe("runtime question fallback", () => {
   const questionSet = {
-    schema: "paperclip.question_set.v1" as const,
+    schema: "bionic.question_set.v1" as const,
     title: "Configure deployment",
     description: "These answers are required before work can continue.",
     submitLabel: "Continue",
@@ -2399,7 +2399,7 @@ describe("runtime question fallback", () => {
           reason,
           replayAllowed: false,
           request: {
-            schema: "paperclip.runtime_request.v2",
+            schema: "bionic.runtime_request.v2",
             requestKind: "runtime",
             requestId: "elicitation-1",
             type: "input",
@@ -2433,7 +2433,7 @@ describe("runtime question fallback", () => {
             {
               id: "replicas",
               selectionMode: "single",
-              options: [{ id: "__paperclip_text__", freeText: true }],
+              options: [{ id: "__bionic_text__", freeText: true }],
             },
           ],
         },
@@ -2457,7 +2457,7 @@ describe("runtime question fallback", () => {
             reason,
             replayAllowed,
             request: {
-              schema: "paperclip.runtime_request.v2",
+              schema: "bionic.runtime_request.v2",
               requestKind: "runtime",
               requestId: "elicitation-1",
               type: "input",
@@ -2528,7 +2528,7 @@ describe("native provider bootstrap environment", () => {
     const provider = { kind: "acpx", agent } as NativeExecutionInput["provider"];
     const host = { PATH: "/host/bin", HOME: "/host/home", OPENROUTER_API_KEY: "ambient-pi",
       CURSOR_API_KEY: "ambient-cursor", CURSOR_AUTH_TOKEN: "ambient-cursor-login", COPILOT_GITHUB_TOKEN: "ambient-copilot",
-      PAPERCLIP_ACPX_CREDENTIAL_BINDING: "ambient-forged-binding" };
+      BIONIC_ACPX_CREDENTIAL_BINDING: "ambient-forged-binding" };
     expect(resolveNativeProviderEnvironment(provider, undefined, host)).toEqual({ PATH: "/host/bin", HOME: "/host/home" });
     const explicit = { COPILOT_GITHUB_TOKEN: "explicit-company-binding" };
     expect(resolveNativeProviderEnvironment(provider, explicit, host)).toBe(explicit);
@@ -2549,7 +2549,7 @@ describe("native provider bootstrap environment", () => {
           PATH: "/opt/homebrew/bin:/usr/bin",
           HOME: "/Users/runner",
           CODEX_HOME: "/Users/runner/.codex",
-          PAPERCLIP_INTERNAL_SECRET: "must-not-leak",
+          BIONIC_INTERNAL_SECRET: "must-not-leak",
         },
       ),
     ).toEqual({
@@ -2582,21 +2582,21 @@ describe("native provider bootstrap environment", () => {
     expect(
       buildNativeProviderEnvironment(
         {
-          PAPERCLIP_WORKSPACE_CWD: "/untrusted/configured-workspace",
+          BIONIC_WORKSPACE_CWD: "/untrusted/configured-workspace",
         },
         { HOME: "/Users/runner" },
-        "/Users/runner/.paperclip/instances/default/workspaces/agent-1",
+        "/Users/runner/.bionic/instances/default/workspaces/agent-1",
       ),
     ).toEqual({
       HOME: "/Users/runner",
-      PAPERCLIP_WORKSPACE_CWD:
-        "/Users/runner/.paperclip/instances/default/workspaces/agent-1",
+      BIONIC_WORKSPACE_CWD:
+        "/Users/runner/.bionic/instances/default/workspaces/agent-1",
     });
   });
 });
 
 const execution = {
-  schema: "paperclip.native-execution-input.v1",
+  schema: "bionic.native-execution-input.v1",
   provider: { kind: "codex", model: null },
   binding: {
     companyId: "company",
@@ -2613,7 +2613,7 @@ const execution = {
     workMode: "standard",
   },
   workspace: {
-    cwd: "/tmp/paperclip-native-session-test",
+    cwd: "/tmp/bionic-native-session-test",
     repoUrl: null,
     repoRef: null,
     branchName: null,
@@ -2627,7 +2627,7 @@ const execution = {
   completionContract: {
     id: "contract",
     sha256: "sha",
-    schemaVersion: "paperclip.completion-contract.v1",
+    schemaVersion: "bionic.completion-contract.v1",
     contract: {
       revision: "1",
       objective: "Exercise the native session.",
@@ -2708,7 +2708,7 @@ describe("retained native cleanup activation", () => {
     "legacy_activation",
   ])("preserves exact original evidence for %s", async (mode) => {
     const directory = await mkdtemp(
-      join(tmpdir(), "paperclip-maintenance-activation-"),
+      join(tmpdir(), "bionic-maintenance-activation-"),
     );
     let providerHomeDatabase: DatabaseSync | undefined;
     const preservedHomeFiles = [
@@ -2721,8 +2721,8 @@ describe("retained native cleanup activation", () => {
       "config.toml",
     ];
     let preservedHomeBytes: Buffer[] | null = null;
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = directory;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = directory;
     const canonical = (value: unknown): string =>
       value && typeof value === "object" && !Array.isArray(value)
         ? `{${Object.entries(value)
@@ -2733,7 +2733,7 @@ describe("retained native cleanup activation", () => {
     const key = createHash("sha256")
       .update(
         canonical({
-          schema: "paperclip.native-session-scope.v2",
+          schema: "bionic.native-session-scope.v2",
           companyId: execution.binding.companyId,
           agentId: execution.binding.agentId,
           workspace: {
@@ -2779,7 +2779,7 @@ describe("retained native cleanup activation", () => {
       ? "exact-account"
       : "exact-thread";
     const event = {
-      schema: "paperclip.prp.event.v1",
+      schema: "bionic.prp.event.v1",
       schemaVersion: 1,
       sourceKind: "runner",
       sourceSeq: 1,
@@ -2832,7 +2832,7 @@ describe("retained native cleanup activation", () => {
       resultJson: {
         result: validatedResult.result,
         terminal: {
-          schema: "paperclip.prp.terminal.v1",
+          schema: "bionic.prp.terminal.v1",
           turnTerminalState: "completed",
           runTerminalState: "succeeded",
           reportedWorkDisposition: "yielded",
@@ -2859,7 +2859,7 @@ describe("retained native cleanup activation", () => {
     const semantic = {
       ...createPrpSemanticToolInputEnvelope({
         callId: "finish-call",
-        operationId: "paperclip_finish",
+        operationId: "bionic_finish",
         correlation,
         content: semanticInput,
       }),
@@ -2882,7 +2882,7 @@ describe("retained native cleanup activation", () => {
       payload: {
         semantic_tool: createPrpSemanticToolResultEnvelope({
           callId: "finish-call",
-          operationId: "paperclip_finish",
+          operationId: "bionic_finish",
           correlation,
           content: semanticInput,
           outcome: "succeeded",
@@ -3636,7 +3636,7 @@ describe("retained native cleanup activation", () => {
           stagingName: input.stateDirectory.split("/").at(-1),
         });
         const epoch = {
-          schema: "paperclip.native_cleanup_runner_epoch.v1",
+          schema: "bionic.native_cleanup_runner_epoch.v1",
           requestId: input.requestId,
           epoch: 0,
           launchId: "fixture-launch",
@@ -4071,8 +4071,8 @@ describe("retained native cleanup activation", () => {
       proofSpy.mockRestore();
       state.maintenanceIdle.mockReset().mockReturnValue(true);
       releaseCommit();
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -4084,8 +4084,8 @@ describe("stopped native conversation physical cleanup", () => {
     "foreign_run", "foreign_company", "foreign_runner", "remote", "unreleased", "changed_state", "changed_pid", "symlink", "startup_intent", "pending_identity", "wrong_schema", "replacement", "replacement_alive", "agent_alive", "checkpoint_owner_alive", "diagnostic_owner_alive", "normalized_session_receipt",
   ].map(mode => ({ provider, mode }))))("$provider $mode", async ({ provider, mode }) => {
     const base = await mkdtemp(join(tmpdir(), "native-conversation-cleanup-"));
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = base;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = base;
     const input = parseNativeExecutionInput({ ...execution,
       provider: provider === "codex" ? execution.provider : { kind: "acpx", agent: "claude", model: "claude-sonnet-5", permissionPolicy: "interactive",
         profile: { driverKind: "acpx_runtime", protocolVersion: 1, acpxVersion: "0.13.1", agent: "claude", agentProfileVersion: 1,
@@ -4098,12 +4098,12 @@ describe("stopped native conversation physical cleanup", () => {
       : JSON.stringify(value);
     const hash = (value: unknown) => createHash("sha256").update(canonical(value)).digest("hex");
     const providerScope = input.provider.kind === "acpx" ? { kind: "acpx", agent: input.provider.agent, profile: input.provider.profile } : { kind: "codex" };
-    const root = join(base, hash({ schema: "paperclip.native-session-scope.v2", companyId: input.binding.companyId,
+    const root = join(base, hash({ schema: "bionic.native-session-scope.v2", companyId: input.binding.companyId,
       agentId: input.binding.agentId, workspace: { kind: "managed", executionWorkspaceId: input.binding.executionWorkspaceId },
       provider: { driverKind: input.session.driverKind, identity: providerScope }, normalizedSessionId: input.session.normalizedSessionId }));
     const identity = { runId: input.binding.runId, normalizedSessionId: input.session.normalizedSessionId,
       runnerInstanceId: "runner-crashed", environmentLeaseId: "lease", turnId: "turn", itemId: "item" };
-    const event = { schema: "paperclip.prp.event.v1", schemaVersion: 1, sourceKind: "runner", sourceSeq: 1,
+    const event = { schema: "bionic.prp.event.v1", schemaVersion: 1, sourceKind: "runner", sourceSeq: 1,
       sourceEventId: "provider-identity", sourceInstanceId: identity.runnerInstanceId, runId: identity.runId,
       normalizedSessionId: identity.normalizedSessionId, turnId: identity.turnId, itemId: identity.itemId,
       priority: 0, emittedAt: new Date().toISOString(), eventType: "session.started",
@@ -4113,7 +4113,7 @@ describe("stopped native conversation physical cleanup", () => {
     const providerEvents = mode.startsWith("replacement") ? [event, replacement] : [event];
     if (mode === "diagnostic_owner_alive") providerEvents.push({ ...event, eventType: "harness.diagnostic",
       payload: { providerMethod: "acpx/process", role: "acp_agent", pid: process.pid } } as unknown as typeof event);
-    const providerState = { schema: mode === "wrong_schema" ? "unknown" : `paperclip.runner.${provider}-provider-state.${provider === "codex" ? "v1" : "v3"}`, lifecycle: "turn_active",
+    const providerState = { schema: mode === "wrong_schema" ? "unknown" : `bionic.runner.${provider}-provider-state.${provider === "codex" ? "v1" : "v3"}`, lifecycle: "turn_active",
       ...(mode === "startup_intent" ? { startupAttempt: { phase: "intent" } } : {}),
       ...(mode === "pending_identity" ? { pendingEvents: [{ eventType: "session.started" }] } : {}),
     };
@@ -4151,7 +4151,7 @@ describe("stopped native conversation physical cleanup", () => {
         expect(await readFile(join(root, `runner/${provider}-provider-state.json`), "utf8")).toBe(JSON.stringify(providerState));
       } else expect(proof).toBeNull();
     } finally {
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR; else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR; else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(base, { recursive: true, force: true });
     }
   });
@@ -4181,10 +4181,10 @@ describe("explicit failed native retry physical evidence", () => {
     "unselected_result",
   ])("observes %s without mutating the retained root", async (kind) => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-failed-retry-state-"),
+      join(tmpdir(), "bionic-failed-retry-state-"),
     );
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const canonical = (value: unknown): string =>
       value && typeof value === "object" && !Array.isArray(value)
         ? `{${Object.entries(value)
@@ -4195,7 +4195,7 @@ describe("explicit failed native retry physical evidence", () => {
     const key = createHash("sha256")
       .update(
         canonical({
-          schema: "paperclip.native-session-scope.v2",
+          schema: "bionic.native-session-scope.v2",
           companyId: execution.binding.companyId,
           agentId: execution.binding.agentId,
           workspace: {
@@ -4265,7 +4265,7 @@ describe("explicit failed native retry physical evidence", () => {
         await writeFile(
           join(root, "runner", "codex-provider-state.json"),
           JSON.stringify({
-            schema: "paperclip.runner.codex-provider-state.v1",
+            schema: "bionic.runner.codex-provider-state.v1",
             lifecycle: "prepared",
             threadId: "exact-thread",
             providerSessionId: providerAccount,
@@ -4386,8 +4386,8 @@ describe("explicit failed native retry physical evidence", () => {
           await access(join(root, "control-plane", "control-plane-state.json")),
         ).toBeUndefined();
     } finally {
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(stateBase, { recursive: true, force: true });
     }
   });
@@ -4531,7 +4531,7 @@ describe("provider plan synchronization", () => {
 
 describe("native conversation replies", () => {
   const reply: PrpEvent = {
-    schema: "paperclip.prp.event.v1", sourceInstanceId: "runner-1",
+    schema: "bionic.prp.event.v1", sourceInstanceId: "runner-1",
     sourceEventId: "runner-1:run-1:8", sourceSeq: 8, sourceKind: "runner",
     runId: "run-1", normalizedSessionId: "session-1", turnId: "turn-1",
     eventType: "item.completed", schemaVersion: 1, priority: 1,
@@ -4617,7 +4617,7 @@ describe("native governed waits", () => {
       }),
     ).toEqual(
       expect.objectContaining({
-        schema: "paperclip.run_result.v1",
+        schema: "bionic.run_result.v1",
         reportedWorkDisposition: "yielded",
         summary: "Waiting for Choose an output format.",
         completionClaim: expect.objectContaining({
@@ -4684,7 +4684,7 @@ describe("native governed waits", () => {
       async () => waitResult,
     );
     const replayedEvent: PrpEvent = {
-      schema: "paperclip.prp.event.v1" as const,
+      schema: "bionic.prp.event.v1" as const,
       sourceInstanceId: "runner-recovered",
       sourceEventId: "runner-recovered:item:7",
       sourceSeq: 7,
@@ -4998,8 +4998,8 @@ describe("native startup cancellation fence", () => {
 describe("native startup restart detachment", () => {
   it("waits for in-flight runner startup and its detach acknowledgement before shutdown returns", async () => {
     const root = await mkdtemp(join(tmpdir(), "native-startup-detach-"));
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = root;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = root;
     const restarting = structuredClone(execution);
     restarting.binding.runId = "restart-inflight-bootstrap";
     restarting.session.normalizedSessionId = "restart-inflight-session";
@@ -5035,16 +5035,16 @@ describe("native startup restart detachment", () => {
       open(); acknowledge();
       await outcome;
       await detaching;
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(root, { recursive: true, force: true });
     }
   });
 
   it.each([false, true])("settles failed startup without claiming detachment (deadline exceeded: %s)", async (exceedDeadline) => {
     const root = await mkdtemp(join(tmpdir(), "native-startup-failure-"));
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = root;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = root;
     const restarting = structuredClone(execution);
     restarting.binding.runId = `restart-failed-bootstrap-${exceedDeadline}`;
     restarting.session.normalizedSessionId = `restart-failed-session-${exceedDeadline}`;
@@ -5073,8 +5073,8 @@ describe("native startup restart detachment", () => {
       vi.useRealTimers();
       release();
       await outcome;
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(root, { recursive: true, force: true });
     }
   });
@@ -5241,8 +5241,8 @@ describe("native session cancellation", () => {
     { useRunnerd: false, durableIntentVisible: true },
   ])("waits for an in-flight startup handle before acknowledging Stop (runnerd=$useRunnerd, durable intent=$durableIntentVisible)", async ({ useRunnerd, durableIntentVisible }) => {
     const root = await mkdtemp(join(tmpdir(), "native-startup-stop-"));
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = root;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = root;
     let open!: () => void, started!: () => void, finish!: () => void;
     const opening = new Promise<void>(resolve => { open = resolve; });
     const admitted = new Promise<void>(resolve => { started = resolve; });
@@ -5298,16 +5298,16 @@ describe("native session cancellation", () => {
       open(); finish();
       await outcome;
       await stopping;
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(root, { recursive: true, force: true });
     }
   });
 
   it.each([true, false])("fences a late startup even when Stop reaches its acknowledgement deadline (runnerd=%s)", async (useRunnerd) => {
     const root = await mkdtemp(join(tmpdir(), "native-late-startup-stop-"));
-    const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = root;
+    const previous = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = root;
     let open!: () => void, started!: () => void;
     const opening = new Promise<void>(resolve => { open = resolve; });
     const admitted = new Promise<void>(resolve => { started = resolve; });
@@ -5335,8 +5335,8 @@ describe("native session cancellation", () => {
       expect(submitTurn).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers(); open(); await outcome;
-      if (previous === undefined) delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+      if (previous === undefined) delete process.env.BIONIC_RUNNER_STATE_DIR;
+      else process.env.BIONIC_RUNNER_STATE_DIR = previous;
       await rm(root, { recursive: true, force: true });
     }
   });
@@ -5434,7 +5434,7 @@ describe("native session cancellation", () => {
     expect(cancellationUpdate?.values.resultJson).toMatchObject({
       durableReceipt: { operationId: "operation-1" },
       nativeCancellation: {
-        schema: "paperclip.native-cancellation.v1",
+        schema: "bionic.native-cancellation.v1",
         dispatchState: "acknowledged",
         scope: "run",
         dispatched: false,
@@ -5614,7 +5614,7 @@ describe("native session execution lease fencing", () => {
             {},
             {
               nativeCancellation: {
-                schema: "paperclip.native-cancellation.v1",
+                schema: "bionic.native-cancellation.v1",
                 intentId: "native-cancellation:intent-1",
                 intentAuditId: "native-cancellation-audit",
                 companyId: execution.binding.companyId,
@@ -6089,14 +6089,14 @@ describe("native warm session supervision", () => {
     let previousHome: string | undefined;
     let isolatedHome: string;
     beforeEach(async () => {
-      previousHome = process.env.PAPERCLIP_HOME;
+      previousHome = process.env.BIONIC_HOME;
       isolatedHome = await mkdtemp(join(tmpdir(), "native-identity-transition-"));
-      process.env.PAPERCLIP_HOME = isolatedHome;
+      process.env.BIONIC_HOME = isolatedHome;
     });
     afterEach(async () => {
       await closeIdleWarmNativeSessionsForRestart();
-      if (previousHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = previousHome;
       await rm(isolatedHome, { recursive: true, force: true });
     });
     const result = {
@@ -6318,9 +6318,9 @@ describe("native warm session supervision", () => {
   });
 
   it.each(["checkpoint first", "turn first"])("serializes restart checkpoint and turn admission: %s", async (order) => {
-    const stateBase = await mkdtemp(join(tmpdir(), "paperclip-close-race-"));
-    const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-    process.env.PAPERCLIP_HOME = stateBase;
+    const stateBase = await mkdtemp(join(tmpdir(), "bionic-close-race-"));
+    const previousPaperclipHome = process.env.BIONIC_HOME;
+    process.env.BIONIC_HOME = stateBase;
     let finishClose!: () => void;
     const closing = new Promise<void>((resolve) => { finishClose = resolve; });
     const close = vi.fn(() => closing);
@@ -6391,8 +6391,8 @@ describe("native warm session supervision", () => {
     } finally {
       finishClose();
       await closeIdleWarmNativeSessionsForRestart();
-      if (previousPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousPaperclipHome;
+      if (previousPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = previousPaperclipHome;
       await rm(stateBase, { recursive: true, force: true });
     }
   });
@@ -6454,10 +6454,10 @@ describe("native warm session supervision", () => {
 
   it("preserves the active turn when a warm checkpoint resumes the same run", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-warm-same-run-recovery-"),
+      join(tmpdir(), "bionic-warm-same-run-recovery-"),
     );
-    const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-    process.env.PAPERCLIP_HOME = stateBase;
+    const previousPaperclipHome = process.env.BIONIC_HOME;
+    process.env.BIONIC_HOME = stateBase;
     const activeRun = {
       ...execution,
       binding: {
@@ -6538,9 +6538,9 @@ describe("native warm session supervision", () => {
       ).resolves.toBeDefined();
     } finally {
       if (previousPaperclipHome === undefined) {
-        delete process.env.PAPERCLIP_HOME;
+        delete process.env.BIONIC_HOME;
       } else {
-        process.env.PAPERCLIP_HOME = previousPaperclipHome;
+        process.env.BIONIC_HOME = previousPaperclipHome;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -6766,7 +6766,7 @@ describe("native warm session supervision", () => {
       brokerReady,
     }) => {
       githubAccess.create.mockReset().mockResolvedValue({
-        env: { PAPERCLIP_GITHUB_BROKER_TOKEN: "stable-session-capability" },
+        env: { BIONIC_GITHUB_BROKER_TOKEN: "stable-session-capability" },
         ready: brokerReady,
         activate: githubAccess.activate.mockReset().mockImplementation(() => vi.fn()),
         stop: githubAccess.stop.mockReset().mockResolvedValue(undefined),
@@ -6777,12 +6777,12 @@ describe("native warm session supervision", () => {
         firstMode !== secondMode ||
         firstNetwork !== secondNetwork;
       const stateBase = await mkdtemp(
-        join(tmpdir(), "paperclip-runnerd-warm-authority-"),
+        join(tmpdir(), "bionic-runnerd-warm-authority-"),
       );
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
-      process.env.PAPERCLIP_HOME = stateBase;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+      const previousPaperclipHome = process.env.BIONIC_HOME;
+      process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
+      process.env.BIONIC_HOME = stateBase;
       const firstClose = vi.fn(async () => undefined);
       const firstSession = { close: firstClose };
       const first = {
@@ -6827,7 +6827,7 @@ describe("native warm session supervision", () => {
               kind: "remote" as const,
               transport: "sandbox" as const,
               environmentId: "environment-runnerd-warm-authority",
-              remoteCwd: "/home/daytona/paperclip-workspace",
+              remoteCwd: "/home/daytona/bionic-workspace",
               runner: { execute: vi.fn() },
             }
       ) as never;
@@ -6892,10 +6892,10 @@ describe("native warm session supervision", () => {
           db: leaseDb(first),
           execution: first,
           runnerEnvironment: {
-            PAPERCLIP_GITHUB_AUTH_MODE: firstMode,
-            PAPERCLIP_RUNNER_NETWORK_ACCESS: firstNetwork,
+            BIONIC_GITHUB_AUTH_MODE: firstMode,
+            BIONIC_RUNNER_NETWORK_ACCESS: firstNetwork,
             ...(firstBroker
-              ? { PAPERCLIP_GITHUB_BROKER_TOKEN: "first-run-capability" }
+              ? { BIONIC_GITHUB_BROKER_TOKEN: "first-run-capability" }
               : {}),
           },
           runnerInstanceId: "runner-runnerd-warm",
@@ -6910,7 +6910,7 @@ describe("native warm session supervision", () => {
             await readdir(stateBase, { recursive: true })
           ).find(
             (path) =>
-              path.includes("paperclip-runner/sessions/") &&
+              path.includes("bionic-runner/sessions/") &&
               path.endsWith(".json"),
           );
           expect(checkpointFile).toBeDefined();
@@ -6987,10 +6987,10 @@ describe("native warm session supervision", () => {
           db: continuationDb,
           execution: second,
           runnerEnvironment: {
-            PAPERCLIP_GITHUB_AUTH_MODE: secondMode,
-            PAPERCLIP_RUNNER_NETWORK_ACCESS: secondNetwork,
+            BIONIC_GITHUB_AUTH_MODE: secondMode,
+            BIONIC_RUNNER_NETWORK_ACCESS: secondNetwork,
             ...(secondBroker
-              ? { PAPERCLIP_GITHUB_BROKER_TOKEN: "second-run-capability" }
+              ? { BIONIC_GITHUB_BROKER_TOKEN: "second-run-capability" }
               : {}),
           },
           runnerInstanceId: "runner-runnerd-warm",
@@ -7030,14 +7030,14 @@ describe("native warm session supervision", () => {
         }
       } finally {
         if (previousStateDirectory === undefined) {
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
         } else {
-          process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+          process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
         }
         if (previousPaperclipHome === undefined) {
-          delete process.env.PAPERCLIP_HOME;
+          delete process.env.BIONIC_HOME;
         } else {
-          process.env.PAPERCLIP_HOME = previousPaperclipHome;
+          process.env.BIONIC_HOME = previousPaperclipHome;
         }
         await rm(stateBase, { recursive: true, force: true });
       }
@@ -7132,7 +7132,7 @@ describe("native warm session supervision", () => {
     const secondSession = { close: secondClose };
     const base = {
       ...execution,
-      schema: "paperclip.native-execution-input.v4",
+      schema: "bionic.native-execution-input.v4",
       provider: { kind: "codex", model: null, approvalPolicy: "never" },
       binding: {
         ...execution.binding,
@@ -7221,7 +7221,7 @@ describe("native session bounded recovery", () => {
       Object.assign(stop, { ...(source === "operator"
         ? { cancelledByActorType: "user", cancelledByUserId: "board" }
         : { reassignmentStopRequested: true }), nativeCancellation: {
-        schema: "paperclip.native-cancellation.v1", ...execution.binding, scope: "run", reasonCode: "cancellation_run_only",
+        schema: "bionic.native-cancellation.v1", ...execution.binding, scope: "run", reasonCode: "cancellation_run_only",
         dispatched: true, dispatchState: "acknowledged", intentAuditId: "intent", acknowledgementAuditId: "ack",
       } });
       throw new Error("native_finalization_missing: session returned no semantic result");
@@ -7240,7 +7240,7 @@ describe("native session bounded recovery", () => {
     const stop: Record<string, unknown> = {};
     state.execute.mockReset().mockImplementationOnce(async () => {
       Object.assign(stop, { nativeCancellation: {
-        schema: "paperclip.native-cancellation.v1", ...execution.binding,
+        schema: "bionic.native-cancellation.v1", ...execution.binding,
         scope: "run", reasonCode: "cancellation_run_only", dispatchState,
         dispatched: true, intentAuditId: "intent", acknowledgementAuditId: "ack",
       } });
@@ -7849,7 +7849,7 @@ describe("native session bounded recovery", () => {
 describe("native process ownership", () => {
   it("checks the complete wake-comment receipt before finalizing a successful provider turn", async () => {
     const expectedBinding = {
-      schema: "paperclip.current-wake-comments-binding.v1",
+      schema: "bionic.current-wake-comments-binding.v1",
       companyId: execution.binding.companyId,
       issueId: execution.binding.issueId,
       runId: execution.binding.runId,
@@ -8048,18 +8048,18 @@ describe("runnerd provider runtime wiring", () => {
   let previousStateDirectory: string | undefined;
 
   beforeEach(async () => {
-    previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
+    previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
     isolatedStateDirectory = await mkdtemp(
-      join(tmpdir(), "paperclip-runnerd-wiring-"),
+      join(tmpdir(), "bionic-runnerd-wiring-"),
     );
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = isolatedStateDirectory;
+    process.env.BIONIC_RUNNER_STATE_DIR = isolatedStateDirectory;
   });
 
   afterEach(async () => {
     if (previousStateDirectory === undefined) {
-      delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+      delete process.env.BIONIC_RUNNER_STATE_DIR;
     } else {
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+      process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
     }
     await rm(isolatedStateDirectory, { recursive: true, force: true });
   });
@@ -8118,9 +8118,9 @@ describe("runnerd provider runtime wiring", () => {
   });
 
   it("copies back and removes Grok credentials from the exact ACPX launch home", async () => {
-    const priorHome = process.env.PAPERCLIP_HOME;
+    const priorHome = process.env.BIONIC_HOME;
     const privateRoot = await realpath(isolatedStateDirectory);
-    process.env.PAPERCLIP_HOME = privateRoot;
+    process.env.BIONIC_HOME = privateRoot;
     const managedHome = join(privateRoot, "company-login");
     await mkdir(managedHome, { mode: 0o700 });
     await writeFile(join(managedHome, "auth.json"), "fixture-old-login", { mode: 0o600 });
@@ -8155,8 +8155,8 @@ describe("runnerd provider runtime wiring", () => {
         await expect(access(join(agentHome, name))).rejects.toMatchObject({ code: "ENOENT" });
       }
     } finally {
-      if (priorHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = priorHome;
+      if (priorHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = priorHome;
     }
   });
 
@@ -8200,14 +8200,14 @@ describe("runnerd provider runtime wiring", () => {
           contentType: "text/plain",
           byteSize: 12,
           workspaceRelativePath:
-            ".paperclip-inbound/run/00000000-0000-4000-8000-000000009202",
+            ".bionic-inbound/run/00000000-0000-4000-8000-000000009202",
           unavailableReason: null,
         },
       ],
       cleanup,
     });
     state.renderNativeRunnerStagedAttachmentPrompt.mockReturnValueOnce(
-      "Paperclip native attachment access: staged.",
+      "Bionic native attachment access: staged.",
     );
     state.execute.mockReset().mockResolvedValueOnce({
       result: { summary: "completed" },
@@ -8364,10 +8364,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("carries the verified runner and lease binding into a projectless continuation", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-runner-binding-"),
+      join(tmpdir(), "bionic-runner-binding-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const prior = {
       ...execution,
       binding: {
@@ -8389,7 +8389,7 @@ describe("runnerd provider runtime wiring", () => {
         executionWorkspaceId: "run-projectless-next",
       },
     } as NativeExecutionInputV1;
-    const remoteCwd = "/home/daytona/paperclip-workspace";
+    const remoteCwd = "/home/daytona/bionic-workspace";
     try {
       state.createBackend.mockClear();
       state.createTransport.mockClear();
@@ -8498,24 +8498,24 @@ describe("runnerd provider runtime wiring", () => {
       );
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
   });
 
   it.each([
-    { PAPERCLIP_NATIVE_MCP_NAME: "paperclip-assigned" },
-    { PAPERCLIP_NATIVE_MCP_URL: "http://127.0.0.1:3217/mcp/gateways/test" },
-    { PAPERCLIP_NATIVE_MCP_TOKEN: "private-run-token" },
+    { BIONIC_NATIVE_MCP_NAME: "bionic-assigned" },
+    { BIONIC_NATIVE_MCP_URL: "http://127.0.0.1:3217/mcp/gateways/test" },
+    { BIONIC_NATIVE_MCP_TOKEN: "private-run-token" },
   ])("rejects partial remote assigned MCP bindings", async (runnerEnvironment) => {
     await expect(createRunnerdBackend({
       db: leaseDb(execution), execution, runnerInstanceId: "runner-partial-mcp", runnerEnvironment,
       runnerExecutionTarget: {
         kind: "remote", transport: "sandbox", providerKey: "daytona",
-        leaseId: "lease-partial-mcp", remoteCwd: "/home/daytona/paperclip-workspace",
+        leaseId: "lease-partial-mcp", remoteCwd: "/home/daytona/bionic-workspace",
         runner: { execute: vi.fn() },
       } as never,
     })).rejects.toThrow("assigned native MCP launch binding is incomplete");
@@ -8531,13 +8531,13 @@ describe("runnerd provider runtime wiring", () => {
     await createRunnerdBackend({
       db: leaseDb(execution), execution, runnerInstanceId: "runner-assigned-mcp",
       runnerEnvironment: {
-        PAPERCLIP_NATIVE_MCP_NAME: "paperclip-assigned",
-        PAPERCLIP_NATIVE_MCP_URL: "http://127.0.0.1:3217/mcp/gateways/assigned-test",
-        PAPERCLIP_NATIVE_MCP_TOKEN: "private-run-token",
+        BIONIC_NATIVE_MCP_NAME: "bionic-assigned",
+        BIONIC_NATIVE_MCP_URL: "http://127.0.0.1:3217/mcp/gateways/assigned-test",
+        BIONIC_NATIVE_MCP_TOKEN: "private-run-token",
       },
       runnerExecutionTarget: {
         kind: "remote", transport: "sandbox", providerKey: "daytona",
-        leaseId: "lease-assigned-mcp", remoteCwd: "/home/daytona/paperclip-workspace",
+        leaseId: "lease-assigned-mcp", remoteCwd: "/home/daytona/bionic-workspace",
         runner: { execute: vi.fn() },
       } as never,
     });
@@ -8547,9 +8547,9 @@ describe("runnerd provider runtime wiring", () => {
     expect(state.toolAuthorityDefinitions).toHaveBeenCalledWith(expect.objectContaining({ assignedMcpTools }));
     state.createBackend.mock.calls[0]![1].codexTransportFactory!();
     const options = state.createTransport.mock.calls[0]![0] as { environment: NodeJS.ProcessEnv };
-    expect(options.environment.PAPERCLIP_NATIVE_MCP_NAME).toBeUndefined();
-    expect(options.environment.PAPERCLIP_NATIVE_MCP_URL).toBeUndefined();
-    expect(options.environment.PAPERCLIP_NATIVE_MCP_TOKEN).toBeUndefined();
+    expect(options.environment.BIONIC_NATIVE_MCP_NAME).toBeUndefined();
+    expect(options.environment.BIONIC_NATIVE_MCP_URL).toBeUndefined();
+    expect(options.environment.BIONIC_NATIVE_MCP_TOKEN).toBeUndefined();
   });
 
   it("makes remote authority archival idempotent and returns the archived state", async () => {
@@ -8559,7 +8559,7 @@ describe("runnerd provider runtime wiring", () => {
       transport: "sandbox" as const,
       providerKey: "daytona",
       leaseId: "lease-authority-archive",
-      remoteCwd: "/home/daytona/paperclip-workspace",
+      remoteCwd: "/home/daytona/bionic-workspace",
       runner: { execute: remoteExecute },
     } as never;
     const normalizedSessionId = execution.session.normalizedSessionId;
@@ -8575,7 +8575,7 @@ describe("runnerd provider runtime wiring", () => {
       itemId: "item-authority-archive",
     };
     const archivedState = {
-      schema: "paperclip.runner.durable.state.v1",
+      schema: "bionic.runner.durable.state.v1",
       ...archiveIdentity,
       lifecycle: "suspended",
     };
@@ -8592,7 +8592,7 @@ describe("runnerd provider runtime wiring", () => {
       expect.objectContaining({
         externallySandboxed: true,
         environment: expect.objectContaining({
-          PAPERCLIP_RUNNER_EXTERNAL_SANDBOX: "1",
+          BIONIC_RUNNER_EXTERNAL_SANDBOX: "1",
         }),
       }),
     );
@@ -8653,8 +8653,8 @@ describe("runnerd provider runtime wiring", () => {
       runnerInstanceId: "runner-local-workspace",
       runnerEnvironment: {
         HOME: "/home/runner",
-        PAPERCLIP_WORKSPACE_CWD: "/untrusted/configured-workspace",
-        PAPERCLIP_RUNNER_EXTERNAL_SANDBOX: "1",
+        BIONIC_WORKSPACE_CWD: "/untrusted/configured-workspace",
+        BIONIC_RUNNER_EXTERNAL_SANDBOX: "1",
       },
     });
 
@@ -8664,7 +8664,7 @@ describe("runnerd provider runtime wiring", () => {
     expect(state.createTransport).toHaveBeenCalledWith(
       expect.objectContaining({
         environment: expect.objectContaining({
-          PAPERCLIP_WORKSPACE_CWD: execution.workspace.cwd,
+          BIONIC_WORKSPACE_CWD: execution.workspace.cwd,
         }),
       }),
     );
@@ -8672,16 +8672,16 @@ describe("runnerd provider runtime wiring", () => {
       environment: NodeJS.ProcessEnv;
     };
     expect(
-      localTransportOptions.environment.PAPERCLIP_RUNNER_EXTERNAL_SANDBOX,
+      localTransportOptions.environment.BIONIC_RUNNER_EXTERNAL_SANDBOX,
     ).toBeUndefined();
   });
 
   it("atomically migrates legacy unscoped state only for its exact durable run identity", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-legacy-runner-state-"),
+      join(tmpdir(), "bionic-legacy-runner-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const legacyExecution = {
       ...execution,
       binding: {
@@ -8738,7 +8738,7 @@ describe("runnerd provider runtime wiring", () => {
         }),
       );
       expect(state.createTransport.mock.calls[0]![0].runnerBinary).toBe(
-        "/tmp/paperclip-runnerd",
+        "/tmp/bionic-runnerd",
       );
       expect(state.resolveRunnerBinary).toHaveBeenCalled();
 
@@ -8761,9 +8761,9 @@ describe("runnerd provider runtime wiring", () => {
       );
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -8771,10 +8771,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("migrates the former company/session scope into the full native session scope", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-company-session-state-"),
+      join(tmpdir(), "bionic-company-session-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const legacyExecution = {
       ...execution,
       binding: {
@@ -8835,9 +8835,9 @@ describe("runnerd provider runtime wiring", () => {
       ).resolves.toBeUndefined();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -8845,10 +8845,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it.each([0, 2048])("migrates a suspended prior-run authority in the same full session scope with %i retained events", async (eventCount) => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-prior-run-session-state-"),
+      join(tmpdir(), "bionic-prior-run-session-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const priorExecution = {
       ...execution,
       binding: {
@@ -8917,7 +8917,7 @@ describe("runnerd provider runtime wiring", () => {
           eventType: "item.delta",
           priority: 1,
           envelope: {
-            schema: "paperclip.prp.event.v1",
+            schema: "bionic.prp.event.v1",
             schemaVersion: 1,
             sourceKind: "runner",
             sourceInstanceId: identity.runnerInstanceId,
@@ -8988,9 +8988,9 @@ describe("runnerd provider runtime wiring", () => {
       );
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -9043,10 +9043,10 @@ describe("runnerd provider runtime wiring", () => {
     "uses remote prior-run backup when acceptance=$accepted direct=$directLifecycle backup=$backupLifecycle corrupt=$corrupt",
     async ({ directLifecycle, backupLifecycle, corrupt, accepted }) => {
       const stateBase = await mkdtemp(
-        join(tmpdir(), "paperclip-remote-prior-run-state-"),
+        join(tmpdir(), "bionic-remote-prior-run-state-"),
       );
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+      process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
       const priorExecution = {
         ...execution,
         binding: {
@@ -9090,7 +9090,7 @@ describe("runnerd provider runtime wiring", () => {
         transport: "sandbox" as const,
         providerKey: "daytona",
         leaseId: "environment-lease-remote-prior-scope",
-        remoteCwd: "/home/daytona/paperclip-workspace",
+        remoteCwd: "/home/daytona/bionic-workspace",
         runner: {
           execute: vi.fn(),
         },
@@ -9201,9 +9201,9 @@ describe("runnerd provider runtime wiring", () => {
         );
       } finally {
         if (previousStateDirectory === undefined) {
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
         } else {
-          process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+          process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
         }
         await rm(stateBase, { recursive: true, force: true });
       }
@@ -9212,10 +9212,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("quarantines legacy prior-run state only after the database proves a terminal owner in the same full scope", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-legacy-terminal-unsuspended-state-"),
+      join(tmpdir(), "bionic-legacy-terminal-unsuspended-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const priorExecution = {
       ...execution,
       binding: {
@@ -9300,9 +9300,9 @@ describe("runnerd provider runtime wiring", () => {
       expect(state.createTransport).not.toHaveBeenCalled();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -9310,10 +9310,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("rejects scoped prior-run state after restart while its heartbeat is still running", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-running-prior-run-state-"),
+      join(tmpdir(), "bionic-running-prior-run-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const priorExecution = {
       ...execution,
       binding: {
@@ -9395,9 +9395,9 @@ describe("runnerd provider runtime wiring", () => {
       expect(state.createTransport).not.toHaveBeenCalled();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -9431,10 +9431,10 @@ describe("runnerd provider runtime wiring", () => {
     "automatically recovers only a proven settled local session: %s",
     async (scenario) => {
       const stateBase = await mkdtemp(
-        join(tmpdir(), "paperclip-quiescent-recovery-"),
+        join(tmpdir(), "bionic-quiescent-recovery-"),
       );
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+      process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
       const priorExecution = {
         ...execution,
         binding: {
@@ -9537,7 +9537,7 @@ describe("runnerd provider runtime wiring", () => {
                       scenario === "missing process identity" ? null : 90000001,
                     processGroupId: 90000001,
                     contextSnapshot: {
-                      paperclipEnvironment: { driver: "local" },
+                      bionicEnvironment: { driver: "local" },
                     },
                   },
                 ]),
@@ -9581,7 +9581,7 @@ describe("runnerd provider runtime wiring", () => {
           await writeFile(
             join(root, "runner", "codex-provider-state.json"),
             JSON.stringify({
-              schema: "paperclip.runner.codex-provider-state.v1",
+              schema: "bionic.runner.codex-provider-state.v1",
               lifecycle: "session_open",
               config: { provider: "codex", driver: "codex_app_server" },
               threadId: "recovery-thread",
@@ -9712,8 +9712,8 @@ describe("runnerd provider runtime wiring", () => {
       } finally {
         processKill.mockRestore();
         if (previousStateDirectory === undefined)
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-        else process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
+        else process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
         await rm(stateBase, { recursive: true, force: true });
       }
     },
@@ -9721,10 +9721,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("quarantines scoped prior-run state when the heartbeat is terminal but runnerd is not suspended", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-terminal-unsuspended-state-"),
+      join(tmpdir(), "bionic-terminal-unsuspended-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const priorExecution = {
       ...execution,
       binding: {
@@ -9855,9 +9855,9 @@ describe("runnerd provider runtime wiring", () => {
       expect(state.createTransport).not.toHaveBeenCalled();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -9865,10 +9865,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("resumes a matching scoped authority with valid history above 64 MiB", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-current-scoped-state-"),
+      join(tmpdir(), "bionic-current-scoped-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const currentExecution = {
       ...execution,
       binding: {
@@ -9928,7 +9928,7 @@ describe("runnerd provider runtime wiring", () => {
           eventType: "item.delta",
           priority: 1,
           envelope: {
-            schema: "paperclip.prp.event.v1",
+            schema: "bionic.prp.event.v1",
             schemaVersion: 1,
             sourceKind: "runner",
             sourceInstanceId: identity.runnerInstanceId,
@@ -9985,9 +9985,9 @@ describe("runnerd provider runtime wiring", () => {
       );
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -10006,10 +10006,10 @@ describe("runnerd provider runtime wiring", () => {
     "preserves unadmitted forward warm-transition evidence (%s)",
     async (variant) => {
       const stateBase = await mkdtemp(
-        join(tmpdir(), "paperclip-pending-warm-transition-"),
+        join(tmpdir(), "bionic-pending-warm-transition-"),
       );
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+      process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
       const currentExecution = {
         ...execution,
         binding: {
@@ -10049,7 +10049,7 @@ describe("runnerd provider runtime wiring", () => {
         const pending = {
           phase: variant === "awaiting_result" ? "awaiting_result" : "prepared",
           receipt: {
-            schema: "paperclip.runner.warm-transition.v1",
+            schema: "bionic.runner.warm-transition.v1",
             newIdentity: {
               ...identity,
               runId:
@@ -10066,7 +10066,7 @@ describe("runnerd provider runtime wiring", () => {
             : {
                 ...durableControlPlaneState(identity),
                 schema:
-                  "paperclip.runner.durable.control-plane-state.warm-transition.v1",
+                  "bionic.runner.durable.control-plane-state.warm-transition.v1",
                 ...(variant === "schema_only"
                   ? {}
                   : { warmTransition: pending }),
@@ -10079,12 +10079,12 @@ describe("runnerd provider runtime wiring", () => {
               };
         const runner = {
           ...durableRunnerState(identity, "ready"),
-          schema: "paperclip.runner.durable.state.warm-transition.v1",
+          schema: "bionic.runner.durable.state.warm-transition.v1",
           warmTransition: pending,
         };
         const coreBytes =
           variant === "malformed"
-            ? '{"schema":"paperclip.runner.durable.control-plane-state.warm-transition.v1",'
+            ? '{"schema":"bionic.runner.durable.control-plane-state.warm-transition.v1",'
             : JSON.stringify(core);
         const runnerBytes = JSON.stringify(runner);
         const corePath = join(
@@ -10119,8 +10119,8 @@ describe("runnerd provider runtime wiring", () => {
         expect(state.createTransport).not.toHaveBeenCalled();
       } finally {
         if (previousStateDirectory === undefined)
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-        else process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
+        else process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
         await rm(stateBase, { recursive: true, force: true });
       }
     },
@@ -10130,10 +10130,10 @@ describe("runnerd provider runtime wiring", () => {
     "quarantines an exact-run runner state with %s",
     async (caseName) => {
       const stateBase = await mkdtemp(
-        join(tmpdir(), `paperclip-${caseName}-runner-state-`),
+        join(tmpdir(), `bionic-${caseName}-runner-state-`),
       );
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+      process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
       const currentExecution = {
         ...execution,
         binding: {
@@ -10181,7 +10181,7 @@ describe("runnerd provider runtime wiring", () => {
             caseName === "unknown_schema"
               ? {
                   ...runnerState,
-                  schema: "paperclip.runner.durable.state.v999",
+                  schema: "bionic.runner.durable.state.v999",
                 }
               : runnerState,
           ),
@@ -10204,9 +10204,9 @@ describe("runnerd provider runtime wiring", () => {
         expect(state.createTransport).not.toHaveBeenCalled();
       } finally {
         if (previousStateDirectory === undefined) {
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
         } else {
-          process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+          process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
         }
         await rm(stateBase, { recursive: true, force: true });
       }
@@ -10224,10 +10224,10 @@ describe("runnerd provider runtime wiring", () => {
     "fails closed on %s durable identity in an existing scoped root",
     async (caseName) => {
       const stateBase = await mkdtemp(
-        join(tmpdir(), `paperclip-${caseName}-scoped-state-`),
+        join(tmpdir(), `bionic-${caseName}-scoped-state-`),
       );
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+      process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
       const scopedExecution = {
         ...execution,
         binding: {
@@ -10269,7 +10269,7 @@ describe("runnerd provider runtime wiring", () => {
                       environmentLeaseId:
                         scopedExecution.binding.executionWorkspaceId,
                     }),
-                    schema: "paperclip.runner.durable.control-plane-state.v999",
+                    schema: "bionic.runner.durable.control-plane-state.v999",
                   })
                 : JSON.stringify(
                     durableControlPlaneState({
@@ -10381,9 +10381,9 @@ describe("runnerd provider runtime wiring", () => {
         expect(state.createTransport).not.toHaveBeenCalled();
       } finally {
         if (previousStateDirectory === undefined) {
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
         } else {
-          process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+          process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
         }
         await rm(stateBase, { recursive: true, force: true });
       }
@@ -10392,10 +10392,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("does not quarantine an unsafe scoped-root symlink", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-symlink-scoped-state-"),
+      join(tmpdir(), "bionic-symlink-scoped-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const scopedExecution = {
       ...execution,
       binding: {
@@ -10445,9 +10445,9 @@ describe("runnerd provider runtime wiring", () => {
       expect(state.createTransport).not.toHaveBeenCalled();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -10455,10 +10455,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("rejects a suspended prior-run authority whose persisted execution belongs to another full session scope", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-prior-run-mismatched-state-"),
+      join(tmpdir(), "bionic-prior-run-mismatched-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const currentExecution = {
       ...execution,
       binding: {
@@ -10538,9 +10538,9 @@ describe("runnerd provider runtime wiring", () => {
       await expect(access(join(stateBase, "quarantine"))).rejects.toThrow();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -10548,10 +10548,10 @@ describe("runnerd provider runtime wiring", () => {
 
   it("fails closed instead of claiming a mismatched former session scope", async () => {
     const stateBase = await mkdtemp(
-      join(tmpdir(), "paperclip-mismatched-session-state-"),
+      join(tmpdir(), "bionic-mismatched-session-state-"),
     );
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const currentExecution = {
       ...execution,
       binding: {
@@ -10601,9 +10601,9 @@ describe("runnerd provider runtime wiring", () => {
       await expect(access(legacyRoot)).resolves.toBeUndefined();
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -10613,7 +10613,7 @@ describe("runnerd provider runtime wiring", () => {
     const scopedExecution = (companyId: string, runId: string) =>
       ({
         ...execution,
-        schema: "paperclip.native-execution-input.v4",
+        schema: "bionic.native-execution-input.v4",
         binding: {
           ...execution.binding,
           companyId,
@@ -10683,9 +10683,9 @@ describe("runnerd provider runtime wiring", () => {
   });
 
   it("scopes local durable sessions by agent, workspace, and provider profile while reusing them across runs", async () => {
-    const stateBase = await mkdtemp(join(tmpdir(), "paperclip-session-scope-"));
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = stateBase;
+    const stateBase = await mkdtemp(join(tmpdir(), "bionic-session-scope-"));
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = stateBase;
     const scopedExecution = (input: {
       runId: string;
       agentId?: string;
@@ -10694,7 +10694,7 @@ describe("runnerd provider runtime wiring", () => {
     }) =>
       ({
         ...execution,
-        schema: "paperclip.native-execution-input.v4",
+        schema: "bionic.native-execution-input.v4",
         binding: {
           ...execution.binding,
           companyId: "company-session-scope",
@@ -10705,7 +10705,7 @@ describe("runnerd provider runtime wiring", () => {
         },
         workspace: {
           cwd: "/tmp/native-session-scope",
-          repoUrl: "https://example.test/paperclip.git",
+          repoUrl: "https://example.test/bionic.git",
           repoRef: "refs/heads/main",
           branchName: "main",
         },
@@ -10857,9 +10857,9 @@ describe("runnerd provider runtime wiring", () => {
       expect(tracedRuns).toEqual([continuation.binding.runId, continuation.binding.runId]);
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(stateBase, { recursive: true, force: true });
     }
@@ -10908,7 +10908,7 @@ describe("runnerd provider runtime wiring", () => {
   });
 
   it("uses the remote workspace for both the runner backend and native session", async () => {
-    const remoteCwd = "/home/daytona/paperclip-workspace";
+    const remoteCwd = "/home/daytona/bionic-workspace";
     const remoteExecution = {
       ...execution,
       binding: { ...execution.binding, runId: "run-remote-workspace-test" },
@@ -10920,7 +10920,7 @@ describe("runnerd provider runtime wiring", () => {
         workMode: "standard",
       },
       workspace: {
-        cwd: "/host/paperclip-workspace",
+        cwd: "/host/bionic-workspace",
         repoUrl: null,
         repoRef: null,
         branchName: null,
@@ -10974,7 +10974,7 @@ describe("runnerd provider runtime wiring", () => {
           strictHostKeyChecking: true,
         },
       },
-      runnerPublicUrl: "wss://paperclip.example.test",
+      runnerPublicUrl: "wss://bionic.example.test",
     });
 
     expect(state.createBackend).toHaveBeenCalledWith(
@@ -10997,9 +10997,9 @@ describe("runnerd provider runtime wiring", () => {
     backendOptions.codexTransportFactory!();
     expect(state.createTransport).toHaveBeenCalledWith(
       expect.objectContaining({
-        runnerBinary: "/tmp/paperclip-runnerd",
+        runnerBinary: "/tmp/bionic-runnerd",
         environment: expect.objectContaining({
-          PAPERCLIP_WORKSPACE_CWD: remoteCwd,
+          BIONIC_WORKSPACE_CWD: remoteCwd,
         }),
       }),
     );
@@ -11007,10 +11007,10 @@ describe("runnerd provider runtime wiring", () => {
       environment: NodeJS.ProcessEnv;
     };
     expect(
-      sshTransportOptions.environment.PAPERCLIP_RUNNER_EXTERNAL_SANDBOX,
+      sshTransportOptions.environment.BIONIC_RUNNER_EXTERNAL_SANDBOX,
     ).toBeUndefined();
     expect(state.createTransport.mock.calls[0]![0].runnerBinary).not.toBe(
-      `${remoteCwd}/.paperclip-runtime/paperclip-runner/bin/paperclip-runnerd`,
+      `${remoteCwd}/.bionic-runtime/bionic-runner/bin/bionic-runnerd`,
     );
   });
 
@@ -11019,8 +11019,8 @@ describe("runnerd provider runtime wiring", () => {
     const remoteExecute = vi.fn(async (command: { command: string; args?: string[] }) => {
       if (command.args?.[0] === "--build-metadata") return {
         exitCode: 0, timedOut: false, stdout: JSON.stringify({
-          schema: "paperclip-runner/runnerd-build-metadata/v1", binaryName: "paperclip-runnerd",
-          packageName: "@paperclipai/paperclip-runner", binaryContractVersion: 2,
+          schema: "bionic-runner/runnerd-build-metadata/v1", binaryName: "bionic-runnerd",
+          packageName: "@bionicai/bionic-runner", binaryContractVersion: 2,
           durableSessionCapabilities: ["unlimited_runtime", "connection_lease_renewal"],
           prpTransportModes: ["listen_ws"],
         }), stderr: "",
@@ -11080,14 +11080,14 @@ describe("runnerd provider runtime wiring", () => {
   it.each(["fresh", "existing_state", "symlink_parent", "wrong_identity", "connected", "pending_turn", "remote_probe_failed", "backup_present"])(
     "bootstraps only an untouched provider session in a resumed workspace lease: %s", async (scenario) => {
     const remoteCwd = join(isolatedStateDirectory, "remote");
-    const runtimeRoot = join(remoteCwd, ".paperclip-runtime", "paperclip-runner");
+    const runtimeRoot = join(remoteCwd, ".bionic-runtime", "bionic-runner");
     await mkdir(runtimeRoot, { recursive: true });
     const sessionRoot = join(runtimeRoot, "sessions", createHash("sha256").update(execution.session.normalizedSessionId!).digest("hex"));
     if (scenario === "existing_state") await mkdir(sessionRoot, { recursive: true });
     if (scenario === "symlink_parent") await symlink(isolatedStateDirectory, join(runtimeRoot, "sessions"));
     const syncIn = vi.fn(async () => undefined);
     const remoteExecute = vi.fn(async (command: { command: string; args?: string[] }) => {
-      if (command.args?.[2] === "paperclip-runner-claim-unstarted-session") {
+      if (command.args?.[2] === "bionic-runner-claim-unstarted-session") {
         let exitCode = 1;
         if (scenario !== "remote_probe_failed") {
           try { execFileSync("sh", command.args, { stdio: "pipe" }); exitCode = 0; } catch {}
@@ -11096,8 +11096,8 @@ describe("runnerd provider runtime wiring", () => {
       }
       if (command.args?.[0] === "--build-metadata") return {
         exitCode: 0, timedOut: false, stdout: JSON.stringify({
-          schema: "paperclip-runner/runnerd-build-metadata/v1", binaryName: "paperclip-runnerd",
-          packageName: "@paperclipai/paperclip-runner", binaryContractVersion: 2,
+          schema: "bionic-runner/runnerd-build-metadata/v1", binaryName: "bionic-runnerd",
+          packageName: "@bionicai/bionic-runner", binaryContractVersion: 2,
           durableSessionCapabilities: ["unlimited_runtime", "connection_lease_renewal"],
           prpTransportModes: ["listen_ws"],
         }), stderr: "",
@@ -11105,7 +11105,7 @@ describe("runnerd provider runtime wiring", () => {
       if (command.args?.[0] === "--version") return {
         exitCode: 0, timedOut: false, stdout: "codex-cli 0.156.0", stderr: "",
       };
-      if (command.args?.[2] === "paperclip-runner-launch") {
+      if (command.args?.[2] === "bionic-runner-launch") {
         throw new Error("fixture_stop_after_launch_staging");
       }
       if (command.args?.[1]?.includes("base64")) return {
@@ -11134,7 +11134,7 @@ describe("runnerd provider runtime wiring", () => {
     };
     await mkdir(join(options.stateDirectory!, "control-plane"), { recursive: true });
     await writeFile(join(options.stateDirectory!, "control-plane", "control-plane-state.json"), JSON.stringify({
-      schema: "paperclip.runner.durable.control-plane-state.v1",
+      schema: "bionic.runner.durable.control-plane-state.v1",
       identity: { ...options.prpIdentity, ...(scenario === "wrong_identity" ? { runId: "other-run" } : {}) },
       connectionCount: scenario === "connected" ? 1 : 0, committedEvents: [],
       commands: [{ type: "run.prepare", status: "pending" }, { type: scenario === "pending_turn" ? "turn.start" : "session.open", status: "pending" }],
@@ -11147,7 +11147,7 @@ describe("runnerd provider runtime wiring", () => {
       await expect(options.prepareExternalRunnerState()).resolves.toBeUndefined();
       expect(remoteExecute.mock.calls.some(([command]) => command.args?.[1]?.includes("install -d"))).toBe(false);
       expect(syncIn).not.toHaveBeenCalled();
-      const claimCommand = remoteExecute.mock.calls.find(([command]) => command.args?.[2] === "paperclip-runner-claim-unstarted-session")![0];
+      const claimCommand = remoteExecute.mock.calls.find(([command]) => command.args?.[2] === "bionic-runner-claim-unstarted-session")![0];
       expect((await lstat(sessionRoot)).mode & 0o777).toBe(0o700);
       // The exact same claim cannot silently reopen an existing partial root.
       expect(() => execFileSync("sh", claimCommand.args!, { stdio: "pipe" })).toThrow();
@@ -11163,7 +11163,7 @@ describe("runnerd provider runtime wiring", () => {
       await expect(options.prepareExternalRunnerState()).resolves.toBeUndefined();
       expect(syncIn).not.toHaveBeenCalled();
       const launched = options.runnerProcessLauncher({
-        command: "/controller/paperclip-runnerd", args: [], cwd: "/controller", environment: {},
+        command: "/controller/bionic-runnerd", args: [], cwd: "/controller", environment: {},
       });
       await expect(launched.completion).rejects.toThrow("fixture_stop_after_launch_staging");
       for (const name of ["auth.json", "config.toml"]) {
@@ -11176,7 +11176,7 @@ describe("runnerd provider runtime wiring", () => {
       expect(syncIn).toHaveBeenCalledWith([expect.objectContaining({
         files: [expect.objectContaining({ sourcePath: join(options.stateDirectory!, "runtime-context.json"), kind: "file" })],
       })]);
-      expect(remoteExecute.mock.calls.filter(([command]) => command.args?.[2] === "paperclip-runner-claim-unstarted-session")).toHaveLength(1);
+      expect(remoteExecute.mock.calls.filter(([command]) => command.args?.[2] === "bionic-runner-claim-unstarted-session")).toHaveLength(1);
     } else {
       await expect(options.prepareExternalRunnerState()).rejects.toThrow("runner_harness_state_mismatch");
       expect(remoteExecute.mock.calls.some(([command]) => command.args?.[1]?.includes("install -d"))).toBe(false);
@@ -11196,7 +11196,7 @@ describe("runnerd provider runtime wiring", () => {
     const needsReplacement = image !== "current" && image !== "preinstalled-exact" && !exactRetained;
     // The mocked remote executes metadata probes; artifact staging only needs bytes.
     // Keep this regression independent of a locally compiled Rust runner binary.
-    const controllerArtifact = join(isolatedStateDirectory, "paperclip-runnerd");
+    const controllerArtifact = join(isolatedStateDirectory, "bionic-runnerd");
     if (needsReplacement || retained || image === "preinstalled-exact") {
       await writeFile(controllerArtifact, "fixture runner artifact");
       state.resolveRunnerBinary.mockReturnValueOnce(controllerArtifact);
@@ -11215,11 +11215,11 @@ describe("runnerd provider runtime wiring", () => {
           };
         } else if (command.args?.[0] === "--build-metadata") {
           stdout = JSON.stringify({
-            schema: "paperclip-runner/runnerd-build-metadata/v1",
-            binaryName: "paperclip-runnerd",
-            packageName: "@paperclipai/paperclip-runner",
+            schema: "bionic-runner/runnerd-build-metadata/v1",
+            binaryName: "bionic-runnerd",
+            packageName: "@bionicai/bionic-runner",
             binaryContractVersion: 2,
-            durableSessionCapabilities: (image === "stale" || retained) && command.command === "/usr/local/bin/paperclip-runnerd"
+            durableSessionCapabilities: (image === "stale" || retained) && command.command === "/usr/local/bin/bionic-runnerd"
               ? undefined
               : ["unlimited_runtime", "connection_lease_renewal"],
             prpTransportModes: ["listen_ws"],
@@ -11227,7 +11227,7 @@ describe("runnerd provider runtime wiring", () => {
         } else if (command.args?.[0] === "--version") {
           if (
             command.command.endsWith(
-              "/.paperclip-runtime/paperclip-runner/bin/codex",
+              "/.bionic-runtime/bionic-runner/bin/codex",
             )
           ) {
             throw new Error("reached-preinstalled-codex-verification");
@@ -11235,15 +11235,15 @@ describe("runnerd provider runtime wiring", () => {
           stdout = `codex-cli ${version}`;
         } else if (script === "uname -s; uname -m") {
           stdout = `${process.platform === "darwin" ? "Darwin" : "Linux"}\n${process.arch === "arm64" ? "arm64" : "x86_64"}\n`;
-        } else if (script.includes("command -v paperclip-runnerd")) {
-          stdout = image === "missing" ? "" : "/usr/local/bin/paperclip-runnerd\n";
+        } else if (script.includes("command -v bionic-runnerd")) {
+          stdout = image === "missing" ? "" : "/usr/local/bin/bionic-runnerd\n";
         } else if (script.includes("command -v codex")) {
-          stdout = script.includes("/opt/paperclip-runner/bin/codex")
-            ? "/opt/paperclip-runner/bin/codex\n"
+          stdout = script.includes("/opt/bionic-runner/bin/codex")
+            ? "/opt/bionic-runner/bin/codex\n"
             : "/usr/local/bin/codex\n";
         } else if (
           !script.includes("ln -sfn") &&
-          !script.includes("paperclip_codex_launcher_tmp")
+          !script.includes("bionic_codex_launcher_tmp")
         ) {
           throw new Error(`unexpected command: ${command.command}`);
         }
@@ -11286,7 +11286,7 @@ describe("runnerd provider runtime wiring", () => {
     );
     if (!compatible) {
       expect(syncIn).not.toHaveBeenCalled();
-      expect(remoteExecute.mock.calls.some(([call]) => call.command === "npm" || call.args?.[1]?.includes("paperclip_codex_launcher_tmp"))).toBe(false);
+      expect(remoteExecute.mock.calls.some(([call]) => call.command === "npm" || call.args?.[1]?.includes("bionic_codex_launcher_tmp"))).toBe(false);
       expect(onLog).not.toHaveBeenCalledWith("stderr", expect.stringContaining("using compatible Codex"));
       return;
     }
@@ -11299,22 +11299,22 @@ describe("runnerd provider runtime wiring", () => {
       expect(syncIn).toHaveBeenCalledWith([expect.objectContaining({
         files: [expect.objectContaining({
           sourcePath: controllerArtifact,
-          targetPath: "/workspace/.paperclip-runtime/paperclip-runner/bin/paperclip-runnerd",
+          targetPath: "/workspace/.bionic-runtime/bionic-runner/bin/bionic-runnerd",
         })],
       })]);
     } else {
       expect(syncIn).not.toHaveBeenCalled();
     }
     if (exactRetained) {
-      expect(remoteExecute.mock.calls.some(([call]) => call.args?.[1]?.includes("command -v paperclip-runnerd"))).toBe(false);
+      expect(remoteExecute.mock.calls.some(([call]) => call.args?.[1]?.includes("command -v bionic-runnerd"))).toBe(false);
       expect(remoteExecute).toHaveBeenCalledWith(expect.objectContaining({
-        command: "/workspace/.paperclip-runtime/paperclip-runner/bin/paperclip-runnerd",
+        command: "/workspace/.bionic-runtime/bionic-runner/bin/bionic-runnerd",
         args: ["--build-metadata"],
       }));
     }
     expect(remoteExecute).toHaveBeenCalledWith(
       expect.objectContaining({
-        command: "/opt/paperclip-runner/bin/codex",
+        command: "/opt/bionic-runner/bin/codex",
         args: ["--version"],
       }),
     );
@@ -11324,12 +11324,12 @@ describe("runnerd provider runtime wiring", () => {
   });
 
   it("binds a remote launch to the configured controller-owned runner artifact", async () => {
-    const remoteCwd = "/home/daytona/paperclip-workspace";
-    const controllerArtifact = "/controller/artifacts/paperclip-runnerd";
+    const remoteCwd = "/home/daytona/bionic-workspace";
+    const controllerArtifact = "/controller/artifacts/bionic-runnerd";
     const remoteExecution = {
       ...execution,
       binding: { ...execution.binding, runId: "run-remote-runner-artifact" },
-      workspace: { ...execution.workspace, cwd: "/host/paperclip-workspace" },
+      workspace: { ...execution.workspace, cwd: "/host/bionic-workspace" },
     } as NativeExecutionInputV1;
 
     await createRunnerdBackend({
@@ -11367,7 +11367,7 @@ describe("runnerd provider runtime wiring", () => {
   ])(
     "requires the build-owned provider pack before launching remote %s",
     async (providerKind, provider, driverKind) => {
-      const remoteCwd = "/home/daytona/paperclip-workspace";
+      const remoteCwd = "/home/daytona/bionic-workspace";
       const remoteProviderExecution = {
         ...execution,
         binding: {
@@ -11405,7 +11405,7 @@ describe("runnerd provider runtime wiring", () => {
           },
         }),
       ).rejects.toThrow(
-        "runner_remote_provider_artifact_incompatible: configure PAPERCLIP_RUNNER_REMOTE_PROVIDER_PACK_PATH",
+        "runner_remote_provider_artifact_incompatible: configure BIONIC_RUNNER_REMOTE_PROVIDER_PACK_PATH",
       );
       expect(state.createBackend).not.toHaveBeenCalled();
     },
@@ -11414,7 +11414,7 @@ describe("runnerd provider runtime wiring", () => {
   it("passes the isolated ACPX runtime directory to the native backend factory", async () => {
     const acpxExecution = {
       ...execution,
-      schema: "paperclip.native-execution-input.v4",
+      schema: "bionic.native-execution-input.v4",
       task: {
         identifier: "DOT-ACPX",
         title: "ACPX task",
@@ -11471,7 +11471,7 @@ describe("runnerd provider runtime wiring", () => {
       acpxExecution,
       expect.objectContaining({
         acpxRuntimeDirectory: expect.stringContaining(
-          "/runtime/paperclip-runner/acpx",
+          "/runtime/bionic-runner/acpx",
         ),
         acpxDynamicToolHandler: expect.any(Function),
       }),
@@ -11491,7 +11491,7 @@ describe("runnerd provider runtime wiring", () => {
   it("passes the persisted OpenCode permission mode to runnerd", async () => {
     const opencodeExecution = {
       ...execution,
-      schema: "paperclip.native-execution-input.v4",
+      schema: "bionic.native-execution-input.v4",
       binding: { ...execution.binding, runId: "run-opencode-permissions" },
       session: {
         ...execution.session,

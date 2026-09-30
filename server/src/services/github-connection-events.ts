@@ -5,7 +5,7 @@ import {
   externalObjects,
   toolConnections,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { and, eq, sql } from "drizzle-orm";
 import {
   logActivity,
@@ -14,10 +14,10 @@ import {
 } from "./activity-log.js";
 import {
   createPaperclipCloudConnector,
-  paperclipCloudConnectorConfigFromEnv,
+  bionicCloudConnectorConfigFromEnv,
   type PaperclipCloudConnector,
   type SealedConnectorEvents,
-} from "./paperclip-cloud-connector.js";
+} from "./bionic-cloud-connector.js";
 import { issueThreadInteractionService } from "./issue-thread-interactions.js";
 import { logger } from "../middleware/logger.js";
 
@@ -466,7 +466,7 @@ export function githubConnectionEventService(
         nextPollAt = now().getTime() + 5 * 60_000;
         return { leased: 0, processed: 0, duplicate: 0, ignored: 0, failed: 0 };
       }
-      const config = options.connector ? null : paperclipCloudConnectorConfigFromEnv(options.env);
+      const config = options.connector ? null : bionicCloudConnectorConfigFromEnv(options.env);
       const connector = options.connector ?? (config ? createPaperclipCloudConnector({ config }) : null);
       if (!connector) {
         nextPollAt = now().getTime() + 5 * 60_000;

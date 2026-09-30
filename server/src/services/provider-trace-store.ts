@@ -2,12 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { and, eq, gt, inArray, isNull, lte, ne, or } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { providerTraceRecords } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { providerTraceRecords } from "@bionicai/db";
 import type {
   ProviderTraceFrame,
   ProviderTraceMetadata,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { resolvePaperclipInstanceRoot } from "../home-paths.js";
 import { logActivity } from "./activity-log.js";
 
@@ -46,7 +46,7 @@ function rehydrationTracePath(traceRef: string) {
 
 function asMetadata(row: TraceRow): ProviderTraceMetadata {
   return {
-    schema: "paperclip.provider_trace_metadata.v1",
+    schema: "bionic.provider_trace_metadata.v1",
     id: row.id,
     runId: row.runId,
     companyId: row.companyId,

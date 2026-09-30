@@ -1,14 +1,14 @@
 {
-  "name": "@paperclipai/teams-catalog",
+  "name": "@bionicai/teams-catalog",
   "version": "0.1.0",
   "license": "MIT",
-  "homepage": "https://github.com/paperclipai/paperclip",
+  "homepage": "https://github.com/bionicai/bionic",
   "bugs": {
-    "url": "https://github.com/paperclipai/paperclip/issues"
+    "url": "https://github.com/bionicai/bionic/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/paperclipai/paperclip",
+    "url": "https://github.com/bionicai/bionic",
     "directory": "packages/teams-catalog"
   },
   "type": "module",

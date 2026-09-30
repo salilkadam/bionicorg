@@ -22,7 +22,7 @@ import {
   issueRecoveryActions,
   issues,
   runIdentityContexts,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { errorHandler } from "../middleware/index.js";
 import { issueRoutes } from "../routes/issues.js";
 import { heartbeatService } from "../services/heartbeat.js";
@@ -57,7 +57,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-queued-comments-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-queued-comments-");
     db = createDb(tempDb.connectionString);
   }, 30_000);
 
@@ -114,10 +114,10 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
     await db.insert(agents).values({
       id: agentId,
       companyId,
-      name: "Paperclip Runner",
+      name: "Bionic Runner",
       role: "engineer",
       status: "idle",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: {},
       runtimeConfig: {},
       permissions: {},
@@ -150,7 +150,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       payload: {
         issueId,
         commentId: commentIds[1],
-        _paperclipWakeContext: {
+        _bionicWakeContext: {
           commentId: commentIds[1],
           wakeCommentId: commentIds[1],
           wakeCommentIds: commentIds,
@@ -214,7 +214,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       .where(eq(agents.id, seeded.agentId));
     await db.update(heartbeatRuns).set({ runtimeMode: "legacy", status: "cancelled", errorCode: "operator_interrupted",
       finishedAt: new Date("2026-08-22T15:03:00.000Z"),
-      contextSnapshot: { issueId: seeded.issueId, paperclipWorkspace: { remoteExecution: { transport: "sandbox" } } },
+      contextSnapshot: { issueId: seeded.issueId, bionicWorkspace: { remoteExecution: { transport: "sandbox" } } },
     }).where(eq(heartbeatRuns.id, seeded.runId));
     await db.update(issues).set({ status: "blocked", executionRunId: null }).where(eq(issues.id, seeded.issueId));
     await db.insert(issueRecoveryActions).values({ companyId: seeded.companyId, sourceIssueId: seeded.issueId,
@@ -365,7 +365,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       interactionStatus: "accepted", planReviewInteraction: { id: interactionId,
         acceptedTargetRevision: { documentId: "plan-1", revisionId: "revision-1" } } };
     await db.update(agentWakeupRequests).set({ payload: { issueId: seeded.issueId,
-      mutation: "interaction", interactionId, interactionStatus: "accepted", _paperclipWakeContext: context },
+      mutation: "interaction", interactionId, interactionStatus: "accepted", _bionicWakeContext: context },
     }).where(eq(agentWakeupRequests.id, seeded.wakeId));
     if (!native) {
       await db.update(agents).set({ adapterType: "claude_local",
@@ -401,7 +401,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
     expect(wakes).toHaveLength(3);
     expect(wakes.filter(w => w.payload?.mutation === "interaction").map(w => w.payload?.interactionId).sort())
       .toEqual([seeded.interactionId, nextId].sort());
-    expect(wakes.find(w => w.payload?.commentId)?.payload?._paperclipWakeContext).not.toHaveProperty("interactionId");
+    expect(wakes.find(w => w.payload?.commentId)?.payload?._bionicWakeContext).not.toHaveProperty("interactionId");
   });
 
   it("recovers an approval acknowledged before the steering transaction failed without redelivery", async () => {
@@ -490,7 +490,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
     await db.update(agents).set({ runtimeConfig: { heartbeat: { maxConcurrentRuns: 1 } } }).where(eq(agents.id, seeded.agentId));
     const [receipt] = await db.select().from(agentWakeupRequests).where(eq(agentWakeupRequests.id, seeded.wakeId));
     await db.update(agentWakeupRequests).set({ payload: { ...receipt.payload,
-      _paperclipWakeContext: { ...seeded.context, forceFreshSession: true } },
+      _bionicWakeContext: { ...seeded.context, forceFreshSession: true } },
     }).where(eq(agentWakeupRequests.id, seeded.wakeId));
     await db.update(heartbeatRuns).set({ status: "failed", finishedAt: new Date(), errorCode: "process_lost", processPid: process.pid })
       .where(eq(heartbeatRuns.id, seeded.runId));
@@ -547,7 +547,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
     const seeded = await seedResponseQueue(true);
     const [wake] = await db.select().from(agentWakeupRequests).where(eq(agentWakeupRequests.id, seeded.wakeId));
     await db.update(agentWakeupRequests).set({ payload: { ...wake.payload,
-      _paperclipWakeContext: { ...seeded.context, forceFreshSession: true } } }).where(eq(agentWakeupRequests.id, seeded.wakeId));
+      _bionicWakeContext: { ...seeded.context, forceFreshSession: true } } }).where(eq(agentWakeupRequests.id, seeded.wakeId));
     const client = app(seeded.companyId);
     const queue = await request(client).get(`/api/issues/${seeded.issueId}/queued-comments`).expect(200);
     expect(queue.body.entries[0].source.requiresFreshSession).toBe(true);
@@ -874,7 +874,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       .from(agentWakeupRequests)
       .where(eq(agentWakeupRequests.id, seeded.wakeId))
       .then((rows) => rows[0]);
-    const wakeContext = (wake?.payload as any)?._paperclipWakeContext ?? {};
+    const wakeContext = (wake?.payload as any)?._bionicWakeContext ?? {};
     await db
       .update(heartbeatRuns)
       .set({ status: "succeeded", finishedAt: new Date("2026-08-22T15:05:00.000Z") })
@@ -931,7 +931,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       queueId: seeded.wakeId,
       state: "deferred",
       targetRunId: seeded.runId,
-      protocol: "paperclip_runner_v1",
+      protocol: "bionic_runner_v1",
       entries: [
         { position: 0, canEdit: true, canDiscard: true, comment: { id: seeded.commentIds[0] } },
         { position: 1, canEdit: true, canDiscard: true, comment: { id: seeded.commentIds[1] } },
@@ -1145,7 +1145,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
         payload: {
           issueId: seeded.issueId,
           commentId: seeded.commentIds[0],
-          _paperclipWakeContext: {
+          _bionicWakeContext: {
             commentId: seeded.commentIds[0],
             wakeCommentId: seeded.commentIds[0],
             wakeCommentIds: [seeded.commentIds[0]],
@@ -1187,7 +1187,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
         .where(eq(heartbeatRuns.id, queueRunId))
         .then((rows) => rows[0]),
     ]);
-    expect((wake?.payload as any)?._paperclipWakeContext?.wakeCommentIds).toEqual([
+    expect((wake?.payload as any)?._bionicWakeContext?.wakeCommentIds).toEqual([
       seeded.commentIds[1],
     ]);
     expect((queueRun?.contextSnapshot as any)?.wakeCommentIds).toEqual([
@@ -1270,7 +1270,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
         payload: {
           issueId: seeded.issueId,
           commentId: seeded.commentIds[0],
-          _paperclipWakeContext: {
+          _bionicWakeContext: {
             commentId: seeded.commentIds[0],
             wakeCommentId: seeded.commentIds[0],
             wakeCommentIds: [seeded.commentIds[0]],
@@ -1400,7 +1400,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       .where(eq(agentWakeupRequests.id, seeded.wakeId))
       .then((rows) => rows[0]);
     expect(wake?.status).toBe("deferred_issue_execution");
-    expect((wake?.payload as any)?._paperclipWakeContext?.wakeCommentIds).toEqual(seeded.commentIds);
+    expect((wake?.payload as any)?._bionicWakeContext?.wakeCommentIds).toEqual(seeded.commentIds);
   });
 
   it("cancels a queued continuation whose comments disappeared before claim", async () => {
@@ -1458,7 +1458,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
         payload: {
           issueId: seeded.issueId,
           commentId: seeded.commentIds[0],
-          _paperclipWakeContext: {
+          _bionicWakeContext: {
             commentId: seeded.commentIds[0],
             wakeCommentId: seeded.commentIds[0],
             wakeCommentIds: [seeded.commentIds[0]],
@@ -1552,7 +1552,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       .from(agentWakeupRequests)
       .where(eq(agentWakeupRequests.id, seeded.wakeId))
       .then((rows) => rows[0]);
-    expect((wake?.payload as any)?._paperclipWakeContext?.wakeCommentIds).toEqual([seeded.commentIds[1]]);
+    expect((wake?.payload as any)?._bionicWakeContext?.wakeCommentIds).toEqual([seeded.commentIds[1]]);
 
     const run = await db
       .select({ resultJson: heartbeatRuns.resultJson, activeIdentityContextId: heartbeatRuns.activeIdentityContextId })
@@ -1663,7 +1663,7 @@ describeEmbeddedPostgres("issue queued-comment routes", () => {
       .from(agentWakeupRequests)
       .where(eq(agentWakeupRequests.id, seeded.wakeId))
       .then((rows) => rows[0]);
-    expect((wake?.payload as any)?._paperclipWakeContext?.wakeCommentIds).toEqual(seeded.commentIds);
+    expect((wake?.payload as any)?._bionicWakeContext?.wakeCommentIds).toEqual(seeded.commentIds);
     const after = await request(app(seeded.companyId))
       .get(`/api/issues/${seeded.issueId}/queued-comments`);
     expect(after.body.entries.map((entry: any) => entry.comment.id)).toEqual(seeded.commentIds);

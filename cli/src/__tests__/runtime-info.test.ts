@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function fixture(): { filePath: string; info: PaperclipRuntimeInfo } {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-runtime-info-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-runtime-info-"));
   roots.push(root);
   return {
     filePath: path.join(root, "runtime-info.json"),

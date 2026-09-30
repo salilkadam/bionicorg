@@ -1,12 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { Agent, AgentSessionEvent, Issue, IssueComment, PluginContext, PluginEvent, PluginLocalFolderEntry, Project, ToolResult } from "@paperclipai/plugin-sdk";
-import type { IssueDocument, PluginIssueOriginKind, PluginManagedRoutineResolution, PluginManagedSkillResolution } from "@paperclipai/plugin-sdk/types";
+import type { Agent, AgentSessionEvent, Issue, IssueComment, PluginContext, PluginEvent, PluginLocalFolderEntry, Project, ToolResult } from "@bionicai/plugin-sdk";
+import type { IssueDocument, PluginIssueOriginKind, PluginManagedRoutineResolution, PluginManagedSkillResolution } from "@bionicai/plugin-sdk/types";
 import {
   DEFAULT_MAX_SOURCE_BYTES,
-  DEFAULT_MAX_PAPERCLIP_CURSOR_WINDOW_CHARS,
-  DEFAULT_MAX_PAPERCLIP_ISSUE_SOURCE_CHARS,
-  DEFAULT_MAX_PAPERCLIP_ROUTINE_RUN_CHARS,
-  DEFAULT_PAPERCLIP_COST_CENTS_PER_1K_CHARS,
+  DEFAULT_MAX_BIONIC_CURSOR_WINDOW_CHARS,
+  DEFAULT_MAX_BIONIC_ISSUE_SOURCE_CHARS,
+  DEFAULT_MAX_BIONIC_ROUTINE_RUN_CHARS,
+  DEFAULT_BIONIC_COST_CENTS_PER_1K_CHARS,
   PLUGIN_ID,
   WIKI_MAINTAINER_AGENT_KEY,
   WIKI_MANAGED_SKILL_KEYS,
@@ -29,10 +29,10 @@ const EVENT_INGESTION_STATE_NAMESPACE = "llm-wiki";
 const EVENT_INGESTION_STATE_KEY = "event-ingestion";
 const EVENT_INGESTION_DEDUP_NAMESPACE = "llm-wiki-event-ingestion";
 const MAX_EVENT_SOURCE_CHARS = 20000;
-const MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT = 3;
-const MAX_PAPERCLIP_DISTILLATION_FAN_OUT = 25;
-const MAX_PAPERCLIP_PROFILE_SELECTED_PROJECTS = 25;
-const MAX_PAPERCLIP_PROFILE_ROOT_ISSUES = 25;
+const MAX_BIONIC_INGESTION_PROFILE_SOURCE_COUNT = 3;
+const MAX_BIONIC_DISTILLATION_FAN_OUT = 25;
+const MAX_BIONIC_PROFILE_SELECTED_PROJECTS = 25;
+const MAX_BIONIC_PROFILE_ROOT_ISSUES = 25;
 const PROTECTED_WIKI_CONTROL_FILES = new Set(["AGENTS.md", "IDEA.md"]);
 export const PUBLIC_DISTILLATION_AUTO_APPLY_RESTRICTION =
   "Authenticated/public deployments always require manual review before wiki writes.";
@@ -477,7 +477,7 @@ async function requirePaperclipIngestionPolicy(
 
 function assertPaperclipSourceScopePayload(input: { projectId?: string | null; rootIssueId?: string | null }) {
   if (input.projectId && input.rootIssueId) {
-    throw new Error("Paperclip source scope must specify either projectId or rootIssueId, not both.");
+    throw new Error("Bionic source scope must specify either projectId or rootIssueId, not both.");
   }
 }
 
@@ -487,7 +487,7 @@ function assertRequestedCharacterLimit(name: string, value: unknown, max: number
     throw new Error(`${name} must be a positive number.`);
   }
   if (Math.floor(value) > max) {
-    throw new Error(`${name} exceeds the hard Paperclip ingestion cap of ${max} characters.`);
+    throw new Error(`${name} exceeds the hard Bionic ingestion cap of ${max} characters.`);
   }
 }
 
@@ -552,7 +552,7 @@ function normalizeBundleLimit(value: unknown, fallback: number): number {
 }
 
 function normalizeCostRate(value: unknown): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) return DEFAULT_PAPERCLIP_COST_CENTS_PER_1K_CHARS;
+  if (typeof value !== "number" || !Number.isFinite(value)) return DEFAULT_BIONIC_COST_CENTS_PER_1K_CHARS;
   return Math.max(0, value);
 }
 
@@ -626,7 +626,7 @@ function protectDistillationSourceBody(input: {
       "",
       `- Source ID: ${input.sourceId}`,
       `- Redaction reasons: ${reasons.join(", ")}`,
-      "- Review the original Paperclip source directly if a human needs the unredacted material.",
+      "- Review the original Bionic source directly if a human needs the unredacted material.",
     ].join("\n"),
     warning: `Suppressed ${input.sourceKind} content for ${sourceTitleForIssue(input.issue)} / ${input.sourceId}: ${reasons.join(", ")}.`,
     refPatch: {
@@ -640,20 +640,20 @@ async function resolvePaperclipDistillationLimits(
   ctx: PluginContext,
   input: Pick<PaperclipSourceBundleInput, "companyId" | "maxCharacters" | "maxCharactersPerSource" | "routineRun">,
 ): Promise<PaperclipDistillationLimits> {
-  assertRequestedCharacterLimit("maxCharacters", input.maxCharacters, DEFAULT_MAX_PAPERCLIP_CURSOR_WINDOW_CHARS);
-  assertRequestedCharacterLimit("maxCharactersPerSource", input.maxCharactersPerSource, DEFAULT_MAX_PAPERCLIP_ISSUE_SOURCE_CHARS);
+  assertRequestedCharacterLimit("maxCharacters", input.maxCharacters, DEFAULT_MAX_BIONIC_CURSOR_WINDOW_CHARS);
+  assertRequestedCharacterLimit("maxCharactersPerSource", input.maxCharactersPerSource, DEFAULT_MAX_BIONIC_ISSUE_SOURCE_CHARS);
   const config = await ctx.config.get(input.companyId) as Record<string, unknown>;
   const maxCharactersPerSource = Math.min(
-    normalizeBundleLimit(input.maxCharactersPerSource, DEFAULT_MAX_PAPERCLIP_ISSUE_SOURCE_CHARS),
-    normalizeBundleLimit(config.maxPaperclipIssueSourceCharacters, DEFAULT_MAX_PAPERCLIP_ISSUE_SOURCE_CHARS),
+    normalizeBundleLimit(input.maxCharactersPerSource, DEFAULT_MAX_BIONIC_ISSUE_SOURCE_CHARS),
+    normalizeBundleLimit(config.maxPaperclipIssueSourceCharacters, DEFAULT_MAX_BIONIC_ISSUE_SOURCE_CHARS),
   );
   const cursorWindowCap = normalizeBundleLimit(
     config.maxPaperclipCursorWindowCharacters,
-    DEFAULT_MAX_PAPERCLIP_CURSOR_WINDOW_CHARS,
+    DEFAULT_MAX_BIONIC_CURSOR_WINDOW_CHARS,
   );
   const routineRunCap = normalizeBundleLimit(
     config.maxPaperclipRoutineRunCharacters,
-    DEFAULT_MAX_PAPERCLIP_ROUTINE_RUN_CHARS,
+    DEFAULT_MAX_BIONIC_ROUTINE_RUN_CHARS,
   );
   const requestedMaxCharacters = normalizeBundleLimit(input.maxCharacters, cursorWindowCap);
   const hardCharacterCap = input.routineRun ? Math.min(cursorWindowCap, routineRunCap) : cursorWindowCap;
@@ -661,7 +661,7 @@ async function resolvePaperclipDistillationLimits(
     maxCharacters: Math.min(requestedMaxCharacters, hardCharacterCap),
     maxCharactersPerSource,
     maxRoutineRunCharacters: routineRunCap,
-    costCentsPerThousandSourceCharacters: normalizeCostRate(config.paperclipCostCentsPerThousandSourceCharacters),
+    costCentsPerThousandSourceCharacters: normalizeCostRate(config.bionicCostCentsPerThousandSourceCharacters),
   };
 }
 
@@ -734,8 +734,8 @@ function defaultPaperclipIngestionProfile(input: {
       workProducts: "off",
     },
     cursor: {
-      maxWindowCharacters: DEFAULT_MAX_PAPERCLIP_CURSOR_WINDOW_CHARS,
-      maxCharactersPerSource: DEFAULT_MAX_PAPERCLIP_ISSUE_SOURCE_CHARS,
+      maxWindowCharacters: DEFAULT_MAX_BIONIC_CURSOR_WINDOW_CHARS,
+      maxCharactersPerSource: DEFAULT_MAX_BIONIC_ISSUE_SOURCE_CHARS,
       minSourceAgeMinutes: 15,
       maxWindowsPerRun: 6,
       staleAfterHours: 72,
@@ -764,15 +764,15 @@ function normalizePaperclipIngestionSourceScope(value: unknown): PaperclipIngest
       : undefined;
     return {
       kind,
-      limit: normalizeLimit(record.limit, 3, MAX_PAPERCLIP_PROFILE_SELECTED_PROJECTS),
+      limit: normalizeLimit(record.limit, 3, MAX_BIONIC_PROFILE_SELECTED_PROJECTS),
       ...(statuses && statuses.length > 0 ? { statuses: [...new Set(statuses)] } : {}),
     };
   }
   if (kind === "selected_projects") {
-    return { kind, projectIds: stringArray(record.projectIds).slice(0, MAX_PAPERCLIP_PROFILE_SELECTED_PROJECTS) };
+    return { kind, projectIds: stringArray(record.projectIds).slice(0, MAX_BIONIC_PROFILE_SELECTED_PROJECTS) };
   }
   if (kind === "root_issues") {
-    return { kind, issueIds: stringArray(record.issueIds).slice(0, MAX_PAPERCLIP_PROFILE_ROOT_ISSUES) };
+    return { kind, issueIds: stringArray(record.issueIds).slice(0, MAX_BIONIC_PROFILE_ROOT_ISSUES) };
   }
   if (kind === "company_all") {
     return { kind, requiresBoardConfirmation: true };
@@ -810,8 +810,8 @@ function normalizePaperclipIngestionProfile(
       workProducts: sourceKinds.workProducts === "metadata_only" ? "metadata_only" : "off",
     },
     cursor: {
-      maxWindowCharacters: normalizeLimit(cursor.maxWindowCharacters, fallback.cursor.maxWindowCharacters, DEFAULT_MAX_PAPERCLIP_CURSOR_WINDOW_CHARS),
-      maxCharactersPerSource: normalizeLimit(cursor.maxCharactersPerSource, fallback.cursor.maxCharactersPerSource, DEFAULT_MAX_PAPERCLIP_ISSUE_SOURCE_CHARS),
+      maxWindowCharacters: normalizeLimit(cursor.maxWindowCharacters, fallback.cursor.maxWindowCharacters, DEFAULT_MAX_BIONIC_CURSOR_WINDOW_CHARS),
+      maxCharactersPerSource: normalizeLimit(cursor.maxCharactersPerSource, fallback.cursor.maxCharactersPerSource, DEFAULT_MAX_BIONIC_ISSUE_SOURCE_CHARS),
       minSourceAgeMinutes: normalizeLimit(cursor.minSourceAgeMinutes, fallback.cursor.minSourceAgeMinutes, 24 * 60),
       maxWindowsPerRun: normalizeLimit(cursor.maxWindowsPerRun, fallback.cursor.maxWindowsPerRun, 25),
       staleAfterHours: normalizeLimit(cursor.staleAfterHours, fallback.cursor.staleAfterHours, 24 * 30),
@@ -826,7 +826,7 @@ function normalizePaperclipIngestionProfile(
 
 async function profileForSpace(ctx: PluginContext, companyId: string, space: WikiSpace): Promise<PaperclipIngestionProfileV1> {
   const legacySettings = space.slug === DEFAULT_SPACE_SLUG ? await getEventIngestionSettings(ctx, companyId) : null;
-  return normalizePaperclipIngestionProfile(space.settings.paperclipIngestion, { space, legacySettings });
+  return normalizePaperclipIngestionProfile(space.settings.bionicIngestion, { space, legacySettings });
 }
 
 function eventIngestionStateKey(companyId: string) {
@@ -863,7 +863,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "archived_space",
-      message: `Paperclip ingestion policy denied ${purpose}: space "${space.slug}" is ${space.status}.`,
+      message: `Bionic ingestion policy denied ${purpose}: space "${space.slug}" is ${space.status}.`,
     };
   }
   if (space.accessScope !== "shared") {
@@ -871,7 +871,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "restricted_space",
-      message: `Paperclip ingestion policy denied ${purpose}: ${space.accessScope} spaces cannot ingest Paperclip sources until host permissions are enforced.`,
+      message: `Bionic ingestion policy denied ${purpose}: ${space.accessScope} spaces cannot ingest Bionic sources until host permissions are enforced.`,
     };
   }
   if (input.requireEnabledProfile && space.slug !== DEFAULT_SPACE_SLUG && !profile?.enabled) {
@@ -879,7 +879,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "profile_disabled",
-      message: `Paperclip ingestion policy denied ${purpose}: Paperclip ingestion is not enabled for space "${space.slug}".`,
+      message: `Bionic ingestion policy denied ${purpose}: Bionic ingestion is not enabled for space "${space.slug}".`,
     };
   }
   if (input.requireEnabledProfile && space.slug !== DEFAULT_SPACE_SLUG && profile?.enabled && profile.sourceScopes.length === 0) {
@@ -887,7 +887,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "profile_empty",
-      message: `Paperclip ingestion policy denied ${purpose}: space "${space.slug}" has no source scopes configured.`,
+      message: `Bionic ingestion policy denied ${purpose}: space "${space.slug}" has no source scopes configured.`,
     };
   }
   return { allowed: true, space };
@@ -988,18 +988,18 @@ async function validatePaperclipIngestionProfile(ctx: PluginContext, input: {
   });
   if (!policy.allowed) throw new Error(policy.message);
   if (input.profile.enabled && input.profile.sourceScopes.length === 0) {
-    throw new Error("Paperclip ingestion profile must include at least one source scope before it can be enabled.");
+    throw new Error("Bionic ingestion profile must include at least one source scope before it can be enabled.");
   }
-  if (input.profile.sourceScopes.length > MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT) {
-    throw new Error(`Paperclip ingestion profile sources exceed the hard cap of ${MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT}.`);
+  if (input.profile.sourceScopes.length > MAX_BIONIC_INGESTION_PROFILE_SOURCE_COUNT) {
+    throw new Error(`Bionic ingestion profile sources exceed the hard cap of ${MAX_BIONIC_INGESTION_PROFILE_SOURCE_COUNT}.`);
   }
   for (const scope of input.profile.sourceScopes) {
     if (scope.kind === "company_all" && input.space.slug !== DEFAULT_SPACE_SLUG) {
       throw new Error("Everything in the company is only available on the default wiki space.");
     }
     if (scope.kind === "selected_projects") {
-      if (scope.projectIds.length > MAX_PAPERCLIP_PROFILE_SELECTED_PROJECTS) {
-        throw new Error(`selected_projects exceeds the hard cap of ${MAX_PAPERCLIP_PROFILE_SELECTED_PROJECTS}.`);
+      if (scope.projectIds.length > MAX_BIONIC_PROFILE_SELECTED_PROJECTS) {
+        throw new Error(`selected_projects exceeds the hard cap of ${MAX_BIONIC_PROFILE_SELECTED_PROJECTS}.`);
       }
       for (const projectId of scope.projectIds) {
         const project = await ctx.projects.get(projectId, input.companyId);
@@ -1007,8 +1007,8 @@ async function validatePaperclipIngestionProfile(ctx: PluginContext, input: {
       }
     }
     if (scope.kind === "root_issues") {
-      if (scope.issueIds.length > MAX_PAPERCLIP_PROFILE_ROOT_ISSUES) {
-        throw new Error(`root_issues exceeds the hard cap of ${MAX_PAPERCLIP_PROFILE_ROOT_ISSUES}.`);
+      if (scope.issueIds.length > MAX_BIONIC_PROFILE_ROOT_ISSUES) {
+        throw new Error(`root_issues exceeds the hard cap of ${MAX_BIONIC_PROFILE_ROOT_ISSUES}.`);
       }
       for (const issueId of scope.issueIds) {
         const issue = await ctx.issues.get(issueId, input.companyId);
@@ -1033,7 +1033,7 @@ export async function updatePaperclipIngestionProfile(ctx: PluginContext, input:
     companyId: input.companyId,
     wikiId,
     spaceSlug: space.slug,
-    settings: { paperclipIngestion: profile },
+    settings: { bionicIngestion: profile },
   });
   if (space.slug === DEFAULT_SPACE_SLUG) {
     await ctx.state.set(eventIngestionStateKey(input.companyId), {
@@ -1049,11 +1049,11 @@ export async function updatePaperclipIngestionProfile(ctx: PluginContext, input:
   }
   await ctx.activity.log({
     companyId: input.companyId,
-    message: `Updated Paperclip ingestion profile for ${space.displayName}`,
+    message: `Updated Bionic ingestion profile for ${space.displayName}`,
     entityType: "llm_wiki_space",
     entityId: space.id,
     metadata: {
-      type: "plugin.llm_wiki.paperclip_ingestion_profile_updated",
+      type: "plugin.llm_wiki.bionic_ingestion_profile_updated",
       wikiId,
       spaceSlug: space.slug,
       beforeEnabled: current.enabled,
@@ -1111,8 +1111,8 @@ export async function listPaperclipIngestionCandidates(ctx: PluginContext, input
     spaceSlug: DEFAULT_SPACE_SLUG,
   }, "profile_update");
   const sourceKeys = Object.keys(input.settings.sources ?? {});
-  if (sourceKeys.length > MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT) {
-    throw new Error(`Paperclip ingestion profile sources exceed the hard cap of ${MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT}.`);
+  if (sourceKeys.length > MAX_BIONIC_INGESTION_PROFILE_SOURCE_COUNT) {
+    throw new Error(`Bionic ingestion profile sources exceed the hard cap of ${MAX_BIONIC_INGESTION_PROFILE_SOURCE_COUNT}.`);
   }
   assertRequestedCharacterLimit("maxCharacters", input.settings.maxCharacters, MAX_EVENT_SOURCE_CHARS);
   const current = await getEventIngestionSettings(ctx, input.companyId);
@@ -1148,7 +1148,7 @@ export async function listPaperclipIngestionCandidates(ctx: PluginContext, input
     companyId: input.companyId,
     wikiId: next.wikiId,
     spaceSlug: DEFAULT_SPACE_SLUG,
-    settings: { paperclipIngestion: profile },
+    settings: { bionicIngestion: profile },
   });
   return next;
 }
@@ -1171,7 +1171,7 @@ function assertWikiPath(path: string, options: { allowMetadata?: boolean } = {})
     trimmed !== "log.md" &&
     !trimmed.startsWith("raw/") &&
     !trimmed.startsWith("wiki/") &&
-    !(options.allowMetadata && trimmed.startsWith(".paperclip/"))
+    !(options.allowMetadata && trimmed.startsWith(".bionic/"))
   ) {
     throw new Error(`Wiki path must stay inside AGENTS.md, IDEA.md, raw/, or wiki/: ${path}`);
   }
@@ -1216,23 +1216,23 @@ function bindingTable(ctx: PluginContext): string {
 }
 
 function distillationCursorTable(ctx: PluginContext): string {
-  return tableName(ctx.db.namespace, "paperclip_distillation_cursors");
+  return tableName(ctx.db.namespace, "bionic_distillation_cursors");
 }
 
 function distillationRunTable(ctx: PluginContext): string {
-  return tableName(ctx.db.namespace, "paperclip_distillation_runs");
+  return tableName(ctx.db.namespace, "bionic_distillation_runs");
 }
 
 function sourceSnapshotTable(ctx: PluginContext): string {
-  return tableName(ctx.db.namespace, "paperclip_source_snapshots");
+  return tableName(ctx.db.namespace, "bionic_source_snapshots");
 }
 
 function distillationWorkItemTable(ctx: PluginContext): string {
-  return tableName(ctx.db.namespace, "paperclip_distillation_work_items");
+  return tableName(ctx.db.namespace, "bionic_distillation_work_items");
 }
 
 function pageBindingTable(ctx: PluginContext): string {
-  return tableName(ctx.db.namespace, "paperclip_page_bindings");
+  return tableName(ctx.db.namespace, "bionic_page_bindings");
 }
 
 function parseBindingMetadata(value: unknown): Record<string, unknown> {
@@ -2295,7 +2295,7 @@ function operationTitleWithSpace(title: string, space: WikiSpace): string {
 }
 
 function operationPromptWithSpaceContext(input: OperationSpaceContext): string {
-  const paperclipDerived = input.operationType === "distill" || input.operationType === "backfill";
+  const bionicDerived = input.operationType === "distill" || input.operationType === "backfill";
   return [
     `Plugin operation: ${input.operationType}`,
     `Wiki ID: ${input.wikiId}`,
@@ -2306,8 +2306,8 @@ function operationPromptWithSpaceContext(input: OperationSpaceContext): string {
     "Space isolation requirement:",
     `- Pass wikiId \`${input.wikiId}\` and spaceSlug \`${input.space.slug}\` on every LLM Wiki tool call.`,
     "- Treat all paths in the prompt as relative to this space root.",
-    paperclipDerived
-      ? "- Paperclip-derived distill/backfill operations are default-space-only in Phase 1. Stop and comment if asked to write Paperclip-derived pages into a non-default space."
+    bionicDerived
+      ? "- Bionic-derived distill/backfill operations are default-space-only in Phase 1. Stop and comment if asked to write Bionic-derived pages into a non-default space."
       : "- Manual ingest, query, lint, index, and file-as-page operations follow the named destination space. Do not cross into another space unless the operation explicitly asks for a multi-space sweep.",
     "",
     input.prompt ?? "Created by the LLM Wiki plugin.",
@@ -2387,14 +2387,14 @@ function isLlmWikiOperationIssue(issue: Issue): boolean {
   return typeof issue.originKind === "string" && issue.originKind.startsWith(OPERATION_ORIGIN_KIND);
 }
 
-function paperclipDistillationScope(input: { projectId?: string | null; rootIssueId?: string | null }): PaperclipDistillationScope {
+function bionicDistillationScope(input: { projectId?: string | null; rootIssueId?: string | null }): PaperclipDistillationScope {
   if (input.rootIssueId) return "root_issue";
   if (input.projectId) return "project";
   return "company";
 }
 
-function paperclipCursorScopeMetadata(input: { projectId?: string | null; rootIssueId?: string | null }) {
-  const sourceScope = paperclipDistillationScope(input);
+function bionicCursorScopeMetadata(input: { projectId?: string | null; rootIssueId?: string | null }) {
+  const sourceScope = bionicDistillationScope(input);
   const projectId = sourceScope === "project" ? input.projectId ?? null : null;
   const rootIssueId = sourceScope === "root_issue" ? input.rootIssueId ?? null : null;
   return {
@@ -2415,18 +2415,18 @@ async function upsertPaperclipDistillationCursor(ctx: PluginContext, input: {
   metadata?: Record<string, unknown>;
 }): Promise<string> {
   const cursorId = randomUUID();
-  const scope = paperclipCursorScopeMetadata(input);
+  const scope = bionicCursorScopeMetadata(input);
   await ctx.db.execute(
-    `INSERT INTO ${distillationCursorTable(ctx)} AS paperclip_distillation_cursors
+    `INSERT INTO ${distillationCursorTable(ctx)} AS bionic_distillation_cursors
        (id, company_id, wiki_id, space_id, source_scope, scope_key, project_id, root_issue_id, source_kind, last_observed_at, pending_event_count, metadata)
-     VALUES ($1, $2, $3, $11, $4, $5, $6, $7, 'paperclip_issue_history', $8::timestamptz, $9, $10::jsonb)
+     VALUES ($1, $2, $3, $11, $4, $5, $6, $7, 'bionic_issue_history', $8::timestamptz, $9, $10::jsonb)
      ON CONFLICT (company_id, wiki_id, space_id, source_scope, scope_key, source_kind)
      DO UPDATE SET last_observed_at = GREATEST(
-                       COALESCE(paperclip_distillation_cursors.last_observed_at, EXCLUDED.last_observed_at),
-                       COALESCE(EXCLUDED.last_observed_at, paperclip_distillation_cursors.last_observed_at)
+                       COALESCE(bionic_distillation_cursors.last_observed_at, EXCLUDED.last_observed_at),
+                       COALESCE(EXCLUDED.last_observed_at, bionic_distillation_cursors.last_observed_at)
                      ),
-                   pending_event_count = paperclip_distillation_cursors.pending_event_count + EXCLUDED.pending_event_count,
-                   metadata = paperclip_distillation_cursors.metadata || EXCLUDED.metadata,
+                   pending_event_count = bionic_distillation_cursors.pending_event_count + EXCLUDED.pending_event_count,
+                   metadata = bionic_distillation_cursors.metadata || EXCLUDED.metadata,
                    updated_at = now()`,
     [
       cursorId,
@@ -2450,7 +2450,7 @@ async function upsertPaperclipDistillationCursor(ctx: PluginContext, input: {
         AND space_id = $3
         AND source_scope = $4
         AND scope_key = $5
-        AND source_kind = 'paperclip_issue_history'
+        AND source_kind = 'bionic_issue_history'
       LIMIT 1`,
     [input.companyId, input.wikiId, input.spaceId, scope.sourceScope, scope.scopeKey],
   );
@@ -2477,8 +2477,8 @@ export async function enableActiveProjectDistillation(ctx: PluginContext, input:
 }): Promise<EnableActiveProjectDistillationResult> {
   const wikiId = normalizeWikiId(input.wikiId);
   const space = await requirePaperclipIngestionPolicy(ctx, { companyId: input.companyId, wikiId, spaceSlug: input.spaceSlug }, "candidate_search", { requireEnabledProfile: true });
-  if (typeof input.limit === "number" && Number.isFinite(input.limit) && Math.floor(input.limit) > MAX_PAPERCLIP_DISTILLATION_FAN_OUT) {
-    throw new Error(`Paperclip ingestion fan-out exceeds the hard cap of ${MAX_PAPERCLIP_DISTILLATION_FAN_OUT} enabled profiles.`);
+  if (typeof input.limit === "number" && Number.isFinite(input.limit) && Math.floor(input.limit) > MAX_BIONIC_DISTILLATION_FAN_OUT) {
+    throw new Error(`Bionic ingestion fan-out exceeds the hard cap of ${MAX_BIONIC_DISTILLATION_FAN_OUT} enabled profiles.`);
   }
   const limit = normalizeLimit(input.limit ?? 3, 3, 25);
   const projects = await ctx.projects.list({ companyId: input.companyId, limit: 200 });
@@ -2616,11 +2616,11 @@ export async function assemblePaperclipSourceBundle(ctx: PluginContext, input: P
   const includeComments = input.includeComments !== false;
   const includeDocuments = input.includeDocuments !== false;
   const issues = await listPaperclipBundleIssues(ctx, input);
-  const scope = paperclipCursorScopeMetadata(input);
+  const scope = bionicCursorScopeMetadata(input);
   const sourceRefs: PaperclipSourceRef[] = [];
   const warnings: string[] = [];
   const lines = [
-    `# Paperclip source bundle`,
+    `# Bionic source bundle`,
     "",
     "## Bundle Metadata",
     "",
@@ -2767,7 +2767,7 @@ export async function createPaperclipDistillationRun(ctx: PluginContext, input: 
   const wikiId = normalizeWikiId(input.wikiId);
   assertPaperclipSourceScopePayload(input);
   const space = await requirePaperclipIngestionPolicy(ctx, { companyId: input.companyId, wikiId, spaceSlug: input.spaceSlug }, "execute", { requireEnabledProfile: true });
-  const scope = paperclipCursorScopeMetadata(input);
+  const scope = bionicCursorScopeMetadata(input);
   const limits = await resolvePaperclipDistillationLimitsForSpace(ctx, { ...input, space });
   const cursorId = await upsertPaperclipDistillationCursor(ctx, {
     companyId: input.companyId,
@@ -2897,17 +2897,17 @@ export async function createPaperclipDistillationWorkItem(ctx: PluginContext, in
   assertPaperclipSourceScopePayload(input);
   const space = await requirePaperclipIngestionPolicy(ctx, { companyId: input.companyId, wikiId, spaceSlug: input.spaceSlug }, "queue", { requireEnabledProfile: true });
   const itemId = randomUUID();
-  const scope = paperclipCursorScopeMetadata(input);
+  const scope = bionicCursorScopeMetadata(input);
   if (input.kind === "backfill" && !scope.projectId && !scope.rootIssueId) {
     throw new Error("Backfill work items must target a projectId or rootIssueId; whole-company backfill is not allowed.");
   }
   await ctx.db.execute(
-    `INSERT INTO ${distillationWorkItemTable(ctx)} AS paperclip_distillation_work_items
+    `INSERT INTO ${distillationWorkItemTable(ctx)} AS bionic_distillation_work_items
        (id, company_id, wiki_id, space_id, work_item_kind, status, priority, project_id, root_issue_id, requested_by_issue_id, idempotency_key, metadata)
      VALUES ($1, $2, $3, $11, $4, 'pending', $5, $6, $7, $8, $9, $10::jsonb)
      ON CONFLICT (company_id, wiki_id, space_id, idempotency_key)
      DO UPDATE SET priority = EXCLUDED.priority,
-                   metadata = paperclip_distillation_work_items.metadata || EXCLUDED.metadata,
+                   metadata = bionic_distillation_work_items.metadata || EXCLUDED.metadata,
                    updated_at = now()`,
     [
       itemId,
@@ -2931,7 +2931,7 @@ export async function createPaperclipDistillationWorkItem(ctx: PluginContext, in
 }
 
 function sourceRefLabel(ref: PaperclipSourceRef): string {
-  const issue = ref.issueIdentifier ? issueReference(ref.issueIdentifier) : (ref.title ?? "Paperclip source");
+  const issue = ref.issueIdentifier ? issueReference(ref.issueIdentifier) : (ref.title ?? "Bionic source");
   if (ref.kind === "document") return `${issue} document:${ref.documentKey ?? "unknown"}`;
   if (ref.kind === "comment") return `${issue} comment`;
   return issue;
@@ -2957,7 +2957,7 @@ function issueSourceRef(issue: Issue): PaperclipSourceRef {
 }
 
 function projectPageSlug(input: { project: Project | null; rootIssue: Issue | null }): string {
-  return slugify(input.project?.name ?? input.rootIssue?.title ?? "paperclip-project");
+  return slugify(input.project?.name ?? input.rootIssue?.title ?? "bionic-project");
 }
 
 function issueDescription(issue: Issue): string {
@@ -3020,7 +3020,7 @@ function standupPageContents(input: {
   durablePagePath: string;
 }): string {
   const currentAsOf = input.bundle.sourceWindowEnd ?? new Date().toISOString();
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "Bionic Project";
   const activeIssues = input.issues.filter((issue) => !["done", "cancelled"].includes(issue.status));
   const recentlyChanged = [...input.issues]
     .sort((a, b) => (isoString(b.updatedAt) ?? "").localeCompare(isoString(a.updatedAt) ?? ""))
@@ -3046,7 +3046,7 @@ function standupPageContents(input: {
     "## Executive Readout",
     "",
     lead
-      ? `The current center of gravity is **${issueConcept(lead)}** (${issueReferenceFor(lead)}). ${input.bundle.clipped ? "The source window was clipped, so treat this as a bounded readout rather than the full live state." : "This is a high-level readout of the meaningful Paperclip work in the current source window."}`
+      ? `The current center of gravity is **${issueConcept(lead)}** (${issueReferenceFor(lead)}). ${input.bundle.clipped ? "The source window was clipped, so treat this as a bounded readout rather than the full live state." : "This is a high-level readout of the meaningful Bionic work in the current source window."}`
       : "No meaningful project movement was present in this source window.",
     "",
     "## What Changed",
@@ -3091,7 +3091,7 @@ function projectPageContents(input: {
   pagePath: string;
 }): string {
   const currentAsOf = input.bundle.sourceWindowEnd ?? new Date().toISOString();
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "Bionic Project";
   const description = input.project?.description?.trim() || input.rootIssue?.description?.trim() || "";
   const activeIssues = input.issues.filter((issue) => !["done", "cancelled"].includes(issue.status));
   const recentIssues = [...input.issues]
@@ -3112,14 +3112,14 @@ function projectPageContents(input: {
     "",
     "## Overview",
     "",
-    description ? excerpt(description, 700) : `This page synthesizes Paperclip issue history into a stable project brief for ${title}.`,
+    description ? excerpt(description, 700) : `This page synthesizes Bionic issue history into a stable project brief for ${title}.`,
     "",
     "## Current Direction",
     "",
     activeIssues.length
       ? `Work is currently organized around ${activeIssues.slice(0, 3).map((issue) => `**${issueConcept(issue)}** (${issueReferenceFor(issue)})`).join(", ")}. The useful project view is the concept being advanced, not the raw issue queue.`
       : "The current source window does not show active project work.",
-    input.bundle.clipped ? "\nThe source window was clipped, so verify Paperclip before treating this as complete state." : null,
+    input.bundle.clipped ? "\nThe source window was clipped, so verify Bionic before treating this as complete state." : null,
     "",
     "## Workstreams",
     "",
@@ -3148,7 +3148,7 @@ function projectPageContents(input: {
 }
 
 function decisionsPageContents(input: { project: Project | null; rootIssue: Issue | null; issues: Issue[]; bundle: PaperclipSourceBundle }): string {
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "Bionic Project";
   const decisionIssues = input.issues.filter((issue) => hasDecisionSignal(`${issue.title}\n${issueDescription(issue)}`));
   return [
     `# ${title} Decisions`,
@@ -3173,7 +3173,7 @@ function decisionsPageContents(input: { project: Project | null; rootIssue: Issu
 }
 
 function historyPageContents(input: { project: Project | null; rootIssue: Issue | null; issues: Issue[]; bundle: PaperclipSourceBundle }): string {
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "Bionic Project";
   const timeline = [...input.issues]
     .sort((a, b) => (isoString(a.updatedAt) ?? "").localeCompare(isoString(b.updatedAt) ?? ""))
     .slice(-30);
@@ -3218,7 +3218,7 @@ function appendProjectLogContents(current: string | null, input: { standupPath: 
     ? input.warnings.map((warning) => `- warning: ${warning}`)
     : ["- warnings: none"];
   const entry = [
-    `## [${new Date().toISOString().slice(0, 10)}] paperclip-distill | ${input.status}`,
+    `## [${new Date().toISOString().slice(0, 10)}] bionic-distill | ${input.status}`,
     `- standup: \`${input.standupPath}\``,
     `- page: \`${input.pagePath}\``,
     `- run: \`${input.runId}\``,
@@ -3283,13 +3283,13 @@ async function upsertPageBinding(ctx: PluginContext, input: {
   metadata?: Record<string, unknown>;
 }) {
   await ctx.db.execute(
-    `INSERT INTO ${pageBindingTable(ctx)} AS paperclip_page_bindings
+    `INSERT INTO ${pageBindingTable(ctx)} AS bionic_page_bindings
        (id, company_id, wiki_id, space_id, project_id, root_issue_id, page_path, last_applied_source_hash, last_distillation_run_id, metadata)
      VALUES ($1, $2, $3, $10, $4, $5, $6, $7, $8, $9::jsonb)
      ON CONFLICT (company_id, wiki_id, space_id, page_path)
      DO UPDATE SET last_applied_source_hash = EXCLUDED.last_applied_source_hash,
                    last_distillation_run_id = EXCLUDED.last_distillation_run_id,
-                   metadata = paperclip_page_bindings.metadata || EXCLUDED.metadata,
+                   metadata = bionic_page_bindings.metadata || EXCLUDED.metadata,
                    updated_at = now()`,
     [
       randomUUID(),
@@ -3316,8 +3316,8 @@ async function autoApplyEnabled(ctx: PluginContext, companyId: string, requested
 }
 
 export function getDistillationAutoApplyRestriction(): DistillationAutoApplyRestriction {
-  const rawMode = process.env.PAPERCLIP_DEPLOYMENT_MODE;
-  const rawExposure = process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE;
+  const rawMode = process.env.BIONIC_DEPLOYMENT_MODE;
+  const rawExposure = process.env.BIONIC_DEPLOYMENT_EXPOSURE;
   const deploymentMode =
     rawMode === "local_trusted" || rawMode === "authenticated" ? rawMode : null;
   const deploymentExposure =
@@ -3338,7 +3338,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
   const wikiId = normalizeWikiId(input.wikiId);
   assertPaperclipSourceScopePayload(input);
   const space = await requirePaperclipIngestionPolicy(ctx, { companyId: input.companyId, wikiId, spaceSlug: input.spaceSlug }, "execute", { requireEnabledProfile: true });
-  const scope = paperclipCursorScopeMetadata(input);
+  const scope = bionicCursorScopeMetadata(input);
   const issues = await listPaperclipBundleIssues(ctx, input);
   const project = scope.projectId ? await ctx.projects.get(scope.projectId, input.companyId) : null;
   const rootIssue = scope.rootIssueId ? await ctx.issues.get(scope.rootIssueId, input.companyId) : null;
@@ -3361,7 +3361,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       status: "succeeded",
       sourceHash: bundle.sourceHash,
       sourceWindowEnd: bundle.sourceWindowEnd,
-      warning: "Skipped low-signal Paperclip source window.",
+      warning: "Skipped low-signal Bionic source window.",
     });
     return {
       status: "skipped",
@@ -3370,7 +3370,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       runId: run.runId,
       cursorId: run.cursorId,
       sourceHash: bundle.sourceHash,
-      warnings: ["Skipped low-signal Paperclip source window."],
+      warnings: ["Skipped low-signal Bionic source window."],
       patches: [] as PaperclipDistillationPatch[],
     };
   }
@@ -3386,7 +3386,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       status: "succeeded",
       sourceHash: bundle.sourceHash,
       sourceWindowEnd: bundle.sourceWindowEnd,
-      warning: "Skipped unchanged Paperclip source hash.",
+      warning: "Skipped unchanged Bionic source hash.",
     });
     return {
       status: "skipped",
@@ -3395,7 +3395,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       runId: run.runId,
       cursorId: run.cursorId,
       sourceHash: bundle.sourceHash,
-      warnings: ["Skipped unchanged Paperclip source hash."],
+      warnings: ["Skipped unchanged Bionic source hash."],
       patches: [] as PaperclipDistillationPatch[],
     };
   }
@@ -3403,7 +3403,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
   const warnings = [...bundle.warnings];
   const confidence: "high" | "medium" | "low" = bundle.clipped ? "medium" : "high";
   const reviewRequired = bundle.clipped || warnings.length > 0;
-  const title = project?.name ?? rootIssue?.title ?? "Paperclip Project";
+  const title = project?.name ?? rootIssue?.title ?? "Bionic Project";
   const standupCurrent = await readCurrentWithHash(ctx, input.companyId, standupPath, space);
   const standupContents = standupPageContents({ project, rootIssue, issues, bundle, pagePath: standupPath, durablePagePath: pagePath });
   const projectContents = projectPageContents({ project, rootIssue, issues, bundle, pagePath });
@@ -3497,7 +3497,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       path: patch.pagePath,
       contents: patch.proposedContents,
       expectedHash: patch.currentHash,
-      summary: `Paperclip distillation ${patch.operationType} from ${bundle.sourceHash}`,
+      summary: `Bionic distillation ${patch.operationType} from ${bundle.sourceHash}`,
       sourceRefs: patch.sourceRefs,
     });
     await upsertPageBinding(ctx, {
@@ -3561,12 +3561,12 @@ function rawPathForPaperclipEvent(input: {
 }): string {
   const identifier = input.issue.identifier ?? input.issue.id.slice(0, 8);
   const eventDate = input.event.occurredAt.slice(0, 10);
-  return assertRawPath(`raw/paperclip/${input.sourceKind}/${eventDate}-${slugify(identifier)}-${slugify(input.label)}-${contentHash(input.contents).slice(0, 8)}.md`);
+  return assertRawPath(`raw/bionic/${input.sourceKind}/${eventDate}-${slugify(identifier)}-${slugify(input.label)}-${contentHash(input.contents).slice(0, 8)}.md`);
 }
 
 function formatIssueEventSource(issue: Issue, event: PluginEvent, maxCharacters: number): string {
   return truncateEventSource([
-    `# Paperclip issue: ${sourceTitleForIssue(issue)}`,
+    `# Bionic issue: ${sourceTitleForIssue(issue)}`,
     "",
     "## Provenance",
     "",
@@ -3587,7 +3587,7 @@ function formatIssueEventSource(issue: Issue, event: PluginEvent, maxCharacters:
 
 function formatCommentEventSource(issue: Issue, comment: IssueComment, event: PluginEvent, maxCharacters: number): string {
   return truncateEventSource([
-    `# Paperclip comment on ${sourceTitleForIssue(issue)}`,
+    `# Bionic comment on ${sourceTitleForIssue(issue)}`,
     "",
     "## Provenance",
     "",
@@ -3607,7 +3607,7 @@ function formatCommentEventSource(issue: Issue, comment: IssueComment, event: Pl
 
 function formatDocumentEventSource(issue: Issue, document: IssueDocument, event: PluginEvent, maxCharacters: number): string {
   return truncateEventSource([
-    `# Paperclip document: ${document.title ?? document.key}`,
+    `# Bionic document: ${document.title ?? document.key}`,
     "",
     "## Provenance",
     "",
@@ -3669,7 +3669,7 @@ async function recordPaperclipCursorObservation(ctx: PluginContext, input: {
   };
 }
 
-async function paperclipProfileIncludesIssue(ctx: PluginContext, input: {
+async function bionicProfileIncludesIssue(ctx: PluginContext, input: {
   companyId: string;
   issue: Issue;
   profile: PaperclipIngestionProfileV1;
@@ -3713,10 +3713,10 @@ async function routePaperclipCursorObservation(ctx: PluginContext, input: {
     const policy = evaluatePaperclipProfilePolicy({ space, profile, purpose: "event_routing", requireEnabledProfile: true });
     if (!policy.allowed) continue;
     if (!profile.sourceKinds[input.sourceKind]) continue;
-    if (!(await paperclipProfileIncludesIssue(ctx, { companyId: input.companyId, issue: input.issue, profile }))) continue;
+    if (!(await bionicProfileIncludesIssue(ctx, { companyId: input.companyId, issue: input.issue, profile }))) continue;
     eligibleProfileCount += 1;
-    if (eligibleProfileCount > MAX_PAPERCLIP_DISTILLATION_FAN_OUT) {
-      throw new Error(`Paperclip ingestion fan-out exceeds the hard cap of ${MAX_PAPERCLIP_DISTILLATION_FAN_OUT} enabled profiles.`);
+    if (eligibleProfileCount > MAX_BIONIC_DISTILLATION_FAN_OUT) {
+      throw new Error(`Bionic ingestion fan-out exceeds the hard cap of ${MAX_BIONIC_DISTILLATION_FAN_OUT} enabled profiles.`);
     }
     if (await ctx.state.get(eventIngestionDedupKey(input.companyId, space.wikiId, space.id, input.sourceKind, input.sourceId))) {
       continue;

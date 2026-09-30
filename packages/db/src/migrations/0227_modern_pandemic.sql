@@ -143,7 +143,7 @@ SET "next_event_seq" = COALESCE((
 	FROM "heartbeat_run_events" AS event
 	WHERE event."run_id" = run."id"
 ), 1);--> statement-breakpoint
-CREATE OR REPLACE FUNCTION paperclip_bump_issue_status_version()
+CREATE OR REPLACE FUNCTION bionic_bump_issue_status_version()
 RETURNS trigger AS $$
 BEGIN
 	IF NEW."status" IS DISTINCT FROM OLD."status" THEN
@@ -152,10 +152,10 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;--> statement-breakpoint
-DROP TRIGGER IF EXISTS paperclip_issue_status_version_trigger ON "issues";--> statement-breakpoint
-CREATE TRIGGER paperclip_issue_status_version_trigger
+DROP TRIGGER IF EXISTS bionic_issue_status_version_trigger ON "issues";--> statement-breakpoint
+CREATE TRIGGER bionic_issue_status_version_trigger
 BEFORE UPDATE OF "status" ON "issues"
-FOR EACH ROW EXECUTE FUNCTION paperclip_bump_issue_status_version();--> statement-breakpoint
+FOR EACH ROW EXECUTE FUNCTION bionic_bump_issue_status_version();--> statement-breakpoint
 DO $$ BEGIN
 	ALTER TABLE "completion_contracts" ADD CONSTRAINT "completion_contracts_company_id_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
@@ -277,16 +277,16 @@ CREATE UNIQUE INDEX IF NOT EXISTS "status_decisions_company_issue_version_uq" ON
 CREATE UNIQUE INDEX IF NOT EXISTS "status_decisions_company_assessment_uq" ON "status_decisions" USING btree ("company_id","assessment_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "status_decisions_company_issue_digest_uq" ON "status_decisions" USING btree ("company_id","issue_id","decision_digest");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "work_assessments_company_issue_input_uq" ON "work_assessments" USING btree ("company_id","issue_id","input_digest");--> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: nullable native source IDs mean historical rows need no backfill and the invariant must commit atomically with the new columns.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: nullable native source IDs mean historical rows need no backfill and the invariant must commit atomically with the new columns.
 CREATE UNIQUE INDEX IF NOT EXISTS "heartbeat_run_events_run_source_event_uq" ON "heartbeat_run_events" USING btree ("run_id","source_event_id") WHERE "heartbeat_run_events"."source_event_id" is not null;--> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: nullable native source sequence fields mean historical rows need no backfill and the invariant must commit atomically with the new columns.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: nullable native source sequence fields mean historical rows need no backfill and the invariant must commit atomically with the new columns.
 CREATE UNIQUE INDEX IF NOT EXISTS "heartbeat_run_events_run_source_seq_uq" ON "heartbeat_run_events" USING btree ("run_id","source_instance_id","source_seq") WHERE "heartbeat_run_events"."source_instance_id" is not null and "heartbeat_run_events"."source_seq" is not null;
 --> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: the primary key already makes this ownership tuple unique; this supporting index only enables composite foreign keys.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: the primary key already makes this ownership tuple unique; this supporting index only enables composite foreign keys.
 CREATE UNIQUE INDEX IF NOT EXISTS "issues_company_id_uq" ON "issues" USING btree ("company_id","id");--> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: the primary key already makes this ownership tuple unique; this supporting index only enables composite foreign keys.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: the primary key already makes this ownership tuple unique; this supporting index only enables composite foreign keys.
 CREATE UNIQUE INDEX IF NOT EXISTS "heartbeat_runs_company_native_issue_id_uq" ON "heartbeat_runs" USING btree ("company_id","native_issue_id","id");--> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: the primary key already makes this ownership tuple unique; this supporting index only enables composite foreign keys.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: the primary key already makes this ownership tuple unique; this supporting index only enables composite foreign keys.
 CREATE UNIQUE INDEX IF NOT EXISTS "heartbeat_runs_company_native_issue_contract_id_uq" ON "heartbeat_runs" USING btree ("company_id","native_issue_id","id","completion_contract_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "completion_contracts_company_issue_id_uq" ON "completion_contracts" USING btree ("company_id","issue_id","id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "native_run_results_company_issue_run_id_uq" ON "native_run_results" USING btree ("company_id","issue_id","run_id","id");--> statement-breakpoint

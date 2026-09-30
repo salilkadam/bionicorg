@@ -23,12 +23,12 @@ describe("Honeycomb run links", () => {
 
     expect(url.origin).toBe("https://ui.honeycomb.io");
     expect(url.pathname).toBe(
-      "/paperclip/environments/test/datasets/paperclip/",
+      "/bionic/environments/test/datasets/bionic/",
     );
     expect(query.calculations).toEqual([{ op: "COUNT" }]);
     expect(query.breakdowns).toEqual(["trace.trace_id"]);
     expect(query.filters).toEqual([
-      { column: "service.name", op: "=", value: "paperclip" },
+      { column: "service.name", op: "=", value: "bionic" },
       { column: "name", op: "=", value: "task.run" },
       {
         column: HONEYCOMB_RUN_HASH_ATTRIBUTE,

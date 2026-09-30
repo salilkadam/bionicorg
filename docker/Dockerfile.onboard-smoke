@@ -5,11 +5,11 @@ ARG PAPERCLIPAI_VERSION=latest
 ARG HOST_UID=10001
 
 ENV DEBIAN_FRONTEND=noninteractive \
-  PAPERCLIP_HOME=/paperclip \
-  PAPERCLIP_OPEN_ON_LISTEN=false \
+  BIONIC_HOME=/bionic \
+  BIONIC_OPEN_ON_LISTEN=false \
   HOST=0.0.0.0 \
   PORT=3100 \
-  HOME=/home/paperclip \
+  HOME=/home/bionic \
   LANG=en_US.UTF-8 \
   LC_ALL=en_US.UTF-8 \
   NPM_CONFIG_UPDATE_NOTIFIER=false \
@@ -26,20 +26,20 @@ RUN apt-get update \
   && apt-get update \
   && apt-get install -y --no-install-recommends nodejs \
   && locale-gen en_US.UTF-8 \
-  && groupadd --gid 10001 paperclip \
-  && useradd --create-home --shell /bin/bash --uid "${HOST_UID}" --gid 10001 paperclip \
-  && mkdir -p /paperclip /home/paperclip/workspace \
-  && chown -R paperclip:paperclip /paperclip /home/paperclip \
+  && groupadd --gid 10001 bionic \
+  && useradd --create-home --shell /bin/bash --uid "${HOST_UID}" --gid 10001 bionic \
+  && mkdir -p /bionic /home/bionic/workspace \
+  && chown -R bionic:bionic /bionic /home/bionic \
   && rm -rf /var/lib/apt/lists/*
 
-VOLUME ["/paperclip"]
-WORKDIR /home/paperclip/workspace
+VOLUME ["/bionic"]
+WORKDIR /home/bionic/workspace
 EXPOSE 3100
-USER paperclip
+USER bionic
 
 # --bind lan is required: `onboard --yes` without an explicit --bind prefers
 # trusted-local defaults, which write a loopback bind into the instance config
 # and ignore the deployment env vars. A loopback listener inside the container
 # is unreachable through Docker's port mapping, so the smoke health check can
 # never pass without this flag.
-CMD ["bash", "-lc", "set -euo pipefail; mkdir -p \"$PAPERCLIP_HOME\"; npx --yes \"paperclipai@${PAPERCLIPAI_VERSION}\" onboard --yes --bind lan --data-dir \"$PAPERCLIP_HOME\""]
+CMD ["bash", "-lc", "set -euo pipefail; mkdir -p \"$BIONIC_HOME\"; npx --yes \"paperclipai@${PAPERCLIPAI_VERSION}\" onboard --yes --bind lan --data-dir \"$BIONIC_HOME\""]

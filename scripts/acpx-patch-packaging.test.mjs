@@ -29,7 +29,7 @@ const adapterUtilsPackage = JSON.parse(
   await readFile(new URL("../packages/adapter-utils/package.json", import.meta.url), "utf8"),
 );
 const runnerPackage = JSON.parse(
-  await readFile(new URL("../packages/paperclip-runner/package.json", import.meta.url), "utf8"),
+  await readFile(new URL("../packages/bionic-runner/package.json", import.meta.url), "utf8"),
 );
 const serverPackage = JSON.parse(
   await readFile(new URL("../server/package.json", import.meta.url), "utf8"),
@@ -124,7 +124,7 @@ test("published packages preserve the patched ACPX runtime", () => {
   assert.equal(cliEsbuildConfig.external.includes("acpx"), false);
 });
 
-test("Paperclip Runner pins the qualified ACPX host callbacks", () => {
+test("Bionic Runner pins the qualified ACPX host callbacks", () => {
   assert.equal(rootPackage.pnpm.patchedDependencies["acpx@0.13.1"], "patches/acpx@0.13.1.patch");
   assert.equal(
     rootPackage.pnpm.patchedDependencies["@agentclientprotocol/claude-agent-acp@0.73.0"],
@@ -163,7 +163,7 @@ test("bundled package staging materializes publishConfig entrypoints", () => {
 
 test("bundled package staging materializes workspace dependency versions", () => {
   const staged = materializePublishManifest({
-    name: "@paperclipai/example",
+    name: "@bionicai/example",
     version: "2026.723.0",
     dependencies: { exact: "workspace:*", caret: "workspace:^", tilde: "workspace:~" },
   });
@@ -177,15 +177,15 @@ test("bundled package staging materializes workspace dependency versions", () =>
 
 test("bundled package staging installs only dependencies included in the tarball", () => {
   const publishManifest = {
-    name: "@paperclipai/db",
+    name: "@bionicai/db",
     version: "2026.723.0-canary.8",
     dependencies: {
-      "@paperclipai/shared": "2026.723.0-canary.8",
+      "@bionicai/shared": "2026.723.0-canary.8",
       "drizzle-orm": "^0.45.2",
       "embedded-postgres": "^18.1.0-beta.16",
     },
     devDependencies: {
-      "@paperclipai/paperclip-runner": "2026.723.0-canary.8",
+      "@bionicai/bionic-runner": "2026.723.0-canary.8",
     },
     bundleDependencies: ["embedded-postgres"],
   };
@@ -196,13 +196,13 @@ test("bundled package staging installs only dependencies included in the tarball
   });
   assert.equal(installManifest.devDependencies, undefined);
   assert.deepEqual(publishManifest.devDependencies, {
-    "@paperclipai/paperclip-runner": "2026.723.0-canary.8",
+    "@bionicai/bionic-runner": "2026.723.0-canary.8",
   });
   assert.deepEqual(installManifest.bundleDependencies, ["embedded-postgres"]);
 });
 
 test("bundled package staging selects only the installed dependency version's patch", (t) => {
-  const destinationDir = mkdtempSync(join(tmpdir(), "paperclip-bundled-patch-selection-"));
+  const destinationDir = mkdtempSync(join(tmpdir(), "bionic-bundled-patch-selection-"));
   const installedPackageDir = join(destinationDir, "node_modules", "acpx");
   mkdirSync(installedPackageDir, { recursive: true });
   writeFileSync(
@@ -227,7 +227,7 @@ test("bundled package staging selects only the installed dependency version's pa
 });
 
 test("bundled package patch selection handles scoped package names", (t) => {
-  const destinationDir = mkdtempSync(join(tmpdir(), "paperclip-scoped-patch-selection-"));
+  const destinationDir = mkdtempSync(join(tmpdir(), "bionic-scoped-patch-selection-"));
   const installedPackageDir = join(destinationDir, "node_modules", "@example", "runtime");
   mkdirSync(installedPackageDir, { recursive: true });
   writeFileSync(
@@ -252,7 +252,7 @@ test("bundled package patch selection handles scoped package names", (t) => {
 });
 
 test("bundled package patch selection reports missing installed metadata", (t) => {
-  const destinationDir = mkdtempSync(join(tmpdir(), "paperclip-missing-patch-metadata-"));
+  const destinationDir = mkdtempSync(join(tmpdir(), "bionic-missing-patch-metadata-"));
   t.after(() => rmSync(destinationDir, { recursive: true, force: true }));
 
   assert.throws(
@@ -265,7 +265,7 @@ test("bundled package patch selection reports missing installed metadata", (t) =
 });
 
 test("bundled package patch selection rejects an unpatched installed version", (t) => {
-  const destinationDir = mkdtempSync(join(tmpdir(), "paperclip-unmatched-patch-version-"));
+  const destinationDir = mkdtempSync(join(tmpdir(), "bionic-unmatched-patch-version-"));
   const installedPackageDir = join(destinationDir, "node_modules", "acpx");
   mkdirSync(installedPackageDir, { recursive: true });
   writeFileSync(
@@ -285,7 +285,7 @@ test("bundled package patch selection rejects an unpatched installed version", (
 });
 
 test("server package staging applies every bundled runtime patch and preserves the vendored runner", (t) => {
-  const fixtureDir = mkdtempSync(join(tmpdir(), "paperclip-bundled-stage-"));
+  const fixtureDir = mkdtempSync(join(tmpdir(), "bionic-bundled-stage-"));
   const sourceDir = join(fixtureDir, "source");
   const destinationDir = join(fixtureDir, "destination");
   const binDir = join(fixtureDir, "bin");
@@ -427,7 +427,7 @@ test("npm builds use corepack instead of requiring a global pnpm", () => {
 
 
 test("installed ACPX runtime persists and restores optional goal capabilities", () => {
-  const requireRunner = createRequire(new URL("../packages/paperclip-runner/package.json", import.meta.url));
+  const requireRunner = createRequire(new URL("../packages/bionic-runner/package.json", import.meta.url));
   const runtimeSource = readFileSync(requireRunner.resolve("acpx/runtime"), "utf8");
   const start = runtimeSource.indexOf("function persistedGoalCapability(");
   const end = runtimeSource.indexOf("function planUpdateEvent(", start);

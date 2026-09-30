@@ -13,11 +13,11 @@ WITH ranked AS (
   SELECT
     id,
     row_number() OVER (
-      PARTITION BY company_id, (metadata -> 'paperclipBuiltInAgent' ->> 'key')
+      PARTITION BY company_id, (metadata -> 'bionicBuiltInAgent' ->> 'key')
       ORDER BY created_at ASC, id ASC
     ) AS rn
   FROM agents
-  WHERE (metadata -> 'paperclipBuiltInAgent' ->> 'key') IS NOT NULL
+  WHERE (metadata -> 'bionicBuiltInAgent' ->> 'key') IS NOT NULL
     AND status <> 'terminated'
 ),
 duplicates AS (
@@ -48,6 +48,6 @@ WHERE revoked_at IS NULL
 -- provision()/ensure() catch and re-resolve to the winner's row). Terminated
 -- rows are excluded so re-provisioning after a termination stays possible.
 CREATE UNIQUE INDEX IF NOT EXISTS "agents_company_built_in_agent_key_unique_idx"
-  ON "agents" ("company_id", ((metadata -> 'paperclipBuiltInAgent' ->> 'key')))
-  WHERE (metadata -> 'paperclipBuiltInAgent' ->> 'key') IS NOT NULL
+  ON "agents" ("company_id", ((metadata -> 'bionicBuiltInAgent' ->> 'key')))
+  WHERE (metadata -> 'bionicBuiltInAgent' ->> 'key') IS NOT NULL
     AND status <> 'terminated';

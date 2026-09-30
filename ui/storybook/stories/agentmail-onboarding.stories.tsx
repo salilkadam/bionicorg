@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { AgentIcon } from "@/components/AgentIconPicker";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { AgentPermissions } from "@paperclipai/shared";
+import type { AgentPermissions } from "@bionicai/shared";
 import { TrustPresetSection } from "@/components/TrustPresetSection";
 import {
   buildPermissionsForTrustPreset,
@@ -42,7 +42,7 @@ import { Label } from "@/components/ui/label";
 import { RadioCardGroup } from "@/components/ui/radio-card";
 import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
-import { storybookAgents } from "../fixtures/paperclipData";
+import { storybookAgents } from "../fixtures/bionicData";
 
 // An interactive design proposal. State is local: no credentials or inboxes are created.
 type Screen =
@@ -237,7 +237,7 @@ function AgentMailJourney({
               ? scoped
                 ? "Email tasks must stay inside this agent’s configured work boundary. Output is quarantined for trusted review."
                 : "Choose a project or task boundary before activating email."
-              : "Email can contain malicious instructions. We recommend Low-trust review to limit the agent’s access to Paperclip work."}
+              : "Email can contain malicious instructions. We recommend Low-trust review to limit the agent’s access to Bionic work."}
           </p>
         </div>
       </div>
@@ -913,13 +913,13 @@ function AgentMailJourney({
                               value: "webhook",
                               title: "Webhook",
                               description:
-                                "For a Paperclip server with a public HTTPS address.",
+                                "For a Bionic server with a public HTTPS address.",
                             },
                           ]}
                         />
                         {receiveMode === "webhook" && (
                           <p className="text-xs text-muted-foreground">
-                            Paperclip registers and verifies the webhook at your
+                            Bionic registers and verifies the webhook at your
                             server’s public address. This preview assumes HTTPS
                             is configured.
                           </p>
@@ -1073,7 +1073,7 @@ function AgentMailJourney({
             issueCandidates={[]}
           />
           <p className="text-xs text-muted-foreground">
-            Low trust limits Paperclip access; it does not sandbox the runtime.
+            Low trust limits Bionic access; it does not sandbox the runtime.
             Review filesystem, tool, and secret access separately.
           </p>
           <DialogFooter>

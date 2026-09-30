@@ -1,12 +1,12 @@
 import { resolveConfirmationFromComment } from "../services/confirmation-comment-resolution.js";
 import { createIssueReadTiming } from "../services/issue-read-timing.js";
-import { isNativeWorkspaceExportRepairCause } from "@paperclipai/shared";
+import { isNativeWorkspaceExportRepairCause } from "@bionicai/shared";
 import { retryNativeWorkspaceExport } from "../services/native-runtime/native-workspace-export-retry.js";
 import { queuedInteractionId, readQueuedInteractionResponse, hasQueuedInteractionResponse } from "../services/queued-interaction-response.js";
 import { deliverConversationComments, isConversation } from "../services/agent-conversations.js";
 import { issueRecoveryActionReadModel } from "../services/issue-recovery-actions.js";
 import { getExecutionBlocker } from "../services/execution-blocker.js";
-import { requiresExecutionReconciliation } from "@paperclipai/shared";
+import { requiresExecutionReconciliation } from "@bionicai/shared";
 import {
   validateExecutionReconciliation,
   markExecutionReconciliation,
@@ -32,7 +32,7 @@ import {
   notInArray,
   sql,
 } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import type { ChatChannelService } from "../services/chat-channels.js";
 import {
   activityLog,
@@ -60,7 +60,7 @@ import {
   pipelineStages,
   pipelines,
   projectWorkspaces,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   addIssueCommentSchema,
   acceptIssueThreadInteractionSchema,
@@ -145,8 +145,8 @@ import {
   issueWriteDenialResponse,
   type IssueWriteDenialCode,
   type IssueWriteDenialContext,
-} from "@paperclipai/shared";
-import { trackAgentTaskCompleted } from "@paperclipai/shared/telemetry";
+} from "@bionicai/shared";
+import { trackAgentTaskCompleted } from "@bionicai/shared/telemetry";
 import { getTelemetryClient } from "../telemetry.js";
 import { isUniqueViolation } from "../db-errors.js";
 import type { StorageService } from "../storage/types.js";
@@ -629,7 +629,7 @@ function requiresPaperclipAttachmentMetadata(
     typeof input.provider === "string"
       ? input.provider
       : (fallback?.provider ?? null);
-  return type === "artifact" && provider === "paperclip";
+  return type === "artifact" && provider === "bionic";
 }
 
 const attachmentArtifactMetadataInputSchema = z
@@ -2730,7 +2730,7 @@ async function queueResolvedInteractionContinuationWakeup(input: {
         ...(secretProposal ? { secretProposal } : {}),
         ...(itemVerdicts ? { itemVerdicts, newlyResolvedItemIds } : {}),
         ...(rejectionAgentMessage
-          ? { paperclipAgentMessage: rejectionAgentMessage }
+          ? { bionicAgentMessage: rejectionAgentMessage }
           : {}),
         ...(reviewPathContext ?? {}),
         mutation: "interaction",
@@ -2756,7 +2756,7 @@ async function queueResolvedInteractionContinuationWakeup(input: {
         ...(secretProposal ? { secretProposal } : {}),
         ...(itemVerdicts ? { itemVerdicts, newlyResolvedItemIds } : {}),
         ...(rejectionAgentMessage
-          ? { paperclipAgentMessage: rejectionAgentMessage }
+          ? { bionicAgentMessage: rejectionAgentMessage }
           : {}),
         ...(reviewPathContext ?? {}),
         wakeReason: "issue_commented",
@@ -3351,7 +3351,7 @@ async function coordinateIssueListGet(input: {
         identicalInFlightCount,
         windowMs: now - existing.startedAt,
         referer: safeRefererPath(input.req),
-        visibilityHint: input.req.header("x-paperclip-tab-visible") ?? null,
+        visibilityHint: input.req.header("x-bionic-tab-visible") ?? null,
       };
       logger.warn(event, "request_storm_detected");
       input.diagnostics?.onStormDetected?.(event);
@@ -3454,7 +3454,7 @@ function logIssueListRequest(input: {
         cacheStatus: input.cacheStatus,
         etagOutcome: input.etagOutcome,
         referer: safeRefererPath(input.req),
-        visibilityHint: input.req.header("x-paperclip-tab-visible") ?? null,
+        visibilityHint: input.req.header("x-bionic-tab-visible") ?? null,
       },
       "safe authenticated GET observed",
     );
@@ -3838,13 +3838,13 @@ export function issueRoutes(
         : null;
     if (!context || !readNonEmptyString(context.executionWorkspaceId))
       return null;
-    const paperclipIssue =
-      context.paperclipIssue && typeof context.paperclipIssue === "object"
-        ? (context.paperclipIssue as Record<string, unknown>)
+    const bionicIssue =
+      context.bionicIssue && typeof context.bionicIssue === "object"
+        ? (context.bionicIssue as Record<string, unknown>)
         : null;
     return (
       readNonEmptyString(context.issueId) ??
-      readNonEmptyString(paperclipIssue?.id)
+      readNonEmptyString(bionicIssue?.id)
     );
   }
 
@@ -6219,13 +6219,13 @@ export function issueRoutes(
     if (!run) return null;
 
     const context = readObject(run.contextSnapshot);
-    const paperclipWake = readObject(context.paperclipWake);
-    const recovery = readObject(paperclipWake.recovery);
+    const bionicWake = readObject(context.bionicWake);
+    const recovery = readObject(bionicWake.recovery);
     const wakeReason =
       typeof context.wakeReason === "string"
         ? context.wakeReason
-        : typeof paperclipWake.reason === "string"
-          ? paperclipWake.reason
+        : typeof bionicWake.reason === "string"
+          ? bionicWake.reason
           : null;
     if (wakeReason !== "source_scoped_recovery_action") return null;
 
@@ -8092,7 +8092,7 @@ export function issueRoutes(
       },
     });
 
-    res.setHeader("X-Paperclip-Request-Cache", coordinated.cacheStatus);
+    res.setHeader("X-Bionic-Request-Cache", coordinated.cacheStatus);
     if (!coordinated.response) {
       const body = {
         error: "Too many concurrent issue-list requests for this actor/client",
@@ -10676,7 +10676,7 @@ export function issueRoutes(
         });
       }
       const attachmentId =
-        createInput.type === "artifact" && createInput.provider === "paperclip"
+        createInput.type === "artifact" && createInput.provider === "bionic"
           ? (createInput.metadata as Record<string, unknown> | null)
               ?.attachmentId
           : null;
@@ -10690,7 +10690,7 @@ export function issueRoutes(
                   eq(issueWorkProducts.companyId, issue.companyId),
                   eq(issueWorkProducts.issueId, issue.id),
                   eq(issueWorkProducts.type, "artifact"),
-                  eq(issueWorkProducts.provider, "paperclip"),
+                  eq(issueWorkProducts.provider, "bionic"),
                   eq(issueWorkProducts.externalId, attachmentId),
                   eq(issueWorkProducts.createdByRunId, createdByRunId),
                 ),
@@ -10986,7 +10986,7 @@ export function issueRoutes(
             issueId: issue.id,
             projectId: issue.projectId ?? null,
             type: "artifact",
-            provider: "paperclip",
+            provider: "bionic",
             externalId: req.body.sourceArtifactId,
             title: req.body.title,
             status: "approved",
@@ -15550,7 +15550,7 @@ export function issueRoutes(
             queueId: req.body.queueId,
             revision: req.body.revision,
           });
-          if (locked.queue.protocol !== "paperclip_runner_v1") {
+          if (locked.queue.protocol !== "bionic_runner_v1") {
             throw conflict("This runner does not support same-turn steering", {
               code: "steering_unsupported",
             });
@@ -18495,7 +18495,7 @@ export function issueRoutes(
           details: {
             workProductId: attachment.artifactWorkProductId,
             type: "artifact",
-            provider: "paperclip",
+            provider: "bionic",
             source: "run_attachment_upload",
           },
         });

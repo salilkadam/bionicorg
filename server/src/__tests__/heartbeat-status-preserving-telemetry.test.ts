@@ -8,7 +8,7 @@ import {
   heartbeatRuns,
   issues,
   nativeRunFinalizations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -86,7 +86,7 @@ describeEmbeddedPostgres(
         id: agentId,
         companyId,
         name: "Native worker",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "running",
       });
       await db.insert(issues).values({

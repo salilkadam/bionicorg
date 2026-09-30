@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { models as claudeFallbackModels } from "@paperclipai/adapter-claude-local";
-import { resetClaudeModelsCacheForTests } from "@paperclipai/adapter-claude-local/server";
-import { models as codexFallbackModels } from "@paperclipai/adapter-codex-local";
-import { models as cursorFallbackModels } from "@paperclipai/adapter-cursor-local";
-import { models as opencodeFallbackModels } from "@paperclipai/adapter-opencode-local";
-import { resetOpenCodeModelsCacheForTests } from "@paperclipai/adapter-opencode-local/server";
+import { models as claudeFallbackModels } from "@bionicai/adapter-claude-local";
+import { resetClaudeModelsCacheForTests } from "@bionicai/adapter-claude-local/server";
+import { models as codexFallbackModels } from "@bionicai/adapter-codex-local";
+import { models as cursorFallbackModels } from "@bionicai/adapter-cursor-local";
+import { models as opencodeFallbackModels } from "@bionicai/adapter-opencode-local";
+import { resetOpenCodeModelsCacheForTests } from "@bionicai/adapter-opencode-local/server";
 import { listAdapterModels, listServerAdapters, refreshAdapterModels, registerServerAdapter, unregisterServerAdapter } from "../adapters/index.js";
 import { resetCodexModelsCacheForTests } from "../adapters/codex-models.js";
 import { resetCursorModelsCacheForTests, setCursorModelsRunnerForTests } from "../adapters/cursor-models.js";
@@ -23,7 +23,7 @@ describe("adapter model listing", () => {
     delete process.env.ANTHROPIC_BASE_URL;
     delete process.env.ANTHROPIC_BEDROCK_BASE_URL;
     delete process.env.CLAUDE_CODE_USE_BEDROCK;
-    delete process.env.PAPERCLIP_OPENCODE_COMMAND;
+    delete process.env.BIONIC_OPENCODE_COMMAND;
     resetClaudeModelsCacheForTests();
     resetCodexModelsCacheForTests();
     resetCursorModelsCacheForTests();
@@ -252,7 +252,7 @@ describe("adapter model listing", () => {
       expect(listModels).toHaveBeenCalledOnce();
       expect(refreshModels).toHaveBeenCalledOnce();
 
-      process.env.PAPERCLIP_ADAPTER_MODELS = JSON.stringify({
+      process.env.BIONIC_ADAPTER_MODELS = JSON.stringify({
         codex_local: [{ id: "declared-codex", label: "Declared Codex" }],
       });
       const declared = [{ id: "declared-codex", label: "Declared Codex" }];
@@ -261,7 +261,7 @@ describe("adapter model listing", () => {
       expect(listModels).toHaveBeenCalledOnce();
       expect(refreshModels).toHaveBeenCalledOnce();
     } finally {
-      delete process.env.PAPERCLIP_ADAPTER_MODELS;
+      delete process.env.BIONIC_ADAPTER_MODELS;
       unregisterServerAdapter("codex_local");
     }
   });
@@ -280,7 +280,7 @@ describe("adapter model listing", () => {
   });
 
   it("returns current provider-qualified OpenCode models when discovery is unavailable", async () => {
-    process.env.PAPERCLIP_OPENCODE_COMMAND = "__paperclip_missing_opencode_command__";
+    process.env.BIONIC_OPENCODE_COMMAND = "__bionic_missing_opencode_command__";
 
     const models = await listAdapterModels("opencode_local");
 
@@ -307,13 +307,13 @@ describe("adapter model listing", () => {
     expect(first.some((model) => model.id === "composer-1")).toBe(true);
   });
 
-  describe("PAPERCLIP_ADAPTER_MODELS declared models", () => {
+  describe("BIONIC_ADAPTER_MODELS declared models", () => {
     afterEach(() => {
-      delete process.env.PAPERCLIP_ADAPTER_MODELS;
+      delete process.env.BIONIC_ADAPTER_MODELS;
     });
 
     it("prefers declared env models over adapter discovery", async () => {
-      process.env.PAPERCLIP_ADAPTER_MODELS = JSON.stringify({
+      process.env.BIONIC_ADAPTER_MODELS = JSON.stringify({
         opencode_local: [
           { id: "tensorix/deepseek/deepseek-chat-v3.1", label: "DeepSeek v3.1" },
           { id: "tensorix/z-ai/glm-4.7" },
@@ -329,7 +329,7 @@ describe("adapter model listing", () => {
     });
 
     it("uses declared Codex models for both listing and refresh", async () => {
-      process.env.PAPERCLIP_ADAPTER_MODELS = JSON.stringify({
+      process.env.BIONIC_ADAPTER_MODELS = JSON.stringify({
         codex_local: [{ id: "private-codex", label: "Private Codex" }],
       });
       const declared = [{ id: "private-codex", label: "Private Codex" }];
@@ -339,14 +339,14 @@ describe("adapter model listing", () => {
     });
 
     it("observes env changes between calls (memo keyed by raw env value)", async () => {
-      process.env.PAPERCLIP_ADAPTER_MODELS = JSON.stringify({
+      process.env.BIONIC_ADAPTER_MODELS = JSON.stringify({
         opencode_local: [{ id: "model-a" }],
       });
       expect(await listAdapterModels("opencode_local")).toEqual([
         { id: "model-a", label: "model-a" },
       ]);
 
-      process.env.PAPERCLIP_ADAPTER_MODELS = JSON.stringify({
+      process.env.BIONIC_ADAPTER_MODELS = JSON.stringify({
         opencode_local: [{ id: "model-b" }],
       });
       expect(await listAdapterModels("opencode_local")).toEqual([
@@ -355,8 +355,8 @@ describe("adapter model listing", () => {
     });
 
     it("fails soft on malformed values: falls back to adapter models instead of throwing", async () => {
-      process.env.PAPERCLIP_ADAPTER_MODELS = "{not json";
-      process.env.PAPERCLIP_OPENCODE_COMMAND = "__paperclip_missing_opencode_command__";
+      process.env.BIONIC_ADAPTER_MODELS = "{not json";
+      process.env.BIONIC_OPENCODE_COMMAND = "__bionic_missing_opencode_command__";
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const models = await listAdapterModels("opencode_local");
@@ -370,7 +370,7 @@ describe("adapter model listing", () => {
     });
 
     it("ignores declared models for adapters not in the map", async () => {
-      process.env.PAPERCLIP_ADAPTER_MODELS = JSON.stringify({
+      process.env.BIONIC_ADAPTER_MODELS = JSON.stringify({
         opencode_local: [{ id: "model-a" }],
       });
       const models = await listAdapterModels("codex_local");

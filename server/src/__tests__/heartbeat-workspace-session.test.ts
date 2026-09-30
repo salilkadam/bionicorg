@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it, vi } from "vitest";
-import type { agents } from "@paperclipai/db";
-import { sessionCodec as codexSessionCodec } from "@paperclipai/adapter-codex-local/server";
+import type { agents } from "@bionicai/db";
+import { sessionCodec as codexSessionCodec } from "@bionicai/adapter-codex-local/server";
 import { resolveDefaultAgentWorkspaceDir } from "../home-paths.js";
 import {
   applyPersistedExecutionWorkspaceConfig,
@@ -136,7 +136,7 @@ async function runGit(cwd: string, args: string[]) {
 }
 
 async function createGitCheckout(options: { withRemote: boolean }) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-push-preflight-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-push-preflight-"));
   await runGit(root, ["init"]);
   if (options.withRemote) {
     await runGit(root, ["remote", "add", "origin", "https://github.com/example/repo.git"]);
@@ -379,13 +379,13 @@ describe("assertGitSensitiveAdapterWorkspaceValid", () => {
 
   it("rejects a git worktree persisted workspace when the checked-out branch differs from the recorded branch", async () => {
     const repoRoot = await createGitCheckout({ withRemote: false });
-    const worktreeParent = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-branch-worktree-"));
+    const worktreeParent = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-branch-worktree-"));
     const worktreePath = path.join(worktreeParent, "workspace");
     const recordedBranch = "PAP-1-recorded-branch";
     const actualBranch = "PAP-1-push-pr-head";
     try {
       await runGit(repoRoot, ["config", "user.email", "test@example.com"]);
-      await runGit(repoRoot, ["config", "user.name", "Paperclip Test"]);
+      await runGit(repoRoot, ["config", "user.name", "Bionic Test"]);
       await fs.writeFile(path.join(repoRoot, "README.md"), "initial\n", "utf8");
       await runGit(repoRoot, ["add", "README.md"]);
       await runGit(repoRoot, ["commit", "-m", "Initial commit"]);
@@ -424,7 +424,7 @@ describe("assertGitSensitiveAdapterWorkspaceValid", () => {
 
   it("rejects a workspace-linked issue when adapter cwd has no git metadata", async () => {
     const input = buildWorkspaceValidationInput();
-    const cwd = "/tmp/paperclip-workspace-without-git-metadata";
+    const cwd = "/tmp/bionic-workspace-without-git-metadata";
 
     await expectWorkspaceValidationFailure(
       buildWorkspaceValidationInput({
@@ -531,7 +531,7 @@ describe("assertGitWorktreeBaseWorkspaceReady", () => {
   });
 
   it("rejects isolated git worktrees when the resolved base is not a git checkout", async () => {
-    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-non-git-workspace-"));
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-non-git-workspace-"));
     try {
       await expect(assertGitWorktreeBaseWorkspaceReady({
         requestedExecutionWorkspaceMode: "isolated_workspace",
@@ -620,7 +620,7 @@ describe("assertGitWorktreeBaseWorkspaceReady", () => {
   it("keeps the not-a-git-checkout reason for a fallback with no failed materialization attempt", async () => {
     // A configured path that is simply unavailable is not a clone failure; the message must
     // not steer the operator toward repairing clone access.
-    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-unavailable-path-fallback-"));
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-unavailable-path-fallback-"));
     try {
       await expect(assertGitWorktreeBaseWorkspaceReady({
         requestedExecutionWorkspaceMode: "isolated_workspace",
@@ -745,7 +745,7 @@ describe("assertGitWorktreeBaseWorkspaceReady", () => {
   });
 
   it("does not require git for shared project-primary workspaces", async () => {
-    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-shared-workspace-"));
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-shared-workspace-"));
     try {
       await expect(assertGitWorktreeBaseWorkspaceReady({
         requestedExecutionWorkspaceMode: "shared_workspace",
@@ -859,7 +859,7 @@ describe("scrubGitCredentialText", () => {
 describe("buildAnchorFallbackWorkspaceNotes", () => {
   it("reports materialization failures ahead of the generic no-cwd note", () => {
     expect(buildAnchorFallbackWorkspaceNotes({
-      fallbackCwd: "/paperclip/workspaces/agent-1",
+      fallbackCwd: "/bionic/workspaces/agent-1",
       preferredWorkspaceWarning: null,
       materializationFailures: [{
         projectWorkspaceId: "workspace-1",
@@ -869,7 +869,7 @@ describe("buildAnchorFallbackWorkspaceNotes", () => {
       missingProjectCwds: [],
       hasConfiguredProjectCwd: false,
     })).toEqual([
-      'Failed to prepare the project workspace checkout: fatal: could not read Username. Using fallback workspace "/paperclip/workspaces/agent-1" for this run.',
+      'Failed to prepare the project workspace checkout: fatal: could not read Username. Using fallback workspace "/bionic/workspaces/agent-1" for this run.',
     ]);
   });
 
@@ -979,7 +979,7 @@ describe("requiresPushCapabilityPreflight", () => {
     expect(requiresPushCapabilityPreflight({
       adapterType: "codex_local",
       issueId: "issue-1",
-      explicitRunScopedSkillKeys: ["paperclipai/bundled/software-development/github-pr-workflow"],
+      explicitRunScopedSkillKeys: ["bionicai/bundled/software-development/github-pr-workflow"],
     })).toBe(true);
 
     expect(requiresPushCapabilityPreflight({
@@ -991,7 +991,7 @@ describe("requiresPushCapabilityPreflight", () => {
     expect(requiresPushCapabilityPreflight({
       adapterType: "cursor-cloud",
       issueId: "issue-1",
-      explicitRunScopedSkillKeys: ["paperclipai/bundled/software-development/github-pr-workflow"],
+      explicitRunScopedSkillKeys: ["bionicai/bundled/software-development/github-pr-workflow"],
     })).toBe(false);
   });
 });
@@ -1428,7 +1428,7 @@ function buildWorkspaceConfigMetadata(
       type: "git_worktree",
       baseRef: "origin/main",
       branchTemplate: "{{issue.identifier}}-{{slug}}",
-      worktreeParentDir: ".paperclip/worktrees",
+      worktreeParentDir: ".bionic/worktrees",
     },
     repoUrl: "https://github.com/example/repo.git",
     repoRef: "origin/main",
@@ -1564,7 +1564,7 @@ describe("effective run execution workspace config freshness", () => {
           type: "git_worktree",
           baseRef: "origin/main",
           branchTemplate: "custom-{{issue.identifier}}",
-          worktreeParentDir: ".paperclip/worktrees",
+          worktreeParentDir: ".bionic/worktrees",
         },
       }),
     },
@@ -1582,7 +1582,7 @@ describe("effective run execution workspace config freshness", () => {
           type: "git_worktree",
           baseRef: "origin/release",
           branchTemplate: "{{issue.identifier}}-{{slug}}",
-          worktreeParentDir: ".paperclip/worktrees",
+          worktreeParentDir: ".bionic/worktrees",
         },
       }),
     },
@@ -1623,7 +1623,7 @@ describe("effective run execution workspace config freshness", () => {
         type: "git_worktree",
         baseRef: "origin/release",
         branchTemplate: "{{issue.identifier}}-{{slug}}",
-        worktreeParentDir: ".paperclip/worktrees",
+        worktreeParentDir: ".bionic/worktrees",
       },
       configSnapshot: {
         provisionCommand: "pnpm install --frozen-lockfile",
@@ -1687,7 +1687,7 @@ describe("effective run execution workspace config freshness", () => {
         type: "git_worktree",
         baseRef: "origin/release",
         branchTemplate: "{{issue.identifier}}-{{slug}}",
-        worktreeParentDir: ".paperclip/worktrees",
+        worktreeParentDir: ".bionic/worktrees",
       },
     });
     const decision = resolveExecutionWorkspaceConfigFreshness({
@@ -2071,7 +2071,7 @@ describe("shouldResetTaskSessionForModelChange", () => {
         configuredModel: "gpt-5.4-mini",
         taskSessionParams: {
           sessionId: "thread-1",
-          __paperclipConfiguredModel: "opencode/mimo-v2-pro-free",
+          __bionicConfiguredModel: "opencode/mimo-v2-pro-free",
         },
       }),
     ).toBe(true);
@@ -2083,7 +2083,7 @@ describe("shouldResetTaskSessionForModelChange", () => {
         configuredModel: "gpt-5.4-mini",
         taskSessionParams: {
           sessionId: "thread-1",
-        __paperclipConfiguredModel: "gpt-5.4-mini",
+        __bionicConfiguredModel: "gpt-5.4-mini",
         },
       }),
     ).toBe(false);
@@ -2106,7 +2106,7 @@ describe("shouldResetTaskSessionForModelChange", () => {
         configuredModel: null,
         taskSessionParams: {
           sessionId: "thread-1",
-          __paperclipConfiguredModel: "gpt-5.4-mini",
+          __bionicConfiguredModel: "gpt-5.4-mini",
         },
       }),
     ).toBe(false);
@@ -2178,9 +2178,9 @@ async function buildSessionConfigMetadata(
     ],
     runtimeSkills: [
       {
-        key: "paperclip",
-        runtimeName: "paperclip",
-        source: "/tmp/paperclip/runtime-skills/paperclip",
+        key: "bionic",
+        runtimeName: "bionic",
+        source: "/tmp/bionic/runtime-skills/bionic",
         versionId: null,
         currentVersionId: "skill-version-1",
         sourceStatus: "available",
@@ -2202,11 +2202,11 @@ function sessionParamsWithConfigMetadata(
 ) {
   return {
     sessionId: "thread-1",
-    __paperclipConfiguredModel: configuredModel,
-    __paperclipConfigFingerprint: metadata.fingerprint,
-    __paperclipConfigFingerprintVersion: metadata.version,
-    __paperclipConfigCategories: metadata.categories,
-    __paperclipConfigCategoryFingerprints: metadata.categoryFingerprints,
+    __bionicConfiguredModel: configuredModel,
+    __bionicConfigFingerprint: metadata.fingerprint,
+    __bionicConfigFingerprintVersion: metadata.version,
+    __bionicConfigCategories: metadata.categories,
+    __bionicConfigCategoryFingerprints: metadata.categoryFingerprints,
   };
 }
 
@@ -2389,7 +2389,7 @@ describe("effective run session config freshness", () => {
       configuredModel: "gpt-5.4-mini",
       taskSessionParams: {
         sessionId: "thread-1",
-        __paperclipConfiguredModel: "gpt-5.4-mini",
+        __bionicConfiguredModel: "gpt-5.4-mini",
       },
       configMetadata: metadata,
     });
@@ -2422,7 +2422,7 @@ describe("effective run session config freshness", () => {
       configuredModel: "gpt-5.4-mini",
       taskSessionParams: {
         sessionId: "thread-1",
-        __paperclipConfiguredModel: "gpt-5.4-mini",
+        __bionicConfiguredModel: "gpt-5.4-mini",
       },
       configMetadata: metadata,
       preserveLegacySessionWithoutConfigMetadata: true,
@@ -2485,9 +2485,9 @@ describe("effective run session config freshness", () => {
         metadata: await buildSessionConfigMetadata({
           runtimeSkills: [
             {
-              key: "paperclip",
-              runtimeName: "paperclip",
-              source: "/tmp/paperclip/runtime-skills/paperclip",
+              key: "bionic",
+              runtimeName: "bionic",
+              source: "/tmp/bionic/runtime-skills/bionic",
               versionId: null,
               currentVersionId: "skill-version-2",
               sourceStatus: "available",
@@ -2512,7 +2512,7 @@ describe("effective run session config freshness", () => {
   });
 
   it("detects instructions content drift without storing the contents", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-session-fingerprint-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-session-fingerprint-"));
     const instructionsPath = path.join(root, "AGENTS.md");
     await fs.writeFile(instructionsPath, "Version one instructions.\n", "utf8");
     const base = await buildSessionConfigMetadata({
@@ -2550,7 +2550,7 @@ describe("effective run session config freshness", () => {
   });
 
   it("does not read unbounded legacy instructions paths for config fingerprints", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-session-fingerprint-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-session-fingerprint-"));
     const instructionsPath = path.join(root, "AGENTS.md");
     await fs.writeFile(instructionsPath, "Legacy direct-path instructions.\n", "utf8");
     const metadata = await buildSessionConfigMetadata({
@@ -2586,7 +2586,7 @@ describe("stripConfiguredModelFromSessionParams", () => {
     expect(
       stripConfiguredModelFromSessionParams({
         sessionId: "thread-1",
-        __paperclipConfiguredModel: "gpt-5.4-mini",
+        __bionicConfiguredModel: "gpt-5.4-mini",
       }),
     ).toEqual({ sessionId: "thread-1" });
   });
@@ -2597,15 +2597,15 @@ describe("stripConfiguredModelFromSessionParams", () => {
   });
 
   it("returns a copy without mutating the input", () => {
-    const input = { sessionId: "thread-1", __paperclipConfiguredModel: "gpt-5.4-mini" };
+    const input = { sessionId: "thread-1", __bionicConfiguredModel: "gpt-5.4-mini" };
     const result = stripConfiguredModelFromSessionParams(input);
     expect(result).not.toBe(input);
-    expect(input.__paperclipConfiguredModel).toBe("gpt-5.4-mini");
+    expect(input.__bionicConfiguredModel).toBe("gpt-5.4-mini");
   });
 
   it("returns an empty object when only the internal model key is present (caller must normalize)", () => {
     const stripped = stripConfiguredModelFromSessionParams({
-      __paperclipConfiguredModel: "gpt-5.4-mini",
+      __bionicConfiguredModel: "gpt-5.4-mini",
     });
     expect(stripped).toEqual({});
     // Callers that forward params to adapters must normalize {} back to null so
@@ -2615,17 +2615,17 @@ describe("stripConfiguredModelFromSessionParams", () => {
 });
 
 describe("stripPaperclipSessionMetadataFromSessionParams", () => {
-  it("removes all internal Paperclip session metadata before adapter invocation", () => {
+  it("removes all internal Bionic session metadata before adapter invocation", () => {
     expect(
       stripPaperclipSessionMetadataFromSessionParams({
         sessionId: "thread-1",
         cwd: "/tmp/project",
-        paperclipAiCredentialIdentity: "grant:user:generation",
-        __paperclipConfiguredModel: "gpt-5.4-mini",
-        __paperclipConfigFingerprint: "v1:sha256:abc",
-        __paperclipConfigFingerprintVersion: 1,
-        __paperclipConfigCategories: ["adapterConfig"],
-        __paperclipConfigCategoryFingerprints: { adapterConfig: "v1:sha256:def" },
+        bionicAiCredentialIdentity: "grant:user:generation",
+        __bionicConfiguredModel: "gpt-5.4-mini",
+        __bionicConfigFingerprint: "v1:sha256:abc",
+        __bionicConfigFingerprintVersion: 1,
+        __bionicConfigCategories: ["adapterConfig"],
+        __bionicConfigCategoryFingerprints: { adapterConfig: "v1:sha256:def" },
       }),
     ).toEqual({
       sessionId: "thread-1",
@@ -2636,7 +2636,7 @@ describe("stripPaperclipSessionMetadataFromSessionParams", () => {
 
 describe("isTaskSessionCredentialCompatible", () => {
   it("retains the server-owned identity even when the Codex codec drops it", () => {
-    const saved = { sessionId: "thread-1", paperclipAiCredentialIdentity: "grant:user:generation" };
+    const saved = { sessionId: "thread-1", bionicAiCredentialIdentity: "grant:user:generation" };
     const decoded = codexSessionCodec.deserialize(saved);
     expect(decoded).toEqual({ sessionId: "thread-1" });
     expect(isTaskSessionCredentialCompatible(saved, "grant:user:generation")).toBe(true);
@@ -2646,9 +2646,9 @@ describe("isTaskSessionCredentialCompatible", () => {
     undefined,
     null,
     {},
-    { paperclipAiCredentialIdentity: "other-grant:user:generation" },
-    { paperclipAiCredentialIdentity: "grant:other-user:generation" },
-    { paperclipAiCredentialIdentity: "grant:user:new-generation" },
+    { bionicAiCredentialIdentity: "other-grant:user:generation" },
+    { bionicAiCredentialIdentity: "grant:other-user:generation" },
+    { bionicAiCredentialIdentity: "grant:user:new-generation" },
   ])("requires the same saved grant, responsible user, and credential generation: %j", (saved) => {
     expect(isTaskSessionCredentialCompatible(saved, "grant:user:generation")).toBe(false);
   });
@@ -2710,7 +2710,7 @@ describe("comment wake batching", () => {
         wakeReason: "issue_commented",
         wakeCommentId: "comment-1",
         wakeCommentIds: ["comment-1"],
-        paperclipWake: {
+        bionicWake: {
           latestCommentId: "comment-1",
         },
       },
@@ -2724,7 +2724,7 @@ describe("comment wake batching", () => {
     expect(merged.wakeCommentIds).toEqual(["comment-1", "comment-2"]);
     expect(merged.commentId).toBe("comment-2");
     expect(merged.wakeCommentId).toBe("comment-2");
-    expect(merged.paperclipWake).toBeUndefined();
+    expect(merged.bionicWake).toBeUndefined();
   });
 
   it("keeps forceFreshSession sticky once any coalesced wake requests it", () => {
@@ -3056,7 +3056,7 @@ describe("formatRuntimeWorkspaceWarningLog", () => {
   it("emits informational workspace warnings on stdout", () => {
     expect(formatRuntimeWorkspaceWarningLog("Using fallback workspace")).toEqual({
       stream: "stdout",
-      chunk: "[paperclip] Using fallback workspace\n",
+      chunk: "[bionic] Using fallback workspace\n",
     });
   });
 });
@@ -3098,7 +3098,7 @@ describe("prioritizeProjectWorkspaceCandidatesForRun", () => {
 });
 
 describe("parseSessionCompactionPolicy", () => {
-  it("disables Paperclip-managed rotation by default for codex and claude local", () => {
+  it("disables Bionic-managed rotation by default for codex and claude local", () => {
     expect(parseSessionCompactionPolicy(buildAgent("codex_local"))).toEqual({
       enabled: true,
       maxSessionRuns: 0,

@@ -975,7 +975,7 @@ export interface IssueComment {
   updatedAt: Date;
 }
 
-export type IssueQueuedCommentProtocol = "paperclip_runner_v1" | "legacy";
+export type IssueQueuedCommentProtocol = "bionic_runner_v1" | "legacy";
 export type IssueQueuedCommentQueueState = "deferred" | "queued";
 export type IssueQueuedCommentSteeringDisposition =
   | "available"
@@ -1175,7 +1175,7 @@ export interface AskUserQuestionsQuestion {
 /**
  * Provider-neutral presentation retained when a live harness question has to
  * fall back to the durable issue interaction lifecycle. This intentionally
- * mirrors `paperclip.question_set.v1` without making the shared package depend
+ * mirrors `bionic.question_set.v1` without making the shared package depend
  * on a particular runner implementation.
  */
 export interface PaperclipQuestionSetOption {
@@ -1209,7 +1209,7 @@ export interface PaperclipQuestionSetQuestion {
 }
 
 export interface PaperclipQuestionSetPayload {
-  schema: "paperclip.question_set.v1";
+  schema: "bionic.question_set.v1";
   title?: string;
   description?: string;
   submitLabel?: string;

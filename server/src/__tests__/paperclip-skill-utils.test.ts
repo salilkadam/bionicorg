@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   listPaperclipSkillEntries,
   removeMaintainerOnlySkillSymlinks,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 
 async function makeTempDir(prefix: string): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), prefix));
@@ -16,7 +16,7 @@ async function makeTempDir(prefix: string): Promise<string> {
 
 const execFileAsync = promisify(execFile);
 const artifactHelperPath = path.resolve(
-  "skills/paperclip/scripts/paperclip-upload-artifact.sh",
+  "skills/bionic/scripts/bionic-upload-artifact.sh",
 );
 
 async function makeArtifactHelperHarness(
@@ -32,7 +32,7 @@ async function makeArtifactHelperHarness(
     uploadDelaySeconds?: string;
   } = {},
 ) {
-  const root = await makeTempDir("paperclip-artifact-helper-");
+  const root = await makeTempDir("bionic-artifact-helper-");
   cleanupDirs.add(root);
   const binDir = path.join(root, "bin");
   const stateDir = path.join(root, "fake-api");
@@ -78,7 +78,7 @@ respond() {
 }
 
 attachment_json() {
-  originating_run_id="$PAPERCLIP_RUN_ID"
+  originating_run_id="$BIONIC_RUN_ID"
   if [[ -f "$FAKE_CURL_STATE_DIR/originating-run-id" ]]; then
     originating_run_id="$(<"$FAKE_CURL_STATE_DIR/originating-run-id")"
   fi
@@ -103,11 +103,11 @@ if [[ "$method" == "GET" && "$url" == */work-products ]]; then
   if [[ -f "$FAKE_CURL_STATE_DIR/upload-committed" ]]; then
     work_product_json="$(
       jq -nc \
-        --arg runId "$PAPERCLIP_RUN_ID" \
+        --arg runId "$BIONIC_RUN_ID" \
         '{
           id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
           type: "artifact",
-          provider: "paperclip",
+          provider: "bionic",
           createdByRunId: $runId,
           externalId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
           metadata: { attachmentId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" }
@@ -139,7 +139,7 @@ if [[ "$method" == "POST" && "$url" == */attachments ]]; then
     (
       sleep "$FAKE_CURL_COMMIT_AFTER_DROP_DELAY"
       : >"$FAKE_CURL_STATE_DIR/upload-committed"
-      printf '%s' "$PAPERCLIP_RUN_ID" >"$FAKE_CURL_STATE_DIR/originating-run-id"
+      printf '%s' "$BIONIC_RUN_ID" >"$FAKE_CURL_STATE_DIR/originating-run-id"
     ) >/dev/null 2>&1 &
     exit 56
   fi
@@ -148,7 +148,7 @@ if [[ "$method" == "POST" && "$url" == */attachments ]]; then
     exit 56
   fi
   : >"$FAKE_CURL_STATE_DIR/upload-committed"
-  printf '%s' "$PAPERCLIP_RUN_ID" >"$FAKE_CURL_STATE_DIR/originating-run-id"
+  printf '%s' "$BIONIC_RUN_ID" >"$FAKE_CURL_STATE_DIR/originating-run-id"
   if [[ -n "\${FAKE_CURL_AMBIGUOUS_STATUS:-}" && ! -f "$FAKE_CURL_STATE_DIR/upload-status-used" ]]; then
     : >"$FAKE_CURL_STATE_DIR/upload-status-used"
     respond '{"error":"ambiguous upstream response","outcome":"indeterminate","retryable":false}' "$FAKE_CURL_AMBIGUOUS_STATUS"
@@ -171,7 +171,7 @@ if [[ "$method" == "POST" && "$url" == */attachments ]]; then
 fi
 
 if [[ "$method" == "POST" && "$url" == */work-products ]]; then
-  respond "$(jq -nc --arg runId "$PAPERCLIP_RUN_ID" '{ id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", createdByRunId: $runId }')" 201
+  respond "$(jq -nc --arg runId "$BIONIC_RUN_ID" '{ id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", createdByRunId: $runId }')" 201
   exit 0
 fi
 
@@ -189,12 +189,12 @@ exit 2
   const env = {
     ...process.env,
     PATH: `${binDir}:${process.env.PATH ?? ""}`,
-    PAPERCLIP_API_KEY: "test-run-key",
-    PAPERCLIP_API_URL: options.apiUrl ?? "http://paperclip.invalid",
-    PAPERCLIP_COMPANY_ID: "company-1",
-    PAPERCLIP_HELPER_STATE_DIR: lockDir,
-    PAPERCLIP_RUN_ID: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
-    PAPERCLIP_TASK_ID: "issue-1",
+    BIONIC_API_KEY: "test-run-key",
+    BIONIC_API_URL: options.apiUrl ?? "http://bionic.invalid",
+    BIONIC_COMPANY_ID: "company-1",
+    BIONIC_HELPER_STATE_DIR: lockDir,
+    BIONIC_RUN_ID: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+    BIONIC_TASK_ID: "issue-1",
     FAKE_ATTACHMENT_SHA: sha256,
     FAKE_CURL_AMBIGUOUS_STATUS:
       options.ambiguousHttpStatusAfterCommit ?? "",
@@ -229,7 +229,7 @@ exit 2
   return { env, filePath, lockDir, root, run, sha256, stateDir };
 }
 
-describe("paperclip skill utils", () => {
+describe("bionic skill utils", () => {
   const cleanupDirs = new Set<string>();
 
   afterEach(async () => {
@@ -238,64 +238,64 @@ describe("paperclip skill utils", () => {
   });
 
   it("lists bundled runtime skills from ./skills without pulling in .agents/skills", async () => {
-    const root = await makeTempDir("paperclip-skill-roots-");
+    const root = await makeTempDir("bionic-skill-roots-");
     cleanupDirs.add(root);
 
     const moduleDir = path.join(root, "a", "b", "c", "d", "e");
     await fs.mkdir(moduleDir, { recursive: true });
-    await fs.mkdir(path.join(root, "skills", "paperclip"), { recursive: true });
-    await fs.mkdir(path.join(root, "skills", "paperclip-create-agent"), { recursive: true });
+    await fs.mkdir(path.join(root, "skills", "bionic"), { recursive: true });
+    await fs.mkdir(path.join(root, "skills", "bionic-create-agent"), { recursive: true });
     await fs.mkdir(path.join(root, ".agents", "skills", "diagnose-why-work-stopped"), { recursive: true });
-    await fs.mkdir(path.join(root, ".agents", "skills", "paperclip-create-plugin"), { recursive: true });
+    await fs.mkdir(path.join(root, ".agents", "skills", "bionic-create-plugin"), { recursive: true });
     await fs.mkdir(path.join(root, ".agents", "skills", "release"), { recursive: true });
     await fs.mkdir(path.join(root, ".agents", "skills", "terminal-bench-loop"), { recursive: true });
 
     const entries = await listPaperclipSkillEntries(moduleDir);
 
     expect(entries.map((entry) => entry.key)).toEqual([
-      "paperclipai/paperclip/paperclip",
-      "paperclipai/paperclip/paperclip-create-agent",
+      "bionicai/bionic/bionic",
+      "bionicai/bionic/bionic-create-agent",
     ]);
     expect(entries.map((entry) => entry.runtimeName)).toEqual([
-      "paperclip",
-      "paperclip-create-agent",
+      "bionic",
+      "bionic-create-agent",
     ]);
-    expect(entries[0]?.source).toBe(path.join(root, "skills", "paperclip"));
-    expect(entries[1]?.source).toBe(path.join(root, "skills", "paperclip-create-agent"));
+    expect(entries[0]?.source).toBe(path.join(root, "skills", "bionic"));
+    expect(entries[1]?.source).toBe(path.join(root, "skills", "bionic-create-agent"));
   });
 
-  it("documents artifact uploads in the installed Paperclip skill", async () => {
-    const skillBody = await fs.readFile(path.resolve("skills/paperclip/SKILL.md"), "utf8");
-    const referenceBody = await fs.readFile(path.resolve("skills/paperclip/references/artifacts.md"), "utf8");
-    const helperBody = await fs.readFile(path.resolve("skills/paperclip/scripts/paperclip-upload-artifact.sh"), "utf8");
+  it("documents artifact uploads in the installed Bionic skill", async () => {
+    const skillBody = await fs.readFile(path.resolve("skills/bionic/SKILL.md"), "utf8");
+    const referenceBody = await fs.readFile(path.resolve("skills/bionic/references/artifacts.md"), "utf8");
+    const helperBody = await fs.readFile(path.resolve("skills/bionic/scripts/bionic-upload-artifact.sh"), "utf8");
     const normalizedReferenceBody = referenceBody.replace(/\s+/g, " ");
 
     expect(skillBody).toContain("Generated Artifacts and Work Products");
     expect(skillBody).toContain("references/artifacts.md");
-    expect(skillBody).not.toContain("/api/companies/$PAPERCLIP_COMPANY_ID/issues/$PAPERCLIP_TASK_ID/attachments");
+    expect(skillBody).not.toContain("/api/companies/$BIONIC_COMPANY_ID/issues/$BIONIC_TASK_ID/attachments");
     expect(referenceBody).toContain("Generated Artifacts and Work Products");
-    expect(referenceBody).toContain("scripts/paperclip-upload-artifact.sh");
+    expect(referenceBody).toContain("scripts/bionic-upload-artifact.sh");
     expect(referenceBody).toContain("POST");
-    expect(referenceBody).toContain("/api/companies/$PAPERCLIP_COMPANY_ID/issues/$PAPERCLIP_TASK_ID/attachments");
-    expect(referenceBody).toContain("/api/issues/$PAPERCLIP_TASK_ID/work-products");
+    expect(referenceBody).toContain("/api/companies/$BIONIC_COMPANY_ID/issues/$BIONIC_TASK_ID/attachments");
+    expect(referenceBody).toContain("/api/issues/$BIONIC_TASK_ID/work-products");
     expect(referenceBody).toContain('--chat-comment "Here is the requested image."');
     expect(referenceBody).toContain("not proof of external");
     expect(referenceBody).toContain("--retry-unknown-upload");
     expect(referenceBody).toContain("was **not**");
     expect(normalizedReferenceBody).toContain("bound to the response comment");
-    expect(referenceBody).not.toContain("npx paperclipai issue comment");
+    expect(referenceBody).not.toContain("npx bionicai issue comment");
     expect(helperBody).toContain("--chat-comment TEXT");
     expect(helperBody).toContain("--retry-unknown-upload");
     expect(helperBody).toContain('"$api_base/issues/$issue_id/comments"');
     expect(helperBody).toContain("attachmentIds: [$attachmentId]");
     await expect(
-      fs.access(path.resolve("skills/paperclip/scripts/paperclip-upload-artifact.sh")),
+      fs.access(path.resolve("skills/bionic/scripts/bionic-upload-artifact.sh")),
     ).resolves.toBeUndefined();
-    await expect(fs.access(path.resolve("scripts/paperclip-upload-artifact.sh"))).rejects.toThrow();
+    await expect(fs.access(path.resolve("scripts/bionic-upload-artifact.sh"))).rejects.toThrow();
   });
 
   it("keeps the external-chat shortcut behind the server-verified harness boundary", async () => {
-    const skillBody = await fs.readFile(path.resolve("skills/paperclip/SKILL.md"), "utf8");
+    const skillBody = await fs.readFile(path.resolve("skills/bionic/SKILL.md"), "utf8");
     const shortcut = skillBody.match(
       /## Server-Verified External Chat Turns(?<body>[\s\S]*?)\n## The Heartbeat Procedure/,
     )?.groups?.body;
@@ -311,7 +311,7 @@ describe("paperclip skill utils", () => {
     expect(normalizedShortcut).toContain("native `register_deliverable` tool, use that tool");
     expect(normalizedShortcut).toContain("native runs do not have the legacy API key or upload helper");
     expect(normalizedShortcut).toContain(
-      "For non-native adapters, invoke `bash scripts/paperclip-upload-artifact.sh`",
+      "For non-native adapters, invoke `bash scripts/bionic-upload-artifact.sh`",
     );
     expect(normalizedShortcut).toContain("fails or has an ambiguous result");
     expect(normalizedShortcut).toContain("use the full heartbeat procedure below");
@@ -448,7 +448,7 @@ describe("paperclip skill utils", () => {
       uploadDelaySeconds: "0.2",
     });
     const operationIdentity = [
-      "http://paperclip.invalid/api",
+      "http://bionic.invalid/api",
       "company-1",
       "issue-1",
       "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
@@ -475,9 +475,9 @@ describe("paperclip skill utils", () => {
     await expect(fs.lstat(staleLockPath)).rejects.toThrow();
   });
 
-  it("accepts PAPERCLIP_API_URL with an existing trailing API path", async () => {
+  it("accepts BIONIC_API_URL with an existing trailing API path", async () => {
     const harness = await makeArtifactHelperHarness(cleanupDirs, {
-      apiUrl: "http://paperclip.invalid/api/",
+      apiUrl: "http://bionic.invalid/api/",
     });
 
     await harness.run();
@@ -487,7 +487,7 @@ describe("paperclip skill utils", () => {
       "utf8",
     );
     expect(requestLog).toContain(
-      "GET http://paperclip.invalid/api/issues/issue-1/attachments",
+      "GET http://bionic.invalid/api/issues/issue-1/attachments",
     );
     expect(requestLog).not.toContain("/api/api/");
   });
@@ -503,7 +503,7 @@ describe("paperclip skill utils", () => {
   });
 
   it("documents governed agent interaction resolution invariants", async () => {
-    const apiReference = await fs.readFile(path.resolve("skills/paperclip/references/api-reference.md"), "utf8");
+    const apiReference = await fs.readFile(path.resolve("skills/bionic/references/api-reference.md"), "utf8");
     const issueDocs = await fs.readFile(path.resolve("docs/api/issues.md"), "utf8");
     for (const body of [apiReference, issueDocs]) {
       expect(body).toContain('resolverPolicy: "anyone" | "not_creator" | "human_only"');
@@ -519,7 +519,7 @@ describe("paperclip skill utils", () => {
   });
 
   it("uses the authoritative PATCH response to confirm monitor scheduling", async () => {
-    const skillBody = await fs.readFile(path.resolve("skills/paperclip/SKILL.md"), "utf8");
+    const skillBody = await fs.readFile(path.resolve("skills/bionic/SKILL.md"), "utf8");
 
     expect(skillBody).toContain("Use that request's default full response");
     expect(skillBody).toContain("do not issue a confirming GET");
@@ -529,14 +529,14 @@ describe("paperclip skill utils", () => {
   });
 
   it("requires issue-update writes to be verified, not inferred", async () => {
-    const skillBody = await fs.readFile(path.resolve("skills/paperclip/SKILL.md"), "utf8");
+    const skillBody = await fs.readFile(path.resolve("skills/bionic/SKILL.md"), "utf8");
 
     expect(skillBody).toContain("Verify writes — never infer them");
     expect(skillBody).toContain("An empty response body means the write FAILED");
     expect(skillBody).toContain("Never pipe a disposition write through `head`/`tail`");
     // The helper's verification behavior (HTTP status parsing, retry
     // classification, attempt bound, exit codes) is exercised end-to-end in
-    // paperclip-issue-update-helper.test.ts against a live local server.
+    // bionic-issue-update-helper.test.ts against a live local server.
   });
 
   it("keeps the create-issue-interaction-ui guide as a maintainer-only skill", async () => {
@@ -548,7 +548,7 @@ describe("paperclip skill utils", () => {
     expect(skillBody).toContain("name: create-issue-interaction-ui");
     expect(normalizedLowerSkillBody).toContain("developer/maintainer skill");
     expect(normalizedLowerSkillBody).toContain(
-      "not the operational agents that run inside a deployed paperclip company",
+      "not the operational agents that run inside a deployed bionic company",
     );
     expect(skillBody).toContain("packages/shared/src/constants.ts");
     expect(skillBody).toContain("server/src/services/issue-thread-interactions.ts");
@@ -558,11 +558,11 @@ describe("paperclip skill utils", () => {
   });
 
   it("removes stale maintainer-only symlinks from a shared skills home", async () => {
-    const root = await makeTempDir("paperclip-skill-cleanup-");
+    const root = await makeTempDir("bionic-skill-cleanup-");
     cleanupDirs.add(root);
 
     const skillsHome = path.join(root, "skills-home");
-    const runtimeSkill = path.join(root, "skills", "paperclip");
+    const runtimeSkill = path.join(root, "skills", "bionic");
     const customSkill = path.join(root, "custom", "release-notes");
     const staleMaintainerSkill = path.join(root, ".agents", "skills", "release");
 
@@ -570,15 +570,15 @@ describe("paperclip skill utils", () => {
     await fs.mkdir(runtimeSkill, { recursive: true });
     await fs.mkdir(customSkill, { recursive: true });
 
-    await fs.symlink(runtimeSkill, path.join(skillsHome, "paperclip"));
+    await fs.symlink(runtimeSkill, path.join(skillsHome, "bionic"));
     await fs.symlink(customSkill, path.join(skillsHome, "release-notes"));
     await fs.symlink(staleMaintainerSkill, path.join(skillsHome, "release"));
 
-    const removed = await removeMaintainerOnlySkillSymlinks(skillsHome, ["paperclip"]);
+    const removed = await removeMaintainerOnlySkillSymlinks(skillsHome, ["bionic"]);
 
     expect(removed).toEqual(["release"]);
     await expect(fs.lstat(path.join(skillsHome, "release"))).rejects.toThrow();
-    expect((await fs.lstat(path.join(skillsHome, "paperclip"))).isSymbolicLink()).toBe(true);
+    expect((await fs.lstat(path.join(skillsHome, "bionic"))).isSymbolicLink()).toBe(true);
     expect((await fs.lstat(path.join(skillsHome, "release-notes"))).isSymbolicLink()).toBe(true);
   });
 });

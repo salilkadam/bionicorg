@@ -3,13 +3,13 @@ import { fileURLToPath } from "node:url";
 import type {
   AdapterSkillContext,
   AdapterSkillSnapshot,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import {
   buildRuntimeMountedSkillSnapshot,
   readPaperclipRuntimeSkillEntries,
   resolveLegacyPaperclipDesiredSkillNames,
   resolvePaperclipDesiredSkillNames,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,7 +18,7 @@ async function buildCodexSkillSnapshot(
   adapterType: string,
 ): Promise<AdapterSkillSnapshot> {
   const availableEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
-  const desiredSkills = adapterType === "paperclip_runner"
+  const desiredSkills = adapterType === "bionic_runner"
     ? resolvePaperclipDesiredSkillNames(config, availableEntries)
     : resolveLegacyPaperclipDesiredSkillNames(config, availableEntries);
   return buildRuntimeMountedSkillSnapshot({

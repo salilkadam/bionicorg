@@ -136,8 +136,8 @@ export function getRecommendedConnectionMethod(
     return capabilityKey === "write" || capabilityKey === "draft";
   });
   const managedMethods = methods.filter((method) =>
-    method.oauthStrategy === "paperclip_cloud_connector"
-    || method.oauthStrategy === "paperclip_id_connector"
+    method.oauthStrategy === "bionic_cloud_connector"
+    || method.oauthStrategy === "bionic_id_connector"
   );
 
   // When a managed pilot advertises only read access, defaulting to a
@@ -163,7 +163,7 @@ export function getAvailableConnectionMethod(
 
 export function connectionMethodSupportsAutomaticOAuth(method: ConnectionMethodDef | null | undefined): boolean {
   return method?.auth === "oauth" && (
-    (method.oauthStrategy === "paperclip_cloud_connector" || method.oauthStrategy === "paperclip_id_connector")
+    (method.oauthStrategy === "bionic_cloud_connector" || method.oauthStrategy === "bionic_id_connector")
     || method.ownershipModes.includes("dcr")
   );
 }

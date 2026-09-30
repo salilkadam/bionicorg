@@ -6,7 +6,7 @@ import {
   AGGREGATOR_NAMES,
   type ConnectionSearchResultItem,
   type RemoteMcpConnectorId,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { RemoteMcpAccountChoice } from "@/features/connections/remote-mcp/RemoteMcpAccountChoice";
 import { QuestionForm } from "@/components/task-chat/QuestionForm";
 import { RemoteMcpConnectionReview } from "../prototypes/RemoteMcpConnectionReview";
@@ -82,7 +82,7 @@ function ProviderChoice({
       <QuestionForm
         id="provider-choice-review"
         questionSet={{
-          schema: "paperclip.question_set.v1",
+          schema: "bionic.question_set.v1",
           questions: [
             {
               id: question.id,

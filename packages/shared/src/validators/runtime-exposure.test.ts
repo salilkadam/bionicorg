@@ -50,9 +50,9 @@ describe("runtimeExposureConfigSchema", () => {
 
 describe("readRuntimeExposureIntent", () => {
   it("treats a legacy expose block with no exposure fields as unset", () => {
-    // The pre-feature Paperclip App template shape: an `expose` block that only
+    // The pre-feature Bionic App template shape: an `expose` block that only
     // describes the backend URL. This must be defaultable, not opted out.
-    expect(readRuntimeExposureIntent({ urlTemplate: "http://paperclip-dev:{{port}}" })).toBe("unset");
+    expect(readRuntimeExposureIntent({ urlTemplate: "http://bionic-dev:{{port}}" })).toBe("unset");
     expect(readRuntimeExposureIntent(undefined)).toBe("unset");
     expect(readRuntimeExposureIntent(null)).toBe("unset");
     expect(readRuntimeExposureIntent({})).toBe("unset");
@@ -79,7 +79,7 @@ describe("readRuntimeExposureIntent", () => {
 describe("resolveDeclaredRuntimeExposureConfig", () => {
   it("returns null unless the block explicitly opts in", () => {
     expect(resolveDeclaredRuntimeExposureConfig(undefined)).toBeNull();
-    expect(resolveDeclaredRuntimeExposureConfig({ urlTemplate: "http://paperclip-dev:{{port}}" })).toBeNull();
+    expect(resolveDeclaredRuntimeExposureConfig({ urlTemplate: "http://bionic-dev:{{port}}" })).toBeNull();
     expect(resolveDeclaredRuntimeExposureConfig({ tailscaleHttps: false })).toBeNull();
   });
 
@@ -138,8 +138,8 @@ describe("runtimeExposureStatusSchema", () => {
       runtimeExposureStatusSchema.parse({
         provider: "tailscale_https",
         state: "ready",
-        publicUrl: "https://paperclip-dev.tail29c1aa.ts.net:42010",
-        hostname: "paperclip-dev.tail29c1aa.ts.net",
+        publicUrl: "https://bionic-dev.tail29c1aa.ts.net:42010",
+        hostname: "bionic-dev.tail29c1aa.ts.net",
         listeners: [
           { purpose: "app", publicPort: 42010, targetPort: 42010 },
           { purpose: "vite_hmr", publicPort: 52010, targetPort: 52010 },

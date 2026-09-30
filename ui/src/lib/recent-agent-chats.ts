@@ -1,8 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
-import type { Agent } from "@paperclipai/shared";
-const eventName = "paperclip:recent-agent-chats";
+import type { Agent } from "@bionicai/shared";
+const eventName = "bionic:recent-agent-chats";
 const key = (company: string, user?: string | null) =>
-  `paperclip.recentAgentChats:${company}:${user ?? "__local_board__"}`;
+  `bionic.recentAgentChats:${company}:${user ?? "__local_board__"}`;
 const memory = new Map<string, string>();
 function read(storageKey: string): string {
   try {

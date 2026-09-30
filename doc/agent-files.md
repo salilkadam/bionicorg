@@ -34,7 +34,7 @@ registered writable agent copy. Adapter `HOME` and `CODEX_HOME` keep their
 existing meanings and are not personal-file storage. Local copies are outside
 the task workspace. Remote providers currently confine file sync to their
 workspace: their independent agent copy therefore lives under the excluded
-`.paperclip-runtime/agent-files/<agent>/<run>/` area. It is not included in task
+`.bionic-runtime/agent-files/<agent>/<run>/` area. It is not included in task
 workspace sync, Git staging, or task deliverables.
 
 Regular files (including binary bytes) and directories are supported, up to
@@ -43,7 +43,7 @@ hardlinks, and special
 files are rejected, rather than followed or silently skipped. The instruction
 entry remains valid UTF-8, at most 1 MiB, and cannot be deleted. The editor edits
 text up to 1 MiB and offers downloads for binary or larger files. The reserved
-`.paperclip-runtime` directory and the compatibility-only virtual file
+`.bionic-runtime` directory and the compatibility-only virtual file
 `promptTemplate.legacy.md` are not user storage. Task cache and Git ignore
 exclusions do not apply to this directory.
 

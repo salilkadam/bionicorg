@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   createDecisionArchiveProposalSchema,
   decisionInputsSchema,
@@ -9,7 +9,7 @@ import {
   type AttentionArchiveTargetSnapshot,
   type AttentionItem,
   type CreateDecisionArchiveProposalInput,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { validate } from "../middleware/validate.js";
 import { decisionService, type DecisionServiceOptions } from "../services/decisions.js";
 import { assertBoard, assertBoardOrAgent, assertCompanyAccess, getAccessibleResource, getActorInfo } from "./authz.js";

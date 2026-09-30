@@ -75,7 +75,7 @@ function expectResponseId(value: unknown): string {
   return String(value);
 }
 
-vi.mock("@paperclipai/shared/telemetry", () => ({
+vi.mock("@bionicai/shared/telemetry", () => ({
   trackAgentCreated: mockTrackAgentCreated,
   trackErrorHandlerCrash: vi.fn(),
 }));
@@ -119,7 +119,7 @@ vi.mock("../adapters/index.js", () => ({
 }));
 
 function registerModuleMocks() {
-  vi.doMock("@paperclipai/shared/telemetry", () => ({
+  vi.doMock("@bionicai/shared/telemetry", () => ({
     trackAgentCreated: mockTrackAgentCreated,
     trackErrorHandlerCrash: vi.fn(),
   }));
@@ -278,23 +278,23 @@ describe.sequential("agent skill routes", () => {
     mockSecretService.syncEnvBindingsForTarget.mockResolvedValue(undefined);
     mockCompanySkillService.listRuntimeSkillEntries.mockResolvedValue([
       {
-        key: "paperclipai/paperclip/paperclip",
-        runtimeName: "paperclip",
-        source: "/tmp/paperclip",
+        key: "bionicai/bionic/bionic",
+        runtimeName: "bionic",
+        source: "/tmp/bionic",
       },
     ]);
     mockCompanySkillService.resolveRequestedSkillKeys.mockImplementation(
       async (_companyId: string, requested: string[]) =>
         requested.map((value) =>
-          value === "paperclip"
-            ? "paperclipai/paperclip/paperclip"
+          value === "bionic"
+            ? "bionicai/bionic/bionic"
             : value,
         ),
     );
     mockCompanySkillService.resolveRequestedSkillEntries.mockImplementation(
       async (_companyId: string, requested: Array<{ key: string; versionId?: string | null }>) => ({
         resolved: requested.map((entry) => ({
-          key: entry.key === "paperclip" ? "paperclipai/paperclip/paperclip" : entry.key,
+          key: entry.key === "bionic" ? "bionicai/bionic/bionic" : entry.key,
           versionId: entry.versionId ?? null,
         })),
         unresolved: [],
@@ -304,7 +304,7 @@ describe.sequential("agent skill routes", () => {
       adapterType: "claude_local",
       supported: true,
       mode: "ephemeral",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
@@ -312,7 +312,7 @@ describe.sequential("agent skill routes", () => {
       adapterType: "claude_local",
       supported: true,
       mode: "ephemeral",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
@@ -395,7 +395,7 @@ describe.sequential("agent skill routes", () => {
       expect.objectContaining({
         adapterType: "claude_local",
         config: expect.objectContaining({
-          paperclipRuntimeSkills: expect.any(Array),
+          bionicRuntimeSkills: expect.any(Array),
         }),
       }),
     );
@@ -452,7 +452,7 @@ describe.sequential("agent skill routes", () => {
         adapterType: "claude_local",
         config: expect.objectContaining({
           env: { HOME: "/home/agent" },
-          paperclipRuntimeSkills: expect.any(Array),
+          bionicRuntimeSkills: expect.any(Array),
         }),
       }),
     );
@@ -486,7 +486,7 @@ describe.sequential("agent skill routes", () => {
       adapterType: "claude_local",
       supported: true,
       mode: "ephemeral",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
@@ -494,7 +494,7 @@ describe.sequential("agent skill routes", () => {
       await createApp(),
       (baseUrl) => request(baseUrl)
         .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-        .send({ desiredSkills: ["paperclip"], mode: "replace" }),
+        .send({ desiredSkills: ["bionic"], mode: "replace" }),
     );
     expect(syncRes.status, JSON.stringify(syncRes.body)).toBe(200);
     const syncCall = mockSecretService.resolveAdapterConfigForRuntime.mock.calls.at(-1);
@@ -509,7 +509,7 @@ describe.sequential("agent skill routes", () => {
       adapterType: "codex_local",
       supported: true,
       mode: "ephemeral",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
@@ -539,7 +539,7 @@ describe.sequential("agent skill routes", () => {
       adapterType: "acpx_local",
       supported: true,
       mode: "ephemeral",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
@@ -560,7 +560,7 @@ describe.sequential("agent skill routes", () => {
         adapterType: "acpx_local",
         config: expect.objectContaining({
           agent: "claude",
-          paperclipRuntimeSkills: expect.any(Array),
+          bionicRuntimeSkills: expect.any(Array),
         }),
       }),
     );
@@ -578,8 +578,8 @@ describe.sequential("agent skill routes", () => {
     mockSecretService.resolveAdapterConfigForRuntime.mockResolvedValueOnce({
       config: {
         agent: "codex",
-        paperclipSkillSync: {
-          desiredSkills: ["paperclipai/paperclip/paperclip"],
+        bionicSkillSync: {
+          desiredSkills: ["bionicai/bionic/bionic"],
         },
       },
     });
@@ -587,14 +587,14 @@ describe.sequential("agent skill routes", () => {
       adapterType: "acpx_local",
       supported: true,
       mode: "ephemeral",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip"], mode: "replace" }));
+      .send({ desiredSkills: ["bionic"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
@@ -602,8 +602,8 @@ describe.sequential("agent skill routes", () => {
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
           agent: "codex",
-          paperclipSkillSync: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+          bionicSkillSync: expect.objectContaining({
+            desiredSkills: ["bionicai/bionic/bionic"],
           }),
         }),
       }),
@@ -614,17 +614,17 @@ describe.sequential("agent skill routes", () => {
         adapterType: "acpx_local",
         config: expect.objectContaining({
           agent: "codex",
-          paperclipRuntimeSkills: expect.any(Array),
+          bionicRuntimeSkills: expect.any(Array),
         }),
       }),
-      ["paperclipai/paperclip/paperclip"],
+      ["bionicai/bionic/bionic"],
     );
   });
 
   it("requires an explicit actionable merge mode for skill sync", async () => {
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip"] }));
+      .send({ desiredSkills: ["bionic"] }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(422);
     expect(res.body.error).toContain('"add", "remove", or "replace"');
@@ -636,21 +636,21 @@ describe.sequential("agent skill routes", () => {
     mockAgentService.getById.mockResolvedValue({
       ...makeAgent("claude_local"),
       adapterConfig: {
-        paperclipSkillSync: { desiredSkills: ["company-1/keep"] },
+        bionicSkillSync: { desiredSkills: ["company-1/keep"] },
       },
     });
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip"], mode: "add" }));
+      .send({ desiredSkills: ["bionic"], mode: "add" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: {
-            desiredSkills: ["company-1/keep", "paperclipai/paperclip/paperclip"],
+          bionicSkillSync: {
+            desiredSkills: ["company-1/keep", "bionicai/bionic/bionic"],
           },
         }),
       }),
@@ -662,22 +662,22 @@ describe.sequential("agent skill routes", () => {
     mockAgentService.getById.mockResolvedValue({
       ...makeAgent("claude_local"),
       adapterConfig: {
-        paperclipSkillSync: {
-          desiredSkills: ["company-1/keep", "paperclipai/paperclip/paperclip"],
+        bionicSkillSync: {
+          desiredSkills: ["company-1/keep", "bionicai/bionic/bionic"],
         },
       },
     });
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip"], mode: "remove" }));
+      .send({ desiredSkills: ["bionic"], mode: "remove" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: { desiredSkills: ["company-1/keep"] },
+          bionicSkillSync: { desiredSkills: ["company-1/keep"] },
         }),
       }),
       expect.any(Object),
@@ -688,21 +688,21 @@ describe.sequential("agent skill routes", () => {
     mockAgentService.getById.mockResolvedValue({
       ...makeAgent("claude_local"),
       adapterConfig: {
-        paperclipSkillSync: { desiredSkills: ["company-1/keep"] },
+        bionicSkillSync: { desiredSkills: ["company-1/keep"] },
       },
     });
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip"], mode: "replace" }));
+      .send({ desiredSkills: ["bionic"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: {
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+          bionicSkillSync: {
+            desiredSkills: ["bionicai/bionic/bionic"],
           },
         }),
       }),
@@ -718,7 +718,7 @@ describe.sequential("agent skill routes", () => {
       .send({
         mode: "replace",
         desiredSkills: [{
-          key: "paperclipai/paperclip/paperclip",
+          key: "bionicai/bionic/bionic",
           versionId: "22222222-2222-4222-8222-222222222222",
         }],
       }));
@@ -737,7 +737,7 @@ describe.sequential("agent skill routes", () => {
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
       .send({
         mode: "replace",
-        desiredSkills: [{ key: "paperclipai/paperclip/paperclip", versionId }],
+        desiredSkills: [{ key: "bionicai/bionic/bionic", versionId }],
       }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
@@ -745,8 +745,8 @@ describe.sequential("agent skill routes", () => {
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: expect.objectContaining({
-            desiredSkills: [{ key: "paperclipai/paperclip/paperclip", versionId }],
+          bionicSkillSync: expect.objectContaining({
+            desiredSkills: [{ key: "bionicai/bionic/bionic", versionId }],
           }),
         }),
       }),
@@ -773,7 +773,7 @@ describe.sequential("agent skill routes", () => {
             unresolved.push(entry.key);
           } else {
             resolved.push({
-              key: entry.key === "paperclip" ? "paperclipai/paperclip/paperclip" : entry.key,
+              key: entry.key === "bionic" ? "bionicai/bionic/bionic" : entry.key,
               versionId: entry.versionId ?? null,
             });
           }
@@ -784,7 +784,7 @@ describe.sequential("agent skill routes", () => {
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip", "stale/removed/skill"], mode: "replace" }));
+      .send({ desiredSkills: ["bionic", "stale/removed/skill"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     // Stale key preserved in the persisted config alongside the resolved skill.
@@ -792,8 +792,8 @@ describe.sequential("agent skill routes", () => {
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip", "stale/removed/skill"],
+          bionicSkillSync: expect.objectContaining({
+            desiredSkills: ["bionicai/bionic/bionic", "stale/removed/skill"],
           }),
         }),
       }),
@@ -815,7 +815,7 @@ describe.sequential("agent skill routes", () => {
       adapterType: "cursor",
       supported: true,
       mode: "persistent",
-      desiredSkills: ["paperclipai/paperclip/paperclip"],
+      desiredSkills: ["bionicai/bionic/bionic"],
       entries: [],
       warnings: [],
     });
@@ -838,25 +838,25 @@ describe.sequential("agent skill routes", () => {
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclipai/paperclip/paperclip"], mode: "replace" }));
+      .send({ desiredSkills: ["bionicai/bionic/bionic"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAdapter.syncSkills).toHaveBeenCalled();
   });
 
-  it("ignores the reserved legacy Paperclip skill for paperclip_runner", async () => {
-    mockAgentService.getById.mockResolvedValue(makeAgent("paperclip_runner"));
+  it("ignores the reserved legacy Bionic skill for bionic_runner", async () => {
+    mockAgentService.getById.mockResolvedValue(makeAgent("bionic_runner"));
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclipai/paperclip/paperclip"], mode: "replace" }));
+      .send({ desiredSkills: ["bionicai/bionic/bionic"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: { desiredSkills: [] },
+          bionicSkillSync: { desiredSkills: [] },
         }),
       }),
       expect.any(Object),
@@ -867,26 +867,26 @@ describe.sequential("agent skill routes", () => {
     );
   });
 
-  it("allows paperclip_runner to remove a pre-existing legacy Paperclip skill", async () => {
+  it("allows bionic_runner to remove a pre-existing legacy Bionic skill", async () => {
     mockAgentService.getById.mockResolvedValue({
-      ...makeAgent("paperclip_runner"),
+      ...makeAgent("bionic_runner"),
       adapterConfig: {
-        paperclipSkillSync: {
-          desiredSkills: ["company-1/keep", "paperclipai/paperclip/paperclip"],
+        bionicSkillSync: {
+          desiredSkills: ["company-1/keep", "bionicai/bionic/bionic"],
         },
       },
     });
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclipai/paperclip/paperclip"], mode: "remove" }));
+      .send({ desiredSkills: ["bionicai/bionic/bionic"], mode: "remove" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: { desiredSkills: ["company-1/keep"] },
+          bionicSkillSync: { desiredSkills: ["company-1/keep"] },
         }),
       }),
       expect.any(Object),
@@ -942,7 +942,7 @@ describe.sequential("agent skill routes", () => {
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclipai/paperclip/paperclip"], mode: "replace" }));
+      .send({ desiredSkills: ["bionicai/bionic/bionic"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAdapter.syncSkills).toHaveBeenCalledWith(
@@ -950,10 +950,10 @@ describe.sequential("agent skill routes", () => {
         adapterType: "claude_local",
         config: expect.objectContaining({
           env: { HOME: "/home/agent" },
-          paperclipRuntimeSkills: expect.any(Array),
+          bionicRuntimeSkills: expect.any(Array),
         }),
       }),
-      ["paperclipai/paperclip/paperclip"],
+      ["bionicai/bionic/bionic"],
     );
   });
 
@@ -962,15 +962,15 @@ describe.sequential("agent skill routes", () => {
 
     const res = await requestApp(await createApp(), (baseUrl) => request(baseUrl)
       .post("/api/agents/11111111-1111-4111-8111-111111111111/skills/sync?companyId=company-1")
-      .send({ desiredSkills: ["paperclip"], mode: "replace" }));
+      .send({ desiredSkills: ["bionic"], mode: "replace" }));
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+          bionicSkillSync: expect.objectContaining({
+            desiredSkills: ["bionicai/bionic/bionic"],
           }),
         }),
       }),
@@ -985,7 +985,7 @@ describe.sequential("agent skill routes", () => {
         name: "QA Agent",
         role: "engineer",
         adapterType: "claude_local",
-        desiredSkills: ["paperclip"],
+        desiredSkills: ["bionic"],
         adapterConfig: {},
       }));
 
@@ -995,8 +995,8 @@ describe.sequential("agent skill routes", () => {
       "company-1",
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+          bionicSkillSync: expect.objectContaining({
+            desiredSkills: ["bionicai/bionic/bionic"],
           }),
         }),
       }),
@@ -1019,7 +1019,7 @@ describe.sequential("agent skill routes", () => {
         role: "engineer",
         adapterType: "claude_local",
         desiredSkills: [{
-          key: "paperclipai/paperclip/paperclip",
+          key: "bionicai/bionic/bionic",
           versionId: "22222222-2222-4222-8222-222222222222",
         }],
         adapterConfig: {},
@@ -1193,7 +1193,7 @@ describe.sequential("agent skill routes", () => {
       expect(mockAgentInstructionsService.materializeManagedBundle).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          "AGENTS.md": expect.stringContaining("skills/paperclip/scripts/paperclip-upload-artifact.sh"),
+          "AGENTS.md": expect.stringContaining("skills/bionic/scripts/bionic-upload-artifact.sh"),
         }),
         expect.any(Object),
       );
@@ -1227,17 +1227,17 @@ describe.sequential("agent skill routes", () => {
     const entrySeed = seededCalls.at(-1)?.[1] as Record<string, string> | undefined;
     expect(entrySeed?.["AGENTS.md"]).toContain("chief of staff");
     // The normal onboarding flow has beta skill version selection disabled.
-    expect(mockAgentService.create.mock.calls[0][1].adapterConfig.paperclipSkillSync.desiredSkills)
-      .toContain("paperclipai/paperclip/first-task");
+    expect(mockAgentService.create.mock.calls[0][1].adapterConfig.bionicSkillSync.desiredSkills)
+      .toContain("bionicai/bionic/first-task");
   });
 
   it.each(["codex_local", "claude_local"].flatMap((adapterType) => [
-    ["agents", "paperclipai/paperclip/paperclip-create-agent"],
-    ["agent-hires", "paperclipai/paperclip/paperclip-create-agent"],
-    ["agents", "paperclip"],
-    ["agent-hires", "paperclip"],
-    ["agents", "paperclipai/paperclip/first-task"],
-    ["agent-hires", "paperclipai/paperclip/first-task"],
+    ["agents", "bionicai/bionic/bionic-create-agent"],
+    ["agent-hires", "bionicai/bionic/bionic-create-agent"],
+    ["agents", "bionic"],
+    ["agent-hires", "bionic"],
+    ["agents", "bionicai/bionic/first-task"],
+    ["agent-hires", "bionicai/bionic/first-task"],
   ].map(([route, skill]) => ({ adapterType, route, skill }))))("gives $adapterType onboarding agents core and first-task skills via $route, preserving $skill pins", async ({ adapterType, route, skill }) => {
     mockInstanceSettingsService.getExperimental.mockResolvedValue({ enableBetaSkills: true });
     const versionId = "22222222-2222-4222-8222-222222222222";
@@ -1251,11 +1251,11 @@ describe.sequential("agent skill routes", () => {
     expect(res.status, JSON.stringify(res.body)).toBe(201);
     const input = mockAgentService.create.mock.calls[0][1];
     expect(input.role).toBe("general");
-    const canonicalKey = skill === "paperclip" ? "paperclipai/paperclip/paperclip" : skill;
-    const expected = ["paperclip", "paperclip-board", "paperclip-converting-plans-to-tasks", "paperclip-create-agent", "para-memory-files", "first-task"]
-      .map((name) => ({ key: `paperclipai/paperclip/${name}`, versionId: `paperclipai/paperclip/${name}` === canonicalKey ? versionId : null }));
-    expect(input.adapterConfig.paperclipSkillSync.desiredSkills).toEqual(expect.arrayContaining(expected));
-    expect(input.adapterConfig.paperclipSkillSync.desiredSkills).toHaveLength(6);
+    const canonicalKey = skill === "bionic" ? "bionicai/bionic/bionic" : skill;
+    const expected = ["bionic", "bionic-board", "bionic-converting-plans-to-tasks", "bionic-create-agent", "para-memory-files", "first-task"]
+      .map((name) => ({ key: `bionicai/bionic/${name}`, versionId: `bionicai/bionic/${name}` === canonicalKey ? versionId : null }));
+    expect(input.adapterConfig.bionicSkillSync.desiredSkills).toEqual(expect.arrayContaining(expected));
+    expect(input.adapterConfig.bionicSkillSync.desiredSkills).toHaveLength(6);
   });
 
   it.each(["agents", "agent-hires"])("leaves ordinary general agents' defaults unchanged via %s", async (route) => {
@@ -1263,7 +1263,7 @@ describe.sequential("agent skill routes", () => {
       .post(`/api/companies/company-1/${route}`)
       .send({ name: "Biff", role: "general", adapterType: "codex_local" });
     expect(res.status, JSON.stringify(res.body)).toBe(201);
-    expect(mockAgentService.create.mock.calls[0][1].adapterConfig.paperclipSkillSync).toBeUndefined();
+    expect(mockAgentService.create.mock.calls[0][1].adapterConfig.bionicSkillSync).toBeUndefined();
   });
 
   it.each(["agents", "agent-hires"])("does not assign first-task to ordinary CEOs via %s", async (route) => {
@@ -1271,9 +1271,9 @@ describe.sequential("agent skill routes", () => {
       .post(`/api/companies/company-1/${route}`)
       .send({ name: "CEO", role: "ceo", adapterType: "codex_local" });
     expect(res.status, JSON.stringify(res.body)).toBe(201);
-    const desiredSkills = mockAgentService.create.mock.calls[0][1].adapterConfig.paperclipSkillSync.desiredSkills;
-    expect(desiredSkills).toContain("paperclipai/paperclip/paperclip");
-    expect(desiredSkills).not.toContain("paperclipai/paperclip/first-task");
+    const desiredSkills = mockAgentService.create.mock.calls[0][1].adapterConfig.bionicSkillSync.desiredSkills;
+    expect(desiredSkills).toContain("bionicai/bionic/bionic");
+    expect(desiredSkills).not.toContain("bionicai/bionic/first-task");
   });
 
   it("does not trust an agent-supplied onboarding marker to select chief-of-staff defaults", async () => {
@@ -1284,7 +1284,7 @@ describe.sequential("agent skill routes", () => {
       .post("/api/companies/company-1/agent-hires")
       .send({ name: "Biff", role: "general", adapterType: "claude_local", onboardingFirstAgent: true });
     expect(res.status, JSON.stringify(res.body)).toBe(201);
-    expect(mockAgentService.create.mock.calls[0][1].adapterConfig.paperclipSkillSync).toBeUndefined();
+    expect(mockAgentService.create.mock.calls[0][1].adapterConfig.bionicSkillSync).toBeUndefined();
     await vi.waitFor(() => expect(mockAgentInstructionsService.materializeManagedBundle).toHaveBeenCalled());
     expect(mockAgentInstructionsService.materializeManagedBundle.mock.calls[0][1]["AGENTS.md"])
       .not.toContain("chief of staff");
@@ -1319,7 +1319,7 @@ describe.sequential("agent skill routes", () => {
         name: "QA Agent",
         role: "engineer",
         adapterType: "claude_local",
-        desiredSkills: ["paperclip"],
+        desiredSkills: ["bionic"],
         adapterConfig: {},
       });
 
@@ -1328,16 +1328,16 @@ describe.sequential("agent skill routes", () => {
       "company-1",
       expect.objectContaining({
         payload: expect.objectContaining({
-          desiredSkills: ["paperclipai/paperclip/paperclip"],
+          desiredSkills: ["bionicai/bionic/bionic"],
           requestedConfigurationSnapshot: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+            desiredSkills: ["bionicai/bionic/bionic"],
           }),
         }),
       }),
     );
   });
 
-  it("gives a CEO hire the core paperclip skills when none are requested", async () => {
+  it("gives a CEO hire the core bionic skills when none are requested", async () => {
     const res = await request(await createApp(createDb(true)))
       .post("/api/companies/company-1/agent-hires")
       .send({
@@ -1352,13 +1352,13 @@ describe.sequential("agent skill routes", () => {
       "company-1",
       expect.objectContaining({
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: expect.objectContaining({
+          bionicSkillSync: expect.objectContaining({
             desiredSkills: expect.arrayContaining([
-              "paperclipai/paperclip/paperclip",
-              "paperclipai/paperclip/paperclip-board",
-              "paperclipai/paperclip/paperclip-converting-plans-to-tasks",
-              "paperclipai/paperclip/paperclip-create-agent",
-              "paperclipai/paperclip/para-memory-files",
+              "bionicai/bionic/bionic",
+              "bionicai/bionic/bionic-board",
+              "bionicai/bionic/bionic-converting-plans-to-tasks",
+              "bionicai/bionic/bionic-create-agent",
+              "bionicai/bionic/para-memory-files",
             ]),
           }),
         }),
@@ -1367,7 +1367,7 @@ describe.sequential("agent skill routes", () => {
     );
   });
 
-  it("omits the legacy operational skill from paperclip_runner CEO defaults", async () => {
+  it("omits the legacy operational skill from bionic_runner CEO defaults", async () => {
     mockInstanceSettingsService.getExperimental.mockResolvedValue({
       enableBetaSkills: false,
       enableNativeRunner: true,
@@ -1378,19 +1378,19 @@ describe.sequential("agent skill routes", () => {
       .send({
         name: "Native Lead",
         role: "ceo",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: { provider: "codex" },
       });
 
     expect(res.status, JSON.stringify(res.body)).toBe(201);
     const createInput = mockAgentService.create.mock.calls[0]?.[1] as {
-      adapterConfig: { paperclipSkillSync: { desiredSkills: string[] } };
+      adapterConfig: { bionicSkillSync: { desiredSkills: string[] } };
     };
-    expect(createInput.adapterConfig.paperclipSkillSync.desiredSkills).not.toContain(
-      "paperclipai/paperclip/paperclip",
+    expect(createInput.adapterConfig.bionicSkillSync.desiredSkills).not.toContain(
+      "bionicai/bionic/bionic",
     );
-    expect(createInput.adapterConfig.paperclipSkillSync.desiredSkills).toContain(
-      "paperclipai/paperclip/paperclip-board",
+    expect(createInput.adapterConfig.bionicSkillSync.desiredSkills).toContain(
+      "bionicai/bionic/bionic-board",
     );
   });
 
@@ -1401,18 +1401,18 @@ describe.sequential("agent skill routes", () => {
         name: "First Lead",
         role: "ceo",
         adapterType: "claude_local",
-        desiredSkills: ["paperclip"],
+        desiredSkills: ["bionic"],
         adapterConfig: {},
       });
 
     expect(res.status, JSON.stringify(res.body)).toBe(201);
     const createInput = mockAgentService.create.mock.calls[0]?.[1] as {
-      adapterConfig: { paperclipSkillSync: { desiredSkills: string[] } };
+      adapterConfig: { bionicSkillSync: { desiredSkills: string[] } };
     };
-    const desired = createInput.adapterConfig.paperclipSkillSync.desiredSkills;
-    // "paperclip" resolves to its canonical key and dedupes with the default.
+    const desired = createInput.adapterConfig.bionicSkillSync.desiredSkills;
+    // "bionic" resolves to its canonical key and dedupes with the default.
     expect(desired).toHaveLength(5);
-    expect(desired).toContain("paperclipai/paperclip/paperclip");
+    expect(desired).toContain("bionicai/bionic/bionic");
   });
 
   it("does not add default skills to non-CEO hires", async () => {
@@ -1429,7 +1429,7 @@ describe.sequential("agent skill routes", () => {
     const createInput = mockAgentService.create.mock.calls[0]?.[1] as {
       adapterConfig: Record<string, unknown>;
     };
-    expect(createInput.adapterConfig.paperclipSkillSync).toBeUndefined();
+    expect(createInput.adapterConfig.bionicSkillSync).toBeUndefined();
   });
 
   it("rejects version pins in agent hires while beta skills are disabled", async () => {
@@ -1440,7 +1440,7 @@ describe.sequential("agent skill routes", () => {
         role: "engineer",
         adapterType: "claude_local",
         desiredSkills: [{
-          key: "paperclipai/paperclip/paperclip",
+          key: "bionicai/bionic/bionic",
           versionId: "22222222-2222-4222-8222-222222222222",
         }],
         adapterConfig: {},
@@ -1463,7 +1463,7 @@ describe.sequential("agent skill routes", () => {
         role: "engineer",
         icon: "crown",
         adapterType: "claude_local",
-        desiredSkills: ["paperclip"],
+        desiredSkills: ["bionic"],
         adapterConfig: {},
         sourceIssueId,
       });
@@ -1474,8 +1474,8 @@ describe.sequential("agent skill routes", () => {
       expect.objectContaining({
         icon: "crown",
         adapterConfig: expect.objectContaining({
-          paperclipSkillSync: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+          bionicSkillSync: expect.objectContaining({
+            desiredSkills: ["bionicai/bionic/bionic"],
           }),
         }),
       }),
@@ -1493,9 +1493,9 @@ describe.sequential("agent skill routes", () => {
       expect.objectContaining({
         payload: expect.objectContaining({
           icon: "crown",
-          desiredSkills: ["paperclipai/paperclip/paperclip"],
+          desiredSkills: ["bionicai/bionic/bionic"],
           requestedConfigurationSnapshot: expect.objectContaining({
-            desiredSkills: ["paperclipai/paperclip/paperclip"],
+            desiredSkills: ["bionicai/bionic/bionic"],
           }),
         }),
       }),

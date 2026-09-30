@@ -3,14 +3,14 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { SandboxManagedRuntimeAsset } from "@paperclipai/adapter-utils/sandbox-managed-runtime";
+import type { SandboxManagedRuntimeAsset } from "@bionicai/adapter-utils/sandbox-managed-runtime";
 
 // Captured Codex `home` asset descriptor + the sandbox `auth.json` fixture the
 // mocked runtime hands back during teardown. Mutated per-test so a single
 // harness drives every round-trip case through the REAL `execute()` wiring.
 const captured: { assets: SandboxManagedRuntimeAsset[] } = { assets: [] };
 const sandboxAuthFixture: { bytes: Buffer } = { bytes: Buffer.from("{}") };
-const REMOTE_RUNTIME_ROOT = "/remote/workspace/.paperclip-runtime/codex";
+const REMOTE_RUNTIME_ROOT = "/remote/workspace/.bionic-runtime/codex";
 
 const {
   runChildProcess,
@@ -34,9 +34,9 @@ const {
   startAdapterExecutionTargetPaperclipBridge: vi.fn(async () => null),
 }));
 
-vi.mock("@paperclipai/adapter-utils/server-utils", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/server-utils")>(
-    "@paperclipai/adapter-utils/server-utils",
+vi.mock("@bionicai/adapter-utils/server-utils", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/server-utils")>(
+    "@bionicai/adapter-utils/server-utils",
   );
   return {
     ...actual,
@@ -46,9 +46,9 @@ vi.mock("@paperclipai/adapter-utils/server-utils", async () => {
   };
 });
 
-vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/execution-target")>(
-    "@paperclipai/adapter-utils/execution-target",
+vi.mock("@bionicai/adapter-utils/execution-target", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/execution-target")>(
+    "@bionicai/adapter-utils/execution-target",
   );
   return {
     ...actual,
@@ -119,7 +119,7 @@ describe("codex execute — outbound auth copy-back restore contribution", () =>
 
   async function runTeardown(input: { sandboxAuth: string; hostAuth: string; onProviderStopped?: () => Promise<void> }) {
     const rootDir = await mkdtemp(
-      path.join(os.tmpdir(), "paperclip-codex-copyback-e2e-"),
+      path.join(os.tmpdir(), "bionic-codex-copyback-e2e-"),
     );
     cleanupDirs.push(rootDir);
     const workspaceDir = path.join(rootDir, "workspace");
@@ -155,7 +155,7 @@ describe("codex execute — outbound auth copy-back restore contribution", () =>
         env: { CODEX_HOME: sharedHostHome },
       },
       context: {
-        paperclipWorkspace: {
+        bionicWorkspace: {
           cwd: workspaceDir,
           source: "project_primary",
         },

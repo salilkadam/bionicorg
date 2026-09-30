@@ -14,7 +14,7 @@ import {
   issueRelations,
   issues,
   issueThreadInteractions,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   CapabilitySemanticDispatcher,
   createCapabilityFixtureState,
@@ -28,7 +28,7 @@ import {
   type SemanticConformanceAdapter,
   type SemanticConformanceObservation,
   type SemanticConformanceVector,
-} from "../../vendor/paperclip-runner/testing.js";
+} from "../../vendor/bionic-runner/testing.js";
 
 import { errorHandler } from "../../middleware/index.js";
 import { issueRoutes } from "../../routes/issues.js";
@@ -62,7 +62,7 @@ interface ProductionWorld {
  * revisions, interactions, and terminal arbitration remain production-owned.
  */
 export class PaperclipProductionSemanticConformanceAdapter implements SemanticConformanceAdapter {
-  readonly id = "paperclip-production-services";
+  readonly id = "bionic-production-services";
   readonly kind = "production_binding" as const;
 
   private constructor(readonly worlds: ReadonlyMap<string, ProductionWorld>) {}
@@ -197,7 +197,7 @@ class PaperclipRouteSemanticPort {
     const task = this.#state.tasks.find((candidate) => candidate.id === this.binding.taskId);
     if (task === undefined) throw new Error("semantic_conformance_task_missing");
     return {
-      schema: "paperclip.capability.run-context.v1",
+      schema: "bionic.capability.run-context.v1",
       company: {
         id: this.ids.companyId,
         name: "Semantic Conformance",
@@ -359,7 +359,7 @@ class PaperclipRouteSemanticPort {
       taskId: issue.id,
       sessionId: run.sessionIdAfter ?? run.sessionIdBefore ?? run.externalRunId ?? run.id,
       backendKind: "runner",
-      sourceInstanceId: "paperclip-production-services",
+      sourceInstanceId: "bionic-production-services",
       status: toFixtureRunStatus(run.status),
       attempt: run.scheduledRetryAttempt + 1,
       openedAt: (run.startedAt ?? run.createdAt).toISOString(),
@@ -502,15 +502,15 @@ class PaperclipRouteSemanticPort {
   }
 
   private post(path: string, body: unknown) {
-    return request(this.app).post(path).set("X-Paperclip-Run-Id", this.binding.runId).send(body);
+    return request(this.app).post(path).set("X-Bionic-Run-Id", this.binding.runId).send(body);
   }
 
   private put(path: string, body: unknown) {
-    return request(this.app).put(path).set("X-Paperclip-Run-Id", this.binding.runId).send(body);
+    return request(this.app).put(path).set("X-Bionic-Run-Id", this.binding.runId).send(body);
   }
 
   private patch(path: string, body: unknown) {
-    return request(this.app).patch(path).set("X-Paperclip-Run-Id", this.binding.runId).send(body);
+    return request(this.app).patch(path).set("X-Bionic-Run-Id", this.binding.runId).send(body);
   }
 }
 
@@ -534,7 +534,7 @@ function createProductionAuthorityApp(db: Db, ids: PaperclipSemanticConformanceI
       type: "agent",
       agentId: ids.actorId,
       companyId: ids.companyId,
-      runId: req.header("X-Paperclip-Run-Id") ?? undefined,
+      runId: req.header("X-Bionic-Run-Id") ?? undefined,
       source: "agent_jwt",
     };
     next();

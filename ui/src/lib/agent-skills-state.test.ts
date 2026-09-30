@@ -23,8 +23,8 @@ describe("shouldScheduleSkillAutosave", () => {
     // user's order. Same set → already saved, no re-fire (would loop otherwise).
     expect(
       shouldScheduleSkillAutosave({
-        draft: ["paperclip", "stale/removed/skill", "ascii-art"],
-        lastSaved: ["paperclip", "ascii-art", "stale/removed/skill"],
+        draft: ["bionic", "stale/removed/skill", "ascii-art"],
+        lastSaved: ["bionic", "ascii-art", "stale/removed/skill"],
         failedDraft: null,
       }),
     ).toBe(false);
@@ -33,8 +33,8 @@ describe("shouldScheduleSkillAutosave", () => {
   it("does not save when the draft already matches what was saved", () => {
     expect(
       shouldScheduleSkillAutosave({
-        draft: ["paperclip"],
-        lastSaved: ["paperclip"],
+        draft: ["bionic"],
+        lastSaved: ["bionic"],
         failedDraft: null,
       }),
     ).toBe(false);
@@ -43,19 +43,19 @@ describe("shouldScheduleSkillAutosave", () => {
   it("saves when the draft diverges from the last saved state", () => {
     expect(
       shouldScheduleSkillAutosave({
-        draft: ["paperclip", "ascii-art"],
-        lastSaved: ["paperclip"],
+        draft: ["bionic", "ascii-art"],
+        lastSaved: ["bionic"],
         failedDraft: null,
       }),
     ).toBe(true);
   });
 
   it("holds a payload that just failed to prevent a retry storm (PAP-13222)", () => {
-    const draft = ["paperclip", "stale/removed/skill"];
+    const draft = ["bionic", "stale/removed/skill"];
     expect(
       shouldScheduleSkillAutosave({
         draft,
-        lastSaved: ["paperclip"],
+        lastSaved: ["bionic"],
         failedDraft: [...draft],
       }),
     ).toBe(false);
@@ -64,9 +64,9 @@ describe("shouldScheduleSkillAutosave", () => {
   it("resumes saving once the user edits the draft after a failure", () => {
     expect(
       shouldScheduleSkillAutosave({
-        draft: ["paperclip", "ascii-art"],
-        lastSaved: ["paperclip"],
-        failedDraft: ["paperclip", "stale/removed/skill"],
+        draft: ["bionic", "ascii-art"],
+        lastSaved: ["bionic"],
+        failedDraft: ["bionic", "stale/removed/skill"],
       }),
     ).toBe(true);
   });
@@ -80,12 +80,12 @@ describe("applyAgentSkillSnapshot", () => {
         lastSaved: [],
         hasHydratedSnapshot: false,
       },
-      ["paperclip", "para-memory-files"],
+      ["bionic", "para-memory-files"],
     );
 
     expect(result).toEqual({
-      draft: ["paperclip", "para-memory-files"],
-      lastSaved: ["paperclip", "para-memory-files"],
+      draft: ["bionic", "para-memory-files"],
+      lastSaved: ["bionic", "para-memory-files"],
       hasHydratedSnapshot: true,
       shouldSkipAutosave: true,
     });
@@ -94,16 +94,16 @@ describe("applyAgentSkillSnapshot", () => {
   it("keeps unsaved local edits when a fresh snapshot arrives", () => {
     const result = applyAgentSkillSnapshot(
       {
-        draft: ["paperclip", "custom-skill"],
-        lastSaved: ["paperclip"],
+        draft: ["bionic", "custom-skill"],
+        lastSaved: ["bionic"],
         hasHydratedSnapshot: true,
       },
-      ["paperclip"],
+      ["bionic"],
     );
 
     expect(result).toEqual({
-      draft: ["paperclip", "custom-skill"],
-      lastSaved: ["paperclip"],
+      draft: ["bionic", "custom-skill"],
+      lastSaved: ["bionic"],
       hasHydratedSnapshot: true,
       shouldSkipAutosave: false,
     });
@@ -112,16 +112,16 @@ describe("applyAgentSkillSnapshot", () => {
   it("adopts server state after a successful save and skips the follow-up autosave pass", () => {
     const result = applyAgentSkillSnapshot(
       {
-        draft: ["paperclip", "custom-skill"],
-        lastSaved: ["paperclip", "custom-skill"],
+        draft: ["bionic", "custom-skill"],
+        lastSaved: ["bionic", "custom-skill"],
         hasHydratedSnapshot: true,
       },
-      ["paperclip", "custom-skill"],
+      ["bionic", "custom-skill"],
     );
 
     expect(result).toEqual({
-      draft: ["paperclip", "custom-skill"],
-      lastSaved: ["paperclip", "custom-skill"],
+      draft: ["bionic", "custom-skill"],
+      lastSaved: ["bionic", "custom-skill"],
       hasHydratedSnapshot: true,
       shouldSkipAutosave: true,
     });
@@ -135,18 +135,18 @@ describe("applyAgentSkillSnapshot", () => {
       managed: false,
       state: "external",
       origin: "user_installed",
-    }, new Set(["paperclip"]))).toBe(true);
+    }, new Set(["bionic"]))).toBe(true);
   });
 
   it("keeps company-library entries in the managed section even when the adapter reports an external conflict", () => {
     expect(isReadOnlyUnmanagedSkillEntry({
-      key: "paperclip",
-      runtimeName: "paperclip",
+      key: "bionic",
+      runtimeName: "bionic",
       desired: true,
       managed: false,
       state: "external",
       origin: "company_managed",
-    }, new Set(["paperclip"]))).toBe(false);
+    }, new Set(["bionic"]))).toBe(false);
   });
 
   it("falls back to legacy snapshots that only mark unmanaged external entries", () => {

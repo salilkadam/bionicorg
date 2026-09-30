@@ -18,7 +18,7 @@ function cssBlock(selector: string): string {
 
 describe("accent markdown styles", () => {
   it("inherits the current message bubble foreground for prose text, links, and list counters", () => {
-    const block = cssBlock(".paperclip-markdown.paperclip-markdown-on-accent");
+    const block = cssBlock(".bionic-markdown.bionic-markdown-on-accent");
 
     expect(block).toContain("color: inherit");
     expect(block).toContain("--tw-prose-body: currentColor");
@@ -29,18 +29,18 @@ describe("accent markdown styles", () => {
   });
 
   it("keeps ordered-list markers and rendered link variants readable on accent bubbles", () => {
-    expect(cssBlock(".paperclip-markdown.paperclip-markdown-on-accent li::marker")).toContain(
+    expect(cssBlock(".bionic-markdown.bionic-markdown-on-accent li::marker")).toContain(
       "color: currentColor",
     );
-    expect(cssBlock(".paperclip-markdown.paperclip-markdown-on-accent :where(a, a:visited)")).toContain(
+    expect(cssBlock(".bionic-markdown.bionic-markdown-on-accent :where(a, a:visited)")).toContain(
       "color: currentColor",
     );
-    expect(cssBlock(".paperclip-markdown.paperclip-markdown-on-accent .paperclip-workspace-file-link")).toContain(
+    expect(cssBlock(".bionic-markdown.bionic-markdown-on-accent .bionic-workspace-file-link")).toContain(
       "color: currentColor",
     );
     expect(
       cssBlock(
-        ".paperclip-markdown.paperclip-markdown-on-accent :where(a.paperclip-mention-chip, a.paperclip-project-mention-chip)",
+        ".bionic-markdown.bionic-markdown-on-accent :where(a.bionic-mention-chip, a.bionic-project-mention-chip)",
       ),
     ).toContain("color: currentColor !important");
   });

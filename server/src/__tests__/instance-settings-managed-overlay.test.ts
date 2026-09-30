@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   applyManagedExperimentalOverlay,
   instanceSettingsService,
@@ -18,7 +18,7 @@ const MANAGED_RAW = JSON.stringify({
 });
 
 function managedEnv(raw: string | undefined = MANAGED_RAW) {
-  return { PAPERCLIP_MANAGED_CONFIG: raw };
+  return { BIONIC_MANAGED_CONFIG: raw };
 }
 
 /**
@@ -74,7 +74,7 @@ describe("applyManagedExperimentalOverlay", () => {
     // unmanaged keys keep their stored/default values
     expect(experimental.enableCases).toBe(false);
     expect(managedKeys).toEqual({
-      enablePipelines: { managed: true, managedBy: "paperclip-cloud" },
+      enablePipelines: { managed: true, managedBy: "bionic-cloud" },
     });
     // input is not mutated
     expect(stored.enableApps).toBe(true);
@@ -112,14 +112,14 @@ describe("instanceSettingsService managed overlay", () => {
     })) });
     expect(await service.getExperimental()).toMatchObject({
       enableChatConnectors: false,
-      managedKeys: { enableChatConnectors: { managed: true, managedBy: "paperclip-cloud" } },
+      managedKeys: { enableChatConnectors: { managed: true, managedBy: "bionic-cloud" } },
     });
     expect(persistedSets).toHaveLength(0);
   });
   it("fails closed at construction on a malformed managed config", () => {
     const { db } = stubDb(settingsRow({}));
     expect(() => instanceSettingsService(db, { runtimeEnv: managedEnv("{bad") })).toThrow(
-      /PAPERCLIP_MANAGED_CONFIG is not valid JSON/,
+      /BIONIC_MANAGED_CONFIG is not valid JSON/,
     );
   });
 
@@ -131,7 +131,7 @@ describe("instanceSettingsService managed overlay", () => {
     expect(experimental.enableApps).toBe(true);
     expect(experimental.enablePipelines).toBe(true);
     expect(experimental.managedKeys).toEqual({
-      enablePipelines: { managed: true, managedBy: "paperclip-cloud" },
+      enablePipelines: { managed: true, managedBy: "bionic-cloud" },
     });
   });
 

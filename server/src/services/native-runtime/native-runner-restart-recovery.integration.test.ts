@@ -17,13 +17,13 @@ import {
   issues,
   nativeRunFinalizations,
   nativeRunResults,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   createRunnerdCodexTransport,
   defaultCapabilityRunnerdBinary,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -57,7 +57,7 @@ const describeEmbeddedPostgres = embeddedPostgresSupport.supported
 
 const fakeCodexAppServer = resolve(
   import.meta.dirname,
-  "../../../../packages/paperclip-runner/runner/target/debug/fake-codex-app-server",
+  "../../../../packages/bionic-runner/runner/target/debug/fake-codex-app-server",
 );
 const binariesAvailable =
   existsSync(defaultCapabilityRunnerdBinary()) && existsSync(fakeCodexAppServer);
@@ -115,7 +115,7 @@ async function stopOwnedProcessGroup(
 describeEmbeddedPostgres("native runner restart recovery with real processes", () => {
   let temporary: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>>;
   let runtimeRoot: string;
-  let paperclipHome: string;
+  let bionicHome: string;
   let server: Server | null = null;
   let apiUrl: string;
   let originalPaperclipHome: string | undefined;
@@ -129,9 +129,9 @@ describeEmbeddedPostgres("native runner restart recovery with real processes", (
       "native-runner-restart-recovery-",
     );
     runtimeRoot = await mkdtemp(resolve(tmpdir(), "native-restart-runtime-"));
-    paperclipHome = await mkdtemp(resolve(tmpdir(), "native-restart-home-"));
-    originalPaperclipHome = process.env.PAPERCLIP_HOME;
-    process.env.PAPERCLIP_HOME = paperclipHome;
+    bionicHome = await mkdtemp(resolve(tmpdir(), "native-restart-home-"));
+    originalPaperclipHome = process.env.BIONIC_HOME;
+    process.env.BIONIC_HOME = bionicHome;
     const controllerStartedAt = await readProcessStartedAt(process.pid);
     successor = {
       bootId: randomUUID(),
@@ -164,7 +164,7 @@ describeEmbeddedPostgres("native runner restart recovery with real processes", (
       name: "Native restart runner",
       role: "engineer",
       status: "active",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "codex" },
       runtimeConfig: {},
       permissions: {},
@@ -177,10 +177,10 @@ describeEmbeddedPostgres("native runner restart recovery with real processes", (
     await temporary.cleanup();
     await Promise.all([
       rm(runtimeRoot, { recursive: true, force: true }),
-      rm(paperclipHome, { recursive: true, force: true }),
+      rm(bionicHome, { recursive: true, force: true }),
     ]);
-    if (originalPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-    else process.env.PAPERCLIP_HOME = originalPaperclipHome;
+    if (originalPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+    else process.env.BIONIC_HOME = originalPaperclipHome;
   });
 
   async function seedRun(
@@ -371,7 +371,7 @@ describeEmbeddedPostgres("native runner restart recovery with real processes", (
       processStartedAt: new Date("2020-01-01T00:00:00Z"),
       runnerProfileJson: {
         nativeWorkspaceSync: {
-          schema: "paperclip.native-workspace-sync/v1", state: "prepared",
+          schema: "bionic.native-workspace-sync/v1", state: "prepared",
           descriptorSha256: "a".repeat(64), baselineSha256: "b".repeat(64),
           workspaceId: "workspace", leaseId: "lease", providerLeaseId: "sandbox",
           remoteCwd: "/workspace",
@@ -800,7 +800,7 @@ describeEmbeddedPostgres("native runner restart recovery with real processes", (
       serverFingerprint: "result-before-restart",
       schemaStatus: "accepted",
       resultJson: {
-        schema: "paperclip.run_result.v1",
+        schema: "bionic.run_result.v1",
         reportedWorkDisposition: "done",
         summary: "Durable result proposed before restart.",
       },

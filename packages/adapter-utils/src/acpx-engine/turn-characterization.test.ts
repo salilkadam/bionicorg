@@ -2,18 +2,18 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { AdapterExecutionContext, AdapterRuntimeMcpAccess } from "@paperclipai/adapter-utils";
+import type { AdapterExecutionContext, AdapterRuntimeMcpAccess } from "@bionicai/adapter-utils";
 import {
   prepareAdapterExecutionTargetRuntime,
   startAdapterExecutionTargetPaperclipBridge,
   startAdapterExecutionTargetProcessSessionBridge,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 
 // Wrap the staging seam + both sandbox bridges in call-recording spies that
 // still delegate to the real implementations. This mirrors the execute.test.ts
 // harness so the turn characterization tests share the same mocked module graph.
-vi.mock("@paperclipai/adapter-utils/execution-target", async (importActual) => {
-  const actual = await importActual<typeof import("@paperclipai/adapter-utils/execution-target")>();
+vi.mock("@bionicai/adapter-utils/execution-target", async (importActual) => {
+  const actual = await importActual<typeof import("@bionicai/adapter-utils/execution-target")>();
   return {
     ...actual,
     prepareAdapterExecutionTargetRuntime: vi.fn(actual.prepareAdapterExecutionTargetRuntime),
@@ -31,7 +31,7 @@ import { runChildProcess } from "../server-utils.js";
 const tempRoots: string[] = [];
 
 async function makeTempRoot() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-acpx-skills-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-acpx-skills-"));
   tempRoots.push(root);
   return root;
 }
@@ -645,7 +645,7 @@ describe("ACPX engine turn characterization", () => {
     // A throwing accessor on a field only buildPrompt reads makes the prompt build
     // fail after the session handshake succeeds but before startTurn runs.
     const context: Record<string, unknown> = {};
-    Object.defineProperty(context, "paperclipSessionHandoffMarkdown", {
+    Object.defineProperty(context, "bionicSessionHandoffMarkdown", {
       enumerable: false,
       get() {
         throw new Error("prompt build boom");

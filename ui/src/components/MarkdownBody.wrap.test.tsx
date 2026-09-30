@@ -61,10 +61,10 @@ describe("MarkdownBody code block wrapping", () => {
 
     const pre = container.querySelector("pre");
     const actions = container.querySelector<HTMLDivElement>(
-      ".paperclip-markdown-codeblock-actions",
+      ".bionic-markdown-codeblock-actions",
     );
     const wrapButton = container.querySelector<HTMLButtonElement>(
-      ".paperclip-markdown-codeblock-wrap",
+      ".bionic-markdown-codeblock-wrap",
     );
 
     expect(pre).not.toBeNull();

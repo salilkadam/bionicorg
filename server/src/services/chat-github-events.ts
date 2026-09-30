@@ -9,12 +9,12 @@ import {
   chatIdentityLinks,
   companyMemberships,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   githubCommitSchema,
   githubIdSchema,
   type GitHubReviewEventContext,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   effectiveGitHubReviewPolicy,
   githubReviewSchedulingDecision,
@@ -111,7 +111,7 @@ export async function githubAutomaticAdmission(
     );
   const [link] = await db
     .select({
-      userId: chatIdentityLinks.paperclipUserId,
+      userId: chatIdentityLinks.bionicUserId,
       status: chatIdentityLinks.status,
     })
     .from(chatExternalPrincipals)

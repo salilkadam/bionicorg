@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-  paperclipRunnerBinaryNeedsBuild,
+  bionicRunnerBinaryNeedsBuild,
   resolveNativeRunnerRequirement,
 } from "../../../scripts/dev-runner-native-binary.mjs";
 
@@ -18,18 +18,18 @@ afterEach(() => {
 });
 
 function createRunnerCheckout(): { root: string; source: string; binary: string } {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-dev-runner-binary-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-dev-runner-binary-"));
   tempRoots.add(root);
 
-  const runnerRoot = path.join(root, "packages", "paperclip-runner", "runner");
+  const runnerRoot = path.join(root, "packages", "bionic-runner", "runner");
   const source = path.join(runnerRoot, "crates", "runner-core", "src", "main.rs");
   const binary = path.join(
     root,
     "packages",
-    "paperclip-runner",
+    "bionic-runner",
     "dist",
     "bin",
-    process.platform === "win32" ? "paperclip-runnerd.exe" : "paperclip-runnerd",
+    process.platform === "win32" ? "bionic-runnerd.exe" : "bionic-runnerd",
   );
   fs.mkdirSync(path.dirname(source), { recursive: true });
   fs.mkdirSync(path.dirname(binary), { recursive: true });
@@ -40,7 +40,7 @@ function createRunnerCheckout(): { root: string; source: string; binary: string 
   return { root, source, binary };
 }
 
-describe("paperclip runner native dev prerequisite", () => {
+describe("bionic runner native dev prerequisite", () => {
   it("uses an explicit status response and fails safe when status is unknown", () => {
     expect(
       resolveNativeRunnerRequirement({
@@ -78,7 +78,7 @@ describe("paperclip runner native dev prerequisite", () => {
     fs.utimesSync(checkout.source, old, old);
     fs.utimesSync(checkout.binary, current, current);
     expect(
-      paperclipRunnerBinaryNeedsBuild({
+      bionicRunnerBinaryNeedsBuild({
         repoRoot: checkout.root,
         nativeRunnerRequired: true,
       }),
@@ -86,7 +86,7 @@ describe("paperclip runner native dev prerequisite", () => {
 
     fs.utimesSync(checkout.source, next, next);
     expect(
-      paperclipRunnerBinaryNeedsBuild({
+      bionicRunnerBinaryNeedsBuild({
         repoRoot: checkout.root,
         nativeRunnerRequired: true,
       }),
@@ -94,7 +94,7 @@ describe("paperclip runner native dev prerequisite", () => {
 
     fs.rmSync(checkout.binary);
     expect(
-      paperclipRunnerBinaryNeedsBuild({
+      bionicRunnerBinaryNeedsBuild({
         repoRoot: checkout.root,
         nativeRunnerRequired: true,
       }),
@@ -103,7 +103,7 @@ describe("paperclip runner native dev prerequisite", () => {
 
   it("keeps default-off legacy development Node-only", () => {
     expect(
-      paperclipRunnerBinaryNeedsBuild({
+      bionicRunnerBinaryNeedsBuild({
         repoRoot: "/checkout/without/a/staged/binary",
         nativeRunnerRequired: false,
       }),
@@ -112,10 +112,10 @@ describe("paperclip runner native dev prerequisite", () => {
 
   it("does not build a workspace binary when an explicit binary is configured", () => {
     expect(
-      paperclipRunnerBinaryNeedsBuild({
+      bionicRunnerBinaryNeedsBuild({
         repoRoot: "/checkout/without/a/staged/binary",
         nativeRunnerRequired: true,
-        configuredBinary: "/opt/paperclip/paperclip-runnerd",
+        configuredBinary: "/opt/bionic/bionic-runnerd",
       }),
     ).toBe(false);
   });

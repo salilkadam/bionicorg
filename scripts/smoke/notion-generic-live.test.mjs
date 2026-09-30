@@ -19,28 +19,28 @@ import {
 } from "./notion-generic-live-lib.mjs";
 
 const COMPLETE_ENV = {
-  PAPERCLIP_E2E_BASE_URL: "https://paperclip.example.test",
-  PAPERCLIP_E2E_EMAIL: "operator@example.test",
-  PAPERCLIP_DEV_LOGIN_PASSWORD: "not-a-real-password",
-  PAPERCLIP_API_URL: "https://paperclip.example.test/api",
-  PAPERCLIP_API_KEY: "not-a-real-agent-key",
-  PAPERCLIP_RUN_ID: "run-123",
-  PAPERCLIP_TASK_ID: "issue-123",
+  BIONIC_E2E_BASE_URL: "https://bionic.example.test",
+  BIONIC_E2E_EMAIL: "operator@example.test",
+  BIONIC_DEV_LOGIN_PASSWORD: "not-a-real-password",
+  BIONIC_API_URL: "https://bionic.example.test/api",
+  BIONIC_API_KEY: "not-a-real-agent-key",
+  BIONIC_RUN_ID: "run-123",
+  BIONIC_TASK_ID: "issue-123",
 };
 
 test("preflight reports binding names without exposing supplied values", () => {
   assert.throws(
-    () => preflightNotionGenericLive({ PAPERCLIP_DEV_LOGIN_PASSWORD: "present" }),
+    () => preflightNotionGenericLive({ BIONIC_DEV_LOGIN_PASSWORD: "present" }),
     (error) => {
       assert.ok(error instanceof NotionGenericLivePreflightError);
       assert.equal(error.code, "missing_environment");
       assert.deepEqual(error.details.missing, [
-        "PAPERCLIP_E2E_BASE_URL",
-        "PAPERCLIP_E2E_EMAIL",
-        "PAPERCLIP_API_URL",
-        "PAPERCLIP_API_KEY",
-        "PAPERCLIP_RUN_ID",
-        "PAPERCLIP_TASK_ID",
+        "BIONIC_E2E_BASE_URL",
+        "BIONIC_E2E_EMAIL",
+        "BIONIC_API_URL",
+        "BIONIC_API_KEY",
+        "BIONIC_RUN_ID",
+        "BIONIC_TASK_ID",
       ]);
       assert.doesNotMatch(error.message, /present/);
       return true;
@@ -51,20 +51,20 @@ test("preflight reports binding names without exposing supplied values", () => {
 test("preflight requires explicit credential-free HTTPS target and control-plane URLs", () => {
   for (const baseUrl of [
     "http://127.0.0.1:3100",
-    "http://paperclip.example.test",
-    "https://user:secret@paperclip.example.test",
-    "https://paperclip.example.test/?code=secret",
+    "http://bionic.example.test",
+    "https://user:secret@bionic.example.test",
+    "https://bionic.example.test/?code=secret",
   ]) {
     assert.throws(
-      () => preflightNotionGenericLive({ ...COMPLETE_ENV, PAPERCLIP_E2E_BASE_URL: baseUrl }),
+      () => preflightNotionGenericLive({ ...COMPLETE_ENV, BIONIC_E2E_BASE_URL: baseUrl }),
       (error) => error instanceof NotionGenericLivePreflightError && error.code === "unsafe_base_url",
     );
   }
   const split = preflightNotionGenericLive({
     ...COMPLETE_ENV,
-    PAPERCLIP_API_URL: "https://control-plane.example.test/api",
+    BIONIC_API_URL: "https://control-plane.example.test/api",
   });
-  assert.equal(split.baseUrl, "https://paperclip.example.test");
+  assert.equal(split.baseUrl, "https://bionic.example.test");
   assert.equal(split.apiBaseUrl, "https://control-plane.example.test/api");
 });
 
@@ -88,7 +88,7 @@ test("health and binding metadata pass before browser loading, without fetching 
       return { chromium: {} };
     },
   });
-  assert.equal(prepared.config.callbackUrl, "https://paperclip.example.test/api/tools/oauth/callback");
+  assert.equal(prepared.config.callbackUrl, "https://bionic.example.test/api/tools/oauth/callback");
   assert.equal(browserLoaded, true);
   assert.deepEqual(requests.map((entry) => entry.method), ["GET", "GET"]);
   assert.equal(requests.some((entry) => entry.url.includes("/value")), false);
@@ -150,7 +150,7 @@ test("authorization proof requires automatic registration, PKCE, callback, resou
     );
   }
 
-  const baseUrl = "https://paperclip.example.test";
+  const baseUrl = "https://bionic.example.test";
   const callbackUrl = `${baseUrl}/api/tools/oauth/callback`;
   const resource = "https://mcp.notion.com/mcp";
   const url = new URL("https://mcp.notion.com/authorize");
@@ -184,10 +184,10 @@ test("authorization proof requires automatic registration, PKCE, callback, resou
 test("authorization proof rejects a provider login page after OAuth parameters were consumed", () => {
   assert.throws(
     () => inspectAuthorizationUrl("https://id.notion.test/login", {
-      callbackUrl: "https://paperclip.example/api/tools/oauth/callback",
+      callbackUrl: "https://bionic.example/api/tools/oauth/callback",
       resource: "https://mcp.notion.com/mcp",
       registrationSource: "dcr",
-      baseUrl: "https://paperclip.example",
+      baseUrl: "https://bionic.example",
     }),
     (error) => error instanceof NotionGenericLivePreflightError
       && error.code === "authorization_parameter_missing",
@@ -254,7 +254,7 @@ test("workspace proof extraction and fresh-run comments retain only sanitized id
         text: JSON.stringify({
           id: "bot-123",
           type: "bot",
-          bot: { workspace_id: "workspace-123", workspace_name: "Paperclip" },
+          bot: { workspace_id: "workspace-123", workspace_name: "Bionic" },
           token: "discard-me",
         }),
       }],
@@ -262,15 +262,15 @@ test("workspace proof extraction and fresh-run comments retain only sanitized id
   });
   assert.deepEqual(identity, {
     workspaceId: "workspace-123",
-    workspaceName: "Paperclip",
+    workspaceName: "Bionic",
     botId: "bot-123",
   });
   assert.deepEqual(
     parseSanitizedAgentProof(
-      '{"workspaceId":"workspace-123","workspaceName":"Paperclip","invocationId":"inv-123"}',
+      '{"workspaceId":"workspace-123","workspaceName":"Bionic","invocationId":"inv-123"}',
       identity,
     ),
-    { workspaceId: "workspace-123", workspaceName: "Paperclip", invocationId: "inv-123" },
+    { workspaceId: "workspace-123", workspaceName: "Bionic", invocationId: "inv-123" },
   );
   assert.deepEqual(
     parseRuntimeAbsenceProof('{"connectionId":"conn-123","toolPresent":false}', "conn-123"),

@@ -33,7 +33,7 @@ import type {
   ToolConnectionCredentialSource,
   ToolConnectionCreateCapabilities,
   ToolOAuthStartResult,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   aiConnectionMetadataSchema,
   isRemoteMcpConnectorId,
@@ -48,7 +48,7 @@ import {
   getAvailableConnectionMethods,
   getRecommendedConnectionMethod,
   isGoogleWorkspaceConnectorProfileId,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { useNavigate, useParams, useSearchParams } from "@/lib/router";
 import { useCompany } from "@/context/CompanyContext";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
@@ -113,7 +113,7 @@ type EnrollmentAccessState = {
 };
 
 function enrollmentAccessStorageKey(appKey: string): string {
-  return `paperclip.connector-enrollment-access:${appKey}`;
+  return `bionic.connector-enrollment-access:${appKey}`;
 }
 
 function validEnrollmentAccessState(value: unknown): value is EnrollmentAccessState {
@@ -178,7 +178,7 @@ function oauthCallbackErrorMessage(outcome: string | null, code: string | null):
     return "Authorization was cancelled or declined. Your saved connection was not changed.";
   }
   if (code === "github_installation_required") {
-    return "GitHub access is required. Install Paperclip and grant at least one repository, then try again.";
+    return "GitHub access is required. Install Bionic and grant at least one repository, then try again.";
   }
   return "Authorization did not complete. Your saved connection is still here, so you can try again.";
 }
@@ -414,8 +414,8 @@ function recommendedManagedConnectorMethod(
       ? entry.methods.filter(
           (candidate) =>
             (candidate.purpose ?? "tool") === "tool" &&
-            (candidate.oauthStrategy === "paperclip_cloud_connector" ||
-              candidate.oauthStrategy === "paperclip_id_connector"),
+            (candidate.oauthStrategy === "bionic_cloud_connector" ||
+              candidate.oauthStrategy === "bionic_id_connector"),
         )
       : [],
   );
@@ -497,7 +497,7 @@ export function readConnectionIntentOAuthOutcome(
     outcome?: unknown;
   };
   if (
-    message.type !== "paperclip.connection-intent.oauth"
+    message.type !== "bionic.connection-intent.oauth"
     || message.interactionId !== interactionId
   ) return null;
   return message.outcome === "connected"
@@ -509,7 +509,7 @@ export function readConnectionIntentOAuthOutcome(
 
 export interface ConnectionSetupFlowProps {
   upstreamServiceName?: string;
-  aiConnection?: import("@paperclipai/shared").AiConnectionBinding;
+  aiConnection?: import("@bionicai/shared").AiConnectionBinding;
   /** Provider-specific authentication inside the existing access/setup shell. Undefined retains the standard credential form. */
   renderCredentialStep?: (context: { app: AppDefinition; name: string; grantKind: ConnectionGrantKind; agentIds: string[]; allAgents: boolean; onBack: () => void }) => ReactNode;
   byoOnly?: boolean;
@@ -543,7 +543,7 @@ export function ConnectionSetupFlow(props: ConnectionSetupFlowProps = {}) {
   const source = props.serviceSlug || searchParams.get("source") || params.appKey || searchParams.get("appKey");
   const draftId = useMemo(() => {
     if (interactionId && isRemoteMcpConnectorId(source)) {
-      try { return sessionStorage.getItem(`paperclip:mcp-intent-draft:${selectedCompanyId}:${interactionId}`); } catch { /* Storage may be disabled. */ }
+      try { return sessionStorage.getItem(`bionic:mcp-intent-draft:${selectedCompanyId}:${interactionId}`); } catch { /* Storage may be disabled. */ }
     }
     return null;
   }, [interactionId, selectedCompanyId, source]);
@@ -558,7 +558,7 @@ export function ConnectionSetupFlow(props: ConnectionSetupFlowProps = {}) {
     if (!memory.loaded) return <p className="p-6 text-sm text-muted-foreground">Loading connection settings…</p>;
     if (!memory.enabled) return <p role="status" className="p-6 text-sm text-muted-foreground">Enable memory connectors in Settings → Experimental to set up this connection.</p>;
   }
-  if (!props.byoOnly && (props.credentialSource ?? "paperclip_vault") === "paperclip_vault"
+  if (!props.byoOnly && (props.credentialSource ?? "bionic_vault") === "bionic_vault"
     && isRemoteMcpConnectorId(provider) && (!method || isRemoteMcpConnectorMethod(provider, method))) {
     return <RemoteMcpProductionSetup key={`${interactionId || "page"}:${provider}`} {...props} interactionId={interactionId} providerId={provider} connection={existing.data} />;
   }
@@ -567,7 +567,7 @@ export function ConnectionSetupFlow(props: ConnectionSetupFlowProps = {}) {
 
 function StandardConnectionSetupFlow({
   byoOnly = false,
-  credentialSource = "paperclip_vault",
+  credentialSource = "bionic_vault",
   host = "page",
   serviceSlug,
   requestedAgentId,
@@ -617,7 +617,7 @@ function StandardConnectionSetupFlow({
       : null;
   const vercelConnectMode = credentialSource === "vercel_connect";
   const directOAuthCandidate = serviceSlug ?? sourceSlug;
-  const directOAuthSource = credentialSource === "paperclip_vault"
+  const directOAuthSource = credentialSource === "bionic_vault"
     && isMcpDirectOAuthConnectSlug(directOAuthCandidate)
     ? directOAuthCandidate
     : null;
@@ -661,7 +661,7 @@ function StandardConnectionSetupFlow({
   const [linkNeedsKey, setLinkNeedsKey] = useState(false);
   const [linkKey, setLinkKey] = useState("");
   // Generic ("connect your own MCP server") flow state. `authMode: auto` is the
-  // simple path: Paperclip probes the endpoint and branches on what it finds.
+  // simple path: Bionic probes the endpoint and branches on what it finds.
   const [linkAuthMode, setLinkAuthMode] = useState<GenericMcpAuthMode>("auto");
   const [linkHeaders, setLinkHeaders] = useState<CustomHeaderRow[]>(() => [newCustomHeaderRow()]);
   const [linkOAuthClientId, setLinkOAuthClientId] = useState("");
@@ -727,7 +727,7 @@ function StandardConnectionSetupFlow({
     if (host !== "dialog" || oauthPopupRef.current?.closed === false) return;
     oauthPopupRef.current = window.open(
       "about:blank",
-      "paperclip-connection-oauth",
+      "bionic-connection-oauth",
       "popup,width=720,height=760,resizable=yes,scrollbars=yes",
     );
   }, [host]);
@@ -741,7 +741,7 @@ function StandardConnectionSetupFlow({
     const popup = oauthPopupRef.current;
     if (!popup || popup.closed) {
       setOAuthPhase("error");
-      setOAuthError("Paperclip couldn’t open the sign-in window. Open sign-in in a new tab to continue.");
+      setOAuthError("Bionic couldn’t open the sign-in window. Open sign-in in a new tab to continue.");
       onPhaseChange?.("needs_retry");
       return;
     }
@@ -781,7 +781,7 @@ function StandardConnectionSetupFlow({
       if (target.kind === "reauthentication") {
         const destination = host === "dialog" ? oauthPopupRef.current : window;
         if (!destination || destination.closed || !start.handoff) {
-          throw new Error("Paperclip couldn’t preserve this sign-in while refreshing your account.");
+          throw new Error("Bionic couldn’t preserve this sign-in while refreshing your account.");
         }
         savePendingCloudHandoff(start.handoff.session, destination.sessionStorage);
         setOAuthPhase("starting");
@@ -793,7 +793,7 @@ function StandardConnectionSetupFlow({
     } catch (error) {
       if (controller.signal.aborted) return;
       setOAuthPhase("error");
-      setOAuthError(error instanceof Error ? error.message : "Paperclip couldn’t start secure sign-in. Try again.");
+      setOAuthError(error instanceof Error ? error.message : "Bionic couldn’t start secure sign-in. Try again.");
       onPhaseChange?.("needs_retry");
     } finally {
       if (oauthHandoffAbortRef.current === controller) oauthHandoffAbortRef.current = null;
@@ -887,7 +887,7 @@ function StandardConnectionSetupFlow({
    * definition — the generic path stays available either way.
    */
   const useMatchedGalleryEntry = (picked: AppDefinition) => {
-    if (host === "page" && !connectionIntentId && credentialSource === "paperclip_vault" && isRemoteMcpConnectorId(picked.slug)) {
+    if (host === "page" && !connectionIntentId && credentialSource === "bionic_vault" && isRemoteMcpConnectorId(picked.slug)) {
       navigate(`/apps/connect?source=${picked.slug}`);
       return;
     }
@@ -905,7 +905,7 @@ function StandardConnectionSetupFlow({
       navigate(withConnectionIntent("/apps/connect?source=zapier", connectionIntentId));
       return;
     }
-    if (credentialSource === "paperclip_vault" && canUseAutomaticOAuthFastPath(picked)) {
+    if (credentialSource === "bionic_vault" && canUseAutomaticOAuthFastPath(picked)) {
       navigate(appSourceConnectHref(picked.slug, connectionIntentId));
       return;
     }
@@ -983,14 +983,14 @@ function StandardConnectionSetupFlow({
     : null;
   const requestedDefinitionUsesManagedConnector = Boolean(
     fullRequestedDefinition?.methods.some((candidate) =>
-      candidate.oauthStrategy === "paperclip_cloud_connector"
-      || candidate.oauthStrategy === "paperclip_id_connector"
+      candidate.oauthStrategy === "bionic_cloud_connector"
+      || candidate.oauthStrategy === "bionic_id_connector"
     ),
   );
   const entryAdvertisesManagedConnector = Boolean(
     entry?.methods.some((candidate) =>
-      candidate.oauthStrategy === "paperclip_cloud_connector"
-      || candidate.oauthStrategy === "paperclip_id_connector"
+      candidate.oauthStrategy === "bionic_cloud_connector"
+      || candidate.oauthStrategy === "bionic_id_connector"
     ),
   );
   // Before a self-hosted instance enrolls, the server intentionally withholds
@@ -1071,7 +1071,7 @@ function StandardConnectionSetupFlow({
     onSuccess: (status) => {
       if (!status.verificationUrl) {
         closeEnrollmentPopup();
-        setConnectorEnrollmentError("Paperclip Cloud did not return an enrollment link. Try again.");
+        setConnectorEnrollmentError("Bionic Cloud did not return an enrollment link. Try again.");
         return;
       }
       openConnectorEnrollment(status.verificationUrl);
@@ -1079,7 +1079,7 @@ function StandardConnectionSetupFlow({
     onError: (error) => {
       closeEnrollmentPopup();
       setConnectorEnrollmentError(
-        error instanceof Error ? error.message : "Paperclip couldn’t reach Paperclip Cloud. Try again.",
+        error instanceof Error ? error.message : "Bionic couldn’t reach Bionic Cloud. Try again.",
       );
     },
   });
@@ -1186,8 +1186,8 @@ function StandardConnectionSetupFlow({
   const entryAutomaticOAuthMethod = selectedSetupMethod && connectionMethodSupportsAutomaticOAuth(selectedSetupMethod)
     ? selectedSetupMethod
     : automaticOAuthMethod(entry);
-  const automaticOAuthEntry = credentialSource === "paperclip_vault" && entryAutomaticOAuthMethod ? entry : null;
-  const directOAuthEntry = credentialSource === "paperclip_vault" && canUseAutomaticOAuthFastPath(entry) ? entry : null;
+  const automaticOAuthEntry = credentialSource === "bionic_vault" && entryAutomaticOAuthMethod ? entry : null;
+  const directOAuthEntry = credentialSource === "bionic_vault" && canUseAutomaticOAuthFastPath(entry) ? entry : null;
   const directOAuthLookupPending = Boolean(directOAuthSource) && (
     !applicationsQuery.isFetchedAfterMount || !connectionsQuery.isFetchedAfterMount
   );
@@ -1227,7 +1227,7 @@ function StandardConnectionSetupFlow({
           ? "Your authorization expired or was revoked. Reconnect to continue."
           : error instanceof Error
             ? error.message
-            : "Paperclip couldn’t start secure sign-in. Try again.",
+            : "Bionic couldn’t start secure sign-in. Try again.",
       );
     },
   });
@@ -1279,7 +1279,7 @@ function StandardConnectionSetupFlow({
           ...(connectionMethodKey ? { connectionMethodKey } : {}),
           name: connectionName,
           credentialSource,
-          ...(credentialSource === "paperclip_vault" ? { credentialValues: credentials } : {}),
+          ...(credentialSource === "bionic_vault" ? { credentialValues: credentials } : {}),
           ...(credentialSource === "vercel_connect"
             ? { vercelConnect: { connector: vercelConnector.trim() } }
             : {}),
@@ -1338,7 +1338,7 @@ function StandardConnectionSetupFlow({
       // A resumable draft already owns its identity and install reach. Replacing
       // those choices with this page's defaults would turn "finish setup" into a
       // silent access change. Fresh connections still persist the Access step
-      // before the browser leaves Paperclip.
+      // before the browser leaves Bionic.
       if (result.auth?.kind === "oauth" && !resumeConnectionId && !reconnectConnectionId) {
         await applyAccessInstalls(result.connectionId);
       }
@@ -1399,7 +1399,7 @@ function StandardConnectionSetupFlow({
             ? "Your authorization expired or was revoked. Reconnect to continue."
             : error instanceof Error
               ? error.message
-              : "Paperclip couldn’t start secure sign-in. Try again.",
+              : "Bionic couldn’t start secure sign-in. Try again.",
         );
         return;
       }
@@ -1449,8 +1449,8 @@ function StandardConnectionSetupFlow({
     });
     const requestedEntryAdvertisesManagedConnector = Boolean(
       requestedEntry?.methods.some((candidate) =>
-        candidate.oauthStrategy === "paperclip_cloud_connector"
-        || candidate.oauthStrategy === "paperclip_id_connector"
+        candidate.oauthStrategy === "bionic_cloud_connector"
+        || candidate.oauthStrategy === "bionic_id_connector"
       ),
     );
     // The enrollment lookup decides whether a hidden managed method means
@@ -1476,7 +1476,7 @@ function StandardConnectionSetupFlow({
         : null
     ) ?? recommendedSetupConnectionMethod(methods);
     const method = methods.length === 1 ? methods[0]! : null;
-    const automaticOAuth = credentialSource === "paperclip_vault" && Boolean(automaticOAuthMethod(requestedEntry));
+    const automaticOAuth = credentialSource === "bionic_vault" && Boolean(automaticOAuthMethod(requestedEntry));
     const vercelUnavailable = isVercelConnectUnavailable({
       credentialSource,
       available: galleryQuery.data.credentialSources?.vercelConnect.available === true,
@@ -1564,7 +1564,7 @@ function StandardConnectionSetupFlow({
     if (automaticOAuth && directOAuthRetryingRef.current) return;
     if (automaticOAuth && (applicationsQuery.isError || connectionsQuery.isError)) {
       setOAuthPhase("error");
-      setOAuthError("Paperclip couldn’t check for an existing connection. Try again.");
+      setOAuthError("Bionic couldn’t check for an existing connection. Try again.");
       setStep("key");
       return;
     }
@@ -1746,7 +1746,7 @@ function StandardConnectionSetupFlow({
       <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6">
         <h2 className="text-lg font-semibold text-foreground">Couldn’t load connection setup</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Paperclip couldn’t check the retained connection. The retained connection was not changed.
+          Bionic couldn’t check the retained connection. The retained connection was not changed.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Button
@@ -1812,7 +1812,7 @@ function StandardConnectionSetupFlow({
       <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6">
         <h2 className="text-lg font-semibold text-foreground">Couldn’t load connection setup</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Paperclip couldn’t load the provider details needed to restore this connection. The retained connection was not changed.
+          Bionic couldn’t load the provider details needed to restore this connection. The retained connection was not changed.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Button type="button" onClick={() => void galleryQuery.refetch()}>
@@ -1831,7 +1831,7 @@ function StandardConnectionSetupFlow({
       <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6">
         <h2 className="text-lg font-semibold text-foreground">This connection can’t be reconnected</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Paperclip no longer has a supported setup method for this retained connection. The retained connection was not changed.
+          Bionic no longer has a supported setup method for this retained connection. The retained connection was not changed.
         </p>
         <Button type="button" variant="outline" className="mt-5" onClick={() => navigate("/apps")}>
           Back to apps
@@ -1969,7 +1969,7 @@ function StandardConnectionSetupFlow({
             ]);
             if (applicationsResult.isError || connectionsResult.isError) {
               setOAuthPhase("error");
-              setOAuthError("Paperclip couldn’t check for an existing connection. Try again.");
+              setOAuthError("Bionic couldn’t check for an existing connection. Try again.");
               return;
             }
             const refreshedResumeConnection = resumeConnectionId
@@ -2199,7 +2199,7 @@ function StandardConnectionSetupFlow({
         <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground">{entry.name} sign-in is unavailable</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            This instance is connected to Paperclip, but {entry.name} sign-in is not currently available. Try again shortly or contact your instance administrator.
+            This instance is connected to Bionic, but {entry.name} sign-in is not currently available. Try again shortly or contact your instance administrator.
           </p>
           <div className="mt-6 flex items-center justify-between gap-3">
             <Button type="button" variant="ghost" onClick={() => setAppStep("access")}>Back</Button>
@@ -2218,17 +2218,17 @@ function StandardConnectionSetupFlow({
               </div>
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-foreground">
-                  Connect with Paperclip
+                  Connect with Bionic
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  You must connect this instance to Paperclip to connect to {entry.name} (you only need to do this once).
+                  You must connect this instance to Bionic to connect to {entry.name} (you only need to do this once).
                 </p>
               </div>
             </div>
 
             {connectorEnrollmentQuery.isError || connectorEnrollmentError ? (
               <InlineBanner tone="danger" className="mt-4">
-                {connectorEnrollmentError ?? "Paperclip couldn’t check Cloud registration. Try again."}
+                {connectorEnrollmentError ?? "Bionic couldn’t check Cloud registration. Try again."}
               </InlineBanner>
             ) : null}
 
@@ -2259,7 +2259,7 @@ function StandardConnectionSetupFlow({
                 {startConnectorEnrollment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {connectorEnrollmentQuery.data?.status === "pending"
                   ? "Continue"
-                  : "Connect with Paperclip"}
+                  : "Connect with Bionic"}
               </Button>
             </div>
           </div>
@@ -2589,15 +2589,15 @@ export function OAuthConnectStateScreen({
     ? {
         title: resuming
           ? `Finish connecting ${serverName}`
-          : `Connect ${serverName} to Paperclip`,
+          : `Connect ${serverName} to Bionic`,
         body: resuming
           ? `Your connection is saved. Continue in ${serverName} to approve access; its identity and agent access will stay the same.`
-          : `Paperclip will open ${serverName} so you can choose a workspace and approve access.`,
+          : `Bionic will open ${serverName} so you can choose a workspace and approve access.`,
       }
     : phase === "starting"
       ? {
           title: "Preparing secure sign-in",
-          body: `Paperclip is creating a secure ${serverName} connection.`,
+          body: `Bionic is creating a secure ${serverName} connection.`,
         }
       : phase === "redirecting"
         ? {
@@ -2608,7 +2608,7 @@ export function OAuthConnectStateScreen({
           }
         : {
             title: `${serverName} couldn’t connect`,
-            body: error ?? "Paperclip couldn’t start secure sign-in. Try again.",
+            body: error ?? "Bionic couldn’t start secure sign-in. Try again.",
           };
 
   return (
@@ -2645,7 +2645,7 @@ export function OAuthConnectStateScreen({
             {recoveryActions.installationUrl ? (
               <Button type="button" variant="outline" asChild>
                 <a href={recoveryActions.installationUrl} target="_blank" rel="noreferrer">
-                  Install Paperclip on GitHub
+                  Install Bionic on GitHub
                   <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
                 </a>
               </Button>
@@ -2818,7 +2818,7 @@ function GalleryStep({
             <div>
               <h2 className="text-lg font-bold tracking-tight">Connect through Vercel</h2>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Create and manage the provider connector in Vercel. Paperclip stores its reference and applies agent access, policy, approval, and audit controls here.
+                Create and manage the provider connector in Vercel. Bionic stores its reference and applies agent access, policy, approval, and audit controls here.
               </p>
             </div>
             {vercelConnectAvailability ? (
@@ -3005,7 +3005,7 @@ function normalizeAppLink(value: string): string | null {
  * key?" — because that is all most servers need. Everything protocol-shaped lives
  * behind "Advanced authentication", and no OAuth/DCR/CIMD jargon appears on the
  * consumer path: the operator picks how the server authenticates, not which RFC
- * Paperclip will use to satisfy it.
+ * Bionic will use to satisfy it.
  *
  * The endpoint host and the "Unverified server" label stay visible the whole way
  * through, so the operator can always see whose server they are about to let
@@ -3090,7 +3090,7 @@ function LinkConnectStep({
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2 text-sm">
             <AppLogo name={matchedEntry.name} logoUrl={matchedEntry.branding.logoUrl} darkLogoUrl={matchedEntry.branding.darkLogoUrl} size={24} />
-            <span className="truncate">Paperclip has a guided setup for {matchedEntry.name}.</span>
+            <span className="truncate">Bionic has a guided setup for {matchedEntry.name}.</span>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={onUseMatchedEntry}>
             Use {matchedEntry.name}
@@ -3217,8 +3217,8 @@ function LinkConnectStep({
             {authMode === "oauth" ? (
               <div className="space-y-4">
                 <p className="text-xs text-muted-foreground">
-                  Paperclip sets sign-in up on its own whenever the server allows it. Only fill these in when the
-                  server's docs tell you to register Paperclip yourself first.
+                  Bionic sets sign-in up on its own whenever the server allows it. Only fill these in when the
+                  server's docs tell you to register Bionic yourself first.
                 </p>
                 <div>
                   <label className="text-sm font-medium text-foreground" htmlFor="generic-mcp-client-id">
@@ -3268,15 +3268,15 @@ function LinkConnectStep({
 
 /**
  * What the operator is choosing is how the *server* authenticates, in its own
- * terms. Paperclip decides internally whether that means a preconfigured client,
+ * terms. Bionic decides internally whether that means a preconfigured client,
  * a client ID metadata document, dynamic registration, or the credentials pasted
  * below — none of which belongs on this screen.
  */
 const GENERIC_AUTH_MODE_OPTIONS: Array<{ mode: GenericMcpAuthMode; label: string; hint: string }> = [
   {
     mode: "auto",
-    label: "Let Paperclip check",
-    hint: "Paperclip asks the server what it needs and walks you through it. Start here.",
+    label: "Let Bionic check",
+    hint: "Bionic asks the server what it needs and walks you through it. Start here.",
   },
   {
     mode: "none",
@@ -3286,17 +3286,17 @@ const GENERIC_AUTH_MODE_OPTIONS: Array<{ mode: GenericMcpAuthMode; label: string
   {
     mode: "bearer",
     label: "Key or token",
-    hint: "Paperclip sends your key as an Authorization header.",
+    hint: "Bionic sends your key as an Authorization header.",
   },
   {
     mode: "custom_headers",
     label: "Custom headers",
-    hint: "For servers that name their own headers. Values are stored as Paperclip secrets and can\u2019t be read back.",
+    hint: "For servers that name their own headers. Values are stored as Bionic secrets and can\u2019t be read back.",
   },
   {
     mode: "oauth",
     label: "Browser sign-in",
-    hint: "You\u2019ll sign in at the provider. Add a client ID and secret only if the provider requires you to register Paperclip first.",
+    hint: "You\u2019ll sign in at the provider. Add a client ID and secret only if the provider requires you to register Bionic first.",
   },
 ];
 
@@ -3473,7 +3473,7 @@ function KeyStep({
   const hasAdvancedSettings = advancedConfigFields.length > 0 || optionalCustomerOAuthClient;
   const capabilitySelection = capabilityGroups.length > 1 ? (
     <div>
-      <label className="text-sm font-medium text-foreground">What should Paperclip be able to do?</label>
+      <label className="text-sm font-medium text-foreground">What should Bionic be able to do?</label>
       <RadioCardGroup
         ariaLabel={`Access level for ${entry.name}`}
         className="mt-2"
@@ -3494,7 +3494,7 @@ function KeyStep({
     </div>
   ) : null;
   const managedGoogleMethod = capabilityMethods.find((candidate) =>
-    candidate.oauthStrategy === "paperclip_cloud_connector"
+    candidate.oauthStrategy === "bionic_cloud_connector"
     && isGoogleWorkspaceConnectorProfileId(candidate.connectorProfile ?? ""),
   );
   const customerGoogleMethod = managedGoogleMethod && capabilityMethods.find((candidate) =>
@@ -3513,7 +3513,7 @@ function KeyStep({
       disabled={submitting}
       onClick={() => onMethodChange(usingCustomGoogleOAuth ? managedGoogleMethod : customerGoogleMethod)}
     >
-      {usingCustomGoogleOAuth ? "Use Paperclip instead" : "Use your own Google OAuth app"}
+      {usingCustomGoogleOAuth ? "Use Bionic instead" : "Use your own Google OAuth app"}
     </Button>
   ) : capabilityMethods.length > 1 ? (
     <div>
@@ -3622,7 +3622,7 @@ function KeyStep({
             <div>
               <div className="text-sm font-medium text-foreground">Create or attach the connector in Vercel</div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Paperclip does not copy Vercel’s setup forms. Finish connector setup there, then paste its UID below.
+                Bionic does not copy Vercel’s setup forms. Finish connector setup there, then paste its UID below.
               </p>
               <a
                 href={vercelConnectAvailability.manageUrl}
@@ -3647,7 +3647,7 @@ function KeyStep({
                 className="mt-2 h-11 font-mono"
               />
               <p className="mt-2 text-xs text-muted-foreground">
-                Paperclip validates the connector and stores only its reference and redacted verification metadata.
+                Bionic validates the connector and stores only its reference and redacted verification metadata.
               </p>
             </div>
           </div>
@@ -3810,7 +3810,7 @@ function OAuthClientFields({
           {required ? "Your OAuth app" : "Use your own OAuth app"}
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Register Paperclip's callback URI in {entry.name}, then enter the customer-owned client details.
+          Register Bionic's callback URI in {entry.name}, then enter the customer-owned client details.
         </p>
         {method.consoleLinks?.register ? (
           <a
@@ -3826,7 +3826,7 @@ function OAuthClientFields({
       </div>
       {callbackUrl ? (
         <div>
-          <label className="text-sm font-medium text-foreground">Paperclip callback URL</label>
+          <label className="text-sm font-medium text-foreground">Bionic callback URL</label>
           <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
             <div
               title={callbackUrl}

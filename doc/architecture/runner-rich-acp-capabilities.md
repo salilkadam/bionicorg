@@ -16,7 +16,7 @@ passed real native denial and detached-command settlement probes. Failed attempt
 no Daytona resources have been started. This report does not certify a provider
 from its ACP listing or a partial run.
 
-The [harness priorities report](https://pages.paperclip.ing/2026-09-25-harness-priorities/)
+The [harness priorities report](https://pages.bionic.ing/2026-09-25-harness-priorities/)
 recommends Cursor and Copilot, followed by Pi, using the existing qualified ACPX
 path. Codex app-server is the richness benchmark. The legacy Cursor and Pi
 adapters are outside this change.
@@ -25,11 +25,11 @@ adapters are outside this change.
 
 | Branch | Deliverable |
 | --- | --- |
-| [`codex/runner-rich-acp` / #14430](https://github.com/paperclipai/paperclip/pull/14430) | Shared ACPX extension boundary, durable permissions, canonical display events, provider pack infrastructure, configuration and UI |
-| [`codex/runner-cursor-acp` / #14435](https://github.com/paperclipai/paperclip/pull/14435) | Cursor native distribution, questions/plans, child activity, policy admission, wire fixtures |
-| [`codex/runner-copilot-acp` / #14434](https://github.com/paperclipai/paperclip/pull/14434) | Copilot native distribution, event inventory/projections, permission and settlement probes |
-| [`codex/runner-pi-acp` / #14436](https://github.com/paperclipai/paperclip/pull/14436) | Patched wrapper, owned extension, MCP/tools, permissions/input, portable dependency closure |
-| [`codex/rich-acp-extended-harness-evals` / evals #29](https://github.com/paperclipai/paperclip-evals/pull/29) | Explicit 21-cell Runner Eval campaign, semantic assertions, provenance and fail-closed budget accounting |
+| [`codex/runner-rich-acp` / #14430](https://github.com/bionicai/bionic/pull/14430) | Shared ACPX extension boundary, durable permissions, canonical display events, provider pack infrastructure, configuration and UI |
+| [`codex/runner-cursor-acp` / #14435](https://github.com/bionicai/bionic/pull/14435) | Cursor native distribution, questions/plans, child activity, policy admission, wire fixtures |
+| [`codex/runner-copilot-acp` / #14434](https://github.com/bionicai/bionic/pull/14434) | Copilot native distribution, event inventory/projections, permission and settlement probes |
+| [`codex/runner-pi-acp` / #14436](https://github.com/bionicai/bionic/pull/14436) | Patched wrapper, owned extension, MCP/tools, permissions/input, portable dependency closure |
+| [`codex/rich-acp-extended-harness-evals` / evals #29](https://github.com/bionicai/bionic-evals/pull/29) | Explicit 21-cell Runner Eval campaign, semantic assertions, provenance and fail-closed budget accounting |
 
 The provider branches were implemented in parallel from the foundation. Final
 shared registration and packaging conflicts are resolved in dependency order:
@@ -42,9 +42,9 @@ pending qualification. Source reports on the provider branches are
 `doc/architecture/runner-pi-capabilities.md`. Those reports retain versioned
 source references, per-field dispositions, fixture paths, and narrower claims.
 The Copilot inventory enumerates all 150 pinned native event types. Read the
-[Cursor inventory](https://github.com/paperclipai/paperclip/blob/codex/runner-cursor-acp/doc/architecture/runner-cursor-capabilities.md),
-[Copilot inventory](https://github.com/paperclipai/paperclip/blob/codex/runner-copilot-acp/doc/architecture/runner-copilot-capabilities.md),
-and [Pi inventory](https://github.com/paperclipai/paperclip/blob/codex/runner-pi-acp/doc/architecture/runner-pi-capabilities.md)
+[Cursor inventory](https://github.com/bionicai/bionic/blob/codex/runner-cursor-acp/doc/architecture/runner-cursor-capabilities.md),
+[Copilot inventory](https://github.com/bionicai/bionic/blob/codex/runner-copilot-acp/doc/architecture/runner-copilot-capabilities.md),
+and [Pi inventory](https://github.com/bionicai/bionic/blob/codex/runner-pi-acp/doc/architecture/runner-pi-capabilities.md)
 for the complete per-provider source audit.
 
 [Retained browser evidence](../../ui/storybook/fixtures/evidence/rich-acp-browser-proof.darwin-arm64.json)
@@ -63,7 +63,7 @@ Codex's row is the existing app-server integration, not the Codex ACP bridge.
 
 The provider reports above are the method/event and field inventories. In the
 table below, a method that is absent from a pinned implementation is distinct
-from an exposed method with no Paperclip control. Shared surfaces and their
+from an exposed method with no Bionic control. Shared surfaces and their
 deterministic evidence are mapped separately after the comparison.
 
 | Capability | Codex app-server benchmark | Cursor ACP candidate | Copilot ACP candidate | Pi ACP candidate |
@@ -76,7 +76,7 @@ deterministic evidence are mapped separately after the comparison.
 | Session continuity | Read/load/history/fork and durable identity | Session load/list observed; paid semantic warm continuation passed; native history replay unverified and fork absent in tested methods | Session load plus native history events; semantic pending-question controller recovery passed | Private Pi JSONL mapping/load; native RPC `fork`, `clone`, `get_fork_messages` are not mapped through this ACP wrapper; unresolved UI promises cannot survive provider death |
 | Questions | Typed input requests and response correlation | `cursor/ask_question`, option identity and multiple selection preserved | Native ask-user capability exists, but pinned ACP does not wire its responder; do not display a false answerable form | `select`, `confirm`, `input`, `editor` through typed form elicitation |
 | Permissions | Durable typed approvals | Standard ACP permission options; denied shell write had no observed side effects; separately labeled exact-correlation assessment | Standard ACP; real native reject_once prevented marker creation; session decision scope inspected | Native pre-tool gate; allow once, exact-operation session grant, deny; paths rechecked after wait |
-| Plans | Typed plan and collaboration mode | `cursor/create_plan` includes full plan and revision-bound accept/reject/cancel; todo activity separate | Native plan events displayed; native plan-decision callback not exposed in ACP | No native structured plan event; authenticated Paperclip planning tools available |
+| Plans | Typed plan and collaboration mode | `cursor/create_plan` includes full plan and revision-bound accept/reject/cancel; todo activity separate | Native plan events displayed; native plan-decision callback not exposed in ACP | No native structured plan event; authenticated Bionic planning tools available |
 | Authenticated tools | Runner bridge and governed operations | ACP HTTP MCP binding; paid context/history reads passed | ACP HTTP MCP binding; paid context read passed | Owned extension registers exact bound MCP tools; four authenticated semantic reads succeeded in a paid partial run; no ambient servers |
 | Delegation | Typed agent roles and lifecycle | Opt-in subagent lifecycle, nested ownership and bounded child activity; never parent transcript flattening | Native delegation/session events projected with role/model/agent provenance | No built-in ACP delegation protocol; arbitrary extensions are excluded |
 | Files/diffs | Typed file changes and artifact references | Standard tool changes plus validated image references | File/workspace events retained; provider session files are not silently treated as task files | Wrapper-retained read/write/edit diffs; common typed/UI projection remains partial; semantic artifact tools |
@@ -98,7 +98,7 @@ deterministic evidence are mapped separately after the comparison.
 | Session list/fork, generic configuration and commands | No added operator surface; exact owned session recovery and configured model remain available | Provider inventories identify native-only, ACP-exposed, confirmed-absent and unverified methods with follow-ups |
 
 Paths starting with `src/` or `runner/` in this evidence table are relative to
-`packages/paperclip-runner/`; other paths are repository-relative. Deterministic
+`packages/bionic-runner/`; other paths are repository-relative. Deterministic
 fixtures establish contract behavior, not successful paid provider execution.
 
 ## Shared event and interaction contract
@@ -194,7 +194,7 @@ qualification gates, not claims that a JavaScript path check confines a shell.
 | P1 | Copilot session-store files and export/artifact URIs | Provider paths are not task-workspace paths. Add a separately authorized export flow with validated bytes and provenance; do not resolve arbitrary URLs or auto-register. |
 | P1 | Pi native fork/history/export interfaces | Pinned Pi 0.84.2 native RPC exposes `fork(entryId)`, `clone`, `get_fork_messages` and `export_html`. The wrapper does not map them to runner controls. Add durable branch lineage for fork/clone and an authorized, contained artifact flow for HTML export before exposing them; do not label these native capabilities absent. |
 | P1 | Complete usage/billing provenance | Missing cache fields remain unknown. Pi price estimates are displayed separately. Budget qualification requires actual spend coverage, not an estimate presented as a bill. |
-| P1 | Fork/history/model/mode controls not exposed by Paperclip | Research documents the native and ACP methods separately. Add governance-aware controls and durable lineage before enabling them. |
+| P1 | Fork/history/model/mode controls not exposed by Bionic | Research documents the native and ACP methods separately. Add governance-aware controls and durable lineage before enabling them. |
 | P1 | Exact pending-request restoration after process death | Session transcript restoration does not restore callbacks. Expire unresolved requests unless a provider proves exact restoration. |
 | P1 | Persistent agent-directory access through ACPX | Mainline `3ca196b0a` supplies `AGENT_HOME`, but its existing ACPX environment allowlist does not forward it. Pi also confines native writes to the task workspace, while the local persistent agent directory lives outside it. The disabled candidates do not claim this new capability. Bind and validate the company/agent/run-owned directory explicitly through launch and native-tool policy, including warm-run rebinding and cleanup-before-collection tests; do not widen ambient environment or filesystem access. |
 | P2 | Remaining Copilot native diagnostic/config/account events | The provider inventory records every event and field, its projection or reason for omission. Preserve bounded useful context; avoid credentials, raw environment or unbounded blobs. |
@@ -269,10 +269,10 @@ Separate paid Product E2E evidence now records:
 | Copilot / file edit and validation | `ee9536001fbe733b2386dd3379730a4e0be59488` | 7/7 assertions and cleanup passed; independent bytes validated; GitHub biller and unpriced receipt verified |
 | Copilot / question continuation | `ee9536001fbe733b2386dd3379730a4e0be59488` | Question/answer and warm session reuse worked; 4/6 terminal assertions passed because the provider returned a literal placeholder instead of the required marker; failed attempt retained |
 | Cursor / controller restart | `d35b83074a018537f5475568d7410e3b1d676789` | 6/6 assertions in 57.865 seconds; pending semantic question survived server restart, Cobalt answer continued to Done, cleanup passed; earlier failed attempts retained |
-| Pi / completion | `dd78df1ef8b279c30c710c9b7a7f9fda22e321d6` | 6/6 assertions and cleanup passed in 32.668 seconds; one authenticated `paperclip_finish`, `turn.completed` and `run.terminal`; exclusive-key delta $0.000654767 |
+| Pi / completion | `dd78df1ef8b279c30c710c9b7a7f9fda22e321d6` | 6/6 assertions and cleanup passed in 32.668 seconds; one authenticated `bionic_finish`, `turn.completed` and `run.terminal`; exclusive-key delta $0.000654767 |
 | Copilot / semantic plan approval | `c06fc5fccc88f5816450434493451b9d2d339125` | 6/6 assertions in 45.625 seconds; accepted decision bound to displayed revision 1, exact marker and Done; both paused/completed receipts are GitHub/unpriced; cleanup passed |
 | Copilot / controller restart | `19ca0f558` (final runtime remains `8aa867b64d5fc2fd62cff110bd000addf5dc54de`) | 6/6 assertions in 50.875 seconds; same pending interaction survived restart and same persisted provider session continued; exact marker once, Done and cleanup passed |
-| Pi / file edit and validation | Runtime `dd78df1ef8b279c30c710c9b7a7f9fda22e321d6` | Failed at the 120-second active deadline after five rejected `paperclip_finish` calls; cleanup passed. The extension discarded validation details. Final bytes and completion arguments cannot be reconstructed from the retained projection. |
+| Pi / file edit and validation | Runtime `dd78df1ef8b279c30c710c9b7a7f9fda22e321d6` | Failed at the 120-second active deadline after five rejected `bionic_finish` calls; cleanup passed. The extension discarded validation details. Final bytes and completion arguments cannot be reconstructed from the retained projection. |
 | Pi / file edit and validation, v3 | Pack source `7710736ca3924c655c5b0efd172cfd3c0173766a`; execution fix `06cf356a8bc94f709fcd15606fe05e17933fe3b2` | 7/7 assertions in 49.427 seconds, exact file bytes and cleanup passed. One rejected completion exposed the missing registered deliverable; Pi corrected it, registered the artifact and finished. Exclusive-key delta $0.003324737. |
 | Pi / semantic question, v3 | Pack source `7710736ca3924c655c5b0efd172cfd3c0173766a` | 6/6 assertions in 158.388 seconds across two bounded turns; exact question/option IDs, Cobalt answer, warm continuation, final marker and cleanup passed. First waiting run has no usage receipt; exclusive-key delta covers both runs ($0.001413697). |
 | Pi / semantic plan, v3 first attempt | Pack source `7710736ca3924c655c5b0efd172cfd3c0173766a` | Failed the native write-boundary UI assertion in 119.553 seconds. The saved two-step plan, matching revision and confirmation controls were visible, but all retained DOM snapshots showed the fallback Plan card. Rust lost the MCP display name/namespace used for placement. Cleanup passed; exclusive-key delta $0.003090504. Matcher remains unchanged. |
@@ -306,7 +306,7 @@ These narrow native probes do not replace durable Product interaction, restart,
 or Daytona coverage. Their private wire evidence remains separate from sanitized
 public summaries. A private durable retention manifest also records hashes for the
 logs, screenshots, wire evidence and failed attempts; no credentials are published. The semantic Cursor question and plan cases above exercise
-Paperclip tools, not the native `cursor/ask_question` or `cursor/create_plan` RPCs.
+Bionic tools, not the native `cursor/ask_question` or `cursor/create_plan` RPCs.
 The failed Pi file case exposed two wrapper losses. Profile version 3 at
 `06cf356a8bc94f709fcd15606fe05e17933fe3b2` preserves bounded, redacted MCP validation
 errors and bounded Bash arguments/output; oversized values have an explicit
@@ -584,8 +584,8 @@ v1–v4 version, digest and paired identity. Cases, model, scoring, budgets and
 deadlines remain unchanged.
 
 Current Linux image identities and exact-head CI/review status are recorded in
-the [Pi PR verification](https://github.com/paperclipai/paperclip/pull/14436) and
-[foundation PR verification](https://github.com/paperclipai/paperclip/pull/14430).
+the [Pi PR verification](https://github.com/bionicai/bionic/pull/14436) and
+[foundation PR verification](https://github.com/bionicai/bionic/pull/14430).
 Their immutable source and dependency identities remain distinct from the
 historical packaging proofs above. Image initialization does not certify paid
 Daytona execution. The unresolved local database and remote account-verification

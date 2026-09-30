@@ -448,7 +448,7 @@ describe("chat setup and identity-link clipboard actions", () => {
     await click("5Add avatar");
     const download = container.querySelector<HTMLAnchorElement>('a[download]')!;
     expect(download.getAttribute("href")).toBe("/api/agent-avatars/cap-v1/cherry-pop/rest.png?size=512&scale=1");
-    expect(download.download).toBe("maya-paperclip-avatar.png");
+    expect(download.download).toBe("maya-bionic-avatar.png");
     const endpoint = client.getQueryData<ChatEndpoint>(["chat-endpoint-setup-resume", "endpoint-a"])!;
     flushSync(() => client.setQueryData(["chat-endpoint-setup-resume", "endpoint-a"], {
       ...endpoint, setup: { ...endpoint.setup, slackApp: { appName: "Custom Slack App", botName: "custom", command: "/custom" } },
@@ -460,7 +460,7 @@ describe("chat setup and identity-link clipboard actions", () => {
     expect(container.querySelector('aside button[aria-current="step"]')?.textContent).toBe("6Connect your Slack account");
     await click("5Add avatar");
     expect(container.textContent).toContain("You marked the avatar as uploaded in Slack.");
-    expect(localStorage.getItem("paperclip:slack-avatar:v1:company-a:endpoint-a")).toBe("uploaded");
+    expect(localStorage.getItem("bionic:slack-avatar:v1:company-a:endpoint-a")).toBe("uploaded");
     flushSync(() => root.unmount());
     root = createRoot(container);
     const saved = client.getQueryData<ChatEndpoint>(["chat-endpoint-setup-resume", "endpoint-a"])!;
@@ -510,7 +510,7 @@ describe("chat setup and identity-link clipboard actions", () => {
     expect(container.textContent).toContain("Owner");
     expect(mocks.confirmIdentityLink).not.toHaveBeenCalled();
     mocks.confirmIdentityLink.mockImplementationOnce(async () => {
-      mocks.listPrincipals.mockResolvedValue([{ ...identity, status: "linked", paperclipUserId: "owner-user" }]);
+      mocks.listPrincipals.mockResolvedValue([{ ...identity, status: "linked", bionicUserId: "owner-user" }]);
       return { ok: true };
     });
     await click("This is my Slack account");
@@ -554,7 +554,7 @@ describe("chat setup and identity-link clipboard actions", () => {
   });
 
   it("does not offer to claim a Slack identity linked to someone else", async () => {
-    mocks.listPrincipals.mockResolvedValue([{ id: "link-a", principalId: "principal-a", externalLabel: "Someone else", status: "linked", paperclipUserId: "another-user", paperclipUserLabel: "Another Person", lastConnectAt: "2026-09-18T20:01:00Z" }]);
+    mocks.listPrincipals.mockResolvedValue([{ id: "link-a", principalId: "principal-a", externalLabel: "Someone else", status: "linked", bionicUserId: "another-user", bionicUserLabel: "Another Person", lastConnectAt: "2026-09-18T20:01:00Z" }]);
     await renderSlackIdentityStep();
     expect(container.textContent).toContain("Linked to Another Person");
     expect(container.textContent).not.toContain("This is my Slack account");
@@ -568,7 +568,7 @@ describe("chat setup and identity-link clipboard actions", () => {
     expect(warning.textContent).toContain("Public HTTPS URL required");
     const link = warning.querySelector("a")!;
     expect(link.textContent).toBe("Learn how to set up HTTPS");
-    expect(link.href).toBe("https://docs.paperclip.ing/reference/deploy/https/");
+    expect(link.href).toBe("https://docs.bionic.ing/reference/deploy/https/");
   });
 
   it("cancels the delayed Slack advance when returning to the agent step", async () => {

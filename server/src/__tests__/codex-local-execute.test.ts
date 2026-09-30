@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { runChildProcess } from "@paperclipai/adapter-utils/server-utils";
-import { execute } from "@paperclipai/adapter-codex-local/server";
+import { runChildProcess } from "@bionicai/adapter-utils/server-utils";
+import { execute } from "@bionicai/adapter-codex-local/server";
 import { buildPaperclipTaskMarkdown } from "../services/heartbeat.js";
 import { AGENT_CHAT_DIRECTIVE } from "../services/agent-conversations.js";
 
@@ -11,7 +11,7 @@ async function writeFakeCodexCommand(commandPath: string): Promise<void> {
   const script = `#!/usr/bin/env node
 const fs = require("node:fs");
 
-const capturePath = process.env.PAPERCLIP_TEST_CAPTURE_PATH;
+const capturePath = process.env.BIONIC_TEST_CAPTURE_PATH;
 const payload = {
   argv: process.argv.slice(2),
   prompt: fs.readFileSync(0, "utf8"),
@@ -19,12 +19,12 @@ const payload = {
   codexConfigContents: process.env.CODEX_HOME && fs.existsSync(process.env.CODEX_HOME + "/config.toml")
     ? fs.readFileSync(process.env.CODEX_HOME + "/config.toml", "utf8")
     : null,
-  paperclipWakePayloadJson: process.env.PAPERCLIP_WAKE_PAYLOAD_JSON || null,
-  paperclipApiUrl: process.env.PAPERCLIP_API_URL || null,
-  paperclipApiKey: process.env.PAPERCLIP_API_KEY || null,
-  paperclipApiBridgeMode: process.env.PAPERCLIP_API_BRIDGE_MODE || null,
-  paperclipEnvKeys: Object.keys(process.env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+  bionicWakePayloadJson: process.env.BIONIC_WAKE_PAYLOAD_JSON || null,
+  bionicApiUrl: process.env.BIONIC_API_URL || null,
+  bionicApiKey: process.env.BIONIC_API_KEY || null,
+  bionicApiBridgeMode: process.env.BIONIC_API_BRIDGE_MODE || null,
+  bionicEnvKeys: Object.keys(process.env)
+    .filter((key) => key.startsWith("BIONIC_"))
     .sort(),
 };
 if (capturePath) {
@@ -52,11 +52,11 @@ type CapturePayload = {
   prompt: string;
   codexHome: string | null;
   codexConfigContents?: string | null;
-  paperclipWakePayloadJson: string | null;
-  paperclipApiUrl?: string | null;
-  paperclipApiKey?: string | null;
-  paperclipApiBridgeMode?: string | null;
-  paperclipEnvKeys: string[];
+  bionicWakePayloadJson: string | null;
+  bionicApiUrl?: string | null;
+  bionicApiKey?: string | null;
+  bionicApiBridgeMode?: string | null;
+  bionicEnvKeys: string[];
 };
 
 type LogEntry = {
@@ -119,15 +119,15 @@ function createLocalSandboxRunner() {
 }
 
 describe("codex execute", () => {
-  it("uses a Paperclip-managed CODEX_HOME outside worktree mode while preserving shared auth and config", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-default-"));
+  it("uses a Bionic-managed CODEX_HOME outside worktree mode while preserving shared auth and config", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-default-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
     const sharedCodexHome = path.join(root, "shared-codex-home");
-    const paperclipHome = path.join(root, "paperclip-home");
+    const bionicHome = path.join(root, "bionic-home");
     const managedCodexHome = path.join(
-      paperclipHome,
+      bionicHome,
       "instances",
       "default",
       "companies",
@@ -141,14 +141,14 @@ describe("codex execute", () => {
     await writeFakeCodexCommand(commandPath);
 
     const previousHome = process.env.HOME;
-    const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-    const previousPaperclipInstanceId = process.env.PAPERCLIP_INSTANCE_ID;
-    const previousPaperclipInWorktree = process.env.PAPERCLIP_IN_WORKTREE;
+    const previousPaperclipHome = process.env.BIONIC_HOME;
+    const previousPaperclipInstanceId = process.env.BIONIC_INSTANCE_ID;
+    const previousPaperclipInWorktree = process.env.BIONIC_IN_WORKTREE;
     const previousCodexHome = process.env.CODEX_HOME;
     process.env.HOME = root;
-    process.env.PAPERCLIP_HOME = paperclipHome;
-    delete process.env.PAPERCLIP_INSTANCE_ID;
-    delete process.env.PAPERCLIP_IN_WORKTREE;
+    process.env.BIONIC_HOME = bionicHome;
+    delete process.env.BIONIC_INSTANCE_ID;
+    delete process.env.BIONIC_IN_WORKTREE;
     process.env.CODEX_HOME = sharedCodexHome;
 
     try {
@@ -173,9 +173,9 @@ describe("codex execute", () => {
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -203,18 +203,18 @@ describe("codex execute", () => {
       expect(logs).toContainEqual(
         expect.objectContaining({
           stream: "stdout",
-          chunk: expect.stringContaining("Using Paperclip-managed Codex home"),
+          chunk: expect.stringContaining("Using Bionic-managed Codex home"),
         }),
       );
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
-      if (previousPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousPaperclipHome;
-      if (previousPaperclipInstanceId === undefined) delete process.env.PAPERCLIP_INSTANCE_ID;
-      else process.env.PAPERCLIP_INSTANCE_ID = previousPaperclipInstanceId;
-      if (previousPaperclipInWorktree === undefined) delete process.env.PAPERCLIP_IN_WORKTREE;
-      else process.env.PAPERCLIP_IN_WORKTREE = previousPaperclipInWorktree;
+      if (previousPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = previousPaperclipHome;
+      if (previousPaperclipInstanceId === undefined) delete process.env.BIONIC_INSTANCE_ID;
+      else process.env.BIONIC_INSTANCE_ID = previousPaperclipInstanceId;
+      if (previousPaperclipInWorktree === undefined) delete process.env.BIONIC_IN_WORKTREE;
+      else process.env.BIONIC_IN_WORKTREE = previousPaperclipInWorktree;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
       await fs.rm(root, { recursive: true, force: true });
@@ -222,14 +222,14 @@ describe("codex execute", () => {
   });
 
   it("writes managed MCP gateways into Codex config and warns on overlapping direct entries without logging tokens", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-managed-mcp-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-managed-mcp-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
     const sharedCodexHome = path.join(root, "shared-codex-home");
-    const paperclipHome = path.join(root, "paperclip-home");
+    const bionicHome = path.join(root, "bionic-home");
     const managedCodexHome = path.join(
-      paperclipHome,
+      bionicHome,
       "instances",
       "default",
       "companies",
@@ -253,14 +253,14 @@ describe("codex execute", () => {
     await writeFakeCodexCommand(commandPath);
 
     const previousHome = process.env.HOME;
-    const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-    const previousPaperclipApiUrl = process.env.PAPERCLIP_API_URL;
-    const previousPaperclipRuntimeApiUrl = process.env.PAPERCLIP_RUNTIME_API_URL;
+    const previousPaperclipHome = process.env.BIONIC_HOME;
+    const previousPaperclipApiUrl = process.env.BIONIC_API_URL;
+    const previousPaperclipRuntimeApiUrl = process.env.BIONIC_RUNTIME_API_URL;
     const previousCodexHome = process.env.CODEX_HOME;
     process.env.HOME = root;
-    process.env.PAPERCLIP_HOME = paperclipHome;
-    process.env.PAPERCLIP_API_URL = "http://paperclip.local:3100";
-    process.env.PAPERCLIP_RUNTIME_API_URL = "http://paperclip.local:3100";
+    process.env.BIONIC_HOME = bionicHome;
+    process.env.BIONIC_API_URL = "http://bionic.local:3100";
+    process.env.BIONIC_RUNTIME_API_URL = "http://bionic.local:3100";
     process.env.CODEX_HOME = sharedCodexHome;
 
     try {
@@ -285,15 +285,15 @@ describe("codex execute", () => {
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         runtimeMcp: {
           getServers: () => [
             {
               name: "github",
-              url: "http://paperclip.local:3100/api/tool-gateway/gateways/gateway-1/mcp",
+              url: "http://bionic.local:3100/api/tool-gateway/gateways/gateway-1/mcp",
               token: "pcgw_secret-managed-token",
               connectionId: "connection-github",
             },
@@ -311,14 +311,14 @@ describe("codex execute", () => {
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
       const configText = capture.codexConfigContents ?? "";
       expect(configText).toContain("[mcp_servers.github]");
-      expect(configText).toContain("[mcp_servers.\"paperclip-github\"]");
-      expect(configText).toContain('url = "http://paperclip.local:3100/api/tool-gateway/gateways/gateway-1/mcp"');
+      expect(configText).toContain("[mcp_servers.\"bionic-github\"]");
+      expect(configText).toContain('url = "http://bionic.local:3100/api/tool-gateway/gateways/gateway-1/mcp"');
       expect(configText).toContain('Authorization = "Bearer pcgw_secret-managed-token"');
       expect(logs).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             stream: "stderr",
-            chunk: expect.stringContaining("Paperclip cannot enforce policies for that direct entry"),
+            chunk: expect.stringContaining("Bionic cannot enforce policies for that direct entry"),
           }),
         ]),
       );
@@ -326,12 +326,12 @@ describe("codex execute", () => {
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
-      if (previousPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousPaperclipHome;
-      if (previousPaperclipApiUrl === undefined) delete process.env.PAPERCLIP_API_URL;
-      else process.env.PAPERCLIP_API_URL = previousPaperclipApiUrl;
-      if (previousPaperclipRuntimeApiUrl === undefined) delete process.env.PAPERCLIP_RUNTIME_API_URL;
-      else process.env.PAPERCLIP_RUNTIME_API_URL = previousPaperclipRuntimeApiUrl;
+      if (previousPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = previousPaperclipHome;
+      if (previousPaperclipApiUrl === undefined) delete process.env.BIONIC_API_URL;
+      else process.env.BIONIC_API_URL = previousPaperclipApiUrl;
+      if (previousPaperclipRuntimeApiUrl === undefined) delete process.env.BIONIC_RUNTIME_API_URL;
+      else process.env.BIONIC_RUNTIME_API_URL = previousPaperclipRuntimeApiUrl;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
       await fs.rm(root, { recursive: true, force: true });
@@ -339,7 +339,7 @@ describe("codex execute", () => {
   });
 
   it("emits a command note that Codex auto-applies repo-scoped AGENTS.md files", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-notes-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-notes-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -372,9 +372,9 @@ describe("codex execute", () => {
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -387,7 +387,7 @@ describe("codex execute", () => {
       expect(result.exitCode).toBe(0);
       expect(result.errorMessage).toBeNull();
       expect(commandNotes).toContain(
-        "Codex exec automatically applies repo-scoped AGENTS.md instructions from the current workspace; Paperclip does not currently suppress that discovery.",
+        "Codex exec automatically applies repo-scoped AGENTS.md instructions from the current workspace; Bionic does not currently suppress that discovery.",
       );
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
@@ -397,7 +397,7 @@ describe("codex execute", () => {
   });
 
   it("logs HOME and the resolved executable path in invocation metadata", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-meta-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-meta-"));
     const workspace = path.join(root, "workspace");
     const binDir = path.join(root, "bin");
     const commandPath = path.join(binDir, "codex");
@@ -435,9 +435,9 @@ describe("codex execute", () => {
           command: "codex",
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -452,7 +452,7 @@ describe("codex execute", () => {
       expect(result.errorMessage).toBeNull();
       expect(loggedCommand).toBe(commandPath);
       expect(loggedEnv.HOME).toBe(root);
-      expect(loggedEnv.PAPERCLIP_RESOLVED_COMMAND).toBe(commandPath);
+      expect(loggedEnv.BIONIC_RESOLVED_COMMAND).toBe(commandPath);
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
@@ -463,7 +463,7 @@ describe("codex execute", () => {
   });
 
   it("injects bridge env into sandbox-managed remote runs", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-sandbox-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-sandbox-"));
     const localWorkspace = path.join(root, "workspace");
     const remoteWorkspace = path.join(root, "sandbox");
     const binDir = path.join(root, "bin");
@@ -502,9 +502,9 @@ describe("codex execute", () => {
           command: commandPath,
           cwd: localWorkspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         executionTarget: {
@@ -525,10 +525,10 @@ describe("codex execute", () => {
       expect(result.errorMessage).toBeNull();
 
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
-      expect(capture.codexHome).toBe(path.join(remoteWorkspace, ".paperclip-runtime", "codex", "home"));
-      expect(capture.paperclipApiUrl).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
-      expect(capture.paperclipApiKey).not.toBe("run-jwt-token");
-      expect(capture.paperclipApiBridgeMode).toBe("queue_v1");
+      expect(capture.codexHome).toBe(path.join(remoteWorkspace, ".bionic-runtime", "codex", "home"));
+      expect(capture.bionicApiUrl).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+      expect(capture.bionicApiKey).not.toBe("run-jwt-token");
+      expect(capture.bionicApiBridgeMode).toBe("queue_v1");
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
@@ -539,7 +539,7 @@ describe("codex execute", () => {
   });
 
   it.each([false, true])("delivers oversized wake context through stdin (sandbox=%s)", async (sandbox) => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-wake-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-wake-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -573,17 +573,17 @@ describe("codex execute", () => {
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
-            PAPERCLIP_WAKE_PAYLOAD_JSON: description,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_WAKE_PAYLOAD_JSON: description,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {
           issueId: "issue-1",
           taskId: "issue-1",
           wakeReason: "issue_commented",
           wakeCommentId: "comment-2",
-          paperclipWake: {
+          bionicWake: {
             reason: "issue_commented",
             issue: {
               id: "issue-1",
@@ -640,11 +640,11 @@ describe("codex execute", () => {
       expect(result.errorMessage).toBeNull();
 
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
-      expect(capture.paperclipEnvKeys).not.toContain("PAPERCLIP_WAKE_PAYLOAD_JSON");
-      expect(capture.paperclipWakePayloadJson).toBeNull();
+      expect(capture.bionicEnvKeys).not.toContain("BIONIC_WAKE_PAYLOAD_JSON");
+      expect(capture.bionicWakePayloadJson).toBeNull();
       expect(capture.prompt).toContain(description);
       expect(capture.prompt).toContain("- reason: issue_commented");
-      expect(capture.prompt).toContain("## Paperclip Wake Payload");
+      expect(capture.prompt).toContain("## Bionic Wake Payload");
       expect(capture.prompt).toContain("Use this wake to continue the task, applying new user direction and preserving its approval gates.");
       expect(capture.prompt).toContain("Do not switch to another issue until you have handled this wake.");
       expect(capture.prompt).toContain(
@@ -660,7 +660,7 @@ describe("codex execute", () => {
   });
 
   it("keeps real assignment markdown and current wake events single-owned at the CLI boundary", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-context-owner-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-context-owner-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -688,14 +688,14 @@ describe("codex execute", () => {
         runtime: { sessionId: null, sessionParams: null, sessionDisplayId: null, taskKey: null },
         config: {
           engine: "cli", command: commandPath, cwd: workspace,
-          env: { PAPERCLIP_TEST_CAPTURE_PATH: capturePath },
-          promptTemplate: "Custom template keeps {{paperclipTaskMarkdown}} and {{paperclipWakePrompt}}.",
+          env: { BIONIC_TEST_CAPTURE_PATH: capturePath },
+          promptTemplate: "Custom template keeps {{bionicTaskMarkdown}} and {{bionicWakePrompt}}.",
         },
         context: {
           issueId: "issue-1",
-          paperclipTaskMarkdown: historicalMarkdown,
-          paperclipTaskMarkdownAssignment: markdown,
-          paperclipWake: {
+          bionicTaskMarkdown: historicalMarkdown,
+          bionicTaskMarkdownAssignment: markdown,
+          bionicWake: {
             reason: "issue_commented",
             issue: { id: "issue-1", identifier: "PAP-900", title: "Repeat phrase Repeat phrase", description: "Repeat phrase Repeat phrase", status: "in_progress" },
             executionContinuation: {
@@ -719,7 +719,7 @@ describe("codex execute", () => {
             commentWindow: { requestedCount: 2, includedCount: 2, missingCount: 0 },
             fallbackFetchNeeded: false,
           },
-          paperclipTurnContext: { version: 1, assignment: { owner: "task_markdown" }, events: { owner: "wake_prompt", comments: [{ id: "comment-a", revision: "a" }, { id: "comment-b", revision: "b" }] } },
+          bionicTurnContext: { version: 1, assignment: { owner: "task_markdown" }, events: { owner: "wake_prompt", comments: [{ id: "comment-a", revision: "a" }, { id: "comment-b", revision: "b" }] } },
         },
         onLog: async () => {},
       });
@@ -738,7 +738,7 @@ describe("codex execute", () => {
   });
 
   it("classifies remote-compaction high-demand failures as retryable transient upstream errors", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-transient-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-transient-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     await fs.mkdir(workspace, { recursive: true });
@@ -771,7 +771,7 @@ describe("codex execute", () => {
           engine: "cli",
           command: commandPath,
           cwd: workspace,
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -790,7 +790,7 @@ describe("codex execute", () => {
   });
 
   it.each([true, false])("retries missing resume only before a session starts (started=%s)", async (started) => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-resume-stop-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-resume-stop-"));
     const commandPath = path.join(root, "codex");
     const attemptsPath = path.join(root, "attempts");
     await seedSharedCodexAuth(root);
@@ -823,7 +823,7 @@ if (process.argv.includes("resume")) {
   });
 
   it("classifies mid-turn harness crashes as retryable transient upstream errors", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-harness-crash-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-harness-crash-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     await fs.mkdir(workspace, { recursive: true });
@@ -863,7 +863,7 @@ process.exit(1);
           engine: "cli",
           command: commandPath,
           cwd: workspace,
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -885,7 +885,7 @@ process.exit(1);
   });
 
   it("persists retry-not-before metadata for codex provider quota failures", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-usage-limit-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-usage-limit-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     await fs.mkdir(workspace, { recursive: true });
@@ -924,7 +924,7 @@ process.exit(1);
           command: commandPath,
           cwd: workspace,
           model: "gpt-5.3-codex-spark",
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -950,7 +950,7 @@ process.exit(1);
   });
 
   it("classifies Codex refresh-token auth failures without credential telemetry", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-refresh-token-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-refresh-token-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     await fs.mkdir(workspace, { recursive: true });
@@ -980,7 +980,7 @@ process.exit(1);
           engine: "cli",
           command: commandPath,
           cwd: workspace,
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -1000,7 +1000,7 @@ process.exit(1);
   });
 
   it("uses safer invocation settings and a fresh-session handoff for codex transient fallback retries", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-fallback-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-fallback-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -1038,13 +1038,13 @@ process.exit(1);
           fastMode: true,
           model: "gpt-5.4",
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {
           codexTransientFallbackMode: "fresh_session_safer_invocation",
-          paperclipContinuationSummary: {
+          bionicContinuationSummary: {
             key: "continuation-summary",
             title: "Continuation Summary",
             body: "Issue continuation summary for the next fresh session.",
@@ -1066,7 +1066,7 @@ process.exit(1);
       expect(capture.argv).not.toContain("resume");
       expect(capture.argv).not.toContain('service_tier="fast"');
       expect(capture.argv).not.toContain("features.fast_mode=true");
-      expect(capture.prompt).toContain("Paperclip session handoff:");
+      expect(capture.prompt).toContain("Bionic session handoff:");
       expect(capture.prompt).toContain("Issue continuation summary for the next fresh session.");
       expect(commandNotes).toContain("Codex transient fallback requested safer invocation settings for this retry.");
       expect(commandNotes).toContain("Codex transient fallback forced a fresh session with a continuation handoff.");
@@ -1078,7 +1078,7 @@ process.exit(1);
   });
 
   it("renders execution-stage wake instructions for reviewer and executor roles", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-stage-wake-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-stage-wake-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -1110,15 +1110,15 @@ process.exit(1);
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {
           issueId: "issue-1",
           taskId: "issue-1",
           wakeReason: "execution_review_requested",
-          paperclipWake: {
+          bionicWake: {
             reason: "execution_review_requested",
             issue: {
               id: "issue-1",
@@ -1180,15 +1180,15 @@ process.exit(1);
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: executorCapturePath,
+            BIONIC_TEST_CAPTURE_PATH: executorCapturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {
           issueId: "issue-1",
           taskId: "issue-1",
           wakeReason: "execution_changes_requested",
-          paperclipWake: {
+          bionicWake: {
             reason: "execution_changes_requested",
             issue: {
               id: "issue-1",
@@ -1235,7 +1235,7 @@ process.exit(1);
   });
 
   it("renders an issue-scoped wake prompt even when the wake has no comments yet", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-issue-wake-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-issue-wake-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -1267,15 +1267,15 @@ process.exit(1);
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {
           issueId: "issue-1",
           taskId: "issue-1",
           wakeReason: "issue_assigned",
-          paperclipWake: {
+          bionicWake: {
             reason: "issue_assigned",
             issue: {
               id: "issue-1",
@@ -1305,9 +1305,9 @@ process.exit(1);
       expect(result.errorMessage).toBeNull();
 
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
-      expect(capture.paperclipEnvKeys).not.toContain("PAPERCLIP_WAKE_PAYLOAD_JSON");
-      expect(capture.paperclipWakePayloadJson).toBeNull();
-      expect(capture.prompt).toContain("## Paperclip Wake Payload");
+      expect(capture.bionicEnvKeys).not.toContain("BIONIC_WAKE_PAYLOAD_JSON");
+      expect(capture.bionicWakePayloadJson).toBeNull();
+      expect(capture.prompt).toContain("## Bionic Wake Payload");
       expect(capture.prompt).toContain("Do not switch to another issue until you have handled this wake.");
       expect(capture.prompt).toContain("- issue: PAP-1201 Fix gallery opening for inline images");
       expect(capture.prompt).not.toContain("- pending comments:");
@@ -1324,7 +1324,7 @@ process.exit(1);
   });
 
   it.each([{ conversationMode: false, resumedSession: true }, { conversationMode: true, resumedSession: true }, { conversationMode: true, resumedSession: false }])("retains current task policy (conversation=$conversationMode, resumed=$resumedSession)", async ({ conversationMode, resumedSession }) => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-resume-wake-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-resume-wake-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
@@ -1373,19 +1373,19 @@ process.exit(1);
           cwd: workspace,
           instructionsFilePath: instructionsPath,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: conversationMode ? undefined : "Follow the paperclip heartbeat.",
+          promptTemplate: conversationMode ? undefined : "Follow the bionic heartbeat.",
         },
         context: {
           conversationMode,
-          paperclipTaskMarkdown: `Full description that must not replay\n${policy}`,
-          paperclipTaskMarkdownCompact: policy,
+          bionicTaskMarkdown: `Full description that must not replay\n${policy}`,
+          bionicTaskMarkdownCompact: policy,
           issueId: "issue-1",
           taskId: "issue-1",
           wakeReason: "issue_commented",
           wakeCommentId: "comment-2",
-          paperclipWake: {
+          bionicWake: {
             reason: "issue_commented",
             issue: {
               id: "issue-1",
@@ -1430,7 +1430,7 @@ process.exit(1);
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
       if (resumedSession) expect(capture.argv).toEqual(expect.arrayContaining(["resume", "codex-session-1", "-"]));
       else expect(capture.argv).not.toContain("resume");
-      expect(capture.prompt).toContain(resumedSession ? "## Paperclip Resume Delta" : "## Paperclip Wake Payload");
+      expect(capture.prompt).toContain(resumedSession ? "## Bionic Resume Delta" : "## Bionic Wake Payload");
       expect(capture.prompt).toContain("Do not switch to another issue until you have handled this wake.");
       expect(capture.prompt).toContain("Second comment");
       expect(capture.prompt).toContain(policy);
@@ -1446,10 +1446,10 @@ process.exit(1);
       } else {
         expect(capture.prompt).toContain("Execution contract:");
       }
-      expect(capture.prompt).not.toContain("Follow the paperclip heartbeat.");
+      expect(capture.prompt).not.toContain("Follow the bionic heartbeat.");
       if (resumedSession) {
         expect(capture.prompt).not.toContain("You are managed instructions.");
-        expect(invocationPrompt).toContain("## Paperclip Resume Delta");
+        expect(invocationPrompt).toContain("## Bionic Resume Delta");
         expect(invocationNotes).toContain("Skipped stdin instruction reinjection because an existing Codex session is being resumed with a wake delta.");
         expect(promptMetrics.instructionsChars).toBe(0);
         expect(promptMetrics.heartbeatPromptChars).toBe(0);
@@ -1464,21 +1464,21 @@ process.exit(1);
     }
   });
   it("uses a worktree-isolated CODEX_HOME and mounts the operational skill by default", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
     const sharedCodexHome = path.join(root, "shared-codex-home");
-    const paperclipHome = path.join(root, "paperclip-home");
+    const bionicHome = path.join(root, "bionic-home");
     const isolatedCodexHome = path.join(
-      paperclipHome,
+      bionicHome,
       "instances",
       "worktree-1",
       "companies",
       "company-1",
       "codex-home",
     );
-    const homeSkill = path.join(isolatedCodexHome, "skills", "paperclip");
+    const homeSkill = path.join(isolatedCodexHome, "skills", "bionic");
     await fs.mkdir(workspace, { recursive: true });
     await fs.mkdir(sharedCodexHome, { recursive: true });
     await fs.writeFile(path.join(sharedCodexHome, "auth.json"), `${fakeCodexAuthJson}\n`, "utf8");
@@ -1486,14 +1486,14 @@ process.exit(1);
     await writeFakeCodexCommand(commandPath);
 
     const previousHome = process.env.HOME;
-    const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-    const previousPaperclipInstanceId = process.env.PAPERCLIP_INSTANCE_ID;
-    const previousPaperclipInWorktree = process.env.PAPERCLIP_IN_WORKTREE;
+    const previousPaperclipHome = process.env.BIONIC_HOME;
+    const previousPaperclipInstanceId = process.env.BIONIC_INSTANCE_ID;
+    const previousPaperclipInWorktree = process.env.BIONIC_IN_WORKTREE;
     const previousCodexHome = process.env.CODEX_HOME;
     process.env.HOME = root;
-    process.env.PAPERCLIP_HOME = paperclipHome;
-    process.env.PAPERCLIP_INSTANCE_ID = "worktree-1";
-    process.env.PAPERCLIP_IN_WORKTREE = "true";
+    process.env.BIONIC_HOME = bionicHome;
+    process.env.BIONIC_INSTANCE_ID = "worktree-1";
+    process.env.BIONIC_IN_WORKTREE = "true";
     process.env.CODEX_HOME = sharedCodexHome;
 
     try {
@@ -1518,9 +1518,9 @@ process.exit(1);
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
+          promptTemplate: "Follow the bionic heartbeat.",
         },
         context: {},
         authToken: "run-jwt-token",
@@ -1535,14 +1535,14 @@ process.exit(1);
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
       expect(capture.codexHome).toBe(isolatedCodexHome);
       expect(capture.argv).toEqual(expect.arrayContaining(["exec", "--json", "-"]));
-      expect(capture.prompt).toContain("Follow the paperclip heartbeat.");
-      expect(capture.paperclipEnvKeys).toEqual(
+      expect(capture.prompt).toContain("Follow the bionic heartbeat.");
+      expect(capture.bionicEnvKeys).toEqual(
         expect.arrayContaining([
-          "PAPERCLIP_AGENT_ID",
-          "PAPERCLIP_API_KEY",
-          "PAPERCLIP_API_URL",
-          "PAPERCLIP_COMPANY_ID",
-          "PAPERCLIP_RUN_ID",
+          "BIONIC_AGENT_ID",
+          "BIONIC_API_KEY",
+          "BIONIC_API_URL",
+          "BIONIC_COMPANY_ID",
+          "BIONIC_RUN_ID",
         ]),
       );
 
@@ -1563,18 +1563,18 @@ process.exit(1);
       expect(logs).toContainEqual(
         expect.objectContaining({
           stream: "stdout",
-          chunk: expect.stringContaining('Injected Codex skill "paperclip"'),
+          chunk: expect.stringContaining('Injected Codex skill "bionic"'),
         }),
       );
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
-      if (previousPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousPaperclipHome;
-      if (previousPaperclipInstanceId === undefined) delete process.env.PAPERCLIP_INSTANCE_ID;
-      else process.env.PAPERCLIP_INSTANCE_ID = previousPaperclipInstanceId;
-      if (previousPaperclipInWorktree === undefined) delete process.env.PAPERCLIP_IN_WORKTREE;
-      else process.env.PAPERCLIP_IN_WORKTREE = previousPaperclipInWorktree;
+      if (previousPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = previousPaperclipHome;
+      if (previousPaperclipInstanceId === undefined) delete process.env.BIONIC_INSTANCE_ID;
+      else process.env.BIONIC_INSTANCE_ID = previousPaperclipInstanceId;
+      if (previousPaperclipInWorktree === undefined) delete process.env.BIONIC_IN_WORKTREE;
+      else process.env.BIONIC_IN_WORKTREE = previousPaperclipInWorktree;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
       await fs.rm(root, { recursive: true, force: true });
@@ -1582,7 +1582,7 @@ process.exit(1);
   });
 
   it("isolates connector skills by agent and revision without changing the selected model identity", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-connector-codex-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-connector-codex-"));
     const workspace = path.join(root, "workspace");
     const command = path.join(root, "codex");
     const capture = path.join(root, "capture.json");
@@ -1594,23 +1594,23 @@ process.exit(1);
     await fs.writeFile(path.join(sourceHome, "auth.json"), fakeCodexAuthJson);
     await fs.writeFile(path.join(skillSource, "SKILL.md"), "# AgentMail\nAssigned inbox one.");
     await writeFakeCodexCommand(command);
-    const keys = ["PAPERCLIP_HOME", "PAPERCLIP_INSTANCE_ID", "CODEX_HOME"] as const;
+    const keys = ["BIONIC_HOME", "BIONIC_INSTANCE_ID", "CODEX_HOME"] as const;
     const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
-    process.env.PAPERCLIP_HOME = path.join(root, "paperclip");
-    process.env.PAPERCLIP_INSTANCE_ID = "connectors";
+    process.env.BIONIC_HOME = path.join(root, "bionic");
+    process.env.BIONIC_INSTANCE_ID = "connectors";
     process.env.CODEX_HOME = sourceHome;
     const invoke = async (agentId: string, digest: string | null, source = skillSource, connectorSkillInstructions = "") => {
       const config = {
         engine: "cli", command, cwd: workspace,
-        env: { CODEX_HOME: sourceHome, PAPERCLIP_TEST_CAPTURE_PATH: capture },
-        paperclipConnectorSkillDigest: digest,
-        paperclipSkillSync: { desiredSkills: digest ? ["paperclipai/paperclip/agentmail"] : [] },
-        paperclipRuntimeSkills: digest ? [{ key: "paperclipai/paperclip/agentmail", runtimeName: "agentmail", source }] : [],
+        env: { CODEX_HOME: sourceHome, BIONIC_TEST_CAPTURE_PATH: capture },
+        bionicConnectorSkillDigest: digest,
+        bionicSkillSync: { desiredSkills: digest ? ["bionicai/bionic/agentmail"] : [] },
+        bionicRuntimeSkills: digest ? [{ key: "bionicai/bionic/agentmail", runtimeName: "agentmail", source }] : [],
       };
       const result = await execute({ runId: `run-${agentId}-${digest?.slice(0, 1) ?? "none"}`,
         agent: { id: agentId, companyId: "company-1", name: "Email agent", adapterType: "codex_local", adapterConfig: config },
         runtime: { sessionId: null, sessionParams: null, sessionDisplayId: null, taskKey: null },
-        config, context: { paperclipWake: { connectorSkillInstructions } }, authToken: "test-token", onLog: async () => {},
+        config, context: { bionicWake: { connectorSkillInstructions } }, authToken: "test-token", onLog: async () => {},
       });
       expect(result.errorMessage).toBeNull();
       expect(result.exitCode).toBe(0);
@@ -1644,27 +1644,27 @@ process.exit(1);
   });
 
   it("respects an explicit CODEX_HOME config override even in worktree mode", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-explicit-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-execute-explicit-"));
     const workspace = path.join(root, "workspace");
     const commandPath = path.join(root, "codex");
     const capturePath = path.join(root, "capture.json");
     const sharedCodexHome = path.join(root, "shared-codex-home");
     const explicitCodexHome = path.join(root, "explicit-codex-home");
-    const paperclipHome = path.join(root, "paperclip-home");
+    const bionicHome = path.join(root, "bionic-home");
     await fs.mkdir(workspace, { recursive: true });
     await fs.mkdir(sharedCodexHome, { recursive: true });
     await fs.writeFile(path.join(sharedCodexHome, "auth.json"), `${fakeCodexAuthJson}\n`, "utf8");
     await writeFakeCodexCommand(commandPath);
 
     const previousHome = process.env.HOME;
-    const previousPaperclipHome = process.env.PAPERCLIP_HOME;
-    const previousPaperclipInstanceId = process.env.PAPERCLIP_INSTANCE_ID;
-    const previousPaperclipInWorktree = process.env.PAPERCLIP_IN_WORKTREE;
+    const previousPaperclipHome = process.env.BIONIC_HOME;
+    const previousPaperclipInstanceId = process.env.BIONIC_INSTANCE_ID;
+    const previousPaperclipInWorktree = process.env.BIONIC_IN_WORKTREE;
     const previousCodexHome = process.env.CODEX_HOME;
     process.env.HOME = root;
-    process.env.PAPERCLIP_HOME = paperclipHome;
-    process.env.PAPERCLIP_INSTANCE_ID = "worktree-1";
-    process.env.PAPERCLIP_IN_WORKTREE = "true";
+    process.env.BIONIC_HOME = bionicHome;
+    process.env.BIONIC_INSTANCE_ID = "worktree-1";
+    process.env.BIONIC_IN_WORKTREE = "true";
     process.env.CODEX_HOME = sharedCodexHome;
 
     try {
@@ -1688,12 +1688,12 @@ process.exit(1);
           command: commandPath,
           cwd: workspace,
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            BIONIC_TEST_CAPTURE_PATH: capturePath,
             CODEX_HOME: explicitCodexHome,
           },
-          promptTemplate: "Follow the paperclip heartbeat.",
-          paperclipSkillSync: {
-            desiredSkills: ["paperclip"],
+          promptTemplate: "Follow the bionic heartbeat.",
+          bionicSkillSync: {
+            desiredSkills: ["bionic"],
           },
         },
         context: {},
@@ -1706,17 +1706,17 @@ process.exit(1);
 
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
       expect(capture.codexHome).toBe(explicitCodexHome);
-      expect((await fs.lstat(path.join(explicitCodexHome, "skills", "paperclip"))).isSymbolicLink()).toBe(true);
-      await expect(fs.lstat(path.join(paperclipHome, "instances", "worktree-1", "codex-home"))).rejects.toThrow();
+      expect((await fs.lstat(path.join(explicitCodexHome, "skills", "bionic"))).isSymbolicLink()).toBe(true);
+      await expect(fs.lstat(path.join(bionicHome, "instances", "worktree-1", "codex-home"))).rejects.toThrow();
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
-      if (previousPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousPaperclipHome;
-      if (previousPaperclipInstanceId === undefined) delete process.env.PAPERCLIP_INSTANCE_ID;
-      else process.env.PAPERCLIP_INSTANCE_ID = previousPaperclipInstanceId;
-      if (previousPaperclipInWorktree === undefined) delete process.env.PAPERCLIP_IN_WORKTREE;
-      else process.env.PAPERCLIP_IN_WORKTREE = previousPaperclipInWorktree;
+      if (previousPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+      else process.env.BIONIC_HOME = previousPaperclipHome;
+      if (previousPaperclipInstanceId === undefined) delete process.env.BIONIC_INSTANCE_ID;
+      else process.env.BIONIC_INSTANCE_ID = previousPaperclipInstanceId;
+      if (previousPaperclipInWorktree === undefined) delete process.env.BIONIC_IN_WORKTREE;
+      else process.env.BIONIC_IN_WORKTREE = previousPaperclipInWorktree;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
       await fs.rm(root, { recursive: true, force: true });

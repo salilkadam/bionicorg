@@ -1,11 +1,11 @@
 import { and, eq, ne, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { agents, companyOnboardingSeeds, goals, issues, projects } from "@paperclipai/db";
-import type { ApplyOnboardingSeed } from "@paperclipai/shared";
-import { writePaperclipSkillSyncPreference } from "@paperclipai/adapter-utils/server-utils";
+import type { Db } from "@bionicai/db";
+import { agents, companyOnboardingSeeds, goals, issues, projects } from "@bionicai/db";
+import type { ApplyOnboardingSeed } from "@bionicai/shared";
+import { writePaperclipSkillSyncPreference } from "@bionicai/adapter-utils/server-utils";
 import { findActiveServerAdapter } from "../adapters/registry.js";
 import { agentService } from "./agents.js";
-import { PAPERCLIP_CORE_SKILL_KEYS } from "./company-skills.js";
+import { BIONIC_CORE_SKILL_KEYS } from "./company-skills.js";
 import { goalService } from "./goals.js";
 import { projectService } from "./projects.js";
 import { issueService } from "./issues.js";
@@ -34,19 +34,19 @@ const SEEDED_AGENT_ROLE = "ceo";
 const FALLBACK_SEEDED_AGENT_ADAPTER_TYPE = "claude_local";
 
 function seededAgentAdapterType() {
-  const configured = process.env.PAPERCLIP_ONBOARDING_SEED_ADAPTER_TYPE?.trim()
-    || process.env.PAPERCLIP_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE?.trim()
+  const configured = process.env.BIONIC_ONBOARDING_SEED_ADAPTER_TYPE?.trim()
+    || process.env.BIONIC_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE?.trim()
     || FALLBACK_SEEDED_AGENT_ADAPTER_TYPE;
   // Server-seeded onboarding deliberately stays on a direct adapter. Native
   // runner rollout is an explicit post-onboarding configuration choice.
-  return configured === "paperclip_runner"
+  return configured === "bionic_runner"
     ? FALLBACK_SEEDED_AGENT_ADAPTER_TYPE
     : configured;
 }
 
 /**
  * Adapter config for the seeded CEO. The default CEO instructions tell the
- * agent to use the core paperclip skills (hiring, memory, coordination), and
+ * agent to use the core bionic skills (hiring, memory, coordination), and
  * an agent's runtime only receives skills listed in its own desired set — so
  * a seeded CEO with an empty adapter config arrives with zero skills and
  * truthfully reports its own toolkit as not installed. Enable the core set
@@ -57,7 +57,7 @@ function seededAgentAdapterConfig(adapterType: string): Record<string, unknown> 
   if (!adapter?.listSkills && !adapter?.syncSkills) return {};
   return writePaperclipSkillSyncPreference(
     {},
-    PAPERCLIP_CORE_SKILL_KEYS.map((key) => ({ key, versionId: null })),
+    BIONIC_CORE_SKILL_KEYS.map((key) => ({ key, versionId: null })),
   );
 }
 
@@ -265,7 +265,7 @@ export function onboardingSeedService(db: Db) {
     //
     //    No-first-task contract (PAP-67 r17.4): on the Cloud walk this branch
     //    never runs. The seed Cloud sends is mission-only — `agent` and
-    //    `firstTask` are unpopulated by the signup wizard and a paperclip-cloud
+    //    `firstTask` are unpopulated by the signup wizard and a bionic-cloud
     //    `node:test` in `src/onboarding/` pins that — so `firstTaskTitle` is
     //    null here and the first task stays owned by the tenant's own
     //    server-owned onboarding path (`POST /issues` with
@@ -401,7 +401,7 @@ export function onboardingSeedService(db: Db) {
 
     const result = await db.transaction(async (tx) => {
       await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtextextended(${`paperclip:onboarding-seed:${companyId}`}, 0))`,
+        sql`select pg_advisory_xact_lock(hashtextextended(${`bionic:onboarding-seed:${companyId}`}, 0))`,
       );
       const dbx = tx as unknown as Db;
       const applied = await applyWithin(dbx, companyId, seed);

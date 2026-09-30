@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
-import { environmentLeases, heartbeatRunEvents, heartbeatRuns, nativeRunFinalizations, type Db } from "@paperclipai/db";
+import { environmentLeases, heartbeatRunEvents, heartbeatRuns, nativeRunFinalizations, type Db } from "@bionicai/db";
 import { claimedAdapterType } from "./conversation-continuation.js";
 import { PROCESS_IDENTITY_RECORDED, PROCESS_START_REQUESTED } from "./native-local-process-stop.js";
 import { hasRemoteTerminationReceipt } from "./remote-execution-termination.js";
@@ -15,7 +15,7 @@ export async function isCancelledNativeStartup(db: Db, run: Run, coordinator: Co
       run.processStartedAt || run.sessionIdAfter) return false;
   const cancellation = run.resultJson?.startupCancellation as Record<string, unknown> | undefined;
   const beforeSelection = run.runtimeMode === "legacy" && !run.runtimeModeResolvedAt &&
-    !run.nativeSessionId && !coordinator && claimedAdapterType(run) === "paperclip_runner" &&
+    !run.nativeSessionId && !coordinator && claimedAdapterType(run) === "bionic_runner" &&
     cancellation?.beforeNativeSelection === true;
   const neverClaimed = run.runtimeMode === "native" && coordinator &&
     ["observed", "terminal_failure"].includes(coordinator.phase) && coordinator.attempt === 0 &&

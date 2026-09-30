@@ -1,9 +1,9 @@
-import type { Issue, IssueStatus } from "@paperclipai/shared";
+import type { Issue, IssueStatus } from "@bionicai/shared";
 
 export const RECENT_TASKS_LIMIT = 5;
-export const RECENT_TASKS_UPDATED_EVENT = "paperclip:recent-tasks-updated";
-const STORAGE_PREFIX = "paperclip.recentTasks.v2:";
-const LEGACY_STORAGE_PREFIX = "paperclip.recentTasks:";
+export const RECENT_TASKS_UPDATED_EVENT = "bionic:recent-tasks-updated";
+const STORAGE_PREFIX = "bionic.recentTasks.v2:";
+const LEGACY_STORAGE_PREFIX = "bionic.recentTasks:";
 
 export interface RecentTaskEntry {
   id: string;

@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import type { AskUserQuestionsInteraction } from "@paperclipai/shared";
+import type { AskUserQuestionsInteraction } from "@bionicai/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildChatQuestionFormModal,
@@ -72,7 +72,7 @@ function formFixture() {
           allowOther: true,
           options: [
             {
-              id: "__paperclip_text__",
+              id: "__bionic_text__",
               label: "Type an answer",
               freeText: true,
             },
@@ -80,7 +80,7 @@ function formFixture() {
         },
       ],
       questionSet: {
-        schema: "paperclip.question_set.v1",
+        schema: "bionic.question_set.v1",
         title: "Deployment details",
         submitLabel: "Continue",
         questions: [
@@ -155,7 +155,7 @@ function signedRequest(payload: unknown, secret = signingSecret) {
   }).toString();
   const timestamp = String(Math.floor(Date.now() / 1_000));
   const signature = `v0=${createHmac("sha256", secret).update(`v0:${timestamp}:${body}`).digest("hex")}`;
-  return new Request("https://paperclip.test/webhooks/slack", {
+  return new Request("https://bionic.test/webhooks/slack", {
     method: "POST",
     headers: {
       "content-type": "application/x-www-form-urlencoded",
@@ -279,10 +279,10 @@ describe("Slack native multi-question modal adapter-to-runtime boundary", () => 
           ok: true,
           user: {
             id: params.get("user"),
-            name: "paperclip-agent",
-            real_name: "Paperclip Agent",
+            name: "bionic-agent",
+            real_name: "Bionic Agent",
             is_bot: true,
-            profile: { display_name: "Paperclip Agent" },
+            profile: { display_name: "Bionic Agent" },
           },
         };
       } else if (method === "views.open") {
@@ -337,7 +337,7 @@ describe("Slack native multi-question modal adapter-to-runtime boundary", () => 
       persistence: options.persistence ?? memoryPersistence(),
       providerConfig: {
         provider: "slack",
-        userName: "paperclip-agent",
+        userName: "bionic-agent",
         credentials: {
           apiUrl,
           botToken: "xoxb-synthetic",
@@ -386,7 +386,7 @@ describe("Slack native multi-question modal adapter-to-runtime boundary", () => 
     };
   }
 
-  it("round-trips the actual Paperclip modal, opaque metadata and Slack state into canonical answers", async () => {
+  it("round-trips the actual Bionic modal, opaque metadata and Slack state into canonical answers", async () => {
     const test = await harness();
     const view = await test.open();
     expect(view.callback_id).toBe(test.form.draft.submitActionId);

@@ -2,7 +2,7 @@ import { GithubIcon } from "@/components/icons/github-icon";
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Plus, ExternalLink, Check, Lock, GitBranch, FileText, MoreVertical } from 'lucide-react';
-import { parseGitHubSkillRepositoryUrl, type SkillSource, type SkillSourceDiscovery, type SkillSourceRefreshResult, type SkillSourceScanProgress } from '@paperclipai/shared';
+import { parseGitHubSkillRepositoryUrl, type SkillSource, type SkillSourceDiscovery, type SkillSourceRefreshResult, type SkillSourceScanProgress } from '@bionicai/shared';
 import { Link, useNavigate, useParams } from '@/lib/router';
 import { useCompany } from '@/context/CompanyContext';
 import { useBreadcrumbs } from '@/context/BreadcrumbContext';
@@ -100,7 +100,7 @@ export function SkillSources() {
 function SourceDialog({ companyId, source, onClose, onSaved }: {
   companyId: string; source?: SkillSource; onClose: () => void; onSaved: (result: SkillSourceRefreshResult) => Promise<void>;
 }) {
-  const draftKey = `paperclip.skill-source-draft:${companyId}:${source?.id ?? 'new'}`;
+  const draftKey = `bionic.skill-source-draft:${companyId}:${source?.id ?? 'new'}`;
   const [selectionRevision] = useState(source?.revision);
   const [draft] = useState(() => { try { const saved = JSON.parse(sessionStorage.getItem(draftKey) ?? '{}'); return !source || saved.revision === source.revision ? saved : {}; } catch { return {}; } });
   const [repositoryUrl, setRepositoryUrl] = useState<string>(draft.repositoryUrl ?? source?.repositoryUrl ?? '');

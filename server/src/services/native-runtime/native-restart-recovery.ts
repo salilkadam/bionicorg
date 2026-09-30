@@ -2,14 +2,14 @@ import { readNativeWorkspaceSyncReference } from "./native-workspace-sync.js";
 import { recordNativeLocalProcessStop } from "../native-local-process-stop.js";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agents,
   heartbeatRunEvents,
   heartbeatRuns,
   issues,
   nativeRunFinalizations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { readProcessStartedAt } from "../hot-restart.js";
 import { getServerInfoSnapshot } from "../../server-info.js";
 import { redactSensitiveText } from "../../redaction.js";
@@ -476,7 +476,7 @@ export async function claimNativeRestartRecoveries(input: {
     .where(
       and(
         eq(heartbeatRuns.runtimeMode, "native"),
-        eq(agents.adapterType, "paperclip_runner"),
+        eq(agents.adapterType, "bionic_runner"),
         inArray(heartbeatRuns.status, ["running", "failed"]),
         isNull(nativeRunFinalizations.resultId),
         or(

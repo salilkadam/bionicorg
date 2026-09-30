@@ -44,19 +44,19 @@ describe("adapter configuration sections", () => {
     };
     const adapter = renderSection(
       CodexLocalConfigFields,
-      "paperclip_runner",
+      "bionic_runner",
       "adapter",
       config,
     );
     const configuration = renderSection(
       CodexLocalConfigFields,
-      "paperclip_runner",
+      "bionic_runner",
       "configuration",
       config,
     );
     const policy = renderSection(
       CodexLocalConfigFields,
-      "paperclip_runner",
+      "bionic_runner",
       "runPolicy",
       config,
     );
@@ -71,8 +71,8 @@ describe("adapter configuration sections", () => {
 
   it("keeps ACP agent admission choices in the adapter section", () => {
     const config = { provider: "acpx", acpxAgent: "claude" };
-    const adapter = renderSection(CodexLocalConfigFields, "paperclip_runner", "adapter", config);
-    const policy = renderSection(CodexLocalConfigFields, "paperclip_runner", "runPolicy", config);
+    const adapter = renderSection(CodexLocalConfigFields, "bionic_runner", "adapter", config);
+    const policy = renderSection(CodexLocalConfigFields, "bionic_runner", "runPolicy", config);
 
     expect(adapter).toContain('<option value="claude" selected="">Claude</option>');
     expect(adapter).toContain('<option value="pi" disabled="">Pi — qualification pending</option>');

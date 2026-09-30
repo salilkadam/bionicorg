@@ -25,7 +25,7 @@ const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
 const describeEmbeddedPostgres = embeddedPostgresSupport.supported ? describe : describe.skip;
 
 async function createTempDatabase(): Promise<string> {
-  const db = await startEmbeddedPostgresTestDatabase("paperclip-db-client-");
+  const db = await startEmbeddedPostgresTestDatabase("bionic-db-client-");
   cleanups.push(db.cleanup);
   return db.connectionString;
 }
@@ -119,21 +119,21 @@ describeEmbeddedPostgres("createDb pool defaults", () => {
     const [self] = await db.$client`select application_name from pg_stat_activity where pid = pg_backend_pid()`;
     expect(self?.application_name).toBe(DEFAULT_DATABASE_APPLICATION_NAME);
 
-    const shortLived = createDb(url, { applicationName: "paperclip-idle-test", idleTimeoutSeconds: 1 });
+    const shortLived = createDb(url, { applicationName: "bionic-idle-test", idleTimeoutSeconds: 1 });
     cleanups.push(async () => {
       await shortLived.$client.end({ timeout: 1 });
     });
     await shortLived.$client`select 1`;
-    expect(await backendsNamed("paperclip-idle-test")).toBe(1);
+    expect(await backendsNamed("bionic-idle-test")).toBe(1);
 
     // The driver closes the idle connection after `idle_timeout`; without the
     // option (the driver default) the backend would stay until the process
     // exits. Wait past the timeout, then poll PostgreSQL's own view.
     const deadline = Date.now() + 10_000;
-    let remaining = await backendsNamed("paperclip-idle-test");
+    let remaining = await backendsNamed("bionic-idle-test");
     while (remaining > 0 && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 250));
-      remaining = await backendsNamed("paperclip-idle-test");
+      remaining = await backendsNamed("bionic-idle-test");
     }
     expect(remaining).toBe(0);
   }, 30_000);
@@ -1503,7 +1503,7 @@ describeEmbeddedPostgres("applyPendingMigrations", () => {
       legacyUrl.pathname = "/native_legacy";
       const connectionString = legacyUrl.href;
       cleanups.push(() => closeRegisteredClients(connectionString));
-      const directory = await fs.promises.mkdtemp(join(tmpdir(), "paperclip-native-prior-migrations-"));
+      const directory = await fs.promises.mkdtemp(join(tmpdir(), "bionic-native-prior-migrations-"));
       cleanups.push(() => fs.promises.rm(directory, { recursive: true, force: true }));
       const migrationsRoot = new URL("./migrations/", import.meta.url);
       const journal = JSON.parse(await fs.promises.readFile(new URL("meta/_journal.json", migrationsRoot), "utf8"));
@@ -1683,7 +1683,7 @@ describeEmbeddedPostgres("applyPendingMigrations", () => {
             risk, completion_authority, incomplete_criteria_policy, contract_json,
             canonical_sha256, created_by_actor_type, created_by_actor_id
           ) VALUES (
-            ${companyId}, ${otherIssueId}, 1, 'paperclip.completion-contract.v1',
+            ${companyId}, ${otherIssueId}, 1, 'bionic.completion-contract.v1',
             'policy-v1', 'low', 'server', 'review', ${JSON.stringify({ criteria: [] })}::jsonb,
             'cross-company-contract-sha', 'system', 'migration-test'
           )
@@ -1695,7 +1695,7 @@ describeEmbeddedPostgres("applyPendingMigrations", () => {
             risk, completion_authority, incomplete_criteria_policy, contract_json,
             canonical_sha256, created_by_actor_type, created_by_actor_id
           ) VALUES (
-            ${contractId}, ${companyId}, ${issueId}, 1, 'paperclip.completion-contract.v1',
+            ${contractId}, ${companyId}, ${issueId}, 1, 'bionic.completion-contract.v1',
             'policy-v1', 'low', 'server', 'review', ${JSON.stringify({ criteria: [] })}::jsonb,
             'contract-sha', 'system', 'migration-test'
           )
@@ -1707,7 +1707,7 @@ describeEmbeddedPostgres("applyPendingMigrations", () => {
             canonical_sha256, created_by_actor_type, created_by_actor_id
           ) VALUES (
             ${otherContractId}, ${otherCompanyId}, ${otherIssueId}, 1,
-            'paperclip.completion-contract.v1', 'policy-v1', 'low', 'server', 'review',
+            'bionic.completion-contract.v1', 'policy-v1', 'low', 'server', 'review',
             ${JSON.stringify({ criteria: [] })}::jsonb, 'other-contract-sha',
             'system', 'migration-test'
           )
@@ -1915,7 +1915,7 @@ describeEmbeddedPostgres("applyPendingMigrations", () => {
             (
               SELECT count(*)::int
               FROM pg_trigger
-              WHERE tgname = 'paperclip_issue_status_version_trigger'
+              WHERE tgname = 'bionic_issue_status_version_trigger'
                 AND NOT tgisinternal
             ) AS trigger_count,
             (

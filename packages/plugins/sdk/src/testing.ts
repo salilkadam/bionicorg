@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { pluginOperationIssueOriginKind } from "@paperclipai/shared";
+import { pluginOperationIssueOriginKind } from "@bionicai/shared";
 import type {
   PaperclipPluginManifestV1,
   PluginCapability,
@@ -22,7 +22,7 @@ import type {
   Agent,
   Goal,
   Approval,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import type {
   EventFilter,
   PluginContext,
@@ -478,7 +478,7 @@ function isInCompany<T extends { companyId: string | null | undefined }>(
  * Create an in-memory host harness for plugin worker tests.
  *
  * The harness enforces declared capabilities and simulates host APIs, so tests
- * can validate plugin behavior without spinning up the Paperclip server runtime.
+ * can validate plugin behavior without spinning up the Bionic server runtime.
  */
 export function createTestHarness(options: TestHarnessOptions): TestHarness {
   const manifest = options.manifest;
@@ -692,7 +692,7 @@ export function createTestHarness(options: TestHarnessOptions): TestHarness {
   }
 
   function isManagedAgent(agent: Agent, agentKey: string) {
-    const marker = agent.metadata?.paperclipManagedResource;
+    const marker = agent.metadata?.bionicManagedResource;
     return Boolean(
       marker
       && typeof marker === "object"
@@ -706,7 +706,7 @@ export function createTestHarness(options: TestHarnessOptions): TestHarness {
   function managedAgentMetadata(agentKey: string, existing?: Record<string, unknown> | null) {
     return {
       ...(existing ?? {}),
-      paperclipManagedResource: {
+      bionicManagedResource: {
         pluginKey: manifest.id,
         resourceKind: "agent",
         resourceKey: agentKey,

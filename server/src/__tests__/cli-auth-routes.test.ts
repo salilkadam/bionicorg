@@ -115,8 +115,8 @@ describe.sequential("cli auth routes", () => {
     const res = await request(app)
       .post("/api/cli-auth/challenges")
       .send({
-        command: "paperclipai company import",
-        clientName: "paperclipai cli",
+        command: "bionicai company import",
+        clientName: "bionicai cli",
         requestedAccess: "board",
       });
 
@@ -137,13 +137,13 @@ describe.sequential("cli auth routes", () => {
     const skillApp = await createApp({ type: "none", source: "none" });
 
     const indexRes = await request(indexApp).get("/api/skills/index");
-    const skillRes = await request(skillApp).get("/api/skills/paperclip");
+    const skillRes = await request(skillApp).get("/api/skills/bionic");
 
     expect(indexRes.status, JSON.stringify(indexRes.body)).toBe(401);
     expect(skillRes.status, skillRes.text || JSON.stringify(skillRes.body)).toBe(401);
   });
 
-  it.sequential("serves the invite-scoped paperclip skill anonymously for active invites", async () => {
+  it.sequential("serves the invite-scoped bionic skill anonymously for active invites", async () => {
     const invite = {
       id: "invite-1",
       companyId: "company-1",
@@ -167,19 +167,19 @@ describe.sequential("cli auth routes", () => {
     };
 
     const app = await createApp({ type: "none", source: "none" }, db);
-    const res = await request(app).get("/api/invites/token-123/skills/paperclip");
+    const res = await request(app).get("/api/invites/token-123/skills/bionic");
 
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("text/markdown");
-    expect(res.text).toContain("# Paperclip Skill");
+    expect(res.text).toContain("# Bionic Skill");
   });
 
   it.sequential("marks challenge status as requiring sign-in for anonymous viewers", async () => {
     mockBoardAuthService.describeCliAuthChallenge.mockResolvedValue({
       id: "12345678-1234-4123-8123-123456789abc",
       status: "pending",
-      command: "paperclipai company import",
-      clientName: "paperclipai cli",
+      command: "bionicai company import",
+      clientName: "bionicai cli",
       requestedAccess: "board",
       requestedCompanyId: null,
       requestedCompanyName: null,

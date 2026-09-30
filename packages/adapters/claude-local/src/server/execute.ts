@@ -1,9 +1,9 @@
-import { createProviderStoppedBoundary } from "@paperclipai/adapter-utils/provider-stopped-boundary";
+import { createProviderStoppedBoundary } from "@bionicai/adapter-utils/provider-stopped-boundary";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AdapterExecutionContext, AdapterExecutionResult } from "@paperclipai/adapter-utils";
-import type { RunProcessResult } from "@paperclipai/adapter-utils/server-utils";
+import type { AdapterExecutionContext, AdapterExecutionResult } from "@bionicai/adapter-utils";
+import type { RunProcessResult } from "@bionicai/adapter-utils/server-utils";
 import {
   adapterExecutionTargetIsRemote,
   adapterExecutionTargetRemoteCwd,
@@ -23,7 +23,7 @@ import {
   resolveAdapterExecutionTargetCommandForLogs,
   runAdapterExecutionTargetProcess,
   startAdapterExecutionTargetPaperclipBridge,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import {
   asString,
   asNumber,
@@ -48,17 +48,17 @@ import {
   isPaperclipRecoveryWakePayload,
   rewriteWorkspaceCwdEnvVarsForExecution,
   shapePaperclipWorkspaceEnvForExecution,
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
-  DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE,
-} from "@paperclipai/adapter-utils/server-utils";
-import { buildSkillLibraryManifestMarkdown } from "@paperclipai/adapter-utils/skill-library-manifest";
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE,
+} from "@bionicai/adapter-utils/server-utils";
+import { buildSkillLibraryManifestMarkdown } from "@bionicai/adapter-utils/skill-library-manifest";
 import {
   parseLocalProcessFilesystemScope,
   parseLocalProcessSandboxExtraPaths,
   parseLocalProcessNetworkAllowlist,
   parseLocalProcessNetworkScope,
   type LocalProcessSandboxOptions,
-} from "@paperclipai/adapter-utils/local-process-sandbox";
+} from "@bionicai/adapter-utils/local-process-sandbox";
 import {
   claudeModelUsageTotals,
   parseClaudeStreamJson,
@@ -172,7 +172,7 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
   const onLog = input.onLog ?? (async () => {});
 
   const command = asString(config.command, "claude");
-  const workspaceContext = parseObject(context.paperclipWorkspace);
+  const workspaceContext = parseObject(context.bionicWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
   const workspaceStrategy = asString(workspaceContext.strategy, "");
@@ -182,22 +182,22 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
   const workspaceBranch = asString(workspaceContext.branchName, "") || null;
   const workspaceWorktreePath = asString(workspaceContext.worktreePath, "") || null;
   const agentHome = asString(workspaceContext.agentHome, "") || null;
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.bionicWorkspaces)
+    ? context.bionicWorkspaces.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
-  const runtimeServiceIntents = Array.isArray(context.paperclipRuntimeServiceIntents)
-    ? context.paperclipRuntimeServiceIntents.filter(
+  const runtimeServiceIntents = Array.isArray(context.bionicRuntimeServiceIntents)
+    ? context.bionicRuntimeServiceIntents.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
-  const runtimeServices = Array.isArray(context.paperclipRuntimeServices)
-    ? context.paperclipRuntimeServices.filter(
+  const runtimeServices = Array.isArray(context.bionicRuntimeServices)
+    ? context.bionicRuntimeServices.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
-  const runtimePrimaryUrl = asString(context.paperclipRuntimePrimaryUrl, "");
+  const runtimePrimaryUrl = asString(context.bionicRuntimePrimaryUrl, "");
   const configuredCwd = asString(config.cwd, "");
   const useConfiguredInsteadOfAgentHome = workspaceSource === "agent_home" && configuredCwd.length > 0;
   const effectiveWorkspaceCwd = useConfiguredInsteadOfAgentHome ? "" : workspaceCwd;
@@ -215,7 +215,7 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
 
   const envConfig = parseObject(config.env);
   const env: Record<string, string> = { ...buildPaperclipEnv(agent) };
-  env.PAPERCLIP_RUN_ID = runId;
+  env.BIONIC_RUN_ID = runId;
 
   const wakeTaskId =
     (typeof context.taskId === "string" && context.taskId.trim().length > 0 && context.taskId.trim()) ||
@@ -243,25 +243,25 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
   const issueWorkMode = readPaperclipIssueWorkModeFromContext(context);
 
   if (wakeTaskId) {
-    env.PAPERCLIP_TASK_ID = wakeTaskId;
+    env.BIONIC_TASK_ID = wakeTaskId;
   }
   if (issueWorkMode) {
-    env.PAPERCLIP_ISSUE_WORK_MODE = issueWorkMode;
+    env.BIONIC_ISSUE_WORK_MODE = issueWorkMode;
   }
   if (wakeReason) {
-    env.PAPERCLIP_WAKE_REASON = wakeReason;
+    env.BIONIC_WAKE_REASON = wakeReason;
   }
   if (wakeCommentId) {
-    env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
+    env.BIONIC_WAKE_COMMENT_ID = wakeCommentId;
   }
   if (approvalId) {
-    env.PAPERCLIP_APPROVAL_ID = approvalId;
+    env.BIONIC_APPROVAL_ID = approvalId;
   }
   if (approvalStatus) {
-    env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
+    env.BIONIC_APPROVAL_STATUS = approvalStatus;
   }
   if (linkedIssueIds.length > 0) {
-    env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
+    env.BIONIC_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
   }
   applyPaperclipWorkspaceEnv(env, {
     workspaceCwd: shapedWorkspaceEnv.workspaceCwd,
@@ -275,16 +275,16 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
     agentHome,
   });
   if (shapedWorkspaceEnv.workspaceHints.length > 0) {
-    env.PAPERCLIP_WORKSPACES_JSON = JSON.stringify(shapedWorkspaceEnv.workspaceHints);
+    env.BIONIC_WORKSPACES_JSON = JSON.stringify(shapedWorkspaceEnv.workspaceHints);
   }
   if (runtimeServiceIntents.length > 0) {
-    env.PAPERCLIP_RUNTIME_SERVICE_INTENTS_JSON = JSON.stringify(runtimeServiceIntents);
+    env.BIONIC_RUNTIME_SERVICE_INTENTS_JSON = JSON.stringify(runtimeServiceIntents);
   }
   if (runtimeServices.length > 0) {
-    env.PAPERCLIP_RUNTIME_SERVICES_JSON = JSON.stringify(runtimeServices);
+    env.BIONIC_RUNTIME_SERVICES_JSON = JSON.stringify(runtimeServices);
   }
   if (runtimePrimaryUrl) {
-    env.PAPERCLIP_RUNTIME_PRIMARY_URL = runtimePrimaryUrl;
+    env.BIONIC_RUNTIME_PRIMARY_URL = runtimePrimaryUrl;
   }
   const shapedEnvConfig = rewriteWorkspaceCwdEnvVarsForExecution({
     env: envConfig,
@@ -294,16 +294,16 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
   });
   for (const [key, value] of Object.entries(shapedEnvConfig)) {
     if (typeof value !== "string") continue;
-    // Runtime PAPERCLIP_* always wins over config, and PAPERCLIP_API_KEY is
+    // Runtime BIONIC_* always wins over config, and BIONIC_API_KEY is
     // never accepted from config — the harness-minted run token is the only
-    // source. Other PAPERCLIP_* keys Paperclip did not assign flow through.
+    // source. Other BIONIC_* keys Bionic did not assign flow through.
     if (isForbiddenConfigEnvKey(key)) continue;
     if (isPaperclipRuntimeEnvKey(key) && key in env) continue;
     env[key] = value;
   }
 
   if (authToken) {
-    env.PAPERCLIP_API_KEY = authToken;
+    env.BIONIC_API_KEY = authToken;
   }
 
   const runtimeEnv = Object.fromEntries(
@@ -426,23 +426,23 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const promptTemplate = asString(
     config.promptTemplate,
     context.conversationMode === true
-      ? DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE
-      : DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+      ? DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE
+      : DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
   );
   const effort = asString(config.effort, "");
   const chrome = asBoolean(config.chrome, false);
   const maxTurns = asNumber(config.maxTurnsPerRun, 0);
   const dangerouslySkipPermissions = asBoolean(config.dangerouslySkipPermissions, true);
   const configEnv = parseObject(config.env);
-  const workspaceContext = parseObject(context.paperclipWorkspace);
+  const workspaceContext = parseObject(context.bionicWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
   const workspaceStrategy = asString(workspaceContext.strategy, "");
   const workspaceBranch = asString(workspaceContext.branchName, "") || null;
   const workspaceWorktreePath = asString(workspaceContext.worktreePath, "") || null;
   const agentHome = asString(workspaceContext.agentHome, "") || null;
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.bionicWorkspaces)
+    ? context.bionicWorkspaces.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
@@ -510,7 +510,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       const reason = err instanceof Error ? err.message : String(err);
       await onLog(
         "stderr",
-        `[paperclip] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
+        `[bionic] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
       );
     }
   }
@@ -538,7 +538,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (!isPaperclipSkillSourceMissing(entry)) continue;
     await onLog(
       "stderr",
-      `[paperclip] Warning: skill "${entry.key}" is enabled for this agent but its files are unavailable and it was not mounted${entry.missingDetail ? `: ${entry.missingDetail}` : "."}\n`,
+      `[bionic] Warning: skill "${entry.key}" is enabled for this agent but its files are unavailable and it was not mounted${entry.missingDetail ? `: ${entry.missingDetail}` : "."}\n`,
     );
   }
   const promptBundle = await prepareClaudePromptBundle({
@@ -581,7 +581,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
           networkScope,
           networkAllowlist: parseLocalProcessNetworkAllowlist(config.networkAllowlist),
           networkTrustedUrls: [
-            env.PAPERCLIP_API_URL,
+            env.BIONIC_API_URL,
             ...runtimeMcpServers.map((server) => server.url),
           ].filter((value): value is string => typeof value === "string" && value.length > 0),
           command: asString(config.filesystemSandboxCommand, "bwrap"),
@@ -594,7 +594,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       .join(" and ");
     await onLog(
       "stdout",
-      `[paperclip] Confining Claude with ${scopes} scope.\n`,
+      `[bionic] Confining Claude with ${scopes} scope.\n`,
     );
   }
   const useManagedRemoteClaudeConfig =
@@ -608,7 +608,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     ? await (async () => {
         await onLog(
           "stdout",
-          `[paperclip] Syncing workspace and Claude runtime assets to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
+          `[bionic] Syncing workspace and Claude runtime assets to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
         );
         return await prepareAdapterExecutionTargetRuntime({
           runId,
@@ -667,7 +667,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     : null;
   const effectivePromptBundleAddDir = executionTargetIsRemote
     ? preparedExecutionTargetRuntime?.assetDirs.skills ??
-      path.posix.join(effectiveExecutionCwd, ".paperclip-runtime", "claude", "skills")
+      path.posix.join(effectiveExecutionCwd, ".bionic-runtime", "claude", "skills")
     : promptBundle.addDir;
   const effectiveInstructionsFilePath = promptBundle.instructionsFilePath
     ? executionTargetIsRemote
@@ -677,13 +677,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const effectiveMcpConfigPath = executionTargetIsRemote
     ? path.posix.join(
         preparedExecutionTargetRuntime?.assetDirs["mcp-config"] ??
-          path.posix.join(effectiveExecutionCwd, ".paperclip-runtime", "claude", "mcp-config"),
+          path.posix.join(effectiveExecutionCwd, ".bionic-runtime", "claude", "mcp-config"),
         path.basename(localMcpConfigPath),
       )
     : localMcpConfigPath;
   const remoteClaudeRuntimeRoot = executionTargetIsRemote
     ? preparedExecutionTargetRuntime?.runtimeRootDir ??
-      path.posix.join(effectiveExecutionCwd, ".paperclip-runtime", "claude")
+      path.posix.join(effectiveExecutionCwd, ".bionic-runtime", "claude")
     : null;
   const remoteClaudeConfigSeedDir = claudeConfigSeedDir && remoteClaudeRuntimeRoot
     ? preparedExecutionTargetRuntime?.assetDirs["config-seed"] ??
@@ -697,7 +697,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     loggedEnv.CLAUDE_CONFIG_DIR = remoteClaudeConfigDir;
     await onLog(
       "stdout",
-      `[paperclip] Materializing Claude auth/config into ${remoteClaudeConfigDir}.\n`,
+      `[bionic] Materializing Claude auth/config into ${remoteClaudeConfigDir}.\n`,
     );
     await materializeRemoteClaudeConfig({
       runId,
@@ -713,9 +713,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       },
     });
   }
-  let paperclipBridge: Awaited<ReturnType<typeof startAdapterExecutionTargetPaperclipBridge>> = null;
+  let bionicBridge: Awaited<ReturnType<typeof startAdapterExecutionTargetPaperclipBridge>> = null;
   if (executionTargetIsRemote && adapterExecutionTargetUsesPaperclipBridge(runtimeExecutionTarget)) {
-    paperclipBridge = await startAdapterExecutionTargetPaperclipBridge({
+    bionicBridge = await startAdapterExecutionTargetPaperclipBridge({
       runId,
       target: runtimeExecutionTarget,
       enableSandboxDuplexBridge: adapterExecutionTargetEnablesSandboxDuplexBridge(runtimeExecutionTarget),
@@ -723,11 +723,11 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       runtimeRootDir: preparedExecutionTargetRuntime?.runtimeRootDir,
       adapterKey: "claude",
       timeoutSec,
-      hostApiToken: env.PAPERCLIP_API_KEY,
+      hostApiToken: env.BIONIC_API_KEY,
       onLog,
     });
-    if (paperclipBridge) {
-      Object.assign(env, paperclipBridge.env);
+    if (bionicBridge) {
+      Object.assign(env, bionicBridge.env);
       const runtimeEnv = ensurePathInEnv({ ...process.env, ...env });
       loggedEnv = buildInvocationEnvForLogs(env, {
         runtimeEnv,
@@ -754,7 +754,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       effectiveEffort = "";
       await onLog(
         "stderr",
-        `[paperclip] Claude CLI in the environment does not advertise --effort; omitting configured effort "${effort}". Upgrade the environment CLI/image to restore reasoning-effort control.\n`,
+        `[bionic] Claude CLI in the environment does not advertise --effort; omitting configured effort "${effort}". Upgrade the environment CLI/image to restore reasoning-effort control.\n`,
       );
     }
   }
@@ -787,7 +787,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   if (runtimeSessionId && !isValidUuid) {
     await onLog(
       "stdout",
-      `[paperclip] Claude session "${runtimeSessionId}" is not a valid UUID and will not be passed to --resume.\n`,
+      `[bionic] Claude session "${runtimeSessionId}" is not a valid UUID and will not be passed to --resume.\n`,
     );
   }
   if (
@@ -798,7 +798,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   ) {
     await onLog(
       "stdout",
-      `[paperclip] Claude session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
+      `[bionic] Claude session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
     );
   } else if (
     runtimeSessionId &&
@@ -808,24 +808,24 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   ) {
     await onLog(
       "stdout",
-      `[paperclip] Claude session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
+      `[bionic] Claude session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
     );
   } else if (runtimeSessionId && isValidUuid && !canResumeSession) {
     await onLog(
       "stdout",
-      `[paperclip] Claude session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
+      `[bionic] Claude session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
     );
   }
   if (runtimeSessionId && runtimePromptBundleKey.length > 0 && runtimePromptBundleKey !== promptBundle.bundleKey) {
     await onLog(
       "stdout",
-      `[paperclip] Claude session "${runtimeSessionId}" was saved for prompt bundle "${runtimePromptBundleKey}" and will not be resumed with "${promptBundle.bundleKey}".\n`,
+      `[bionic] Claude session "${runtimeSessionId}" was saved for prompt bundle "${runtimePromptBundleKey}" and will not be resumed with "${promptBundle.bundleKey}".\n`,
     );
   }
   if (runtimeSessionId && !hasMatchingMcpServers) {
     await onLog(
       "stdout",
-      `[paperclip] Claude session "${runtimeSessionId}" was saved with a different runtime MCP server set and will not be resumed.\n`,
+      `[bionic] Claude session "${runtimeSessionId}" was saved with a different runtime MCP server set and will not be resumed.\n`,
     );
   }
   const bootstrapPromptTemplate = asString(config.bootstrapPromptTemplate, "");
@@ -902,10 +902,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       resumedSession: Boolean(resumeSessionId),
     });
     const shouldUseResumeDeltaPrompt = Boolean(resumeSessionId) && wakePrompt.length > 0;
-    const renderedPrompt = shouldUseResumeDeltaPrompt || isPaperclipRecoveryWakePayload(context.paperclipWake)
+    const renderedPrompt = shouldUseResumeDeltaPrompt || isPaperclipRecoveryWakePayload(context.bionicWake)
       ? ""
       : renderTemplate(promptTemplate, templateData);
-    const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
+    const sessionHandoffNote = asString(context.bionicSessionHandoffMarkdown, "").trim();
     const prompt = joinPromptSections([
       renderedBootstrapPrompt,
       wakePrompt,
@@ -939,7 +939,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     }
     if (runtimeMcpServers.length > 0) {
       commandNotes.push(
-        `Using ${runtimeMcpServers.length} Paperclip-managed MCP server(s) from strict config ${effectiveMcpConfigPath}.`,
+        `Using ${runtimeMcpServers.length} Bionic-managed MCP server(s) from strict config ${effectiveMcpConfigPath}.`,
       );
     }
     if (onMeta) {
@@ -966,8 +966,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       onSpawn,
       onRuntimeProgress: ctx.onRuntimeProgress,
       onLog,
-      runLogTail: paperclipBridge?.runLogTail,
-      settleRunDisposition: paperclipBridge?.settleRunDisposition,
+      runLogTail: bionicBridge?.runLogTail,
+      settleRunDisposition: bionicBridge?.settleRunDisposition,
       terminalResultCleanup: {
         graceMs: terminalResultCleanupGraceMs,
         hasTerminalResult: ({ stdout }) => parseClaudeStreamJson(stdout).resultJson !== null,
@@ -1116,7 +1116,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const poisonedPreviousMessageId = isClaudePoisonedPreviousMessageIdError(parsed);
     // Fable 5 policy refusals exit cleanly (exitCode=0, is_error=false), so this
     // is intentionally independent of `failed` — otherwise a refusal looks like a
-    // successful run to Paperclip and the heartbeat stalls silently. See RY-604.
+    // successful run to Bionic and the heartbeat stalls silently. See RY-604.
     const claudeRefusal = isClaudeRefusalResult(parsed);
     const parsedIsError = asBoolean(parsed.is_error, false);
     const parsedSubtype = asString(parsed.subtype, "").trim().toLowerCase();
@@ -1280,7 +1280,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         const errorMessage =
           `${model} requires Claude Code ${minimumCliVersion} or newer on the CLI lane; ${detected}. ` +
           "Upgrade Claude Code or restore the default ACP lane before retrying.";
-        await onLog("stderr", `[paperclip] ${errorMessage}\n`);
+        await onLog("stderr", `[bionic] ${errorMessage}\n`);
         return {
           exitCode: 1,
           signal: null,
@@ -1324,7 +1324,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
           : "is unavailable";
       await onLog(
         "stdout",
-        `[paperclip] Claude resume session "${sessionId}" ${reason}; retrying with a fresh session.\n`,
+        `[bionic] Claude resume session "${sessionId}" ${reason}; retrying with a fresh session.\n`,
       );
       if (sessionErrorKind === "poisoned" && !executionTargetIsRemote) {
         const claudeConfigDir = resolveSharedClaudeConfigDir(effectiveEnv);
@@ -1340,7 +1340,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         }
         if (unlinked) {
           try {
-            await onLog("stdout", `[paperclip] Removed poisoned session file: ${poisonedJsonlPath}\n`);
+            await onLog("stdout", `[bionic] Removed poisoned session file: ${poisonedJsonlPath}\n`);
           } catch {
             // log stream may be closed; the unlink already succeeded
           }
@@ -1355,13 +1355,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     try {
       await providerStop.collectBeforeRestore();
     } finally {
-      if (paperclipBridge) {
-        await paperclipBridge.stop();
+      if (bionicBridge) {
+        await bionicBridge.stop();
       }
       if (restoreRemoteWorkspace) {
         await onLog(
           "stdout",
-          `[paperclip] Restoring workspace changes from ${describeAdapterExecutionTarget(executionTarget)}.\n`,
+          `[bionic] Restoring workspace changes from ${describeAdapterExecutionTarget(executionTarget)}.\n`,
         );
         await restoreRemoteWorkspace();
       }

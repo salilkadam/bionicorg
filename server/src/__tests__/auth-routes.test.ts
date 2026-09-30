@@ -89,7 +89,7 @@ describe.sequential("auth routes", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       session: {
-        id: "paperclip:session:user-1",
+        id: "bionic:session:user-1",
         userId: "user-1",
       },
       user: baseUser,
@@ -290,7 +290,7 @@ describe.sequential("auth routes", () => {
     });
   });
 
-  it("accepts Paperclip asset paths for avatars", async () => {
+  it("accepts Bionic asset paths for avatars", async () => {
     const app = await createApp(
       {
         type: "board",

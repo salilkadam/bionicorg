@@ -300,11 +300,11 @@ import {
   resolveChatPublicationSchema,
   replaceChatEndpointResourcesSchema,
   updateChatEndpointSchema,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   COMPANY_IMPORT_TRANSFERS_API_PATH,
   companyImportTransferDeclarationSchema,
-} from "@paperclipai/shared/company-import-transfer";
+} from "@bionicai/shared/company-import-transfer";
 
 type JsonSchema = Record<string, unknown>;
 type OpenApiResponse = Record<string, unknown>;
@@ -876,8 +876,8 @@ const chatPrincipalLinkResponseSchema = z
     principalId: z.string().uuid(),
     externalLabel: z.string(),
     externalDetail: z.string(),
-    paperclipUserId: z.string().nullable(),
-    paperclipUserLabel: z.string().nullable(),
+    bionicUserId: z.string().nullable(),
+    bionicUserLabel: z.string().nullable(),
     status: chatIdentityLinkStatusSchema,
   })
   .strict();
@@ -983,7 +983,7 @@ const chatActivityResponseSchema = z
 
 const safeExternalChatCardResponseSchema = z
   .object({
-    schema: z.literal("paperclip.chat.card.v1"),
+    schema: z.literal("bionic.chat.card.v1"),
     kind: z.enum(["status", "question", "confirmation"]),
     title: z.string(),
     body: z.string().optional(),
@@ -1688,9 +1688,9 @@ function applyDocumentFixups(document: any): any {
     [BOARD_SESSION_AUTH_SCHEME]: {
       type: "apiKey",
       in: "cookie",
-      name: "paperclip_session",
+      name: "bionic_session",
       description:
-        "Board session cookie in authenticated mode. Paperclip uses Better Auth; cookie transport may vary by deployment.",
+        "Board session cookie in authenticated mode. Bionic uses Better Auth; cookie transport may vary by deployment.",
     },
     [BOARD_API_KEY_AUTH_SCHEME]: {
       type: "http",
@@ -1704,7 +1704,7 @@ function applyDocumentFixups(document: any): any {
       scheme: "bearer",
       bearerFormat: "Agent API Key or Agent JWT",
       description:
-        "Agent API key or Paperclip-issued local agent JWT presented in the Authorization bearer header.",
+        "Agent API key or Bionic-issued local agent JWT presented in the Authorization bearer header.",
     },
     [RUNTIME_TOOLS_BEARER_AUTH_SCHEME]: {
       type: "http",
@@ -1717,7 +1717,7 @@ function applyDocumentFixups(document: any): any {
       type: "http",
       scheme: "bearer",
       bearerFormat: "Task-bound agent JWT",
-      description: "Paperclip-issued JWT bound to an active task run. Agent API keys, board sessions, and connection-only tokens are rejected.",
+      description: "Bionic-issued JWT bound to an active task run. Agent API keys, board sessions, and connection-only tokens are rejected.",
     },
   };
   document.security = AUTHENTICATED_SECURITY;
@@ -1739,7 +1739,7 @@ function applyDocumentFixups(document: any): any {
         operation.security = BOARD_SECURITY;
       }
 
-      operation["x-paperclip-authorization"] =
+      operation["x-bionic-authorization"] =
         authLevel === "instance_admin"
           ? { actor: "board", instanceAdmin: true }
           : authLevel === "board"
@@ -1839,7 +1839,7 @@ registry.registerPath({
         cloud: z
           .object({
             managed: z.literal(true),
-            managedBy: z.literal("paperclip-cloud"),
+            managedBy: z.literal("bionic-cloud"),
             stackSlug: z.string().nullable(),
             stackDisplayName: z.string().optional(),
             cloudBaseUrl: z.string().nullable(),
@@ -2192,7 +2192,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "Create a chat endpoint",
   description:
-    "Creates one provider bot endpoint bound permanently to one Paperclip agent. Provider setup and verification happen in later calls.",
+    "Creates one provider bot endpoint bound permanently to one Bionic agent. Provider setup and verification happen in later calls.",
   request: {
     params: z.object({ companyId: z.string().uuid() }),
     body: jsonBody(createChatEndpointSchema),
@@ -2263,8 +2263,8 @@ const githubBotOperations: Array<{
     response: chatEndpointResponseSchema,
   },
   {
-    method: "get", suffix: "reviews", summary: "List review evidence attached to Paperclip tasks",
-    description: "Returns up to 100 newest review records for this endpoint. Each review references ordinary Paperclip tasks and runs; it is not an independent scheduler.",
+    method: "get", suffix: "reviews", summary: "List review evidence attached to Bionic tasks",
+    description: "Returns up to 100 newest review records for this endpoint. Each review references ordinary Bionic tasks and runs; it is not an independent scheduler.",
     response: z.array(z.object({
       id: z.string().uuid(), companyId: z.string().uuid(), endpointId: z.string().uuid(),
       issueId: z.string().uuid(), runId: z.string().uuid().nullable(), repositoryId: z.string(),
@@ -2306,7 +2306,7 @@ const githubBotOperations: Array<{
   },
   {
     method: "post", suffix: "repositories/refresh", summary: "Refresh repositories available to the bot installation",
-    description: "Fetches current installation access from GitHub and reconciles resources while preserving Paperclip repository enablement. Return parameters alone never prove installation access.",
+    description: "Fetches current installation access from GitHub and reconciles resources while preserving Bionic repository enablement. Return parameters alone never prove installation access.",
     response: z.array(chatEndpointResourceResponseSchema),
   },
 ];
@@ -2354,7 +2354,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "Configure or change chat endpoint lifecycle state",
   description:
-    "Runs a setup or lifecycle action. `configure` and `reconnect` accept provider credentials (Slack: `botToken`, `signingSecret`; GitHub: `appId`, `privateKey` after Paperclip generates the webhook secret; Discord: `applicationId`, `guildId`, `botToken`; Microsoft Teams: `clientId`, `tenantId`, `clientSecret`; Telegram: `botToken`; iMessage Photon: `projectSecret`, with nonsecret `photon.projectId` and `photon.lineId` configuration). Credentials are stored as Paperclip secret references and are never returned. Other actions do not require credentials.",
+    "Runs a setup or lifecycle action. `configure` and `reconnect` accept provider credentials (Slack: `botToken`, `signingSecret`; GitHub: `appId`, `privateKey` after Bionic generates the webhook secret; Discord: `applicationId`, `guildId`, `botToken`; Microsoft Teams: `clientId`, `tenantId`, `clientSecret`; Telegram: `botToken`; iMessage Photon: `projectSecret`, with nonsecret `photon.projectId` and `photon.lineId` configuration). Credentials are stored as Bionic secret references and are never returned. Other actions do not require credentials.",
   request: {
     params: z.object({ endpointId: z.string().uuid() }),
     body: jsonBody(configureChatEndpointSchema),
@@ -2453,7 +2453,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "Complete a chat endpoint setup test",
   description:
-    "Activates a verifying endpoint only after Paperclip has received a real provider event since the server-issued setup test boundary. iMessage Photon additionally requires a fresh linked sender's task and a successful outbound agent publication.",
+    "Activates a verifying endpoint only after Bionic has received a real provider event since the server-issued setup test boundary. iMessage Photon additionally requires a fresh linked sender's task and a successful outbound agent publication.",
   request: { params: z.object({ endpointId: z.string().uuid() }) },
   responses: {
     200: r.ok(chatEndpointResponseSchema),
@@ -2508,7 +2508,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "List external identities seen by a chat endpoint",
   description:
-    "Lists provider identities and their explicit Paperclip identity-link status for this endpoint's provider account.",
+    "Lists provider identities and their explicit Bionic identity-link status for this endpoint's provider account.",
   request: { params: z.object({ endpointId: z.string().uuid() }) },
   responses: {
     200: r.ok(z.array(chatPrincipalLinkResponseSchema)),
@@ -2524,7 +2524,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "Create an external identity-link intent",
   description:
-    "Creates a short-lived confirmation URL for a human external identity belonging to this endpoint. The signed-in Paperclip user must confirm the link separately.",
+    "Creates a short-lived confirmation URL for a human external identity belonging to this endpoint. The signed-in Bionic user must confirm the link separately.",
   request: {
     params: z.object({
       endpointId: z.string().uuid(),
@@ -2589,7 +2589,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "Confirm an external identity link",
   description:
-    "Links the token's external identity to the currently signed-in Paperclip user after rechecking active company membership and canonical-link conflicts.",
+    "Links the token's external identity to the currently signed-in Bionic user after rechecking active company membership and canonical-link conflicts.",
   request: { body: jsonBody(confirmChatIdentityLinkSchema) },
   responses: {
     200: r.ok(chatIdentityLinkConfirmationResponseSchema),
@@ -2607,7 +2607,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "List external conversations and bound tasks",
   description:
-    "Lists each durable provider conversation-to-Paperclip-task binding for the endpoint, including provider and task links and the latest publication state.",
+    "Lists each durable provider conversation-to-Bionic-task binding for the endpoint, including provider and task links and the latest publication state.",
   request: { params: z.object({ endpointId: z.string().uuid() }) },
   responses: {
     200: r.ok(z.array(chatConversationResponseSchema)),
@@ -2709,7 +2709,7 @@ registry.registerPath({
   tags: ["chat-channels"],
   summary: "Resolve an unconfirmed provider action",
   description:
-    "After checking the provider, an operator may mark an ambiguous durable provider reply delivered, retry it while accepting duplicate risk, or cancel it. Slack slash-command task starts support explicit retry or cancel only. Paperclip never replays an ambiguous provider action automatically, and every resolution is audited.",
+    "After checking the provider, an operator may mark an ambiguous durable provider reply delivered, retry it while accepting duplicate risk, or cancel it. Slack slash-command task starts support explicit retry or cancel only. Bionic never replays an ambiguous provider action automatically, and every resolution is audited.",
   request: {
     params: z.object({
       endpointId: z.string().uuid(),
@@ -2732,9 +2732,9 @@ registry.registerPath({
   method: "post",
   path: "/api/chat-endpoints/{endpointId}/conversations/{conversationId}/publications",
   tags: ["chat-channels"],
-  summary: "Publish a Paperclip task comment to an external conversation",
+  summary: "Publish a Bionic task comment to an external conversation",
   description:
-    "Explicitly projects an eligible comment from the bound Paperclip task into the provider conversation. The endpoint, conversation, and comment must belong to the same binding. A Board send with an already-bound attachment returns 409 with code chat_board_send_attachments_already_bound and request-scoped details (endpointId, conversationId, idempotencyKey, attachmentIds). This durable rejection queues no publication and is replayed for the same key even if the file later becomes unbound. Correcting it requires an explicit new send identity. Other errors do not establish non-delivery.",
+    "Explicitly projects an eligible comment from the bound Bionic task into the provider conversation. The endpoint, conversation, and comment must belong to the same binding. A Board send with an already-bound attachment returns 409 with code chat_board_send_attachments_already_bound and request-scoped details (endpointId, conversationId, idempotencyKey, attachmentIds). This durable rejection queues no publication and is replayed for the same key even if the file later becomes unbound. Correcting it requires an explicit new send identity. Other errors do not establish non-delivery.",
   request: {
     params: z.object({
       endpointId: z.string().uuid(),
@@ -3676,7 +3676,7 @@ registry.registerPath({
   tags: ["agents"],
   summary: "Wake up an agent",
   description:
-    "Board failed-run retries supply failedRunId with reason retry_failed_run. Paperclip derives the exact request and current authorization; a chat retry may return a durable queued/deferred receipt before a run exists. Caller task/comment markers and fresh-session overrides do not authorize replay.",
+    "Board failed-run retries supply failedRunId with reason retry_failed_run. Bionic derives the exact request and current authorization; a chat retry may return a durable queued/deferred receipt before a run exists. Caller task/comment markers and fresh-session overrides do not authorize replay.",
   request: {
     params: z.object({ id: z.string() }),
     body: jsonBody(wakeAgentSchema),
@@ -7063,7 +7063,7 @@ registry.registerPath({
   method: "post",
   path: "/api/heartbeat-runs/{runId}/runtime-requests/{requestId}/resolve",
   tags: ["runs"],
-  summary: "Resolve a pending Paperclip runner runtime request",
+  summary: "Resolve a pending Bionic runner runtime request",
   request: {
     params: z.object({ runId: heartbeatRunIdParamSchema, requestId: z.string() }),
     body: jsonBody(
@@ -7614,7 +7614,7 @@ registry.registerPath({
   method: "post",
   path: "/api/companies/{companyId}/onboarding-seed",
   tags: ["companies"],
-  summary: "Apply the onboarding seed Paperclip Cloud collected at signup",
+  summary: "Apply the onboarding seed Bionic Cloud collected at signup",
   request: { params: z.object({ companyId: z.string() }) },
   responses: { 200: r.ok(), 401: r.unauthorized, 422: r.unprocessable },
 });
@@ -9118,8 +9118,8 @@ registry.registerPath({
     "JSON `meta` field, or a bare `application/zip` body with the `meta` JSON in the `meta` " +
     "query parameter); the zip is unzipped server-side into the same import bundle. " +
     "Callers can opt into asynchronous processing: trusted Cloud tenants set the " +
-    "`x-paperclip-cloud-async-import: 1` header (browsers cannot — the Cloud harness proxy " +
-    "strips inbound `x-paperclip-cloud-*` headers), while board sessions use the proxy-safe " +
+    "`x-bionic-cloud-async-import: 1` header (browsers cannot — the Cloud harness proxy " +
+    "strips inbound `x-bionic-cloud-*` headers), while board sessions use the proxy-safe " +
     "`?async=1` query parameter. Either way the server responds 202 with a job id and status " +
     "URL instead of holding the connection open for the whole import. While a board actor " +
     "already has an async job running, a resubmit returns 409 carrying the running job's id " +
@@ -10795,28 +10795,28 @@ registerCurrentRoute({
   method: "get",
   path: "/api/tools/oauth/cloud-connector/callback",
   tags: ["tool-access"],
-  summary: "Handle a brokered Paperclip Cloud OAuth callback",
+  summary: "Handle a brokered Bionic Cloud OAuth callback",
 });
 
 registerCurrentRoute({
   method: "get",
-  path: "/api/tools/oauth/paperclip-id/callback",
+  path: "/api/tools/oauth/bionic-id/callback",
   tags: ["tool-access"],
-  summary: "Handle a legacy brokered Paperclip ID OAuth callback",
+  summary: "Handle a legacy brokered Bionic ID OAuth callback",
 });
 
 registerCurrentRoute({
   method: "get",
   path: "/api/tools/oauth/cloud-connector/enrollment",
   tags: ["tool-access"],
-  summary: "Get Paperclip Cloud connector enrollment status",
+  summary: "Get Bionic Cloud connector enrollment status",
 });
 
 registerCurrentRoute({
   method: "post",
   path: "/api/tools/oauth/cloud-connector/enrollment",
   tags: ["tool-access"],
-  summary: "Start Paperclip Cloud connector enrollment",
+  summary: "Start Bionic Cloud connector enrollment",
   body: z
     .object({ companyId: z.string().min(1), label: z.string().optional() })
     .strict(),
@@ -10833,7 +10833,7 @@ registerCurrentRoute({
   method: "get",
   path: "/api/tools/oauth/cloud-connector/enrollment-callback",
   tags: ["tool-access"],
-  summary: "Complete Paperclip Cloud connector enrollment",
+  summary: "Complete Bionic Cloud connector enrollment",
   query: z
     .object({
       enrollment_id: z.string().min(1),
@@ -11498,9 +11498,9 @@ export function buildOpenApiDocument(): any {
   return applyDocumentFixups({
     openapi: "3.0.0",
     info: {
-      title: "Paperclip API",
+      title: "Bionic API",
       version: "1.0.0",
-      description: "REST API for the Paperclip AI agent management platform",
+      description: "REST API for the Bionic AI agent management platform",
     },
     servers: [{ url: "/" }],
     components: registry.buildComponents(),

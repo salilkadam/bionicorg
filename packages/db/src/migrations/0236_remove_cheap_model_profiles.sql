@@ -27,7 +27,7 @@ END $$;--> statement-breakpoint
 
 DROP INDEX IF EXISTS "agents_remove_model_profiles_idx";--> statement-breakpoint
 
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: This temporary partial index covers only revision snapshots with the retired JSON key and is dropped after the bounded cleanup.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: This temporary partial index covers only revision snapshots with the retired JSON key and is dropped after the bounded cleanup.
 CREATE INDEX IF NOT EXISTS "agent_config_revisions_remove_model_profiles_idx"
 	ON "agent_config_revisions" USING btree ("id")
 	WHERE ("before_config" #> '{runtimeConfig}') ? 'modelProfiles'
@@ -75,7 +75,7 @@ END $$;--> statement-breakpoint
 
 DROP INDEX IF EXISTS "agent_config_revisions_remove_model_profiles_idx";--> statement-breakpoint
 
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: This temporary partial index covers only rows with the retired JSON key and is dropped after the bounded cleanup.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: This temporary partial index covers only rows with the retired JSON key and is dropped after the bounded cleanup.
 CREATE INDEX IF NOT EXISTS "issues_remove_model_profile_idx"
 	ON "issues" USING btree ("id")
 	WHERE "assignee_adapter_overrides" ? 'modelProfile';--> statement-breakpoint

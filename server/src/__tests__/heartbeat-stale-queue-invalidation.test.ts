@@ -16,8 +16,8 @@ import {
   issueDocuments,
   issueThreadInteractions,
   issues,
-} from "@paperclipai/db";
-import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@bionicai/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -154,10 +154,10 @@ describeEmbeddedPostgres("heartbeat stale queued-run invalidation", () => {
     mockAdapterExecute.mock.calls.filter(([context]) => context?.runId === runId).length;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-heartbeat-stale-queue-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-heartbeat-stale-queue-");
     db = createDb(tempDb.connectionString);
     heartbeat = heartbeatService(db, {
-      runtimeEnv: { ...process.env, PAPERCLIP_IN_WORKTREE: "false" },
+      runtimeEnv: { ...process.env, BIONIC_IN_WORKTREE: "false" },
       beforeResolvedInteractionContinuationDispatchCheck: async (input) => {
         await beforeContinuationDispatchCheck?.(input);
       },
@@ -209,7 +209,7 @@ describeEmbeddedPostgres("heartbeat stale queued-run invalidation", () => {
     const agentId = randomUUID();
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       defaultResponsibleUserId: "responsible-user",
       requireBoardApprovalForNewAgents: false,
@@ -1570,7 +1570,7 @@ describeEmbeddedPostgres("heartbeat stale queued-run invalidation", () => {
       reason: "issue_execution_deferred",
       payload: {
         issueId,
-        _paperclipWakeContext: {
+        _bionicWakeContext: {
           issueId,
           wakeReason: "issue_mention",
         },

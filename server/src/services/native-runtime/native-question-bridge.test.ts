@@ -18,8 +18,8 @@ import {
   issueThreadInteractions,
   issues,
   nativeRunFinalizations,
-} from "@paperclipai/db";
-import type { PrpEvent } from "@paperclipai/paperclip-runner";
+} from "@bionicai/db";
+import type { PrpEvent } from "@bionicai/bionic-runner";
 
 import {
   getEmbeddedPostgresTestSupport,
@@ -44,8 +44,8 @@ import {
 } from "../issues.js";
 import { questionResponseDeliveryService } from "../question-response-delivery.js";
 import { heartbeatService } from "../heartbeat.js";
-import { DurablePrpControlPlane } from "../../vendor/paperclip-runner/index.js";
-import { PaperclipControlPlanePort } from "./paperclip-control-plane-port.js";
+import { DurablePrpControlPlane } from "../../vendor/bionic-runner/index.js";
+import { PaperclipControlPlanePort } from "./bionic-control-plane-port.js";
 import { readPendingNativeRuntimeRequest } from "./runtime-request-resolution-authority.js";
 import {
   queueRunnerPrpRuntimeRequestResolution,
@@ -74,7 +74,7 @@ describeEmbeddedPostgres("native question bridge", () => {
   let runnerInstanceId: string;
 
   beforeAll(async () => {
-    temporary = await startEmbeddedPostgresTestDatabase("paperclip-native-question-");
+    temporary = await startEmbeddedPostgresTestDatabase("bionic-native-question-");
     db = createDb(temporary.connectionString);
     heartbeat = heartbeatService(db);
   }, 20_000);
@@ -123,7 +123,7 @@ describeEmbeddedPostgres("native question bridge", () => {
       id: agentId,
       companyId,
       name: "Native Codex",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       status: "running",
       adapterConfig: { provider: "codex" },
       runtimeConfig: {},
@@ -159,7 +159,7 @@ describeEmbeddedPostgres("native question bridge", () => {
 
   function runtimeRequestEvent(): PrpEvent {
     return {
-      schema: "paperclip.prp.event.v1",
+      schema: "bionic.prp.event.v1",
       sourceEventId: "runtime-question-1",
       sourceSeq: 1,
       sourceInstanceId: runnerInstanceId,
@@ -174,14 +174,14 @@ describeEmbeddedPostgres("native question bridge", () => {
       emittedAt: "2026-08-25T18:00:00.000Z",
       payload: {
         request: {
-          schema: "paperclip.runtime_request.v2",
+          schema: "bionic.runtime_request.v2",
           requestKind: "runtime",
           requestId: "request-1",
           type: "input",
           status: "pending",
           prompt: "Choose a deployment color",
           input: {
-            schema: "paperclip.question_set.v1",
+            schema: "bionic.question_set.v1",
             title: "Deployment",
             questions: [{
               id: "color",
@@ -216,7 +216,7 @@ describeEmbeddedPostgres("native question bridge", () => {
 
   function permissionRequestEvent(): PrpEvent {
     return { ...runtimeRequestEvent(), payload: { request: {
-      schema: "paperclip.runtime_request.v2", requestKind: "permission_approval",
+      schema: "bionic.runtime_request.v2", requestKind: "permission_approval",
       requestId: "permission-1", turnId: "turn-1", itemId: "item-1",
       type: "permission", status: "pending", prompt: "Allow editing src/example.ts?",
       choices: [{ key: "accept", label: "Allow once" }, { key: "decline", label: "Deny" }],
@@ -320,7 +320,7 @@ describeEmbeddedPostgres("native question bridge", () => {
       if (answered.kind !== "ask_user_questions") throw new Error("wrong question kind");
       expect(await deliverNativeQuestionResponse(db, answered)).toBe("queued");
       expect(resolve).toHaveBeenCalledWith(expect.objectContaining({ runId, requestId: "request-1", turnId: "turn-1",
-        resolution: { action: "submit", response: { schema: "paperclip.question_response.v1", answers: { color: { selectedOptionIds: ["green"] } } } },
+        resolution: { action: "submit", response: { schema: "bionic.question_response.v1", answers: { color: { selectedOptionIds: ["green"] } } } },
       }));
       await db.update(heartbeatRuns).set({ status: "cancelled" }).where(eq(heartbeatRuns.id, runId));
       await expect(resolve.mock.calls[0]![0].authorizeBeforeDispatch()).rejects.toThrow("native_question_not_pending");
@@ -349,7 +349,7 @@ describeEmbeddedPostgres("native question bridge", () => {
       payload: {
         runtimeRequestId: "request-1",
         supersedeOnUserComment: false,
-        questionSet: { schema: "paperclip.question_set.v1" },
+        questionSet: { schema: "bionic.question_set.v1" },
         questions: [{
           id: "color",
           selectionMode: "single",
@@ -384,7 +384,7 @@ describeEmbeddedPostgres("native question bridge", () => {
       {
         requestId: "request-1",
         response: {
-          schema: "paperclip.question_response.v1",
+          schema: "bionic.question_response.v1",
           answers: { color: { selectedOptionIds: ["blue"] } },
         },
       },
@@ -635,7 +635,7 @@ describeEmbeddedPostgres("native question bridge", () => {
     const answer = {
       answers: [{
         questionId: "color",
-        optionIds: ["paperclip_custom_answer"],
+        optionIds: ["bionic_custom_answer"],
         otherText: "purple",
       }],
     };
@@ -660,7 +660,7 @@ describeEmbeddedPostgres("native question bridge", () => {
       {
         requestId: "request-1",
         response: {
-          schema: "paperclip.question_response.v1",
+          schema: "bionic.question_response.v1",
           answers: { color: { selectedOptionIds: [], customText: "purple" } },
         },
       },

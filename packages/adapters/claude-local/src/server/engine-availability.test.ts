@@ -36,7 +36,7 @@ describe("claude engine availability", () => {
   it("keeps an unavailable ACP command as a failure, not a CLI selection", async () => {
     Object.defineProperty(process, "version", { value: "v24.11.0" });
     const result = await resolveClaudeExecutionEngineForRun({
-      config: { agentCommand: "/nonexistent/paperclip-test/acp", command: "/nonexistent/paperclip-test/acp" },
+      config: { agentCommand: "/nonexistent/bionic-test/acp", command: "/nonexistent/bionic-test/acp" },
     });
     expect(result.engine).toBe("acp");
     expect(result.unavailableReason).toContain("not available");

@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync, symlinkSync, realpathSyn
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import type { PaperclipPluginManifestV1 } from "@paperclipai/shared";
+import type { PaperclipPluginManifestV1 } from "@bionicai/shared";
 import { distributionBundleDigest, distributionPluginActivationGuard, readDistributionPluginCatalog } from "../services/distribution-plugin-catalog.js";
 import { BUNDLED_PLUGIN_CATALOG, resolveBundledPluginInstalls } from "../services/bundled-plugins.js";
 
@@ -12,7 +12,7 @@ function fixture() {
   const root = realpathSync(mkdtempSync(path.join(os.tmpdir(), "distribution-plugin-"))); roots.push(root);
   const localPath = path.join(root, "distribution", "acme.widget");
   mkdirSync(path.join(localPath, "dist", "ui"), { recursive: true });
-  writeFileSync(path.join(localPath, "package.json"), JSON.stringify({ name: "@acme/plugin-widget", version: "1.0.0", paperclipPlugin: { manifest: "./dist/manifest.js", worker: "./dist/worker.js", ui: "./dist/ui/" } }));
+  writeFileSync(path.join(localPath, "package.json"), JSON.stringify({ name: "@acme/plugin-widget", version: "1.0.0", bionicPlugin: { manifest: "./dist/manifest.js", worker: "./dist/worker.js", ui: "./dist/ui/" } }));
   writeFileSync(path.join(localPath, "dist", "manifest.js"), "export default {};");
   writeFileSync(path.join(localPath, "dist", "worker.js"), "export default {};");
   const entry = { key: "acme.widget", pluginKey: "acme.widget", version: "1.0.0", directory: "acme.widget", digest: distributionBundleDigest(localPath) };
@@ -36,7 +36,7 @@ describe("image-owned plugin catalogs", () => {
   });
   it("rejects duplicate keys, plugin identities and built-in replacement", () => {
     const { root, entry, save } = fixture();
-    for (const plugins of [[entry, entry], [{ ...entry, key: "daytona" }], [{ ...entry, pluginKey: "paperclip.daytona-sandbox-provider" }]]) {
+    for (const plugins of [[entry, entry], [{ ...entry, key: "daytona" }], [{ ...entry, pluginKey: "bionic.daytona-sandbox-provider" }]]) {
       save(plugins);
       expect(() => readDistributionPluginCatalog(root, BUNDLED_PLUGIN_CATALOG)).toThrow(/Duplicate or built-in/);
     }
@@ -94,7 +94,7 @@ describe("image-owned plugin catalogs", () => {
 
   it("accepts worker-only bundles but rejects a UI path absent from verified metadata", () => {
     const { root, localPath, entry, save } = fixture();
-    writeFileSync(path.join(localPath, "package.json"), JSON.stringify({ version: "1.0.0", paperclipPlugin: { manifest: "./dist/manifest.js", worker: "./dist/worker.js" } }));
+    writeFileSync(path.join(localPath, "package.json"), JSON.stringify({ version: "1.0.0", bionicPlugin: { manifest: "./dist/manifest.js", worker: "./dist/worker.js" } }));
     save([{ ...entry, digest: distributionBundleDigest(localPath) }]);
     const guard = distributionPluginActivationGuard(root, readDistributionPluginCatalog(root, BUNDLED_PLUGIN_CATALOG), null);
     const manifest = { id: "acme.widget", version: "1.0.0", capabilities: [], entrypoints: { worker: "./dist/worker.js" } } as unknown as PaperclipPluginManifestV1;

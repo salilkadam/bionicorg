@@ -11,7 +11,7 @@ import {
 } from "./index.js";
 import { createServerAdapter as createGatewayServerAdapterFromSubpath } from "./gateway/index.js";
 
-test("root package export exposes Paperclip external adapter entrypoint", () => {
+test("root package export exposes Bionic external adapter entrypoint", () => {
   const adapter = createServerAdapter();
 
   expect(adapter.type).toBe("hermes_local");
@@ -53,7 +53,7 @@ test("gateway subpath export exposes the Hermes Gateway adapter entrypoint", () 
   expect(typeof adapter.getConfigSchema).toBe("function");
 });
 
-test("Hermes adapter exposes bundled Paperclip task bridge skill", async () => {
+test("Hermes adapter exposes bundled Bionic task bridge skill", async () => {
   const adapter = createServerAdapter();
   const snapshot = await adapter.listSkills?.({
     adapterType: "hermes_local",
@@ -62,15 +62,15 @@ test("Hermes adapter exposes bundled Paperclip task bridge skill", async () => {
     config: {},
   });
 
-  expect(snapshot?.entries.some((entry) => entry.runtimeName === "paperclip-task-bridge")).toBe(true);
+  expect(snapshot?.entries.some((entry) => entry.runtimeName === "bionic-task-bridge")).toBe(true);
 });
 
-test("Hermes keeps the operational Paperclip skill linked after an empty replacement", async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-hermes-core-skill-"));
+test("Hermes keeps the operational Bionic skill linked after an empty replacement", async () => {
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-hermes-core-skill-"));
   try {
-    const source = path.join(home, "runtime-skills", "paperclip");
+    const source = path.join(home, "runtime-skills", "bionic");
     await fs.mkdir(source, { recursive: true });
-    await fs.writeFile(path.join(source, "SKILL.md"), "# Paperclip\n", "utf8");
+    await fs.writeFile(path.join(source, "SKILL.md"), "# Bionic\n", "utf8");
     const adapter = createServerAdapter();
     const snapshot = await adapter.syncSkills?.({
       adapterType: "hermes_local",
@@ -78,29 +78,29 @@ test("Hermes keeps the operational Paperclip skill linked after an empty replace
       companyId: "22222222-2222-4222-8222-222222222222",
       config: {
         env: { HOME: home },
-        paperclipRuntimeSkills: [{
-          key: "paperclipai/paperclip/paperclip",
-          runtimeName: "paperclip",
+        bionicRuntimeSkills: [{
+          key: "bionicai/bionic/bionic",
+          runtimeName: "bionic",
           source,
         }],
-        paperclipSkillSync: { desiredSkills: [] },
+        bionicSkillSync: { desiredSkills: [] },
       },
     }, []);
 
-    expect(snapshot?.desiredSkills).toContain("paperclipai/paperclip/paperclip");
-    expect((await fs.lstat(path.join(home, ".hermes", "skills", "paperclip"))).isSymbolicLink()).toBe(true);
+    expect(snapshot?.desiredSkills).toContain("bionicai/bionic/bionic");
+    expect((await fs.lstat(path.join(home, ".hermes", "skills", "bionic"))).isSymbolicLink()).toBe(true);
   } finally {
     await fs.rm(home, { recursive: true, force: true });
   }
 });
 
 test("Hermes rejects a conflicting operational skill target", async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-hermes-core-conflict-"));
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-hermes-core-conflict-"));
   try {
-    const source = path.join(home, "runtime-skills", "paperclip");
-    const target = path.join(home, ".hermes", "skills", "paperclip");
+    const source = path.join(home, "runtime-skills", "bionic");
+    const target = path.join(home, ".hermes", "skills", "bionic");
     await fs.mkdir(source, { recursive: true });
-    await fs.writeFile(path.join(source, "SKILL.md"), "# Paperclip\n", "utf8");
+    await fs.writeFile(path.join(source, "SKILL.md"), "# Bionic\n", "utf8");
     await fs.mkdir(target, { recursive: true });
     await fs.writeFile(path.join(target, "SKILL.md"), "# Conflicting skill\n", "utf8");
     const adapter = createServerAdapter();
@@ -111,9 +111,9 @@ test("Hermes rejects a conflicting operational skill target", async () => {
       companyId: "22222222-2222-4222-8222-222222222222",
       config: {
         env: { HOME: home },
-        paperclipRuntimeSkills: [{
-          key: "paperclipai/paperclip/paperclip",
-          runtimeName: "paperclip",
+        bionicRuntimeSkills: [{
+          key: "bionicai/bionic/bionic",
+          runtimeName: "bionic",
           source,
         }],
       },
@@ -124,13 +124,13 @@ test("Hermes rejects a conflicting operational skill target", async () => {
 });
 
 test("Hermes rejects a live symlink owned by another operational skill", async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-hermes-core-link-conflict-"));
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-hermes-core-link-conflict-"));
   try {
-    const source = path.join(home, "runtime-skills", "paperclip");
-    const conflictingSource = path.join(home, "external-skills", "paperclip");
-    const target = path.join(home, ".hermes", "skills", "paperclip");
+    const source = path.join(home, "runtime-skills", "bionic");
+    const conflictingSource = path.join(home, "external-skills", "bionic");
+    const target = path.join(home, ".hermes", "skills", "bionic");
     await fs.mkdir(source, { recursive: true });
-    await fs.writeFile(path.join(source, "SKILL.md"), "# Paperclip\n", "utf8");
+    await fs.writeFile(path.join(source, "SKILL.md"), "# Bionic\n", "utf8");
     await fs.mkdir(conflictingSource, { recursive: true });
     await fs.writeFile(path.join(conflictingSource, "SKILL.md"), "# External skill\n", "utf8");
     await fs.mkdir(path.dirname(target), { recursive: true });
@@ -143,9 +143,9 @@ test("Hermes rejects a live symlink owned by another operational skill", async (
       companyId: "22222222-2222-4222-8222-222222222222",
       config: {
         env: { HOME: home },
-        paperclipRuntimeSkills: [{
-          key: "paperclipai/paperclip/paperclip",
-          runtimeName: "paperclip",
+        bionicRuntimeSkills: [{
+          key: "bionicai/bionic/bionic",
+          runtimeName: "bionic",
           source,
         }],
       },

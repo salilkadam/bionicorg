@@ -12,9 +12,9 @@ import { materializePublishManifest, prepareBundledPackage } from './prepare-bun
 import { GROK_PUBLIC_INSTALL_IMAGE, GROK_PUBLIC_INSTALL_LIFECYCLE, grokConsumerDockerArgs } from './grok-public-install-sandbox.mjs';
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 assert.equal(process.platform, 'linux', 'Run this verification on disposable EC2 Linux, not a developer host');
-const root = mkdtempSync(join(tmpdir(), 'paperclip-grok-public-install-'));
+const root = mkdtempSync(join(tmpdir(), 'bionic-grok-public-install-'));
 const prerequisite = join(root, 'native/grok');
-const env = { ...process.env, NODE_PATH: '', PAPERCLIP_RELEASE_REUSE_UI_DIST: '1', npm_config_ignore_scripts: 'false', npm_config_audit: 'false', npm_config_fund: 'false' };
+const env = { ...process.env, NODE_PATH: '', BIONIC_RELEASE_REUSE_UI_DIST: '1', npm_config_ignore_scripts: 'false', npm_config_audit: 'false', npm_config_fund: 'false' };
 const run = (cmd, args, cwd = root) => execFileSync(cmd, args, { cwd, env, stdio: 'pipe', maxBuffer: 32 * 1024 * 1024 });
 const sourceRevision = run('git', ['rev-parse', 'HEAD'], repo).toString().trim();
 const releaseVersion = `0.0.0-grok-verify.${sourceRevision.slice(0, 12)}`;
@@ -29,7 +29,7 @@ try {
       if (spec.startsWith('workspace:')) visit(dep);
     }
   }
-  visit('@paperclipai/server');
+  visit('@bionicai/server');
   // Match release.sh's unified versioning in temporary staging directories.
   // Source manifests remain untouched, including independently versioned SDKs.
   run(process.execPath, [join(repo, 'scripts/build-standalone-public-packages.mjs')], repo);
@@ -69,11 +69,11 @@ try {
   // Prove lifecycle execution is real even if npm changes its script defaults.
   const sentinelSource = join(root, 'lifecycle-sentinel'); mkdirSync(sentinelSource);
   writeFileSync(join(sentinelSource, 'package.json'), JSON.stringify({
-    name: 'paperclip-verification-lifecycle-sentinel', version: '1.0.0', private: true,
+    name: 'bionic-verification-lifecycle-sentinel', version: '1.0.0', private: true,
     scripts: { postinstall: 'node -e "require(\'node:fs\').writeFileSync(\'lifecycle-ran\', \'ok\')"' },
   }));
   run('npm', ['pack', '--ignore-scripts', '--pack-destination', assets], sentinelSource);
-  const sentinel = join(consumer, 'node_modules/paperclip-verification-lifecycle-sentinel/lifecycle-ran');
+  const sentinel = join(consumer, 'node_modules/bionic-verification-lifecycle-sentinel/lifecycle-ran');
   const consumerUid = process.getuid();
   const isolated = (command, options = {}) => run('docker', grokConsumerDockerArgs({ assets, consumer, cache, uid: consumerUid, gid: process.getgid(), command, ...options }));
   // npm resolution is intentionally the public consumer graph, not the pnpm
@@ -92,17 +92,17 @@ try {
     assert.equal(installedManifest.version, releaseVersion, `Installed release version for ${name}`);
   }
   assert.equal(existsSync(prerequisite), false, 'npm must not provision Grok');
-  const server = join(consumer, 'node_modules/@paperclipai/server');
-  const installed = join(server, 'dist/vendor/paperclip-runner');
+  const server = join(consumer, 'node_modules/@bionicai/server');
+  const installed = join(server, 'dist/vendor/bionic-runner');
   assert.ok(existsSync(join(installed, 'providers/grok/launcher.cjs')));
-  assert.equal(existsSync(join(consumer, 'node_modules/@paperclipai/grok-acp')), false);
+  assert.equal(existsSync(join(consumer, 'node_modules/@bionicai/grok-acp')), false);
   assert.equal(existsSync(join(installed, 'providers/grok/bin')), false);
   // Use real installed compiled code and its actual npm dependency graph. A
   // separate process prevents module resolution from borrowing this checkout.
   const probe = `
     import assert from 'node:assert/strict';
-    import { verifyQualifiedAcpxInstallation } from '/consumer/node_modules/@paperclipai/server/dist/vendor/paperclip-runner/drivers/acpx/installation-integrity.js';
-    import { resolveQualifiedAcpxProfile } from '/consumer/node_modules/@paperclipai/server/dist/vendor/paperclip-runner/drivers/acpx/qualified-profiles.js';
+    import { verifyQualifiedAcpxInstallation } from '/consumer/node_modules/@bionicai/server/dist/vendor/bionic-runner/drivers/acpx/installation-integrity.js';
+    import { resolveQualifiedAcpxProfile } from '/consumer/node_modules/@bionicai/server/dist/vendor/bionic-runner/drivers/acpx/qualified-profiles.js';
     const profile = resolveQualifiedAcpxProfile('grok', 'grok-4.7');
     const inspect = () => verifyQualifiedAcpxInstallation(profile, () => { throw new Error('Grok must not resolve an npm package'); });
     if (process.argv[2] === 'missing') await assert.rejects(inspect, /prerequisite missing/);
@@ -112,9 +112,9 @@ try {
   isolated(['node', '/packages/probe.mjs', 'missing']);
   // Provision as the unprivileged verification user, never into the host's /opt.
   // Only the positive probe sees this file at the canonical sandbox path.
-  run(process.execPath, [join(repo, 'packages/paperclip-runner/scripts/provision-grok.mjs'), prerequisite]);
+  run(process.execPath, [join(repo, 'packages/bionic-runner/scripts/provision-grok.mjs'), prerequisite]);
   isolated(['node', '/packages/probe.mjs', 'present'], { prerequisite });
-  console.log(JSON.stringify({ schema: 'paperclip.grok.public-npm-install.v1', sourceRevision, releaseVersion, lifecycleScriptsEnabled: true, lifecycleSentinelVerified: true, lifecycleNetwork: 'none', consumerImage: GROK_PUBLIC_INSTALL_IMAGE, consumerUid, consumerLockPreserved: true, cleanNpmInstall: true, packageCount: needed.size, builtinLauncherPresent: true, separateGrokPackage: false, npmProvisionedBinary: false, missingPrerequisiteRejected: true, provisionedBinaryVerified: true, commandLeaseVerified: true, providerCalls: 0 }));
+  console.log(JSON.stringify({ schema: 'bionic.grok.public-npm-install.v1', sourceRevision, releaseVersion, lifecycleScriptsEnabled: true, lifecycleSentinelVerified: true, lifecycleNetwork: 'none', consumerImage: GROK_PUBLIC_INSTALL_IMAGE, consumerUid, consumerLockPreserved: true, cleanNpmInstall: true, packageCount: needed.size, builtinLauncherPresent: true, separateGrokPackage: false, npmProvisionedBinary: false, missingPrerequisiteRejected: true, provisionedBinaryVerified: true, commandLeaseVerified: true, providerCalls: 0 }));
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

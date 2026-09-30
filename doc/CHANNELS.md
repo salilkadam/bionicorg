@@ -1,15 +1,15 @@
 # Release Channels
 
-Paperclip ships on four channels. Pick the one that matches your appetite for
+Bionic ships on four channels. Pick the one that matches your appetite for
 freshness versus stability — switching is just a matter of which version you
 install.
 
 | Channel | What it is | Updates | npm | Docker |
 | --- | --- | --- | --- | --- |
-| `stable` | The recommended release | every week or two | `paperclipai@latest` | `ghcr.io/paperclipai/paperclip:latest` |
-| `beta` | Release candidates soaking before stable | when promoted | `paperclipai@beta` | `ghcr.io/paperclipai/paperclip:beta` |
-| `nightly` | Yesterday's merges, smoke-tested as a unit | once a night | `paperclipai@nightly` | `ghcr.io/paperclipai/paperclip:nightly` |
-| `canary` | Every merge to `master`, as it happens | many times a day | `paperclipai@canary` | `ghcr.io/paperclipai/paperclip:canary` |
+| `stable` | The recommended release | every week or two | `bionicai@latest` | `ghcr.io/bionicai/bionic:latest` |
+| `beta` | Release candidates soaking before stable | when promoted | `bionicai@beta` | `ghcr.io/bionicai/bionic:beta` |
+| `nightly` | Yesterday's merges, smoke-tested as a unit | once a night | `bionicai@nightly` | `ghcr.io/bionicai/bionic:nightly` |
+| `canary` | Every merge to `master`, as it happens | many times a day | `bionicai@canary` | `ghcr.io/bionicai/bionic:canary` |
 
 ## Choosing a channel
 
@@ -38,19 +38,19 @@ but it's available to anyone who wants the newest bits and accepts the risk.
 npm / npx:
 
 ```bash
-npx paperclipai@latest onboard    # stable
-npx paperclipai@beta onboard
-npx paperclipai@nightly onboard
-npx paperclipai@canary onboard
+npx bionicai@latest onboard    # stable
+npx bionicai@beta onboard
+npx bionicai@nightly onboard
+npx bionicai@canary onboard
 ```
 
 Docker:
 
 ```bash
-docker pull ghcr.io/paperclipai/paperclip:latest    # stable
-docker pull ghcr.io/paperclipai/paperclip:beta
-docker pull ghcr.io/paperclipai/paperclip:nightly
-docker pull ghcr.io/paperclipai/paperclip:canary
+docker pull ghcr.io/bionicai/bionic:latest    # stable
+docker pull ghcr.io/bionicai/bionic:beta
+docker pull ghcr.io/bionicai/bionic:nightly
+docker pull ghcr.io/bionicai/bionic:canary
 ```
 
 Every image is also published as `:sha-<short-sha>` for exact pinning, and
@@ -59,7 +59,7 @@ stable images additionally get `:YYYY.MDD.P` version tags.
 ## Seeing where you are
 
 ```bash
-npx paperclipai channels
+npx bionicai channels
 ```
 
 prints every channel with the version it currently resolves to, the install

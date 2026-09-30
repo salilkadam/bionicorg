@@ -128,7 +128,7 @@ const CLOUD_HEALTH = {
   status: "ok" as const,
   cloud: {
     managed: true as const,
-    managedBy: "paperclip-cloud" as const,
+    managedBy: "bionic-cloud" as const,
     stackSlug: "acme-labs",
     cloudBaseUrl: "https://cloud.example.test",
   },
@@ -372,8 +372,8 @@ describe("SidebarCompanyMenu", () => {
 
   it("hides the production-shell invite shortcut when the operator hides the invites surface", async () => {
     // The production shell (streamlined UI disabled) must honor
-    // PAPERCLIP_HIDDEN_SETTINGS like the streamlined menu — this is the knob
-    // Paperclip Cloud uses to drop the shortcut on its managed stacks.
+    // BIONIC_HIDDEN_SETTINGS like the streamlined menu — this is the knob
+    // Bionic Cloud uses to drop the shortcut on its managed stacks.
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     queryClient.setQueryData(queryKeys.health, { status: "ok", hiddenSettings: ["company.invites"] });
     const root = createRoot(container);
@@ -604,7 +604,7 @@ describe("SidebarCompanyMenu", () => {
     });
   });
 
-  describe("in Paperclip Cloud", () => {
+  describe("in Bionic Cloud", () => {
     it("closes the menu and enters the Cloud logout flow without local sign-out", async () => {
       const { root } = renderMenu({ cloud: true });
       await flushReact();

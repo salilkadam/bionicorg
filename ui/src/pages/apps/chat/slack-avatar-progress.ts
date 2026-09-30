@@ -2,7 +2,7 @@ import { useState } from "react";
 
 export type SlackAvatarProgress = "uploaded" | "skipped";
 function storageKey(companyId: string, endpointId: string) {
-  return `paperclip:slack-avatar:v1:${companyId}:${endpointId}`;
+  return `bionic:slack-avatar:v1:${companyId}:${endpointId}`;
 }
 function read(key: string): SlackAvatarProgress | null {
   try {

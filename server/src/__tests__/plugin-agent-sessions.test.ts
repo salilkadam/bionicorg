@@ -52,10 +52,10 @@ describe("plugin agent sessions", () => {
         id: sessionId,
         companyId,
         agentId,
-        taskKey: "plugin:paperclip.gateway:session:session-1",
+        taskKey: "plugin:bionic.gateway:session:session-1",
       }),
       "plugin-record-id",
-      "paperclip.gateway",
+      "bionic.gateway",
       createEventBusStub(),
       notifyWorker,
     );
@@ -74,14 +74,14 @@ describe("plugin agent sessions", () => {
       expect.objectContaining({
         payload: { prompt: "hello" },
         contextSnapshot: {
-          taskKey: "plugin:paperclip.gateway:session:session-1",
+          taskKey: "plugin:bionic.gateway:session:session-1",
           wakeReason: "gateway_chat_message",
           wakeSource: "automation",
           wakeTriggerDetail: "system",
-          paperclipAgentMessage: {
+          bionicAgentMessage: {
             text: "hello",
             source: "plugin_session",
-            pluginKey: "paperclip.gateway",
+            pluginKey: "bionic.gateway",
             sessionId,
           },
         },

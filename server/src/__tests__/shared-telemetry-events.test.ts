@@ -8,8 +8,8 @@ import {
   trackInteractionCreated,
   trackInteractionResolved,
   trackInstallCompleted,
-} from "@paperclipai/shared/telemetry";
-import type { EventDimensionsMap, TelemetryClient } from "@paperclipai/shared/telemetry";
+} from "@bionicai/shared/telemetry";
+import type { EventDimensionsMap, TelemetryClient } from "@bionicai/shared/telemetry";
 
 function createClient(): TelemetryClient {
   return {

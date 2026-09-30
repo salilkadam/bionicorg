@@ -145,8 +145,8 @@ const matcher: Rule = (value, at) => {
 };
 const fields = {
   schema: oneOf(
-    "paperclip.runner-e2e.result/v1",
-    "paperclip.runner-e2e.result/v2",
+    "bionic.runner-e2e.result/v1",
+    "bionic.runner-e2e.result/v2",
   ),
   executionId: string,
   suiteId: optional(string),

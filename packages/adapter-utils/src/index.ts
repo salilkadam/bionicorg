@@ -113,21 +113,21 @@ export type {
   LoginRunnerRaceResult,
 } from "./login-runner-lifecycle.js";
 export {
-  PAPERCLIP_RUNNER_IDLE_TIMEOUT_DEFAULT_MS,
-  PAPERCLIP_RUNNER_IDLE_TIMEOUT_MAX_MS,
-  PAPERCLIP_RUNNER_DEFAULT_MODELS,
-  PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES,
-  PAPERCLIP_RUNNER_ACPX_PROFILES,
+  BIONIC_RUNNER_IDLE_TIMEOUT_DEFAULT_MS,
+  BIONIC_RUNNER_IDLE_TIMEOUT_MAX_MS,
+  BIONIC_RUNNER_DEFAULT_MODELS,
+  BIONIC_RUNNER_PERMISSION_CAPABILITIES,
+  BIONIC_RUNNER_ACPX_PROFILES,
   isPaperclipRunnerProvider,
   resolvePaperclipRunnerIdleTimeoutMs,
   resolvePaperclipRunnerModel,
-  paperclipRunnerTransitionConfig,
+  bionicRunnerTransitionConfig,
   normalizeLegacyRunnerProvider,
   resolvePaperclipRunnerPermissionMode,
-} from "./paperclip-runner-permissions.js";
+} from "./bionic-runner-permissions.js";
 export {
-  PAPERCLIP_RUNNER_INGRESS_PORT,
-  PAPERCLIP_RUNNER_CONNECT_PATH_PREFIX,
+  BIONIC_RUNNER_INGRESS_PORT,
+  BIONIC_RUNNER_CONNECT_PATH_PREFIX,
   PaperclipRunnerTransportError,
   buildDirectRunnerConnectUrl,
   resolvePaperclipRunnerTransport,
@@ -145,7 +145,7 @@ export type {
   PaperclipRunnerPermissionMode,
   PaperclipRunnerPermissionOption,
   PaperclipRunnerProvider,
-} from "./paperclip-runner-permissions.js";
+} from "./bionic-runner-permissions.js";
 // Keep the root adapter-utils entry browser-safe because the UI imports it.
 // The sandbox callback bridge stays available via its dedicated subpath export.
 export type {

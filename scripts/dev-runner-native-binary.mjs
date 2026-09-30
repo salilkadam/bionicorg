@@ -38,7 +38,7 @@ function newestMtimeMs(target) {
   return newest;
 }
 
-export function paperclipRunnerBinaryNeedsBuild({
+export function bionicRunnerBinaryNeedsBuild({
   repoRoot,
   nativeRunnerRequired,
   configuredBinary,
@@ -47,8 +47,8 @@ export function paperclipRunnerBinaryNeedsBuild({
   if (!nativeRunnerRequired) return false;
   if (configuredBinary?.trim()) return false;
 
-  const executable = platform === "win32" ? "paperclip-runnerd.exe" : "paperclip-runnerd";
-  const packageRoot = path.join(repoRoot, "packages", "paperclip-runner");
+  const executable = platform === "win32" ? "bionic-runnerd.exe" : "bionic-runnerd";
+  const packageRoot = path.join(repoRoot, "packages", "bionic-runner");
   const stagedBinary = path.join(packageRoot, "dist", "bin", executable);
   const binaryStat = statSync(stagedBinary, { throwIfNoEntry: false });
   if (!binaryStat?.isFile()) return true;

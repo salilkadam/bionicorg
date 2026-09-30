@@ -30,13 +30,13 @@ describe("runAdapterExecutionTargetShellCommand", () => {
       {
         kind: "remote",
         transport: "ssh",
-        remoteCwd: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
         spec: {
           host: "ssh.example.test",
           port: 22,
           username: "ssh-user",
-          remoteCwd: "/srv/paperclip/workspace",
-          remoteWorkspacePath: "/srv/paperclip/workspace",
+          remoteCwd: "/srv/bionic/workspace",
+          remoteWorkspacePath: "/srv/bionic/workspace",
           privateKey: null,
           knownHosts: null,
           strictHostKeyChecking: true,
@@ -77,13 +77,13 @@ describe("runAdapterExecutionTargetShellCommand", () => {
       {
         kind: "remote",
         transport: "ssh",
-        remoteCwd: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
         spec: {
           host: "ssh.example.test",
           port: 22,
           username: "ssh-user",
-          remoteCwd: "/srv/paperclip/workspace",
-          remoteWorkspacePath: "/srv/paperclip/workspace",
+          remoteCwd: "/srv/bionic/workspace",
+          remoteWorkspacePath: "/srv/bionic/workspace",
           privateKey: null,
           knownHosts: null,
           strictHostKeyChecking: true,
@@ -125,13 +125,13 @@ describe("runAdapterExecutionTargetShellCommand", () => {
       {
         kind: "remote",
         transport: "ssh",
-        remoteCwd: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
         spec: {
           host: "ssh.example.test",
           port: 22,
           username: "ssh-user",
-          remoteCwd: "/srv/paperclip/workspace",
-          remoteWorkspacePath: "/srv/paperclip/workspace",
+          remoteCwd: "/srv/bionic/workspace",
+          remoteWorkspacePath: "/srv/bionic/workspace",
           privateKey: null,
           knownHosts: null,
           strictHostKeyChecking: true,
@@ -170,13 +170,13 @@ describe("runAdapterExecutionTargetShellCommand", () => {
       {
         kind: "remote",
         transport: "ssh",
-        remoteCwd: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
         spec: {
           host: "ssh.example.test",
           port: 22,
           username: "ssh-user",
-          remoteCwd: "/srv/paperclip/workspace",
-          remoteWorkspacePath: "/srv/paperclip/workspace",
+          remoteCwd: "/srv/bionic/workspace",
+          remoteWorkspacePath: "/srv/bionic/workspace",
           privateKey: null,
           knownHosts: null,
           strictHostKeyChecking: true,
@@ -206,13 +206,13 @@ describe("runAdapterExecutionTargetShellCommand", () => {
     expect(adapterExecutionTargetUsesManagedHome({
       kind: "remote",
       transport: "ssh",
-      remoteCwd: "/srv/paperclip/workspace",
+      remoteCwd: "/srv/bionic/workspace",
       spec: {
         host: "ssh.example.test",
         port: 22,
         username: "ssh-user",
-        remoteCwd: "/srv/paperclip/workspace",
-        remoteWorkspacePath: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
+        remoteWorkspacePath: "/srv/bionic/workspace",
         privateKey: null,
         knownHosts: null,
         strictHostKeyChecking: true,
@@ -246,13 +246,13 @@ describe("runAdapterExecutionTargetProcess", () => {
       {
         kind: "remote",
         transport: "ssh",
-        remoteCwd: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
         spec: {
           host: "ssh.example.test",
           port: 22,
           username: "ssh-user",
-          remoteCwd: "/srv/paperclip/workspace",
-          remoteWorkspacePath: "/srv/paperclip/workspace",
+          remoteCwd: "/srv/bionic/workspace",
+          remoteWorkspacePath: "/srv/bionic/workspace",
           privateKey: null,
           knownHosts: null,
           strictHostKeyChecking: true,
@@ -339,13 +339,13 @@ describe("ensureAdapterExecutionTargetRuntimeCommandInstalled", () => {
       target: {
         kind: "remote",
         transport: "ssh",
-        remoteCwd: "/srv/paperclip/workspace",
+        remoteCwd: "/srv/bionic/workspace",
         spec: {
           host: "ssh.example.test",
           port: 22,
           username: "ssh-user",
-          remoteCwd: "/srv/paperclip/workspace",
-          remoteWorkspacePath: "/srv/paperclip/workspace",
+          remoteCwd: "/srv/bionic/workspace",
+          remoteWorkspacePath: "/srv/bionic/workspace",
           privateKey: null,
           knownHosts: null,
           strictHostKeyChecking: true,
@@ -364,13 +364,13 @@ describe("resolveAdapterExecutionTargetCwd", () => {
   const sshTarget = {
     kind: "remote" as const,
     transport: "ssh" as const,
-    remoteCwd: "/srv/paperclip/workspace",
+    remoteCwd: "/srv/bionic/workspace",
     spec: {
       host: "ssh.example.test",
       port: 22,
       username: "ssh-user",
-      remoteCwd: "/srv/paperclip/workspace",
-      remoteWorkspacePath: "/srv/paperclip/workspace",
+      remoteCwd: "/srv/bionic/workspace",
+      remoteWorkspacePath: "/srv/bionic/workspace",
       privateKey: null,
       knownHosts: null,
       strictHostKeyChecking: true,
@@ -379,13 +379,13 @@ describe("resolveAdapterExecutionTargetCwd", () => {
 
   it("falls back to the remote cwd when no adapter cwd is configured", () => {
     expect(resolveAdapterExecutionTargetCwd(sshTarget, "", "/Users/host/repo/server")).toBe(
-      "/srv/paperclip/workspace",
+      "/srv/bionic/workspace",
     );
     expect(resolveAdapterExecutionTargetCwd(sshTarget, "   ", "/Users/host/repo/server")).toBe(
-      "/srv/paperclip/workspace",
+      "/srv/bionic/workspace",
     );
     expect(resolveAdapterExecutionTargetCwd(sshTarget, null, "/Users/host/repo/server")).toBe(
-      "/srv/paperclip/workspace",
+      "/srv/bionic/workspace",
     );
   });
 
@@ -393,10 +393,10 @@ describe("resolveAdapterExecutionTargetCwd", () => {
     expect(
       resolveAdapterExecutionTargetCwd(
         sshTarget,
-        "/srv/paperclip/custom-agent-dir",
+        "/srv/bionic/custom-agent-dir",
         "/Users/host/repo/server",
       ),
-    ).toBe("/srv/paperclip/custom-agent-dir");
+    ).toBe("/srv/bionic/custom-agent-dir");
   });
 
   it("keeps the local fallback cwd for local targets", () => {
@@ -415,8 +415,8 @@ describe("GitHub launcher lifecycle", () => {
       const a = await prepareGitHubOperationLaunchers({ ...first, cwd: "/tmp", env: {} });
       const b = await prepareGitHubOperationLaunchers({ ...second, cwd: "/tmp", env: {} });
       await cleanupGitHubOperationLaunchers(first);
-      await expect(access(a.PAPERCLIP_GITHUB_LAUNCHER_DIR)).rejects.toMatchObject({ code: "ENOENT" });
-      expect(await readFile(`${b.PAPERCLIP_GITHUB_LAUNCHER_DIR}/git`, "utf8")).toContain("PAPERCLIP_GITHUB_BROKER_URL");
+      await expect(access(a.BIONIC_GITHUB_LAUNCHER_DIR)).rejects.toMatchObject({ code: "ENOENT" });
+      expect(await readFile(`${b.BIONIC_GITHUB_LAUNCHER_DIR}/git`, "utf8")).toContain("BIONIC_GITHUB_BROKER_URL");
       await cleanupGitHubOperationLaunchers(first); // teardown replay is harmless
     } finally {
       await cleanupGitHubOperationLaunchers(first);
@@ -431,7 +431,7 @@ describe("GitHub launcher lifecycle", () => {
       providerKey: "e2b", remoteCwd: "/remote/workspace", runner };
     await cleanupGitHubOperationLaunchers({ runId: "finished-run", target });
     expect(runner.execute).toHaveBeenCalledWith({ command: "sh",
-      args: ["-c", "rm -rf -- '/remote/workspace/.paperclip-runtime/github/finished-run'"],
+      args: ["-c", "rm -rf -- '/remote/workspace/.bionic-runtime/github/finished-run'"],
       cwd: "/remote/workspace", timeoutMs: 5_000 });
     await expect(cleanupGitHubOperationLaunchers({ runId: "../other", target })).rejects.toThrow("Invalid GitHub launcher run ID");
     expect(runner.execute).toHaveBeenCalledTimes(1);

@@ -19,8 +19,8 @@ describe("release-content Cases contract", () => {
       "\"caseType\": \"tweet_storm\"",
       "\"parentCaseId\"",
       "PUT /api/cases/:caseId/documents/body",
-      "paperclip-release:vYYYY.MDD.P",
-      "X-Paperclip-Run-Id",
+      "bionic-release:vYYYY.MDD.P",
+      "X-Bionic-Run-Id",
     ]) {
       expect(combined).toContain(required);
     }

@@ -14,7 +14,7 @@ async function main() {
   const dbUrl =
     process.env.DATABASE_URL?.trim()
     || config.databaseUrl
-    || `postgres://paperclip:paperclip@127.0.0.1:${config.embeddedPostgresPort}/paperclip`;
+    || `postgres://bionic:bionic@127.0.0.1:${config.embeddedPostgresPort}/bionic`;
 
   const db = createDb(dbUrl);
   const refs = issueReferenceService(db);

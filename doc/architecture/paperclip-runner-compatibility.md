@@ -1,13 +1,13 @@
-# Paperclip Runner compatibility and rollout
+# Bionic Runner compatibility and rollout
 
 - Status: Proposed
 - Date: 2026-08-24
-- Parent decision: [Paperclip Runner architecture](paperclip-runner.md)
+- Parent decision: [Bionic Runner architecture](bionic-runner.md)
 
 ## Purpose
 
 This document defines compatibility rules for introducing the experimental
-Paperclip Runner. These rules are acceptance criteria for each implementation
+Bionic Runner. These rules are acceptance criteria for each implementation
 change. They are not a migration plan for existing adapters.
 
 ## Compatibility invariants
@@ -34,13 +34,13 @@ The server resolves and persists the runtime once, before provider launch.
 | Persisted runtime | Adapter | Flag | Result |
 | --- | --- | --- | --- |
 | none | Any direct adapter | off or on | Use the existing direct path. |
-| none | `paperclip_runner` with any qualified provider | off | Reject the fresh start with a stable rollout-disabled error. |
-| none | `paperclip_runner` with a qualified provider | on | Use PRP v1 and the provider's persisted runnerd backend. |
-| none | `paperclip_runner` with an incomplete or unqualified profile | on | Reject the profile before runnerd starts. |
+| none | `bionic_runner` with any qualified provider | off | Reject the fresh start with a stable rollout-disabled error. |
+| none | `bionic_runner` with a qualified provider | on | Use PRP v1 and the provider's persisted runnerd backend. |
+| none | `bionic_runner` with an incomplete or unqualified profile | on | Reject the profile before runnerd starts. |
 | direct | Any | changed later | Keep the persisted direct path. |
 | native | Any | changed later | Keep the persisted native path for read, cancel, recovery, and finalization. |
 
-The server must not fall back from a selected `paperclip_runner` start to
+The server must not fall back from a selected `bionic_runner` start to
 `codex_local`. A configuration or rollout error must be visible. Silent fallback
 would hide the runtime that executed the task.
 
@@ -65,7 +65,7 @@ release follows a backward-compatible protocol.
 - The same check applies to discovered, explicitly staged, and npm-installed
   remote Codex executables, including the final executable after linking.
 - For an incompatible image, the existing
-  `PAPERCLIP_RUNNER_REMOTE_CODEX_NPM_SPEC=@openai/codex@0.156.0` configuration
+  `BIONIC_RUNNER_REMOTE_CODEX_NPM_SPEC=@openai/codex@0.156.0` configuration
   allows installation of the pinned runtime. Without that configuration,
   startup reports the supported range and the remediation.
 - Runner binary contracts, required runner capabilities, artifact digests,
@@ -100,7 +100,7 @@ This rule applies to every built-in and plugin direct adapter. It includes:
 - gateway adapters; and
 - external adapter plugins.
 
-Adding Paperclip Runner must not add runner imports or runner branches inside a
+Adding Bionic Runner must not add runner imports or runner branches inside a
 direct adapter implementation. The heartbeat coordinator may select the
 explicit runner adapter at one narrow seam. All other adapters continue through
 their existing code.
@@ -117,9 +117,9 @@ For a flag-off `codex_local` heartbeat, compatibility proof must show:
 
 When the rollout flag is off:
 
-- creation UI does not offer `paperclip_runner`;
-- edit UI does not offer switching to `paperclip_runner`;
-- server creation and import reject a new `paperclip_runner` selection;
+- creation UI does not offer `bionic_runner`;
+- edit UI does not offer switching to `bionic_runner`;
+- server creation and import reject a new `bionic_runner` selection;
 - the server rejects a fresh start for an existing runner-configured agent;
 - read and export preserve an existing runner configuration;
 - unrelated edits to an existing runner-configured agent do not erase its
@@ -128,7 +128,7 @@ When the rollout flag is off:
 
 When the rollout flag is on:
 
-- creation, import, and edit accept `paperclip_runner` only with a qualified
+- creation, import, and edit accept `bionic_runner` only with a qualified
   Codex, OpenCode, Claude Managed, AWS AgentCore, or Claude/Codex ACPX profile;
 - switching from a direct adapter affects only future unresolved runs; and
 - switching away from the runner affects only future unresolved runs.
@@ -176,7 +176,7 @@ Final replies continue to use the existing issue-comment behavior.
 
 ## Structured input compatibility
 
-New structured questions use `paperclip.question_set.v1` and the matching
+New structured questions use `bionic.question_set.v1` and the matching
 response contract. Provider-specific question objects remain inside their
 drivers.
 

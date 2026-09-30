@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { validatePrpEvent } from "../../vendor/paperclip-runner/index.js";
+import { validatePrpEvent } from "../../vendor/bionic-runner/index.js";
 import { canonicalNativeJson, nativeSha256 } from "./canonical.js";
 
 export interface RetainedMaintenanceSnapshot {
@@ -141,13 +141,13 @@ export function verifyRetainedMaintenanceNoLaunch(
       );
       requireProof(
         snapshot.control.schema ===
-          "paperclip.runner.durable.control-plane-state.v1",
+          "bionic.runner.durable.control-plane-state.v1",
       );
       requireProof(
-        snapshot.runner.schema === "paperclip.runner.durable.state.v1",
+        snapshot.runner.schema === "bionic.runner.durable.state.v1",
       );
       requireProof(
-        snapshot.provider.schema === "paperclip.runner.codex-provider-state.v1",
+        snapshot.provider.schema === "bionic.runner.codex-provider-state.v1",
       );
       requireProof(same(snapshot.control.identity, identity));
       for (const key of KEYS)
@@ -431,7 +431,7 @@ export function verifyRetainedMaintenanceNoLaunch(
       const raw = record(envelope.payload);
       requireProof(
         same(envelope, {
-          protocol: "paperclip.runner",
+          protocol: "bionic.runner",
           version: 1,
           kind: "event",
           ...identity,
@@ -553,7 +553,7 @@ export function verifyRetainedMaintenanceNoLaunch(
           row.protocolSchemaVersion === 1,
       );
       const receipt = {
-        schema: "paperclip.native_cleanup_event.v1",
+        schema: "bionic.native_cleanup_event.v1",
         requestId,
         rawSourceInstanceId: identity.runnerInstanceId,
         rawSourceEventId: raw.sourceEventId,

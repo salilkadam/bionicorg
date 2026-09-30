@@ -13,7 +13,7 @@ function baseContext(overrides: Record<string, unknown> = {}) {
     config: {},
     context: {
       issueId: "issue-1",
-      paperclipWake: {
+      bionicWake: {
         reason: "issue_assigned",
         issue: {
           id: "issue-1",
@@ -28,8 +28,8 @@ function baseContext(overrides: Record<string, unknown> = {}) {
         comments: [],
         fallbackFetchNeeded: false,
       },
-      paperclipTaskMarkdown: [
-        "Paperclip task context:",
+      bionicTaskMarkdown: [
+        "Bionic task context:",
         '- Issue: "PAP-3404"',
         '- Title: "Plan the Hermes prompt update"',
         "",
@@ -48,7 +48,7 @@ function baseContext(overrides: Record<string, unknown> = {}) {
 
 test("renders standard assignment wake with task authority and no backlog discovery guidance", () => {
   const prompt = buildPrompt(baseContext({
-    paperclipWake: {
+    bionicWake: {
       reason: "issue_assigned",
       issue: {
         id: "issue-1",
@@ -63,8 +63,8 @@ test("renders standard assignment wake with task authority and no backlog discov
       comments: [],
       fallbackFetchNeeded: false,
     },
-    paperclipTaskMarkdown: [
-      "Paperclip task context:",
+    bionicTaskMarkdown: [
+      "Bionic task context:",
       '- Issue: "PAP-11750"',
       '- Title: "Add Hermes prompt rendering regression tests"',
       "",
@@ -75,11 +75,11 @@ test("renders standard assignment wake with task authority and no backlog discov
     ].join("\n"),
   }), {});
 
-  expect(prompt).toContain("## Paperclip Wake Payload");
+  expect(prompt).toContain("## Bionic Wake Payload");
   expect(prompt).toContain("- reason: issue_assigned");
   expect(prompt).toContain("- issue: PAP-11750 Add Hermes prompt rendering regression tests");
   expect(prompt).toContain("- issue work mode: standard");
-  expect(prompt).toContain("Paperclip task context:");
+  expect(prompt).toContain("Bionic task context:");
   expect(prompt).toContain("Add focused unit tests for assignment wake and custom prompt rendering.");
   expect(prompt).toContain("The harness already checked out this issue for the current run.");
   expect(prompt).toContain("clear final disposition");
@@ -90,7 +90,7 @@ test("renders standard assignment wake with task authority and no backlog discov
 test("keeps current wake comments in the wake owner and preserves assignment markdown inputs", () => {
   const commentBody = "Please preserve the exact current comment once.";
   const prompt = buildPrompt(baseContext({
-    paperclipWake: {
+    bionicWake: {
       reason: "issue_commented",
       issue: {
         id: "issue-1",
@@ -104,11 +104,11 @@ test("keeps current wake comments in the wake owner and preserves assignment mar
       comments: [{ id: "comment-1", body: commentBody }],
       fallbackFetchNeeded: false,
     },
-    paperclipTaskMarkdown: [
-      "Paperclip task context:",
+    bionicTaskMarkdown: [
+      "Bionic task context:",
       '- Issue: "PAP-11751"',
     ].join("\n"),
-    paperclipTurnContext: {
+    bionicTurnContext: {
       version: 1,
       assignment: { owner: "task_markdown" },
       events: { owner: "wake_prompt", comments: [{ id: "comment-1", revision: "rev-1" }] },
@@ -116,15 +116,15 @@ test("keeps current wake comments in the wake owner and preserves assignment mar
   }), {});
 
   expect(prompt.split(commentBody)).toHaveLength(2);
-  expect(prompt).toContain('Paperclip task context:\n- Issue: "PAP-11751"');
+  expect(prompt).toContain('Bionic task context:\n- Issue: "PAP-11751"');
 });
 
 test("renders scoped planning wake authority before the Hermes default workflow", () => {
   const prompt = buildPrompt(baseContext(), {
-    paperclipApiUrl: "http://127.0.0.1:3101/api",
+    bionicApiUrl: "http://127.0.0.1:3101/api",
   });
 
-  expect(prompt).toContain("## Paperclip Wake Payload");
+  expect(prompt).toContain("## Bionic Wake Payload");
   expect(prompt).toContain("- issue: PAP-3404 Plan the Hermes prompt update");
   expect(prompt).toContain("- planning directive: Make the plan only. Do not write code or perform implementation work.");
   expect(prompt).toContain("- checkout: already claimed by the harness for this run");
@@ -138,7 +138,7 @@ test("renders scoped planning wake authority before the Hermes default workflow"
 
 test("renders resume deltas instead of full scoped-wake boilerplate when continuing a session", () => {
   const prompt = buildPrompt(baseContext({
-    paperclipWake: {
+    bionicWake: {
       reason: "issue_commented",
       issue: {
         id: "issue-1",
@@ -155,8 +155,8 @@ test("renders resume deltas instead of full scoped-wake boilerplate when continu
     },
   }), {}, { resumedSession: true });
 
-  expect(prompt).toContain("## Paperclip Resume Delta");
-  expect(prompt).toContain("You are resuming an existing Paperclip session.");
+  expect(prompt).toContain("## Bionic Resume Delta");
+  expect(prompt).toContain("You are resuming an existing Bionic session.");
   expect(prompt).toContain("Focus on the new wake delta below");
   expect(prompt).toContain("Please add the resume-delta case.");
   expect(prompt).toContain("- fallback fetch needed: no");
@@ -166,7 +166,7 @@ test("renders resume deltas instead of full scoped-wake boilerplate when continu
 test("renders comment wake batch guidance without defaulting to a full-thread refetch", () => {
   const prompt = buildPrompt(baseContext({
     wakeCommentId: "comment-1",
-    paperclipWake: {
+    bionicWake: {
       reason: "issue_commented",
       issue: {
         id: "issue-1",
@@ -192,7 +192,7 @@ test("renders comment wake batch guidance without defaulting to a full-thread re
 
 test("renders accepted-plan continuation without authorizing implementation on the planning issue", () => {
   const prompt = buildPrompt(baseContext({
-    paperclipWake: {
+    bionicWake: {
       reason: "issue_commented",
       issue: {
         id: "issue-1",
@@ -219,8 +219,8 @@ test("renders accepted-plan continuation without authorizing implementation on t
 
 test("keeps authoritative parent and ancestor context from task markdown", () => {
   const prompt = buildPrompt(baseContext({
-    paperclipTaskMarkdown: [
-      "Paperclip task context:",
+    bionicTaskMarkdown: [
+      "Bionic task context:",
       '- Issue: "PAP-3404"',
       "",
       "Authoritative parent / ancestor context:",
@@ -234,15 +234,15 @@ test("keeps authoritative parent and ancestor context from task markdown", () =>
   expect(prompt).not.toContain("check the issue body or comments for references");
 });
 
-test("renders safe Paperclip API examples from environment variables with multiline update preservation", () => {
+test("renders safe Bionic API examples from environment variables with multiline update preservation", () => {
   const prompt = buildPrompt(baseContext(), {
-    paperclipApiUrl: "http://paperclip.local/api",
+    bionicApiUrl: "http://bionic.local/api",
   });
 
-  expect(prompt).toContain("Use `$PAPERCLIP_API_URL`, `$PAPERCLIP_API_KEY`, and `$PAPERCLIP_RUN_ID`");
+  expect(prompt).toContain("Use `$BIONIC_API_URL`, `$BIONIC_API_KEY`, and `$BIONIC_RUN_ID`");
   expect(prompt).toContain("Displayed command logs may redact secrets");
-  expect(prompt).toContain('-H "Authorization: Bearer $PAPERCLIP_API_KEY"');
-  expect(prompt).toContain('-H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID"');
+  expect(prompt).toContain('-H "Authorization: Bearer $BIONIC_API_KEY"');
+  expect(prompt).toContain('-H "X-Bionic-Run-Id: $BIONIC_RUN_ID"');
   expect(prompt).toContain("body=$(cat <<'MD'");
   expect(prompt).toContain("jq -n --arg status done --arg comment \"$body\"");
   expect(prompt).toContain("--data-binary @-");
@@ -251,59 +251,59 @@ test("renders safe Paperclip API examples from environment variables with multil
 
 test("preserves custom prompt templates while exposing runtime and wake variables", () => {
   const prompt = buildPrompt(baseContext(), {
-    paperclipApiUrl: "http://paperclip.local/api",
+    bionicApiUrl: "http://bionic.local/api",
     promptTemplate: [
       "CUSTOM TEMPLATE",
       "agent={{agent.name}}",
-      "api={{paperclipApiUrl}}",
-      "keyEnv={{paperclipApiKeyEnv}}",
-      "runEnv={{paperclipRunIdEnv}}",
-      "wakePrompt={{paperclipWakePrompt}}",
-      "task={{paperclipTaskMarkdown}}",
-      "wakeJson={{paperclipWakeJson}}",
+      "api={{bionicApiUrl}}",
+      "keyEnv={{bionicApiKeyEnv}}",
+      "runEnv={{bionicRunIdEnv}}",
+      "wakePrompt={{bionicWakePrompt}}",
+      "task={{bionicTaskMarkdown}}",
+      "wakeJson={{bionicWakeJson}}",
       "wake={{wakePayloadJson}}",
     ].join("\n"),
   });
 
   expect(prompt).toContain("CUSTOM TEMPLATE");
   expect(prompt).toContain("agent=Hermes Engineer");
-  expect(prompt).toContain("api=http://paperclip.local/api");
-  expect(prompt).toContain("keyEnv=PAPERCLIP_API_KEY");
-  expect(prompt).toContain("runEnv=PAPERCLIP_RUN_ID");
-  expect(prompt).toContain("wakePrompt=## Paperclip Wake Payload");
-  expect(prompt).toContain("task=Paperclip task context:");
+  expect(prompt).toContain("api=http://bionic.local/api");
+  expect(prompt).toContain("keyEnv=BIONIC_API_KEY");
+  expect(prompt).toContain("runEnv=BIONIC_RUN_ID");
+  expect(prompt).toContain("wakePrompt=## Bionic Wake Payload");
+  expect(prompt).toContain("task=Bionic task context:");
   expect(prompt).toContain("wakeJson={\"reason\":\"issue_assigned\"");
   expect(prompt).toContain('"reason":"issue_assigned"');
-  expect(prompt).toContain("## Paperclip Wake Payload");
+  expect(prompt).toContain("## Bionic Wake Payload");
   expect(prompt).toContain("Issue description:\n```text\nUse the wake payload as runtime authority.\n```");
-  expect(prompt).not.toContain("Paperclip runtime identity:");
+  expect(prompt).not.toContain("Bionic runtime identity:");
 });
 
 test("keeps historical task markdown available to custom templates while automatic context uses assignment markdown", () => {
   const historical = "Historical task with current comment.";
   const assignment = "Assignment task without current comment.";
   const prompt = buildPrompt(baseContext({
-    paperclipTaskMarkdown: historical,
-    paperclipTaskMarkdownAssignment: assignment,
-    paperclipWake: {
+    bionicTaskMarkdown: historical,
+    bionicTaskMarkdownAssignment: assignment,
+    bionicWake: {
       reason: "issue_commented",
       issue: { id: "issue-1", identifier: "PAP-1", title: "Task", status: "in_progress" },
       comments: [{ id: "comment-1", body: "Current comment." }],
       commentWindow: { requestedCount: 1, includedCount: 1, missingCount: 0 },
       fallbackFetchNeeded: false,
     },
-  }), { promptTemplate: "custom={{paperclipTaskMarkdown}}" });
+  }), { promptTemplate: "custom={{bionicTaskMarkdown}}" });
   expect(prompt).toContain(`custom=${historical}`);
   expect(prompt).toContain(assignment);
   expect(prompt).toContain("Current comment.");
 });
 
 test("keeps legacy task markdown when ownership fields are absent", () => {
-  const legacyTask = "Legacy task context from an older Paperclip caller.";
+  const legacyTask = "Legacy task context from an older Bionic caller.";
   const prompt = buildPrompt(baseContext({
-    paperclipTaskMarkdown: legacyTask,
-    paperclipTaskMarkdownAssignment: undefined,
-    paperclipTaskMarkdownCompact: undefined,
+    bionicTaskMarkdown: legacyTask,
+    bionicTaskMarkdownAssignment: undefined,
+    bionicTaskMarkdownCompact: undefined,
   }), {});
 
   expect(prompt).toContain(legacyTask);
@@ -314,11 +314,11 @@ test.each([false, true])("conversation prompts preserve the handoff policy (resu
   const directive = "Chat directive: clarify goals and hand the plan off to project tasks.";
   const ctx = baseContext({
     conversationMode: true,
-    paperclipTaskMarkdown: directive,
-    paperclipTaskMarkdownCompact: directive,
+    bionicTaskMarkdown: directive,
+    bionicTaskMarkdownCompact: directive,
   });
-  ctx.context.paperclipWake.interactionKind = "request_confirmation";
-  ctx.context.paperclipWake.interactionStatus = "accepted";
+  ctx.context.bionicWake.interactionKind = "request_confirmation";
+  ctx.context.bionicWake.interactionStatus = "accepted";
   for (const config of [{}, { promptTemplate: "Custom agent instruction." }]) {
     const prompt = buildPrompt(ctx, config, { resumedSession });
     expect(prompt).toContain(directive);

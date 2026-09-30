@@ -80,8 +80,8 @@ const adapterDisplayMap: Record<string, AdapterDisplayInfo> = {
     icon: Code,
     recommended: true,
   },
-  paperclip_runner: {
-    label: "Paperclip Runner",
+  bionic_runner: {
+    label: "Bionic Runner",
     description: "Experimental Rust runner with a Codex provider",
     icon: Cpu,
     experimental: true,

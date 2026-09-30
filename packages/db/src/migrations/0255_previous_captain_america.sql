@@ -159,7 +159,7 @@ CREATE TABLE "chat_identity_links" (
 	"company_id" uuid NOT NULL,
 	"endpoint_id" uuid NOT NULL,
 	"principal_id" uuid NOT NULL,
-	"paperclip_user_id" text,
+	"bionic_user_id" text,
 	"status" text DEFAULT 'pending' NOT NULL,
 	"confirmation_token_hash" text,
 	"expires_at" timestamp with time zone,
@@ -274,7 +274,7 @@ CREATE UNIQUE INDEX "chat_endpoints_public_id_uq" ON "chat_endpoints" USING btre
 CREATE UNIQUE INDEX "chat_endpoints_connection_uq" ON "chat_endpoints" USING btree ("connection_id");--> statement-breakpoint
 CREATE INDEX "chat_external_principals_company_idx" ON "chat_external_principals" USING btree ("company_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "chat_external_principals_external_uq" ON "chat_external_principals" USING btree ("company_id","provider","provider_account_id","external_id");--> statement-breakpoint
-CREATE INDEX "chat_identity_links_user_idx" ON "chat_identity_links" USING btree ("company_id","paperclip_user_id");--> statement-breakpoint
+CREATE INDEX "chat_identity_links_user_idx" ON "chat_identity_links" USING btree ("company_id","bionic_user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "chat_identity_links_endpoint_principal_uq" ON "chat_identity_links" USING btree ("endpoint_id","principal_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "chat_message_links_provider_message_uq" ON "chat_message_links" USING btree ("endpoint_id","provider_message_id");--> statement-breakpoint
 CREATE INDEX "chat_publications_work_idx" ON "chat_publications" USING btree ("state","next_attempt_at");--> statement-breakpoint

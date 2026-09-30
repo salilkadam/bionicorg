@@ -1,172 +1,172 @@
 [
   {
     "dir": "packages/adapter-utils",
-    "name": "@paperclipai/adapter-utils",
+    "name": "@bionicai/adapter-utils",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/claude-local",
-    "name": "@paperclipai/adapter-claude-local",
+    "name": "@bionicai/adapter-claude-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/codex-local",
-    "name": "@paperclipai/adapter-codex-local",
+    "name": "@bionicai/adapter-codex-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/cursor-cloud",
-    "name": "@paperclipai/adapter-cursor-cloud",
+    "name": "@bionicai/adapter-cursor-cloud",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/cursor-local",
-    "name": "@paperclipai/adapter-cursor-local",
+    "name": "@bionicai/adapter-cursor-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/gemini-local",
-    "name": "@paperclipai/adapter-gemini-local",
+    "name": "@bionicai/adapter-gemini-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/grok-local",
-    "name": "@paperclipai/adapter-grok-local",
+    "name": "@bionicai/adapter-grok-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/hermes",
-    "name": "@paperclipai/hermes-paperclip-adapter",
+    "name": "@bionicai/hermes-bionic-adapter",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/hermes-gateway",
-    "name": "@paperclipai/adapter-hermes-gateway",
+    "name": "@bionicai/adapter-hermes-gateway",
     "publishFromCi": false
   },
   {
     "dir": "packages/adapters/kimi-local",
-    "name": "@paperclipai/adapter-kimi-local",
+    "name": "@bionicai/adapter-kimi-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/opencode-local",
-    "name": "@paperclipai/adapter-opencode-local",
+    "name": "@bionicai/adapter-opencode-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/pi-local",
-    "name": "@paperclipai/adapter-pi-local",
+    "name": "@bionicai/adapter-pi-local",
     "publishFromCi": true
   },
   {
     "dir": "packages/adapters/openclaw-gateway",
-    "name": "@paperclipai/adapter-openclaw-gateway",
+    "name": "@bionicai/adapter-openclaw-gateway",
     "publishFromCi": true
   },
   {
     "dir": "packages/shared",
-    "name": "@paperclipai/shared",
+    "name": "@bionicai/shared",
     "publishFromCi": true
   },
   {
     "dir": "packages/skills-catalog",
-    "name": "@paperclipai/skills-catalog",
+    "name": "@bionicai/skills-catalog",
     "publishFromCi": true
   },
   {
     "dir": "packages/teams-catalog",
-    "name": "@paperclipai/teams-catalog",
+    "name": "@bionicai/teams-catalog",
     "publishFromCi": true
   },
   {
     "dir": "packages/db",
-    "name": "@paperclipai/db",
+    "name": "@bionicai/db",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sdk",
-    "name": "@paperclipai/plugin-sdk",
+    "name": "@bionicai/plugin-sdk",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/plugin-workspace-diff",
-    "name": "@paperclipai/plugin-workspace-diff",
+    "name": "@bionicai/plugin-workspace-diff",
     "publishFromCi": true
   },
   {
     "dir": "server",
-    "name": "@paperclipai/server",
+    "name": "@bionicai/server",
     "publishFromCi": true
   },
   {
     "dir": "cli",
-    "name": "paperclipai",
+    "name": "bionicai",
     "publishFromCi": true
   },
   {
     "dir": "packages/mcp-server",
-    "name": "@paperclipai/mcp-server",
+    "name": "@bionicai/mcp-server",
     "publishFromCi": true
   },
   {
     "dir": "packages/google-sheets-mcp-server",
-    "name": "@paperclipai/google-sheets-mcp-server",
+    "name": "@bionicai/google-sheets-mcp-server",
     "publishFromCi": false
   },
   {
     "dir": "packages/kv-demo-mcp-server",
-    "name": "@paperclipai/kv-demo-mcp-server",
+    "name": "@bionicai/kv-demo-mcp-server",
     "publishFromCi": false
   },
   {
-    "dir": "packages/plugins/create-paperclip-plugin",
-    "name": "@paperclipai/create-paperclip-plugin",
+    "dir": "packages/plugins/create-bionic-plugin",
+    "name": "@bionicai/create-bionic-plugin",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/cloudflare",
-    "name": "@paperclipai/plugin-cloudflare-sandbox",
+    "name": "@bionicai/plugin-cloudflare-sandbox",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/createos",
-    "name": "@paperclipai/plugin-createos",
+    "name": "@bionicai/plugin-createos",
     "publishFromCi": false
   },
   {
     "dir": "packages/plugins/sandbox-providers/daytona",
-    "name": "@paperclipai/plugin-daytona",
+    "name": "@bionicai/plugin-daytona",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/exe-dev",
-    "name": "@paperclipai/plugin-exe-dev",
+    "name": "@bionicai/plugin-exe-dev",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/e2b",
-    "name": "@paperclipai/plugin-e2b",
+    "name": "@bionicai/plugin-e2b",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/modal",
-    "name": "@paperclipai/plugin-modal",
+    "name": "@bionicai/plugin-modal",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/kubernetes",
-    "name": "@paperclipai/plugin-kubernetes",
+    "name": "@bionicai/plugin-kubernetes",
     "publishFromCi": true
   },
   {
     "dir": "packages/plugins/sandbox-providers/novita",
-    "name": "@paperclipai/plugin-novita-sandbox",
+    "name": "@bionicai/plugin-novita-sandbox",
     "publishFromCi": true
   },
   {
     "dir": "ui",
-    "name": "@paperclipai/ui",
+    "name": "@bionicai/ui",
     "publishFromCi": true
   }
 ]

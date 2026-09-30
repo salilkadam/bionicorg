@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildSkillMentionHref } from "@paperclipai/shared";
+import { buildSkillMentionHref } from "@bionicai/shared";
 import {
   LOW_TRUST_REVIEW_PRESET,
   applyRunScopedMentionedSkillKeys,
@@ -23,7 +23,7 @@ import { resolveManagedProjectWorkspaceDir } from "../home-paths.ts";
 describe("resolveExecutionRunAdapterConfig", () => {
   it("does not preflight or resolve legacy GitHub token bindings for managed executions", async () => {
     const assertNoGitHubBinding = (env: Record<string, unknown>) => {
-      for (const key of Object.keys(env)) if (/^(GH_TOKEN|GITHUB_TOKEN|GH_ENTERPRISE_TOKEN|GITHUB_ENTERPRISE_TOKEN|PAPERCLIP_GIT_TOKEN)$/.test(key)) {
+      for (const key of Object.keys(env)) if (/^(GH_TOKEN|GITHUB_TOKEN|GH_ENTERPRISE_TOKEN|GITHUB_ENTERPRISE_TOKEN|BIONIC_GIT_TOKEN)$/.test(key)) {
         throw new Error("Unavailable legacy GitHub secret must not be resolved at startup");
       }
     };
@@ -34,7 +34,7 @@ describe("resolveExecutionRunAdapterConfig", () => {
       executionRunConfig: { env: { GH_TOKEN: missing, AGENT_VALUE: "ok" } },
       environmentEnv: { GITHUB_TOKEN: missing, ENVIRONMENT_VALUE: "ok" },
       projectEnv: { GH_ENTERPRISE_TOKEN: missing, PROJECT_VALUE: "ok" },
-      routineEnv: { GITHUB_ENTERPRISE_TOKEN: missing, PAPERCLIP_GIT_TOKEN: missing, ROUTINE_VALUE: "ok" },
+      routineEnv: { GITHUB_ENTERPRISE_TOKEN: missing, BIONIC_GIT_TOKEN: missing, ROUTINE_VALUE: "ok" },
       secretsSvc: {
         collectMissingRuntimeBindings: vi.fn(async (_companyId, env) => { assertNoGitHubBinding(env); return []; }),
         resolveAdapterConfigForRuntime: vi.fn(async (_companyId, config) => {
@@ -171,7 +171,7 @@ describe("resolveExecutionRunAdapterConfig", () => {
     });
   });
 
-  it("drops PAPERCLIP_API_KEY bindings but forwards other PAPERCLIP_-named env to resolution", async () => {
+  it("drops BIONIC_API_KEY bindings but forwards other BIONIC_-named env to resolution", async () => {
     const resolveAdapterConfigForRuntime = vi.fn(async (_companyId, config: Record<string, unknown>) => ({
       config: {
         ...config,
@@ -193,26 +193,26 @@ describe("resolveExecutionRunAdapterConfig", () => {
       agentId: "agent-1",
       environmentId: "environment-1",
       environmentEnv: {
-        PAPERCLIP_API_KEY: "environment-api-key",
-        PAPERCLIP_RUNNER_NETWORK_ACCESS: "enabled",
-        PAPERCLIP_CLOUD_PROVIDER_TOKEN_ENV: "environment-cloud",
+        BIONIC_API_KEY: "environment-api-key",
+        BIONIC_RUNNER_NETWORK_ACCESS: "enabled",
+        BIONIC_CLOUD_PROVIDER_TOKEN_ENV: "environment-cloud",
         ENV_ONLY: "environment-only",
       },
       executionRunConfig: {
         env: {
-          PAPERCLIP_API_KEY: { type: "secret_ref", secretId: "secret-api-key", version: "latest" },
-          PAPERCLIP_CLOUD_PROVIDER_TOKEN_AGENT: "agent-cloud",
+          BIONIC_API_KEY: { type: "secret_ref", secretId: "secret-api-key", version: "latest" },
+          BIONIC_CLOUD_PROVIDER_TOKEN_AGENT: "agent-cloud",
           AGENT_ONLY: "agent-only",
         },
       },
       projectEnv: {
-        PAPERCLIP_API_KEY: "project-api-key",
-        PAPERCLIP_CLOUD_PROVIDER_TOKEN_PROJECT: "project-cloud",
+        BIONIC_API_KEY: "project-api-key",
+        BIONIC_CLOUD_PROVIDER_TOKEN_PROJECT: "project-cloud",
         PROJECT_ONLY: "project-only",
       },
       routineEnv: {
-        PAPERCLIP_API_KEY: "routine-api-key",
-        PAPERCLIP_CLOUD_PROVIDER_TOKEN_ROUTINE: "routine-cloud",
+        BIONIC_API_KEY: "routine-api-key",
+        BIONIC_CLOUD_PROVIDER_TOKEN_ROUTINE: "routine-cloud",
         ROUTINE_ONLY: "routine-only",
       },
       routineId: "routine-1",
@@ -223,35 +223,35 @@ describe("resolveExecutionRunAdapterConfig", () => {
     });
 
     expect(resolveEnvBindings.mock.calls[0]?.[1]).toEqual({
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_ENV: "environment-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_ENV: "environment-cloud",
       ENV_ONLY: "environment-only",
     });
     expect(resolveAdapterConfigForRuntime.mock.calls[0]?.[1]).toEqual({
       env: {
-        PAPERCLIP_CLOUD_PROVIDER_TOKEN_AGENT: "agent-cloud",
+        BIONIC_CLOUD_PROVIDER_TOKEN_AGENT: "agent-cloud",
         AGENT_ONLY: "agent-only",
       },
     });
     expect(resolveEnvBindings.mock.calls[1]?.[1]).toEqual({
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_PROJECT: "project-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_PROJECT: "project-cloud",
       PROJECT_ONLY: "project-only",
     });
     expect(resolveEnvBindings.mock.calls[2]?.[1]).toEqual({
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_ROUTINE: "routine-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_ROUTINE: "routine-cloud",
       ROUTINE_ONLY: "routine-only",
     });
     expect(result.resolvedConfig.env).toEqual({
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_ENV: "environment-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_ENV: "environment-cloud",
       ENV_ONLY: "environment-only",
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_AGENT: "agent-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_AGENT: "agent-cloud",
       AGENT_ONLY: "agent-only",
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_PROJECT: "project-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_PROJECT: "project-cloud",
       PROJECT_ONLY: "project-only",
-      PAPERCLIP_CLOUD_PROVIDER_TOKEN_ROUTINE: "routine-cloud",
+      BIONIC_CLOUD_PROVIDER_TOKEN_ROUTINE: "routine-cloud",
       ROUTINE_ONLY: "routine-only",
     });
-    expect(JSON.stringify(result.resolvedConfig.env)).not.toContain("PAPERCLIP_API_KEY");
-    expect(JSON.stringify(result.resolvedConfig.env)).not.toContain("PAPERCLIP_RUNNER_NETWORK_ACCESS");
+    expect(JSON.stringify(result.resolvedConfig.env)).not.toContain("BIONIC_API_KEY");
+    expect(JSON.stringify(result.resolvedConfig.env)).not.toContain("BIONIC_RUNNER_NETWORK_ACCESS");
   });
 
   it("skips project env resolution when the project has no bindings", async () => {
@@ -594,9 +594,9 @@ describe("resolveExecutionRunAdapterConfig codex_local credential pre-dispatch g
   });
 
   async function stubManagedCodexEnv(options: { seedSharedAuth: boolean }) {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-gate-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-codex-gate-"));
     cleanupDirs.push(root);
-    const paperclipHome = path.join(root, "paperclip-home");
+    const bionicHome = path.join(root, "bionic-home");
     const sharedCodexHome = path.join(root, "shared-codex-home");
     await fs.mkdir(sharedCodexHome, { recursive: true });
     if (options.seedSharedAuth) {
@@ -606,11 +606,11 @@ describe("resolveExecutionRunAdapterConfig codex_local credential pre-dispatch g
         "utf8",
       );
     }
-    vi.stubEnv("PAPERCLIP_HOME", paperclipHome);
-    vi.stubEnv("PAPERCLIP_INSTANCE_ID", "default");
+    vi.stubEnv("BIONIC_HOME", bionicHome);
+    vi.stubEnv("BIONIC_INSTANCE_ID", "default");
     vi.stubEnv("CODEX_HOME", sharedCodexHome);
     const managedAgentHome = path.join(
-      paperclipHome,
+      bionicHome,
       "instances",
       "default",
       "companies",
@@ -809,30 +809,30 @@ describe("applyRunScopedMentionedSkillKeys", () => {
   it("adds mentioned skills without mutating the original config", () => {
     const originalConfig = {
       command: "codex",
-      paperclipSkillSync: {
-        desiredSkills: ["paperclipai/paperclip/paperclip"],
+      bionicSkillSync: {
+        desiredSkills: ["bionicai/bionic/bionic"],
       },
     };
 
     const updatedConfig = applyRunScopedMentionedSkillKeys(originalConfig, [
       "company/company-1/release-changelog",
-      "paperclipai/paperclip/paperclip",
+      "bionicai/bionic/bionic",
       "company/company-1/release-changelog",
     ]);
 
     expect(updatedConfig).toEqual({
       command: "codex",
-      paperclipSkillSync: {
+      bionicSkillSync: {
         desiredSkills: [
-          "paperclipai/paperclip/paperclip",
+          "bionicai/bionic/bionic",
           "company/company-1/release-changelog",
         ],
       },
     });
     expect(originalConfig).toEqual({
       command: "codex",
-      paperclipSkillSync: {
-        desiredSkills: ["paperclipai/paperclip/paperclip"],
+      bionicSkillSync: {
+        desiredSkills: ["bionicai/bionic/bionic"],
       },
     });
   });
@@ -840,7 +840,7 @@ describe("applyRunScopedMentionedSkillKeys", () => {
   it("preserves existing version pins when adding mentioned skills", () => {
     const originalConfig = {
       command: "codex",
-      paperclipSkillSync: {
+      bionicSkillSync: {
         desiredSkills: [
           { key: "company/company-1/release-changelog", versionId: "version-1" },
         ],
@@ -853,7 +853,7 @@ describe("applyRunScopedMentionedSkillKeys", () => {
 
     expect(updatedConfig).toEqual({
       command: "codex",
-      paperclipSkillSync: {
+      bionicSkillSync: {
         desiredSkills: [
           { key: "company/company-1/release-changelog", versionId: "version-1" },
           { key: "company/company-1/security-review", versionId: null },

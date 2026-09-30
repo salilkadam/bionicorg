@@ -1,7 +1,7 @@
 import {
   COMPANY_SEARCH_SORTS,
   type CompanySearchSort,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import type { ParsedSearchQuery } from "./search-query-parser";
 
 /**

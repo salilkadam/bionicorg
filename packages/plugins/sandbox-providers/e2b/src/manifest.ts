@@ -1,6 +1,6 @@
-import type { PaperclipPluginManifestV1 } from "@paperclipai/plugin-sdk";
+import type { PaperclipPluginManifestV1 } from "@bionicai/plugin-sdk";
 
-const PLUGIN_ID = "paperclip.e2b-sandbox-provider";
+const PLUGIN_ID = "bionic.e2b-sandbox-provider";
 const PLUGIN_VERSION = "0.1.0";
 
 const manifest: PaperclipPluginManifestV1 = {
@@ -9,8 +9,8 @@ const manifest: PaperclipPluginManifestV1 = {
   version: PLUGIN_VERSION,
   displayName: "E2B Sandbox Provider",
   description:
-    "First-party sandbox provider plugin that provisions E2B cloud sandboxes as Paperclip execution environments.",
-  author: "Paperclip",
+    "First-party sandbox provider plugin that provisions E2B cloud sandboxes as Bionic execution environments.",
+  author: "Bionic",
   categories: ["automation"],
   capabilities: ["environment.drivers.register"],
   entrypoints: {
@@ -35,7 +35,7 @@ const manifest: PaperclipPluginManifestV1 = {
             type: "string",
             format: "secret-ref",
             description:
-              "Environment-specific E2B API key. Paste a key or an existing Paperclip secret reference; saved environments store pasted values as company secrets. Falls back to E2B_API_KEY if omitted.",
+              "Environment-specific E2B API key. Paste a key or an existing Bionic secret reference; saved environments store pasted values as company secrets. Falls back to E2B_API_KEY if omitted.",
           },
           timeoutMs: {
             type: "number",

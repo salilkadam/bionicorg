@@ -361,7 +361,7 @@ import {
   type IssueTreeControlMode,
   type WorkspaceFileRef,
   workspaceFileRefSchema,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 
 // Stable empty array for React Query `data` defaults. A literal `= []` default
 // creates a new array reference on every render while `data` is undefined
@@ -435,7 +435,7 @@ function buildPlanDecisionResponseText(
 
 const FEEDBACK_TERMS_URL =
   import.meta.env.VITE_FEEDBACK_TERMS_URL?.trim() ||
-  "https://paperclip.ing/tos";
+  "https://bionic.ing/tos";
 const ISSUE_COMMENT_AUTOLOAD_LIMIT = ISSUE_COMMENT_PAGE_SIZE * 3;
 const JUMP_TO_LATEST_MAX_COMMENT_PAGES = 10;
 function treeControlPreviewErrorCopy(error: unknown): string {
@@ -1183,7 +1183,7 @@ function InboxMobileToolbar({
 
 type IssueDetailChatTabProps = {
   queryIssueId?: string;
-  browsers?: import("@paperclipai/shared").TaskBrowser[];
+  browsers?: import("@bionicai/shared").TaskBrowser[];
   onOpenBrowser?: (browserId: string) => void;
   onOpenSkill?: (skillId: string, name: string) => void;
   issueId: string;
@@ -1498,7 +1498,7 @@ const IssueDetailChatTab = memo(function IssueDetailChatTab({
   );
   const assigneeUsesPaperclipRunner = Boolean(
     issueAssigneeAgentId &&
-    agentMap.get(issueAssigneeAgentId)?.adapterType === "paperclip_runner",
+    agentMap.get(issueAssigneeAgentId)?.adapterType === "bionic_runner",
   );
   const liveRuntimeRun =
     resolvedActiveRun ??
@@ -1508,7 +1508,7 @@ const IssueDetailChatTab = memo(function IssueDetailChatTab({
     null;
   // Do not briefly select queue behavior from the current assignee while the
   // authoritative active-run lookup is still loading. The active runtime owns
-  // the protocol: native Paperclip turns can steer in place, while legacy
+  // the protocol: native Bionic turns can steer in place, while legacy
   // adapters expose the same composer queue with an interrupt fallback.
   const runtimeSelectionKnown =
     liveRunsFetched && (!activeRunQueryEnabled || activeRunFetched);
@@ -1939,7 +1939,7 @@ const IssueDetailChatTab = memo(function IssueDetailChatTab({
           const queuedTargetRunId =
             interaction.sourceRunId &&
             interruptibleIssueRun?.id === interaction.sourceRunId &&
-            interruptibleIssueRun.adapterType !== "paperclip_runner"
+            interruptibleIssueRun.adapterType !== "bionic_runner"
               ? interaction.sourceRunId
               : null;
           const body =
@@ -2022,8 +2022,8 @@ const IssueDetailChatTab = memo(function IssueDetailChatTab({
     });
     const fallbackProtocol =
       liveRuntimeRun?.runtimeMode === "native" &&
-      liveRuntimeRun.adapterType === "paperclip_runner"
-        ? "paperclip_runner_v1"
+      liveRuntimeRun.adapterType === "bionic_runner"
+        ? "bionic_runner_v1"
         : "legacy";
     return mergePendingIssueQueuedComments({
       issueId,
@@ -2261,7 +2261,7 @@ const IssueDetailChatTab = memo(function IssueDetailChatTab({
         if (code === "queued_comment_already_dispatching") {
           pushToast({
             title: "Message is already being sent",
-            body: "The continuation started before the discard was confirmed, so Paperclip could not unsend it.",
+            body: "The continuation started before the discard was confirmed, so Bionic could not unsend it.",
             tone: "error",
             ttlMs: 15_000,
             dedupeKey: `queued-comment-already-dispatching:${issueId}:${commentId}`,
@@ -4423,7 +4423,7 @@ export function TaskDetailSurface({ conversation, tasksTab }: { tasksTab?: TaskS
           projects={projects}
           liveIssueIds={liveIssueIds}
           projectId={issue.projectId ?? undefined}
-          viewStateKey={`paperclip:issue-detail:${issue.id}:subissues-view`}
+          viewStateKey={`bionic:issue-detail:${issue.id}:subissues-view`}
           issueLinkState={resolvedIssueDetailState ?? location.state}
           searchFilters={{ descendantOf: issue.id, includeBlockedBy: true }}
           searchWithinLoadedIssues
@@ -6087,12 +6087,12 @@ export function TaskDetailSurface({ conversation, tasksTab }: { tasksTab?: TaskS
       setFileViewerPromptOpen(true);
     };
     window.addEventListener(
-      "paperclip:open-file-viewer",
+      "bionic:open-file-viewer",
       handleOpenFileViewer as EventListener,
     );
     return () => {
       window.removeEventListener(
-        "paperclip:open-file-viewer",
+        "bionic:open-file-viewer",
         handleOpenFileViewer as EventListener,
       );
     };
@@ -7531,7 +7531,7 @@ export function TaskDetailSurface({ conversation, tasksTab }: { tasksTab?: TaskS
                 mutedIssueIds={mutedChildIssueIds}
                 issueBadgeById={childPauseBadgeById}
                 projectId={issue.projectId ?? undefined}
-                viewStateKey={`paperclip:issue-detail:${issue.id}:subissues-view`}
+                viewStateKey={`bionic:issue-detail:${issue.id}:subissues-view`}
                 issueLinkState={resolvedIssueDetailState ?? location.state}
                 searchFilters={{
                   descendantOf: issue.id,
@@ -7934,7 +7934,7 @@ export function TaskDetailSurface({ conversation, tasksTab }: { tasksTab?: TaskS
                   currentUserId={currentUserId}
                   userLabelMap={userLabelMap}
                   userProfileMap={userProfileMap}
-                  draftKey={conversationAgent ? `paperclip:agent-chat-draft:${issue.companyId}:${currentUserId}:${conversationAgent.id}` : `paperclip:issue-comment-draft:${issue.id}`}
+                  draftKey={conversationAgent ? `bionic:agent-chat-draft:${issue.companyId}:${currentUserId}:${conversationAgent.id}` : `bionic:issue-comment-draft:${issue.id}`}
                   reassignOptions={commentReassignOptions}
                   currentAssigneeValue={actualAssigneeValue}
                   suggestedAssigneeValue={suggestedAssigneeValue}

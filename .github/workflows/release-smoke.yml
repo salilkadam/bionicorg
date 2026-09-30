@@ -3,8 +3,8 @@ name: Release Smoke
 on:
   workflow_dispatch:
     inputs:
-      paperclip_version:
-        description: Published Paperclip dist-tag to test
+      bionic_version:
+        description: Published Bionic dist-tag to test
         required: true
         default: canary
         type: choice
@@ -25,7 +25,7 @@ on:
         type: string
   workflow_call:
     inputs:
-      paperclip_version:
+      bionic_version:
         required: true
         type: string
       host_port:
@@ -76,7 +76,7 @@ jobs:
 
       - name: Onboard with the background service
         env:
-          PAPERCLIPAI_VERSION: ${{ inputs.paperclip_version }}
+          bionicAI_VERSION: ${{ inputs.bionic_version }}
           DATA_DIR: ${{ runner.temp }}/service-smoke-data
           SMOKE_CLEANUP: "false"
         run: ./scripts/service-onboard-smoke.sh
@@ -85,16 +85,16 @@ jobs:
         if: always()
         run: |
           {
-            systemctl --user --no-pager status paperclipai.service || true
-            journalctl --user -u paperclipai.service --no-pager || true
-          } > "$RUNNER_TEMP/paperclipai-service.log" 2>&1
+            systemctl --user --no-pager status bionicai.service || true
+            journalctl --user -u bionicai.service --no-pager || true
+          } > "$RUNNER_TEMP/bionicai-service.log" 2>&1
 
       - name: Upload service diagnostics
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact_name }}-service
-          path: ${{ runner.temp }}/paperclipai-service.log
+          path: ${{ runner.temp }}/bionicai-service.log
           retention-days: 14
 
   smoke:
@@ -135,7 +135,7 @@ jobs:
         run: |
           HOST_PORT="${{ inputs.host_port }}" \
           DATA_DIR="$RUNNER_TEMP/release-smoke-data" \
-          PAPERCLIPAI_VERSION="${{ inputs.paperclip_version }}" \
+          bionicAI_VERSION="${{ inputs.bionic_version }}" \
           SMOKE_READY_TIMEOUT_SECONDS=420 \
           SMOKE_DETACH=true \
           SMOKE_METADATA_FILE="${{ runner.temp }}/release-smoke.env" \
@@ -150,15 +150,15 @@ jobs:
             echo "SMOKE_ADMIN_PASSWORD=$SMOKE_ADMIN_PASSWORD"
             echo "SMOKE_DATA_DIR=$SMOKE_DATA_DIR"
             echo "SMOKE_IMAGE_NAME=$SMOKE_IMAGE_NAME"
-            echo "SMOKE_PAPERCLIPAI_VERSION=$SMOKE_PAPERCLIPAI_VERSION"
+            echo "SMOKE_bionicAI_VERSION=$SMOKE_bionicAI_VERSION"
           } >> "$GITHUB_ENV"
 
       - name: Run release smoke Playwright suite
         env:
-          PAPERCLIP_RELEASE_SMOKE_BASE_URL: ${{ env.SMOKE_BASE_URL }}
-          PAPERCLIP_RELEASE_SMOKE_EMAIL: ${{ env.SMOKE_ADMIN_EMAIL }}
-          PAPERCLIP_RELEASE_SMOKE_PASSWORD: ${{ env.SMOKE_ADMIN_PASSWORD }}
-          PAPERCLIP_PLAYWRIGHT_CHANNEL: "chrome"
+          BIONIC_RELEASE_SMOKE_BASE_URL: ${{ env.SMOKE_BASE_URL }}
+          BIONIC_RELEASE_SMOKE_EMAIL: ${{ env.SMOKE_ADMIN_EMAIL }}
+          BIONIC_RELEASE_SMOKE_PASSWORD: ${{ env.SMOKE_ADMIN_PASSWORD }}
+          BIONIC_PLAYWRIGHT_CHANNEL: "chrome"
         run: pnpm run test:release-smoke
 
       - name: Capture Docker logs

@@ -5,14 +5,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   listKimiSkills,
   syncKimiSkills,
-} from "@paperclipai/adapter-kimi-local/server";
+} from "@bionicai/adapter-kimi-local/server";
 
 async function makeTempDir(prefix: string): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), prefix));
 }
 
 describe("kimi local skill sync", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
+  const bionicKey = "bionicai/bionic/bionic";
   const cleanupDirs = new Set<string>();
 
   afterEach(async () => {
@@ -20,8 +20,8 @@ describe("kimi local skill sync", () => {
     cleanupDirs.clear();
   });
 
-  it("defaults and installs the operational Paperclip skill in the Kimi skills home", async () => {
-    const kimiCodeHome = await makeTempDir("paperclip-kimi-skill-sync-");
+  it("defaults and installs the operational Bionic skill in the Kimi skills home", async () => {
+    const kimiCodeHome = await makeTempDir("bionic-kimi-skill-sync-");
     cleanupDirs.add(kimiCodeHome);
 
     const ctx = {
@@ -38,11 +38,11 @@ describe("kimi local skill sync", () => {
     const before = await listKimiSkills(ctx);
     expect(before.adapterType).toBe("kimi_local");
     expect(before.mode).toBe("persistent");
-    expect(before.desiredSkills).toContain(paperclipKey);
-    expect(before.entries.find((entry) => entry.key === paperclipKey)?.state).toBe("missing");
+    expect(before.desiredSkills).toContain(bionicKey);
+    expect(before.entries.find((entry) => entry.key === bionicKey)?.state).toBe("missing");
 
-    const after = await syncKimiSkills(ctx, [paperclipKey]);
-    expect(after.entries.find((entry) => entry.key === paperclipKey)?.state).toBe("installed");
-    expect((await fs.lstat(path.join(kimiCodeHome, "skills", "paperclip"))).isSymbolicLink()).toBe(true);
+    const after = await syncKimiSkills(ctx, [bionicKey]);
+    expect(after.entries.find((entry) => entry.key === bionicKey)?.state).toBe("installed");
+    expect((await fs.lstat(path.join(kimiCodeHome, "skills", "bionic"))).isSymbolicLink()).toBe(true);
   });
 });

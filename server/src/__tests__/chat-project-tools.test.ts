@@ -3,7 +3,7 @@ import { createLocalAgentJwt } from "../agent-auth-jwt.js";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { issues, heartbeatRuns } from "@paperclipai/db";
+import { issues, heartbeatRuns } from "@bionicai/db";
 import { startRunnerApiTestServer } from "./helpers/runner-api-server.js";
 import { issueService } from "../services/issues.js";
 import { documentService } from "../services/documents.js";
@@ -13,14 +13,14 @@ import { getEmbeddedPostgresTestSupport } from "./helpers/embedded-postgres.js";
 const support = await getEmbeddedPostgresTestSupport();
 (support.supported ? describe : describe.skip)("chat project tool handoff", () => {
   let server: Awaited<ReturnType<typeof startRunnerApiTestServer>>;
-  const originalSecret = process.env.PAPERCLIP_AGENT_JWT_SECRET;
-  beforeAll(async () => { process.env.PAPERCLIP_AGENT_JWT_SECRET = randomUUID(); server = await startRunnerApiTestServer(); }, 60_000);
-  afterAll(async () => { await server?.close(); if (originalSecret === undefined) delete process.env.PAPERCLIP_AGENT_JWT_SECRET; else process.env.PAPERCLIP_AGENT_JWT_SECRET = originalSecret; });
+  const originalSecret = process.env.BIONIC_AGENT_JWT_SECRET;
+  beforeAll(async () => { process.env.BIONIC_AGENT_JWT_SECRET = randomUUID(); server = await startRunnerApiTestServer(); }, 60_000);
+  afterAll(async () => { await server?.close(); if (originalSecret === undefined) delete process.env.BIONIC_AGENT_JWT_SECRET; else process.env.BIONIC_AGENT_JWT_SECRET = originalSecret; });
   const call = (fixture: Awaited<ReturnType<typeof server.fixture>>, tool: string, args: Record<string, unknown>) => fixture.authority.execute({ tool, arguments: args, callId: randomUUID() });
 
   it("allows a conversation reply to enter review without manufacturing a review interaction", async () => {
     const f = await server.fixture({ conversation: true });
-    const token = createLocalAgentJwt(f.agentId, f.companyId, "paperclip_runner", f.runId, f.responsibleUserId)!;
+    const token = createLocalAgentJwt(f.agentId, f.companyId, "bionic_runner", f.runId, f.responsibleUserId)!;
     const response = await fetch(`${server.apiUrl}/api/issues/${f.issueId}`, {
       method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ status: "in_review", comment: "The plan is ready for our next discussion." }),
@@ -66,7 +66,7 @@ const support = await getEmbeddedPostgresTestSupport();
   it("hands off through the same API used by Claude/Codex MCP with the plan present on return", async () => {
     const f = await server.fixture({ conversation: true });
     const result = await callProjectTool({ name: "create_task", arguments: { title: "MCP handoff", projectId: f.projectId, initialPlan: "# Plan\nImplement in the execution task.", idempotencyKey: "mcp" },
-      apiUrl: server.apiUrl, token: createLocalAgentJwt(f.agentId, f.companyId, "paperclip_runner", f.runId, f.responsibleUserId)!,
+      apiUrl: server.apiUrl, token: createLocalAgentJwt(f.agentId, f.companyId, "bionic_runner", f.runId, f.responsibleUserId)!,
       companyId: f.companyId, issueId: f.issueId, agentId: f.agentId, conversation: true });
     expect(result).toMatchObject({ parentId: null, projectId: f.projectId, assigneeAgentId: f.agentId });
     expect((await documentService(server.db).getIssueDocumentByKey(result.id, "plan"))?.body).toContain("Implement in the execution task");

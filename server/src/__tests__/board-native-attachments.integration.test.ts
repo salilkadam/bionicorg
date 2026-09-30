@@ -22,7 +22,7 @@ import {
   issueAttachments,
   issueComments,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import { createLocalDiskStorageProvider } from "../storage/local-disk-provider.js";
 import { createStorageService } from "../storage/service.js";
@@ -98,7 +98,7 @@ describe("Board upload receipt to native wake staging", () => {
         id,
         companyId,
         name: id,
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: { provider: "codex" },
         runtimeConfig: {},
         status: "active",
@@ -199,14 +199,14 @@ describe("Board upload receipt to native wake staging", () => {
         {},
         emitted![1].contextSnapshot!,
       );
-      const paperclipWake = await buildPaperclipWakePayload({
+      const bionicWake = await buildPaperclipWakePayload({
         db,
         companyId,
         agentId: issue!.assigneeAgentId,
         runId,
         contextSnapshot,
       });
-      expect(paperclipWake?.comments[0]?.attachments).toEqual([
+      expect(bionicWake?.comments[0]?.attachments).toEqual([
         expect.objectContaining({ id: attachment.id, byteSize: bytes.length }),
       ]);
       await db.insert(heartbeatRuns).values({
@@ -218,7 +218,7 @@ describe("Board upload receipt to native wake staging", () => {
         nativeIssueId: issueId,
         invocationSource: "assignment",
         triggerDetail: "system",
-        contextSnapshot: { ...contextSnapshot, paperclipWake },
+        contextSnapshot: { ...contextSnapshot, bionicWake },
       });
       await db
         .update(issues)

@@ -20,7 +20,7 @@ import {
   startEmbeddedPostgresTestDatabase,
   toolApplications,
   toolConnections,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { discordPaperclipCommandDefinition } from "./chat-discord-command-registration.js";
 import {
   readRegisteredDiscordCommandRegistration,
@@ -28,7 +28,7 @@ import {
   type StoredDiscordCommandRegistrationOptions,
 } from "./chat-discord-command-registration-store.js";
 
-const external = process.env.PAPERCLIP_TEST_DATABASE_URL;
+const external = process.env.BIONIC_TEST_DATABASE_URL;
 const support = external
   ? { supported: true }
   : await getEmbeddedPostgresTestSupport();
@@ -46,7 +46,7 @@ suite("Discord command ownership store (real PostgreSQL, no network)", () => {
     if (external) db = createDb(external);
     else {
       temporary = await startEmbeddedPostgresTestDatabase(
-        "paperclip-discord-command-store-",
+        "bionic-discord-command-store-",
       );
       db = createDb(temporary.connectionString);
     }
@@ -247,7 +247,7 @@ suite("Discord command ownership store (real PostgreSQL, no network)", () => {
       receipt: Record<string, unknown>;
     };
     const prior = discordPaperclipCommandDefinition(registration.ownerId);
-    prior.options[2]!.description = "Close the current Paperclip task";
+    prior.options[2]!.description = "Close the current Bionic task";
     const remote = f.remote[0]!;
     f.remote[0] = {
       ...prior,

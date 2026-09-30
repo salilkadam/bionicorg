@@ -23,7 +23,7 @@ const fenceSchema = z
   })
   .strict();
 const common = {
-  schema: z.literal("paperclip.discord.command-registration.v1"),
+  schema: z.literal("bionic.discord.command-registration.v1"),
   scope: scopeSchema,
   ownerId,
 };
@@ -102,13 +102,13 @@ export function discordPaperclipCommandDefinition(publicOwnerId: string) {
     throw new Error("Invalid Discord command owner identifier");
   return {
     type: 1,
-    name: "paperclip",
-    description: `Paperclip session controls [pc:${publicOwnerId}]`,
+    name: "bionic",
+    description: `Bionic session controls [pc:${publicOwnerId}]`,
     options: [
       {
         type: 1,
         name: "status",
-        description: "Show the current Paperclip task",
+        description: "Show the current Bionic task",
       },
       {
         type: 1,
@@ -132,7 +132,7 @@ export function discordPaperclipCommandDefinition(publicOwnerId: string) {
 // it never enables command handling before a current definition is confirmed.
 function priorCloseCopyDefinition(id: string) {
   const definition = discordPaperclipCommandDefinition(id);
-  definition.options[2]!.description = "Close the current Paperclip task";
+  definition.options[2]!.description = "Close the current Bionic task";
   return definition;
 }
 
@@ -157,7 +157,7 @@ export function createDiscordCommandRegistration(
   if (!parsed.success)
     throw new Error("Invalid Discord command registration scope");
   return freezeState({
-    schema: "paperclip.discord.command-registration.v1",
+    schema: "bionic.discord.command-registration.v1",
     scope: parsed.data,
     ownerId: randomBytes(16).toString("hex"),
     phase: "prepared",
@@ -285,7 +285,7 @@ function markedOwner(
 ): boolean {
   return (
     command.type === 1 &&
-    command.name === "paperclip" &&
+    command.name === "bionic" &&
     command.application_id === state.scope.applicationId &&
     command.guild_id === undefined &&
     command.description.endsWith(`[pc:${state.ownerId}]`)
@@ -510,7 +510,7 @@ export async function reconcileDiscordCommandRegistration(
         };
   }
   const namespace = commands.filter(
-    (command) => command.type === 1 && command.name === "paperclip",
+    (command) => command.type === 1 && command.name === "bionic",
   );
   if (namespace.length > 1)
     return { kind: "unavailable", reason: "invalid_response" };

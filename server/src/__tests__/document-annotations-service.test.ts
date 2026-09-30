@@ -13,7 +13,7 @@ import {
   issueDocuments,
   issueThreadInteractions,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -49,7 +49,7 @@ describeEmbeddedPostgres("documentAnnotationService", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-document-annotations-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-document-annotations-");
     db = createDb(tempDb.connectionString);
     annotations = documentAnnotationService(db);
     docs = documentService(db);
@@ -78,7 +78,7 @@ describeEmbeddedPostgres("documentAnnotationService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });

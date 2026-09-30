@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Db } from "@paperclipai/db";
-import { PaperclipRunnerToolAuthority } from "./paperclip-runner-tool-authority.js";
+import type { Db } from "@bionicai/db";
+import { PaperclipRunnerToolAuthority } from "./bionic-runner-tool-authority.js";
 
 const binding = { companyId: "00000000-0000-4000-8000-000000000001", agentId: "00000000-0000-4000-8000-000000000002", issueId: "00000000-0000-4000-8000-000000000003", runId: "00000000-0000-4000-8000-000000000004" };
 

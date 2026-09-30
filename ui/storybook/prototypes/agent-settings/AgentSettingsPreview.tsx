@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils";
 import { RuntimeTestCard } from "../RuntimeTestCard";
 import { type TestOutcome } from "../new-agent-fixtures";
 import { COMPANY, ID, REF, createSettingsFixtures, library } from "./fixtures";
-import { storybookIssues } from "../../fixtures/paperclipData";
+import { storybookIssues } from "../../fixtures/bionicData";
 import "./settings.css";
 
 const descriptions: Record<AgentLocalDetailView, string> = {
@@ -54,7 +54,7 @@ const descriptions: Record<AgentLocalDetailView, string> = {
   tools: "Manage installed connections, available tools, and access policies.",
   channels: "Manage the external chat connections dedicated to this agent.",
   permissions: "Set the agent’s trust level, authority, and boundaries.",
-  "api-keys": "Manage the keys this agent uses to authenticate with Paperclip.",
+  "api-keys": "Manage the keys this agent uses to authenticate with Bionic.",
   revisions:
     "Review past configuration changes and restore an earlier version.",
 };

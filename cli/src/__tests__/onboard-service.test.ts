@@ -32,8 +32,8 @@ function supportedDetection() {
     manager: {
       platform: "systemd" as const,
       instanceId: "default",
-      serviceName: "paperclipai.service",
-      definitionPath: "/tmp/paperclipai.service",
+      serviceName: "bionicai.service",
+      definitionPath: "/tmp/bionicai.service",
       renderDefinition: () => "unit",
       install: vi.fn(async () => ({ changed: true })),
       uninstall: vi.fn(async () => undefined),
@@ -42,7 +42,7 @@ function supportedDetection() {
       restart: vi.fn(async () => undefined),
       status: vi.fn(async () => ({
         platform: "systemd" as const,
-        serviceName: "paperclipai.service",
+        serviceName: "bionicai.service",
         installed: true,
         active: true,
         enabled: true,
@@ -129,7 +129,7 @@ describe("onboard service policy", () => {
 
     expect(installed).toBe(true);
     expect(ensureServiceShim).toHaveBeenCalledOnce();
-    expect(success).toHaveBeenCalledWith(expect.stringContaining("managed paperclipai payload"));
+    expect(success).toHaveBeenCalledWith(expect.stringContaining("managed bionicai payload"));
     expect(detection.manager.install).toHaveBeenCalledWith({ startNow: true, startOnLogin: true });
   });
 
@@ -150,7 +150,7 @@ describe("onboard service policy", () => {
     expect(installed).toBe(false);
     expect(detection.manager.install).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("npm exploded"));
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("paperclipai install"));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("bionicai install"));
   });
 
 });
@@ -175,8 +175,8 @@ describe("onboarded service dashboard handoff", () => {
   it("uses the configured public URL when auth requires one", () => {
     expect(resolveOnboardServiceDashboardUrl(dashboardConfig({
       baseUrlMode: "explicit",
-      publicBaseUrl: "https://paperclip.example.com/",
-    }))).toBe("https://paperclip.example.com");
+      publicBaseUrl: "https://bionic.example.com/",
+    }))).toBe("https://bionic.example.com");
   });
 
   it("prints the dashboard URL without opening a browser in non-interactive runs", async () => {
@@ -243,7 +243,7 @@ describe("onboarded service dashboard handoff", () => {
     });
 
     expect(openDashboard).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("paperclipai service logs"));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("bionicai service logs"));
   });
 });
 

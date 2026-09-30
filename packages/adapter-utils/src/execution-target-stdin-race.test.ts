@@ -42,7 +42,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   // directly. The child command is `cat`, so every byte the poller writes to
   // the child stdin comes back as a `data` frame.
   async function startPollerWrapper(options?: { maxRetries?: number }) {
-    const sessionDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-poll-"));
+    const sessionDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-poll-"));
     cleanupDirs.push(sessionDir);
     const stdinDir = path.join(sessionDir, "stdin");
     await mkdir(stdinDir, { recursive: true });
@@ -55,11 +55,11 @@ describe("stdin file race (parent PAP-4037)", () => {
 
     const env: Record<string, string> = {
       ...process.env,
-      PAPERCLIP_PROCESS_SESSION_DIR: sessionDir,
-      PAPERCLIP_PROCESS_SESSION_COMMAND_B64: commandPayload,
+      BIONIC_PROCESS_SESSION_DIR: sessionDir,
+      BIONIC_PROCESS_SESSION_COMMAND_B64: commandPayload,
     };
     if (options?.maxRetries != null) {
-      env.PAPERCLIP_PROCESS_SESSION_STDIN_MAX_RETRIES = String(options.maxRetries);
+      env.BIONIC_PROCESS_SESSION_STDIN_MAX_RETRIES = String(options.maxRetries);
     }
 
     const child = spawn(process.execPath, [wrapperPath], {
@@ -312,7 +312,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   }
 
   it("serializes host stdin writes so a slow earlier write still lands first", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-host-order-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-host-order-"));
     cleanupDirs.push(rootDir);
     // The child echoes every stdin byte to stdout, so the wrapper reports the
     // exact bytes and order the child received on its stdin.
@@ -344,7 +344,7 @@ describe("stdin file race (parent PAP-4037)", () => {
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-stdin-host-order",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -410,7 +410,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   });
 
   it("holds stdinEnd on stop until an earlier pending stdin write lands first", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-stop-order-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-stop-order-"));
     cleanupDirs.push(rootDir);
     const childPath = path.join(rootDir, "echo-child.mjs");
     await writeFile(childPath, "process.stdin.on('data', (c) => process.stdout.write(c));\n", "utf8");
@@ -443,7 +443,7 @@ describe("stdin file race (parent PAP-4037)", () => {
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-stdin-stop-order",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -500,7 +500,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   ])(
     "recovers a transient %s failure (%s) without repeating or reordering stdin",
     async (stage, failure) => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-retry-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-retry-"));
       cleanupDirs.push(rootDir);
       const childPath = path.join(rootDir, "echo-child.mjs");
       await writeFile(childPath, "process.stdin.on('data', (c) => process.stdout.write(c));\n", "utf8");
@@ -569,7 +569,7 @@ describe("stdin file race (parent PAP-4037)", () => {
         }
         await waitFor(async () => {
           const files = await readdir(path.join(rootDir, "runtime", "process-sessions"), { recursive: true });
-          return files.every((file) => !file.endsWith(".paperclip-upload.b64") && !file.endsWith(".paperclip-upload.decoded"));
+          return files.every((file) => !file.endsWith(".bionic-upload.b64") && !file.endsWith(".bionic-upload.decoded"));
         });
       } finally {
         peer?.destroy();
@@ -592,7 +592,7 @@ describe("stdin file race (parent PAP-4037)", () => {
     ["Cloudflare sandbox bridge request failed with HTTP 502. sensitive-input", 1],
     ["Remote command failed: sensitive-input", 1],
   ] as const)("bounds input failure %s to %i attempts and stops later writes", async (failure, expectedAttempts) => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-failed-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-failed-"));
     cleanupDirs.push(rootDir);
     let attempts = 0;
     let laterWrite = false;
@@ -639,7 +639,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   }, 15_000);
 
   it("stops after exhausted input retries even when failure logging stalls", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-log-stall-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-log-stall-"));
     cleanupDirs.push(rootDir);
     let attempts = 0;
     let loggingStarted = false;
@@ -697,7 +697,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   // ---- Host atomic-write tests ------------------------------------------
 
   it.each(["fails", "stalls"])("preserves the upload failure when best-effort cleanup %s", async (cleanupMode) => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-upload-cleanup-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-upload-cleanup-"));
     cleanupDirs.push(rootDir);
     const local = createLocalSandboxRunner();
     const uploadFailure = new Error("Request failed with status code 502");
@@ -782,7 +782,7 @@ describe("stdin file race (parent PAP-4037)", () => {
   }
 
   it("finalizes the command-managed host write with an atomic rename onto the .json path", async () => {
-    const remoteRoot = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-host-cmd-"));
+    const remoteRoot = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-host-cmd-"));
     cleanupDirs.push(remoteRoot);
     const stdinDir = path.join(remoteRoot, "stdin");
     await mkdir(stdinDir, { recursive: true });
@@ -811,11 +811,11 @@ describe("stdin file race (parent PAP-4037)", () => {
     expect(finalizeScript).toBeDefined();
     expect(finalizeScript).toContain(`mv `);
     expect(finalizeScript).not.toContain(`> '${jsonPath}'`);
-    expect(finalizeScript).toMatch(/> '[^']+\.paperclip-upload\.decoded'/);
+    expect(finalizeScript).toMatch(/> '[^']+\.bionic-upload\.decoded'/);
   });
 
   it("never exposes a partial .json file under a concurrent reader (command-managed host write)", async () => {
-    const remoteRoot = await mkdtemp(path.join(os.tmpdir(), "paperclip-stdin-host-race-"));
+    const remoteRoot = await mkdtemp(path.join(os.tmpdir(), "bionic-stdin-host-race-"));
     cleanupDirs.push(remoteRoot);
     const stdinDir = path.join(remoteRoot, "stdin");
     await mkdir(stdinDir, { recursive: true });
@@ -953,7 +953,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   async function getFakeBirthtimePreloadPath(): Promise<string> {
     if (!fakeBirthtimePreloadPath) {
       fakeBirthtimePreloadPath = (async () => {
-        const dir = await mkdtemp(path.join(os.tmpdir(), "paperclip-birthtime-preload-"));
+        const dir = await mkdtemp(path.join(os.tmpdir(), "bionic-birthtime-preload-"));
         fakeBirthtimePreloadDir = dir;
         const preloadPath = path.join(dir, "fake-birthtime-preload.cjs");
         await writeFile(
@@ -961,9 +961,9 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
           [
             `const fs = require("fs");`,
             `const path = require("path");`,
-            `const target = process.env.PAPERCLIP_TEST_FAKE_BIRTHTIME_TARGET;`,
-            `const mode = process.env.PAPERCLIP_TEST_FAKE_BIRTHTIME_MODE;`,
-            `const sessionDir = process.env.PAPERCLIP_PROCESS_SESSION_DIR;`,
+            `const target = process.env.BIONIC_TEST_FAKE_BIRTHTIME_TARGET;`,
+            `const mode = process.env.BIONIC_TEST_FAKE_BIRTHTIME_MODE;`,
+            `const sessionDir = process.env.BIONIC_PROCESS_SESSION_DIR;`,
             `if (target && mode && sessionDir) {`,
             `  const resolvedTarget = path.resolve(target === "stdinDir" ? path.join(sessionDir, "stdin") : sessionDir);`,
             `  const originalLstat = fs.promises.lstat.bind(fs.promises);`,
@@ -1006,7 +1006,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   async function getProbeSwapPreloadPath(): Promise<string> {
     if (!probeSwapPreloadPath) {
       probeSwapPreloadPath = (async () => {
-        const dir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-swap-preload-"));
+        const dir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-swap-preload-"));
         probeSwapPreloadDir = dir;
         const preloadPath = path.join(dir, "probe-swap-preload.cjs");
         await writeFile(
@@ -1014,11 +1014,11 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
           [
             `const fs = require("fs");`,
             `const path = require("path");`,
-            `const mode = process.env.PAPERCLIP_TEST_PROBE_SWAP_MODE;`,
-            `const seq = process.env.PAPERCLIP_TEST_PROBE_SWAP_SEQ;`,
-            `const symlinkTarget = process.env.PAPERCLIP_TEST_PROBE_SWAP_SYMLINK_TARGET;`,
+            `const mode = process.env.BIONIC_TEST_PROBE_SWAP_MODE;`,
+            `const seq = process.env.BIONIC_TEST_PROBE_SWAP_SEQ;`,
+            `const symlinkTarget = process.env.BIONIC_TEST_PROBE_SWAP_SYMLINK_TARGET;`,
             `if (mode && seq) {`,
-            `  const expectedName = ".paperclip-birthtime-probe-" + process.pid + "-" + seq;`,
+            `  const expectedName = ".bionic-birthtime-probe-" + process.pid + "-" + seq;`,
             `  let swapped = false;`,
             `  const originalLstat = fs.promises.lstat.bind(fs.promises);`,
             `  fs.promises.lstat = async (candidatePath, opts) => {`,
@@ -1057,7 +1057,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   async function getFstatFailurePreloadPath(): Promise<string> {
     if (!fstatFailurePreloadPath) {
       fstatFailurePreloadPath = (async () => {
-        const dir = await mkdtemp(path.join(os.tmpdir(), "paperclip-fstat-failure-preload-"));
+        const dir = await mkdtemp(path.join(os.tmpdir(), "bionic-fstat-failure-preload-"));
         fstatFailurePreloadDir = dir;
         const preloadPath = path.join(dir, "fstat-failure-preload.cjs");
         await writeFile(
@@ -1065,9 +1065,9 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
           [
             `const fs = require("fs");`,
             `const path = require("path");`,
-            `const seq = process.env.PAPERCLIP_TEST_FSTAT_FAILURE_SEQ;`,
+            `const seq = process.env.BIONIC_TEST_FSTAT_FAILURE_SEQ;`,
             `if (seq) {`,
-            `  const expectedName = ".paperclip-birthtime-probe-" + process.pid + "-" + seq;`,
+            `  const expectedName = ".bionic-birthtime-probe-" + process.pid + "-" + seq;`,
             `  const originalOpen = fs.promises.open.bind(fs.promises);`,
             `  fs.promises.open = async (targetPath, flags, mode) => {`,
             `    const handle = await originalOpen(targetPath, flags, mode);`,
@@ -1119,7 +1119,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     // captureSessionIdentity() runs).
     fstatFailure?: { seq: 1 | 2 };
   }) {
-    const sessionDir = await mkdtemp(path.join(options?.parentDir ?? os.tmpdir(), "paperclip-wrapper-lifecycle-"));
+    const sessionDir = await mkdtemp(path.join(options?.parentDir ?? os.tmpdir(), "bionic-wrapper-lifecycle-"));
     cleanupDirs.push(sessionDir);
     const stdinDir = path.join(sessionDir, "stdin");
     const eventsDir = path.join(sessionDir, "events");
@@ -1134,26 +1134,26 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
 
     const env: Record<string, string> = {
       ...process.env,
-      PAPERCLIP_PROCESS_SESSION_DIR: sessionDir,
-      PAPERCLIP_PROCESS_SESSION_COMMAND_B64: commandPayload,
+      BIONIC_PROCESS_SESSION_DIR: sessionDir,
+      BIONIC_PROCESS_SESSION_COMMAND_B64: commandPayload,
     };
-    if (options?.maxRetries != null) env.PAPERCLIP_PROCESS_SESSION_STDIN_MAX_RETRIES = String(options.maxRetries);
-    if (options?.terminateGraceMs != null) env.PAPERCLIP_PROCESS_SESSION_TERMINATE_GRACE_MS = String(options.terminateGraceMs);
+    if (options?.maxRetries != null) env.BIONIC_PROCESS_SESSION_STDIN_MAX_RETRIES = String(options.maxRetries);
+    if (options?.terminateGraceMs != null) env.BIONIC_PROCESS_SESSION_TERMINATE_GRACE_MS = String(options.terminateGraceMs);
 
     const execArgv: string[] = [];
     if (options?.fakeBirthtime) {
-      env.PAPERCLIP_TEST_FAKE_BIRTHTIME_TARGET = options.fakeBirthtime.target;
-      env.PAPERCLIP_TEST_FAKE_BIRTHTIME_MODE = options.fakeBirthtime.mode;
+      env.BIONIC_TEST_FAKE_BIRTHTIME_TARGET = options.fakeBirthtime.target;
+      env.BIONIC_TEST_FAKE_BIRTHTIME_MODE = options.fakeBirthtime.mode;
       execArgv.push("--require", await getFakeBirthtimePreloadPath());
     }
     if (options?.probeSwap) {
-      env.PAPERCLIP_TEST_PROBE_SWAP_SEQ = String(options.probeSwap.seq);
-      env.PAPERCLIP_TEST_PROBE_SWAP_MODE = options.probeSwap.mode;
-      if (options.probeSwap.symlinkTarget) env.PAPERCLIP_TEST_PROBE_SWAP_SYMLINK_TARGET = options.probeSwap.symlinkTarget;
+      env.BIONIC_TEST_PROBE_SWAP_SEQ = String(options.probeSwap.seq);
+      env.BIONIC_TEST_PROBE_SWAP_MODE = options.probeSwap.mode;
+      if (options.probeSwap.symlinkTarget) env.BIONIC_TEST_PROBE_SWAP_SYMLINK_TARGET = options.probeSwap.symlinkTarget;
       execArgv.push("--require", await getProbeSwapPreloadPath());
     }
     if (options?.fstatFailure) {
-      env.PAPERCLIP_TEST_FSTAT_FAILURE_SEQ = String(options.fstatFailure.seq);
+      env.BIONIC_TEST_FSTAT_FAILURE_SEQ = String(options.fstatFailure.seq);
       execArgv.push("--require", await getFstatFailurePreloadPath());
     }
 
@@ -1298,7 +1298,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: input.runId,
       target,
-      runtimeRootDir: path.posix.join(input.rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(input.rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -1327,7 +1327,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   });
 
   it("T2 leaves neither the wrapper nor a stubborn child alive after stop()", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-stubborn-child-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-stubborn-child-"));
     cleanupDirs.push(rootDir);
     const runner = createLocalSandboxRunner();
     const session = await startTrackedBridgeSession({
@@ -1339,7 +1339,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     // The emitted wrapper script's own path is unique to this test (it lives
     // under this test's fresh temp root), so a `ps` grep on it identifies
     // only this test's wrapper process, not a sibling test's.
-    const wrapperScriptSubstring = path.posix.join(rootDir, ".paperclip-runtime", "acpx", "process-sessions");
+    const wrapperScriptSubstring = path.posix.join(rootDir, ".bionic-runtime", "acpx", "process-sessions");
     try {
       expect(isPidAlive(session.pid)).toBe(true);
       await waitFor(async () => (await findLivePidsByArgvSubstring(wrapperScriptSubstring)).length > 0, 4_000);
@@ -1371,7 +1371,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   });
 
   it("T4 stopping one session leaves a sibling session's wrapper and child alive", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-session-isolation-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-session-isolation-"));
     cleanupDirs.push(rootDir);
     const runner = createLocalSandboxRunner();
     const sessionA = await startTrackedBridgeSession({
@@ -1403,7 +1403,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 15_000);
 
   it("T5 still writes both control messages, finishes fast, and warns never after a forged exit event the live poll reads early", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-forged-exit-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-forged-exit-"));
     cleanupDirs.push(rootDir);
     const childPath = path.join(rootDir, "quiet-child.mjs");
     await writeFile(childPath, "process.stdin.resume();\n", "utf8");
@@ -1424,7 +1424,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-forged-exit",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -1458,7 +1458,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     await bridge!.stop();
     const elapsedMs = Date.now() - start;
 
-    const finalizeWrites = scripts.filter((script) => script.includes("base64 -d") && script.includes(".paperclip-upload.decoded"));
+    const finalizeWrites = scripts.filter((script) => script.includes("base64 -d") && script.includes(".bionic-upload.decoded"));
     // stdinEnd, then shutdown: both control messages still land.
     expect(finalizeWrites.length).toBeGreaterThanOrEqual(2);
     const removeScript = scripts.find((script) => script.trim().startsWith("rm -rf"));
@@ -1473,7 +1473,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 10_000);
 
   it("T14 a forged exit event alone does not shorten the wait when the wrapper never truly runs", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-forged-only-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-forged-only-"));
     cleanupDirs.push(rootDir);
     const childPath = path.join(rootDir, "quiet-child.mjs");
     await writeFile(childPath, "process.stdin.resume();\n", "utf8");
@@ -1524,7 +1524,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-forged-only",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -1568,7 +1568,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 10_000);
 
   it("T6 issues no operating-system signal from the host during stop()", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-no-signal-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-no-signal-"));
     cleanupDirs.push(rootDir);
     const childPath = path.join(rootDir, "quiet-child.mjs");
     await writeFile(childPath, "process.stdin.resume();\n", "utf8");
@@ -1588,7 +1588,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-no-signal",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -1633,7 +1633,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   });
 
   it("T9 exits with an error event when sessionDir is a symbolic link", async () => {
-    const targetDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-symlink-target-"));
+    const targetDir = await mkdtemp(path.join(os.tmpdir(), "bionic-symlink-target-"));
     cleanupDirs.push(targetDir);
     const linkDir = `${targetDir}-link`;
     const { symlink } = await import("node:fs/promises");
@@ -1649,8 +1649,8 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
       cwd: targetDir,
       env: {
         ...process.env,
-        PAPERCLIP_PROCESS_SESSION_DIR: linkDir,
-        PAPERCLIP_PROCESS_SESSION_COMMAND_B64: commandPayload,
+        BIONIC_PROCESS_SESSION_DIR: linkDir,
+        BIONIC_PROCESS_SESSION_COMMAND_B64: commandPayload,
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -1684,7 +1684,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
       command: process.execPath,
       args: [
         "-e",
-        "process.stdout.write(JSON.stringify(Object.keys(process.env).filter((k) => k.startsWith('PAPERCLIP_PROCESS_SESSION'))));process.exit(0)",
+        "process.stdout.write(JSON.stringify(Object.keys(process.env).filter((k) => k.startsWith('BIONIC_PROCESS_SESSION'))));process.exit(0)",
       ],
     });
     await waitFor(() => wrapper.frames.some((frame) => frame.type === "exit"), 4_000);
@@ -1740,7 +1740,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   // the file-poll loop stopped re-arming right after it delivered the
   // `exit` event and so never read the `shutdownAck` file that followed it.
   it("T12 stop() finishes well inside the shutdown budget and logs no warning after a normal child exit", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-normal-exit-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-normal-exit-"));
     cleanupDirs.push(rootDir);
     const childPath = path.join(rootDir, "quick-exit-child.mjs");
     await writeFile(childPath, "process.exit(0);\n", "utf8");
@@ -1759,7 +1759,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-normal-exit",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -1789,7 +1789,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   // remove `sessionDir`. The fix must not turn the bounded wait into an
   // unconditional skip.
   it("T13 warns and still removes sessionDir when the wrapper never acknowledges and never exits", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-never-acks-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-never-acks-"));
     cleanupDirs.push(rootDir);
     const childPath = path.join(rootDir, "quiet-child.mjs");
     await writeFile(childPath, "process.stdin.resume();\n", "utf8");
@@ -1841,7 +1841,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-never-acks",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -1887,7 +1887,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   // gap, because it is set fresh on every inode allocation even when the
   // allocator reissues an old inode number.
   it("T15 latches on a lost session identity: a recreated control directory cannot keep the wrapper or its child alive", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-lost-identity-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-lost-identity-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t15-child.pid");
     const childPath = path.join(rootDir, "t15-child.mjs");
@@ -1993,7 +1993,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     const bridge = await startAdapterExecutionTargetProcessSessionBridge({
       runId: "run-lost-identity",
       target,
-      runtimeRootDir: path.posix.join(rootDir, ".paperclip-runtime", "acpx"),
+      runtimeRootDir: path.posix.join(rootDir, ".bionic-runtime", "acpx"),
       adapterKey: "acpx",
       command: process.execPath,
       args: [childPath],
@@ -2014,7 +2014,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     await waitFor(async () => (await readFile(pidFile, "utf8").catch(() => "")).trim().length > 0, 8_000);
     const pid = Number.parseInt((await readFile(pidFile, "utf8")).trim(), 10);
     expect(isPidAlive(pid)).toBe(true);
-    const wrapperScriptSubstring = path.posix.join(rootDir, ".paperclip-runtime", "acpx", "process-sessions");
+    const wrapperScriptSubstring = path.posix.join(rootDir, ".bionic-runtime", "acpx", "process-sessions");
     await waitFor(async () => (await findLivePidsByArgvSubstring(wrapperScriptSubstring)).length > 0, 4_000);
 
     await bridge!.stop();
@@ -2072,7 +2072,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }
 
   it("T16 accepts a zero creation time when the filesystem does not report birth time", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-birthtime-zero-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-birthtime-zero-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t16-child.pid");
     const childPath = path.join(rootDir, "t16-child.mjs");
@@ -2103,7 +2103,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 15_000);
 
   it("T17 fails closed at capture when the reported creation time follows the change time, so a change-time copy never passes as a real creation time", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-birthtime-followctime-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-birthtime-followctime-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t17-child.pid");
     const childPath = path.join(rootDir, "t17-child.mjs");
@@ -2131,7 +2131,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     // temp directory: the test denies traversal on that parent, and doing
     // that to the shared OS temp directory would break every other process
     // on the host that also uses it.
-    const parentDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-eacces-sessiondir-"));
+    const parentDir = await mkdtemp(path.join(os.tmpdir(), "bionic-eacces-sessiondir-"));
     cleanupDirs.push(parentDir);
     const pidFile = path.join(parentDir, "t18-child.pid");
     const childPath = path.join(parentDir, "t18-child.mjs");
@@ -2162,7 +2162,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
 
   it("T19 latches on an EACCES lstat failure on stdinDir during verification, even though sessionDir itself still stats cleanly", async () => {
     const wrapperOptions = { outputToStdout: false as const, terminateGraceMs: 200 };
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-eacces-stdindir-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-eacces-stdindir-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t19-child.pid");
     const childPath = path.join(rootDir, "t19-child.mjs");
@@ -2185,13 +2185,13 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 15_000);
 
   it("T20 refuses to write through a probe path a sandbox peer pre-created as a symbolic link, and leaves that link and its target untouched", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-symlink-race-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-symlink-race-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t20-child.pid");
     const childPath = path.join(rootDir, "t20-child.mjs");
     await writeFile(childPath, trackedChildSource(pidFile), "utf8");
 
-    const sessionDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-symlink-session-"));
+    const sessionDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-symlink-session-"));
     cleanupDirs.push(sessionDir);
     const stdinDir = path.join(sessionDir, "stdin");
     await mkdir(stdinDir, { recursive: true });
@@ -2211,15 +2211,15 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
       cwd: sessionDir,
       env: {
         ...process.env,
-        PAPERCLIP_PROCESS_SESSION_DIR: sessionDir,
-        PAPERCLIP_PROCESS_SESSION_COMMAND_B64: commandPayload,
+        BIONIC_PROCESS_SESSION_DIR: sessionDir,
+        BIONIC_PROCESS_SESSION_COMMAND_B64: commandPayload,
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
 
     // Wins the race to the probe path against the wrapper's own probe write.
     // nextProbeFileName() is deterministic: it names
-    // ".paperclip-birthtime-probe-<pid>-1" on the wrapper's first probe call,
+    // ".bionic-birthtime-probe-<pid>-1" on the wrapper's first probe call,
     // which always targets sessionDir. child.pid is available synchronously
     // right after spawn() returns, well before the freshly spawned process
     // has loaded Node or parsed its own script, so this synchronous
@@ -2227,7 +2227,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     // sandbox peer racing to pre-create the path would have, so it gives the
     // strongest proof: the real wrapper process, under the real race, must
     // still refuse to follow the link.
-    const probePath = path.join(sessionDir, `.paperclip-birthtime-probe-${child.pid}-1`);
+    const probePath = path.join(sessionDir, `.bionic-birthtime-probe-${child.pid}-1`);
     symlinkSync(probeLinkTarget, probePath);
 
     let stderrText = "";
@@ -2258,7 +2258,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   // the last time before deciding whether to remove it.
 
   it("T21 still removes its own probe file normally when no peer ever replaces it", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-no-swap-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-no-swap-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t21-child.pid");
     const childPath = path.join(rootDir, "t21-child.mjs");
@@ -2271,13 +2271,13 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     });
     await waitForTrackedChildPid(pidFile);
 
-    const probePath = path.join(wrapper.sessionDir, `.paperclip-birthtime-probe-${wrapper.pid}-1`);
+    const probePath = path.join(wrapper.sessionDir, `.bionic-birthtime-probe-${wrapper.pid}-1`);
     await waitFor(async () => !(await lstat(probePath).then(() => true).catch(() => false)), 4_000);
     await expect(lstat(probePath)).rejects.toThrow();
   }, 15_000);
 
   it("T22 leaves a peer's replacement file untouched instead of deleting it", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-swap-file-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-swap-file-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t22-child.pid");
     const childPath = path.join(rootDir, "t22-child.mjs");
@@ -2291,7 +2291,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     });
     await waitForTrackedChildPid(pidFile);
 
-    const probePath = path.join(wrapper.sessionDir, `.paperclip-birthtime-probe-${wrapper.pid}-1`);
+    const probePath = path.join(wrapper.sessionDir, `.bionic-birthtime-probe-${wrapper.pid}-1`);
     await waitFor(async () => (await readFile(probePath, "utf8").catch(() => null)) === "peer-owned-content", 4_000);
     // The wrapper's own cleanup call already ran (the preload only swaps the
     // path the moment the wrapper itself checks it). This delay proves that
@@ -2301,7 +2301,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 15_000);
 
   it("T23 leaves a peer's replacement directory untouched instead of deleting it", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-swap-dir-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-swap-dir-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t23-child.pid");
     const childPath = path.join(rootDir, "t23-child.mjs");
@@ -2315,14 +2315,14 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     });
     await waitForTrackedChildPid(pidFile);
 
-    const probePath = path.join(wrapper.sessionDir, `.paperclip-birthtime-probe-${wrapper.pid}-1`);
+    const probePath = path.join(wrapper.sessionDir, `.bionic-birthtime-probe-${wrapper.pid}-1`);
     await waitFor(async () => await lstat(probePath).then((stats) => stats.isDirectory()).catch(() => false), 4_000);
     await delay(200);
     expect((await lstat(probePath)).isDirectory()).toBe(true);
   }, 15_000);
 
   it("T24 leaves a peer's replacement symbolic link and its target untouched instead of deleting or following it", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-swap-symlink-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-swap-symlink-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t24-child.pid");
     const childPath = path.join(rootDir, "t24-child.mjs");
@@ -2340,7 +2340,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     });
     await waitForTrackedChildPid(pidFile);
 
-    const probePath = path.join(wrapper.sessionDir, `.paperclip-birthtime-probe-${wrapper.pid}-1`);
+    const probePath = path.join(wrapper.sessionDir, `.bionic-birthtime-probe-${wrapper.pid}-1`);
     await waitFor(async () => await lstat(probePath).then((stats) => stats.isSymbolicLink()).catch(() => false), 4_000);
     await delay(200);
     expect((await lstat(probePath)).isSymbolicLink()).toBe(true);
@@ -2349,7 +2349,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
   }, 15_000);
 
   it("T25 fails closed at capture when its own probe file's identity cannot be read, so no orphan wrapper or child ever starts polling", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-probe-fstat-failure-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-probe-fstat-failure-"));
     cleanupDirs.push(rootDir);
     const pidFile = path.join(rootDir, "t25-child.pid");
     const childPath = path.join(rootDir, "t25-child.mjs");
@@ -2375,7 +2375,7 @@ describe("deterministic remote process-session wrapper shutdown (PAP-5316)", () 
     // remove it by path alone: it leaves the file exactly as it created it,
     // rather than risking removal of a different entry a peer may have put
     // at the same path.
-    const probePath = path.join(wrapper.sessionDir, `.paperclip-birthtime-probe-${wrapper.pid}-1`);
+    const probePath = path.join(wrapper.sessionDir, `.bionic-birthtime-probe-${wrapper.pid}-1`);
     expect((await lstat(probePath)).isFile()).toBe(true);
   }, 15_000);
 });

@@ -3,8 +3,8 @@
 -- stored provenance here, without replaying duplicate retirement or rekeying.
 -- The primary-key cursor visits every row once, including unrelated-only
 -- batches. Query/write batches are bounded, but locks still last until commit.
--- paperclip:migration-safety-ignore loop-mutation-large-table: Existing agent_wakeup_requests primary key supports the strictly advancing UUID cursor. Each batch selects at most 500 IDs and updates only matching IDs and exact legacy repair metadata.
--- paperclip:migration-safety-ignore batched-mutation-large-table-missing-index: Existing agent_wakeup_requests primary key supports ORDER BY id and id > last_id. No JSON predicate is used to search repeatedly for the next batch.
+-- bionic:migration-safety-ignore loop-mutation-large-table: Existing agent_wakeup_requests primary key supports the strictly advancing UUID cursor. Each batch selects at most 500 IDs and updates only matching IDs and exact legacy repair metadata.
+-- bionic:migration-safety-ignore batched-mutation-large-table-missing-index: Existing agent_wakeup_requests primary key supports ORDER BY id and id > last_id. No JSON predicate is used to search repeatedly for the next batch.
 DO $provenance$
 DECLARE
   last_id uuid;

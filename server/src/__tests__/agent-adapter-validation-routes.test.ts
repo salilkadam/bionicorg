@@ -149,7 +149,7 @@ function registerModuleMocks() {
 
   // The adapter registry reads the disabled set from this store. Mock it so a
   // test can declare an adapter disabled without writing to the real
-  // ~/.paperclip/adapter-settings.json.
+  // ~/.bionic/adapter-settings.json.
   vi.doMock("../services/adapter-plugin-store.js", () => ({
     getDisabledAdapterTypes: mockAdapterPluginStore.getDisabledAdapterTypes,
     isAdapterDisabled: (type: string) =>
@@ -345,14 +345,14 @@ describe("agent routes adapter validation", () => {
     try {
       const app = await createApp();
       for (const [provider, adapter] of [["acpx", "claude_local"], ["codex", "codex_local"], ["opencode", "opencode_local"]]) {
-        const res = await requestApp(app, (baseUrl) => request(baseUrl).get(`/api/companies/company-1/adapters/paperclip_runner/models?provider=${provider}`));
+        const res = await requestApp(app, (baseUrl) => request(baseUrl).get(`/api/companies/company-1/adapters/bionic_runner/models?provider=${provider}`));
         expect(res.status).toBe(200);
         expect(res.body).toEqual([{ id: adapter, label: adapter }]);
-        const refreshed = await requestApp(app, (baseUrl) => request(baseUrl).get(`/api/companies/company-1/adapters/paperclip_runner/models?provider=${provider}&refresh=true`));
+        const refreshed = await requestApp(app, (baseUrl) => request(baseUrl).get(`/api/companies/company-1/adapters/bionic_runner/models?provider=${provider}&refresh=true`));
         expect(refreshed.status).toBe(200);
         expect(refreshed.body).toEqual([{ id: `${adapter}-fresh`, label: adapter }]);
       }
-      const invalid = await requestApp(app, (baseUrl) => request(baseUrl).get("/api/companies/company-1/adapters/paperclip_runner/models?provider=acpx_codex"));
+      const invalid = await requestApp(app, (baseUrl) => request(baseUrl).get("/api/companies/company-1/adapters/bionic_runner/models?provider=acpx_codex"));
       expect(invalid.status).toBe(422);
     } finally { list.mockRestore(); refresh.mockRestore(); }
   });
@@ -539,7 +539,7 @@ describe("agent routes adapter validation", () => {
 
   it("restores a saved agent's redacted CODEX_HOME before testing its adapter", async () => {
     const agentId = "11111111-1111-4111-8111-111111111111";
-    const storedHome = "/paperclip/companies/company-1/agents/agent-1/codex-home";
+    const storedHome = "/bionic/companies/company-1/agents/agent-1/codex-home";
     mockAgentService.getById.mockResolvedValue({
       ...(await mockAgentService.getById()),
       id: agentId,
@@ -600,7 +600,7 @@ describe("agent routes adapter validation", () => {
 
   it("refuses to create an agent on an adapter the instance has disabled", async () => {
     // A disabled adapter is one the instance cannot run (e.g. curated out of
-    // PAPERCLIP_ADAPTERS). Creating an agent on it "succeeds" and then every
+    // BIONIC_ADAPTERS). Creating an agent on it "succeeds" and then every
     // run of that agent dies at lease time with "not in the configured adapter
     // registry", so the refusal belongs here, where it can name the choices.
     const { registerServerAdapter } = await import("../adapters/index.js");
@@ -671,20 +671,20 @@ describe("agent routes adapter validation", () => {
     expect(res.status, JSON.stringify(res.body)).toBe(201);
   });
 
-  it("rejects a new paperclip_runner selection while the rollout flag is off", async () => {
+  it("rejects a new bionic_runner selection while the rollout flag is off", async () => {
     const app = await createApp();
     const res = await requestApp(app, (baseUrl) =>
       request(baseUrl)
         .post("/api/companies/company-1/agents")
-        .send({ name: "Native Codex", adapterType: "paperclip_runner" }),
+        .send({ name: "Native Codex", adapterType: "bionic_runner" }),
     );
 
     expect(res.status, JSON.stringify(res.body)).toBe(422);
-    expect(res.body.details).toMatchObject({ code: "paperclip_runner_rollout_disabled" });
+    expect(res.body.details).toMatchObject({ code: "bionic_runner_rollout_disabled" });
     expect(mockAgentService.create).not.toHaveBeenCalled();
   });
 
-  it("allows a new paperclip_runner selection while the rollout flag is on", async () => {
+  it("allows a new bionic_runner selection while the rollout flag is on", async () => {
     mockInstanceSettingsService.getExperimental.mockResolvedValue({ enableNativeRunner: true });
     const app = await createApp();
     const res = await requestApp(app, (baseUrl) =>
@@ -692,11 +692,11 @@ describe("agent routes adapter validation", () => {
         .post("/api/companies/company-1/agents")
         .send({
           name: "Native Codex",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           adapterConfig: {
             provider: "codex",
-            paperclipSkillSync: {
-              desiredSkills: ["paperclipai/paperclip/paperclip", "company-1/reviewer"],
+            bionicSkillSync: {
+              desiredSkills: ["bionicai/bionic/bionic", "company-1/reviewer"],
             },
           },
         }),
@@ -711,19 +711,19 @@ describe("agent routes adapter validation", () => {
           model: "gpt-5.6-sol",
           codexPermissionMode: "never",
           lifecycleMode: "per_turn",
-          paperclipSkillSync: { desiredSkills: ["company-1/reviewer"] },
+          bionicSkillSync: { desiredSkills: ["company-1/reviewer"] },
         }),
       }),
       expect.any(Object),
     );
     expect(mockAgentInstructionsService.materializeManagedBundle).toHaveBeenCalledWith(
-      expect.objectContaining({ adapterType: "paperclip_runner" }),
+      expect.objectContaining({ adapterType: "bionic_runner" }),
       expect.any(Object),
       expect.objectContaining({ entryFile: "AGENTS.md", replaceExisting: false }),
     );
   });
 
-  it("normalizes legacy skills and permissions when switching to paperclip_runner", async () => {
+  it("normalizes legacy skills and permissions when switching to bionic_runner", async () => {
     mockInstanceSettingsService.getExperimental.mockResolvedValue({ enableNativeRunner: true });
     const existing = await mockAgentService.getById();
     mockAgentService.getById.mockResolvedValue({
@@ -731,8 +731,8 @@ describe("agent routes adapter validation", () => {
       adapterType: "codex_local",
       adapterConfig: {
         model: "gpt-5.5",
-        paperclipSkillSync: {
-          desiredSkills: ["paperclipai/paperclip/paperclip", "company-1/reviewer"],
+        bionicSkillSync: {
+          desiredSkills: ["bionicai/bionic/bionic", "company-1/reviewer"],
         },
       },
     });
@@ -741,20 +741,20 @@ describe("agent routes adapter validation", () => {
     const res = await requestApp(app, (baseUrl) =>
       request(baseUrl)
         .patch("/api/agents/11111111-1111-4111-8111-111111111111")
-        .send({ adapterType: "paperclip_runner", replaceAdapterConfig: true, adapterConfig: {} }),
+        .send({ adapterType: "bionic_runner", replaceAdapterConfig: true, adapterConfig: {} }),
     );
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(mockAgentService.update).toHaveBeenCalledWith(
       "11111111-1111-4111-8111-111111111111",
       expect.objectContaining({
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: expect.objectContaining({
           provider: "codex",
           model: "gpt-5.5",
           codexPermissionMode: "never",
           lifecycleMode: "per_turn",
-          paperclipSkillSync: { desiredSkills: ["company-1/reviewer"] },
+          bionicSkillSync: { desiredSkills: ["company-1/reviewer"] },
         }),
       }),
       expect.any(Object),
@@ -769,7 +769,7 @@ describe("agent routes adapter validation", () => {
       request(baseUrl)
         .patch("/api/agents/11111111-1111-4111-8111-111111111111")
         .send({
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           replaceAdapterConfig: true,
           adapterConfig: { model: "" },
         }),
@@ -799,7 +799,7 @@ describe("agent routes adapter validation", () => {
       request(baseUrl)
         .patch("/api/agents/11111111-1111-4111-8111-111111111111")
         .send({
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           replaceAdapterConfig: true,
           adapterConfig: {},
         }),
@@ -817,7 +817,7 @@ describe("agent routes adapter validation", () => {
         .post("/api/companies/company-1/agents")
         .send({
           name: "Native OpenCode",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           adapterConfig: {
             provider: "opencode",
             model: "openrouter/deepseek/deepseek-v4-flash-0731",
@@ -829,7 +829,7 @@ describe("agent routes adapter validation", () => {
         .post("/api/companies/company-1/agent-hires")
         .send({
           name: "Native ACPX",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           adapterConfig: {
             provider: "acpx",
             acpxAgent: "claude",
@@ -842,7 +842,7 @@ describe("agent routes adapter validation", () => {
         .post("/api/companies/company-1/agents")
         .send({
           name: "Native Claude Managed",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           adapterConfig: {
             provider: "claude_managed",
             managedProfileId: "managed-primary",
@@ -855,7 +855,7 @@ describe("agent routes adapter validation", () => {
         .post("/api/companies/company-1/agent-hires")
         .send({
           name: "Native AgentCore",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           adapterConfig: {
             provider: "aws_agentcore",
             agentCoreProfileId: "agentcore-primary",
@@ -948,7 +948,7 @@ describe("agent routes adapter validation", () => {
           .post("/api/companies/company-1/agents")
           .send({
             name: "Invalid Managed Selection",
-            adapterType: "paperclip_runner",
+            adapterType: "bionic_runner",
             adapterConfig,
           }),
       );
@@ -969,7 +969,7 @@ describe("agent routes adapter validation", () => {
     const existing = await mockAgentService.getById();
     mockAgentService.getById.mockResolvedValue({
       ...existing,
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "opencode", model: "historical" },
     });
     const app = await createApp();
@@ -998,7 +998,7 @@ describe("agent routes adapter validation", () => {
         managedAgentsRetentionAcknowledged: true,
       },
       { managedProfileId: "" },
-      "paperclip_runner_claude_managed_profile_required",
+      "bionic_runner_claude_managed_profile_required",
     ],
     [
       "withdrawn managed retention",
@@ -1008,7 +1008,7 @@ describe("agent routes adapter validation", () => {
         managedAgentsRetentionAcknowledged: true,
       },
       { managedAgentsRetentionAcknowledged: false },
-      "paperclip_runner_claude_managed_retention_required",
+      "bionic_runner_claude_managed_retention_required",
     ],
     [
       "unqualified managed model",
@@ -1018,7 +1018,7 @@ describe("agent routes adapter validation", () => {
         managedAgentsRetentionAcknowledged: true,
       },
       { model: "claude-opus-5" },
-      "paperclip_runner_claude_managed_model_unqualified",
+      "bionic_runner_claude_managed_model_unqualified",
     ],
     [
       "invalid managed spend cap",
@@ -1028,21 +1028,21 @@ describe("agent routes adapter validation", () => {
         managedAgentsRetentionAcknowledged: true,
       },
       { maxSessionListCostUsd: 0 },
-      "paperclip_runner_claude_managed_spend_cap_invalid",
+      "bionic_runner_claude_managed_spend_cap_invalid",
     ],
     [
       "invalid Codex permission",
       { provider: "codex", codexPermissionMode: "never" },
       { codexPermissionMode: "unrestricted" },
-      "paperclip_runner_codex_permission_mode_unqualified",
+      "bionic_runner_codex_permission_mode_unqualified",
     ],
   ])(
-    "rejects a same-provider Paperclip Runner edit with %s",
+    "rejects a same-provider Bionic Runner edit with %s",
     async (_label, existingAdapterConfig, adapterConfigPatch, expectedCode) => {
       const existing = await mockAgentService.getById();
       mockAgentService.getById.mockResolvedValue({
         ...existing,
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: existingAdapterConfig,
       });
       const app = await createApp();
@@ -1062,7 +1062,7 @@ describe("agent routes adapter validation", () => {
     const existing = await mockAgentService.getById();
     mockAgentService.getById.mockResolvedValue({
       ...existing,
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: {
         provider: "claude_managed",
         managedProfileId: "managed-primary",
@@ -1093,7 +1093,7 @@ describe("agent routes adapter validation", () => {
     const existing = await mockAgentService.getById();
     mockAgentService.getById.mockResolvedValue({
       ...existing,
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: {
         provider: "claude_managed",
         managedProfileId: "managed-primary",
@@ -1102,7 +1102,7 @@ describe("agent routes adapter validation", () => {
     });
     mockAgentService.getConfigRevision.mockResolvedValue({
       afterConfig: {
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {
           provider: "claude_managed",
           managedProfileId: "managed-primary",
@@ -1120,16 +1120,16 @@ describe("agent routes adapter validation", () => {
 
     expect(response.status, JSON.stringify(response.body)).toBe(422);
     expect(response.body.details).toMatchObject({
-      code: "paperclip_runner_claude_managed_retention_required",
+      code: "bionic_runner_claude_managed_retention_required",
     });
     expect(mockAgentService.rollbackConfigRevision).not.toHaveBeenCalled();
   });
 
-  it("keeps an existing paperclip_runner agent editable after the flag is disabled", async () => {
+  it("keeps an existing bionic_runner agent editable after the flag is disabled", async () => {
     const existing = await mockAgentService.getById();
     mockAgentService.getById.mockResolvedValue({
       ...existing,
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "codex" },
     });
     const app = await createApp();

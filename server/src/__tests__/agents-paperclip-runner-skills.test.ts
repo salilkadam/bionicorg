@@ -2,19 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   normalizePaperclipOperationalSkillPreference,
   normalizePaperclipRunnerAdapterConfig,
-  PAPERCLIP_OPERATIONAL_SKILL_KEY,
+  BIONIC_OPERATIONAL_SKILL_KEY,
   resolveLegacyPaperclipDesiredSkillNames,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 
 const legacyConfig = {
-  paperclipSkillSync: {
-    desiredSkills: [PAPERCLIP_OPERATIONAL_SKILL_KEY],
+  bionicSkillSync: {
+    desiredSkills: [BIONIC_OPERATIONAL_SKILL_KEY],
   },
 };
 
-describe("paperclip_runner operational skill normalization", () => {
+describe("bionic_runner operational skill normalization", () => {
   it("applies full-auto native runner defaults at persistence boundaries", () => {
-    expect(normalizePaperclipRunnerAdapterConfig("paperclip_runner", {})).toEqual({
+    expect(normalizePaperclipRunnerAdapterConfig("bionic_runner", {})).toEqual({
       provider: "codex",
       model: "gpt-5.6-sol",
       codexPermissionMode: "never",
@@ -23,14 +23,14 @@ describe("paperclip_runner operational skill normalization", () => {
   });
 
   it("repairs an existing blank model without replacing an explicit model", () => {
-    expect(normalizePaperclipRunnerAdapterConfig("paperclip_runner", { model: "" }))
+    expect(normalizePaperclipRunnerAdapterConfig("bionic_runner", { model: "" }))
       .toMatchObject({ model: "gpt-5.6-sol" });
-    expect(normalizePaperclipRunnerAdapterConfig("paperclip_runner", { model: "gpt-5.5" }))
+    expect(normalizePaperclipRunnerAdapterConfig("bionic_runner", { model: "gpt-5.5" }))
       .toMatchObject({ model: "gpt-5.5" });
   });
 
   it("does not replace a non-Codex provider model with the Codex default", () => {
-    expect(normalizePaperclipRunnerAdapterConfig("paperclip_runner", {
+    expect(normalizePaperclipRunnerAdapterConfig("bionic_runner", {
       provider: "claude_managed",
       model: "claude-sonnet-5",
     })).toMatchObject({
@@ -40,23 +40,23 @@ describe("paperclip_runner operational skill normalization", () => {
   });
 
   it("removes the legacy operational skill while preserving optional skills", () => {
-    const normalized = normalizePaperclipOperationalSkillPreference("paperclip_runner", {
-      paperclipSkillSync: {
-        desiredSkills: [PAPERCLIP_OPERATIONAL_SKILL_KEY, "company-1/reviewer"],
+    const normalized = normalizePaperclipOperationalSkillPreference("bionic_runner", {
+      bionicSkillSync: {
+        desiredSkills: [BIONIC_OPERATIONAL_SKILL_KEY, "company-1/reviewer"],
       },
     });
 
     expect(normalized).toEqual({
-      paperclipSkillSync: { desiredSkills: ["company-1/reviewer"] },
+      bionicSkillSync: { desiredSkills: ["company-1/reviewer"] },
     });
   });
 
   it("restores the required operational skill through the legacy resolver after switching back", () => {
-    const normalized = normalizePaperclipOperationalSkillPreference("paperclip_runner", legacyConfig);
+    const normalized = normalizePaperclipOperationalSkillPreference("bionic_runner", legacyConfig);
     expect(resolveLegacyPaperclipDesiredSkillNames(normalized, [{
-      key: PAPERCLIP_OPERATIONAL_SKILL_KEY,
-      runtimeName: "paperclip",
-    }])).toEqual([PAPERCLIP_OPERATIONAL_SKILL_KEY]);
+      key: BIONIC_OPERATIONAL_SKILL_KEY,
+      runtimeName: "bionic",
+    }])).toEqual([BIONIC_OPERATIONAL_SKILL_KEY]);
   });
 
   it("does not change direct adapter preferences", () => {

@@ -13,8 +13,8 @@ import {
   issueRelations,
   issues,
   projects,
-} from "@paperclipai/db";
-import { LOW_TRUST_REVIEW_PRESET } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { LOW_TRUST_REVIEW_PRESET } from "@bionicai/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -190,7 +190,7 @@ describeEmbeddedPostgres("issue wake diagnostics route", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-issue-wake-diagnostics-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-issue-wake-diagnostics-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 

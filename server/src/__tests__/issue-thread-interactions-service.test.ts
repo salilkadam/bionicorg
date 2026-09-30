@@ -20,12 +20,12 @@ import {
   projectWorkspaces,
   projects,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
 } from "./helpers/embedded-postgres.js";
-import { ONBOARDING_FIRST_TASK_ORIGIN_KIND } from "@paperclipai/shared";
+import { ONBOARDING_FIRST_TASK_ORIGIN_KIND } from "@bionicai/shared";
 import { instanceSettingsService } from "../services/instance-settings.js";
 import { issueService } from "../services/issues.js";
 import { issueThreadInteractionService } from "../services/issue-thread-interactions.js";
@@ -41,7 +41,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-issue-thread-interactions-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-issue-thread-interactions-");
     db = createDb(tempDb.connectionString);
     issuesSvc = issueService(db);
     interactionsSvc = issueThreadInteractionService(db);
@@ -78,7 +78,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -206,7 +206,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
   }
 
   it("rejects a source-run question when a newer human comment was not delivered", async () => {
-    const fixture = await seedSourceQuestionFixture({ paperclipWake: { comments: [] } });
+    const fixture = await seedSourceQuestionFixture({ bionicWake: { comments: [] } });
     const commentId = randomUUID();
     await db.insert(issueComments).values({
       id: commentId,
@@ -235,7 +235,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
   it("allows a source-run question when the newer human comment is explicitly delivered", async () => {
     const commentId = randomUUID();
-    const fixture = await seedSourceQuestionFixture({ paperclipWake: { comments: [{ id: commentId }] } });
+    const fixture = await seedSourceQuestionFixture({ bionicWake: { comments: [{ id: commentId }] } });
     await db.insert(issueComments).values({
       id: commentId,
       companyId: fixture.companyId,
@@ -276,7 +276,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
   });
 
   it("does not apply the delivery guard to approval interactions", async () => {
-    const fixture = await seedSourceQuestionFixture({ paperclipWake: { comments: [] } });
+    const fixture = await seedSourceQuestionFixture({ bionicWake: { comments: [] } });
     await db.insert(issueComments).values({
       companyId: fixture.companyId,
       issueId: fixture.issueId,
@@ -301,7 +301,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
   });
 
   it("does not treat the board concierge reply as human direction", async () => {
-    const fixture = await seedSourceQuestionFixture({ paperclipWake: { comments: [] } });
+    const fixture = await seedSourceQuestionFixture({ bionicWake: { comments: [] } });
     await db.insert(issueComments).values({
       companyId: fixture.companyId,
       issueId: fixture.issueId,
@@ -321,7 +321,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
   });
 
   it("rejects an explicitly mismatched source-run issue or agent", async () => {
-    const fixture = await seedSourceQuestionFixture({ paperclipWake: { comments: [] } });
+    const fixture = await seedSourceQuestionFixture({ bionicWake: { comments: [] } });
     const otherAgentId = randomUUID();
     await db.insert(agents).values({
       id: otherAgentId,
@@ -345,7 +345,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
     )).rejects.toMatchObject({ status: 422, message: "sourceRunId must belong to the same issue" });
 
     await db.update(heartbeatRuns)
-      .set({ nativeIssueId: null, contextSnapshot: { issueId: randomUUID(), paperclipWake: { comments: [] } } })
+      .set({ nativeIssueId: null, contextSnapshot: { issueId: randomUUID(), bionicWake: { comments: [] } } })
       .where(eq(heartbeatRuns.id, fixture.runId));
     await expect(interactionsSvc.create(
       { id: fixture.issueId, companyId: fixture.companyId },
@@ -354,7 +354,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
     )).rejects.toMatchObject({ status: 422, message: "sourceRunId must belong to the same issue" });
 
     await db.update(heartbeatRuns)
-      .set({ contextSnapshot: { issueId: fixture.issueId, paperclipWake: { comments: [] } } })
+      .set({ contextSnapshot: { issueId: fixture.issueId, bionicWake: { comments: [] } } })
       .where(eq(heartbeatRuns.id, fixture.runId));
     await expect(interactionsSvc.create(
       { id: fixture.issueId, companyId: fixture.companyId },
@@ -893,7 +893,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -1038,7 +1038,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -1120,7 +1120,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -1187,7 +1187,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -1289,7 +1289,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -1676,7 +1676,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -1923,7 +1923,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
     const agentId = randomUUID();
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -2136,7 +2136,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -2942,7 +2942,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -3654,7 +3654,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -3782,7 +3782,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -3921,7 +3921,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
     });
@@ -4082,7 +4082,7 @@ describeEmbeddedPostgres("issueThreadInteractionService", () => {
 
       await db.insert(companies).values({
         id: companyId,
-        name: "Paperclip",
+        name: "Bionic",
         issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
         requireBoardApprovalForNewAgents: false,
       });

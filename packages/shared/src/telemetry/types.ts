@@ -1,7 +1,7 @@
 import type {
   EventDimensionsMap,
   PaperclipEventName,
-} from "./generated/paperclip-telemetry.js";
+} from "./generated/bionic-telemetry.js";
 
 export interface TelemetryState {
   installId: string;

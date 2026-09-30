@@ -17,7 +17,7 @@ import {
   instanceSettings,
   issues,
   projects,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -100,7 +100,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "fixture.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -222,7 +222,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
           host: "fixture.example.test",
           port: 22,
           username: "fixture",
-          remoteWorkspacePath: "/srv/paperclip",
+          remoteWorkspacePath: "/srv/bionic",
         },
         createdAt: now,
         updatedAt: now,
@@ -236,7 +236,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
           host: "other.example.test",
           port: 22,
           username: "fixture",
-          remoteWorkspacePath: "/srv/paperclip",
+          remoteWorkspacePath: "/srv/bionic",
         },
         createdAt: now,
         updatedAt: now,
@@ -442,7 +442,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
           host: "default.example.test",
           port: 22,
           username: "fixture",
-          remoteWorkspacePath: "/srv/paperclip",
+          remoteWorkspacePath: "/srv/bionic",
         },
         createdAt: now,
         updatedAt: now,
@@ -456,7 +456,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
           host: "delete.example.test",
           port: 22,
           username: "fixture",
-          remoteWorkspacePath: "/srv/paperclip",
+          remoteWorkspacePath: "/srv/bionic",
         },
         createdAt: now,
         updatedAt: now,
@@ -511,7 +511,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "pending.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
       createdAt: now,
       updatedAt: now,
@@ -697,7 +697,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "resolved.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
       createdAt: now,
       updatedAt: now,
@@ -748,7 +748,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "deleted.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
       createdAt: now,
       updatedAt: now,
@@ -807,7 +807,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "race.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
       createdAt: now,
       updatedAt: now,
@@ -986,7 +986,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
       })
       .returning();
 
-    process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN = "test-server-token";
+    process.env.BIONIC_CLOUD_TENANT_SERVER_TOKEN = "test-server-token";
     try {
       const adopted = await svc.ensureLocalEnvironment(companyId);
 
@@ -1009,7 +1009,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         .then((rows) => rows[0]);
       expect(reusedRow?.updatedAt.toISOString()).toBe(adoptedRow?.updatedAt.toISOString());
     } finally {
-      delete process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN;
+      delete process.env.BIONIC_CLOUD_TENANT_SERVER_TOKEN;
     }
   });
 
@@ -1711,7 +1711,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "fixture.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
     });
     const kubernetes = await svc.ensureKubernetesEnvironment(companyId, { inCluster: true });
@@ -1740,7 +1740,7 @@ describeEmbeddedPostgres("environmentService leases", () => {
         host: "fixture.example.test",
         port: 22,
         username: "fixture",
-        remoteWorkspacePath: "/srv/paperclip",
+        remoteWorkspacePath: "/srv/bionic",
       },
     });
 

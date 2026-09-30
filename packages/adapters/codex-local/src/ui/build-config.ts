@@ -6,7 +6,7 @@ import {
   resolvePaperclipRunnerIdleTimeoutMs,
   resolvePaperclipRunnerPermissionMode,
   type CreateConfigValues,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import { DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX } from "../index.js";
 
 function parseCommaArgs(value: string): string[] {
@@ -152,10 +152,10 @@ export function buildPaperclipRunnerConfig(v: CreateConfigValues): Record<string
     300,
     "AWS AgentCore timeoutSeconds",
   );
-  const lifecycleCandidate = v.paperclipRunnerLifecycleMode ?? schemaValues.lifecycleMode;
+  const lifecycleCandidate = v.bionicRunnerLifecycleMode ?? schemaValues.lifecycleMode;
   const lifecycleMode = lifecycleCandidate === "warm" ? "warm" : "per_turn";
   const configuredIdleTimeoutMs =
-    v.paperclipRunnerIdleTimeoutMs ?? schemaValues.idleTimeoutMs;
+    v.bionicRunnerIdleTimeoutMs ?? schemaValues.idleTimeoutMs;
   const idleTimeoutMs = resolvePaperclipRunnerIdleTimeoutMs(
     configuredIdleTimeoutMs,
   );
@@ -167,7 +167,7 @@ export function buildPaperclipRunnerConfig(v: CreateConfigValues): Record<string
     && configuredCodexPermissionMode !== "never"
   ) {
     throw new Error(
-      "Paperclip Runner currently supports Codex only with codexPermissionMode set to never. Select Full auto (never ask) before saving.",
+      "Bionic Runner currently supports Codex only with codexPermissionMode set to never. Select Full auto (never ask) before saving.",
     );
   }
   for (const normalizedKey of [

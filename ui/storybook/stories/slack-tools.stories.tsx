@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SLACK_TOOLS, type SlackSearchStatus } from "@paperclipai/shared";
+import { SLACK_TOOLS, type SlackSearchStatus } from "@bionicai/shared";
 import {
   SlackCapabilitiesView,
   SlackSearchView,
@@ -9,7 +9,7 @@ const base: SlackSearchStatus = {
   configured: false,
   connected: false,
   clientId: null,
-  redirectUri: "https://paperclip.example/api/slack/search/callback",
+  redirectUri: "https://bionic.example/api/slack/search/callback",
   nativeSearchAvailable: false,
   limitation:
     "This runtime uses bounded channel history search. Native search requires transient result delivery.",

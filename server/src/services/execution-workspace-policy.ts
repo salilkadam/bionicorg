@@ -5,7 +5,7 @@ import type {
   ProjectExecutionWorkspaceDefaultMode,
   ProjectExecutionWorkspacePolicy,
   SharedWorkspaceConcurrency,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { asString, parseObject } from "../adapters/utils.js";
 
 export type ParsedExecutionWorkspaceMode = Exclude<ExecutionWorkspaceMode, "inherit" | "reuse_existing">;

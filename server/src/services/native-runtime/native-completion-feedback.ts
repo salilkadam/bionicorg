@@ -16,11 +16,11 @@ import {
   issueThreadInteractions,
   issues,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   normalizePrpResultSignals,
   type PrpStructuredRunResult,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 
 /** Read current constraints before accepting the report, not a premature status commit. */
 export async function nativeCompletionFeedback(
@@ -53,10 +53,10 @@ export async function nativeCompletionFeedback(
       contextSnapshot: reviewContext, allowResolvedByRunId: run.id,
     });
     if (review?.interaction.status === "pending" && result.reportedWorkDisposition !== "blocked") {
-      throw new Error("Resolve your assigned review with resolve_review before finishing. If you cannot review the work, report the concrete blocker with paperclip_block.");
+      throw new Error("Resolve your assigned review with resolve_review before finishing. If you cannot review the work, report the concrete blocker with bionic_block.");
     }
     return review?.interaction.status === "pending"
-      ? "Review blocker recorded. Paperclip will preserve the task and record the reviewer recovery action."
+      ? "Review blocker recorded. Bionic will preserve the task and record the reviewer recovery action."
       : "Review report accepted. The recorded review decision controls task completion; this report cannot override it.";
   }
   // Bind feedback to this run, not the first contract from a reused session or
@@ -192,7 +192,7 @@ export async function nativeCompletionFeedback(
     signals.actionableAttentionRequests.length === 0
   ) {
     throw new Error(
-      "needs_review requires a concrete decision and a named reviewer in attentionRequests. Continue unfinished work or checks; report done when complete. Paperclip will not create an automatic completion approval.",
+      "needs_review requires a concrete decision and a named reviewer in attentionRequests. Continue unfinished work or checks; report done when complete. Bionic will not create an automatic completion approval.",
     );
   }
   for (const request of signals.actionableAttentionRequests) {

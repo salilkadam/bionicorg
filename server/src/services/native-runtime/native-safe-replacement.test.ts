@@ -35,14 +35,14 @@ import {
   documentRevisions,
   issues,
   nativeRunFinalizations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
 } from "../../__tests__/helpers/embedded-postgres.js";
 import { reconcileSafeNativeReplacements } from "./native-safe-replacement.js";
 import { reconcileAbandonedExecutionControl } from "../execution-control-reconciliation.js";
-const externalDatabaseUrl = process.env.PAPERCLIP_TEST_DATABASE_URL;
+const externalDatabaseUrl = process.env.BIONIC_TEST_DATABASE_URL;
 const support = externalDatabaseUrl
   ? { supported: true }
   : await getEmbeddedPostgresTestSupport();
@@ -58,7 +58,7 @@ const support = externalDatabaseUrl
         return;
       }
       database = await startEmbeddedPostgresTestDatabase(
-        "paperclip-safe-replacement-",
+        "bionic-safe-replacement-",
       );
       db = createDb(database.connectionString);
     }, 30_000);
@@ -86,7 +86,7 @@ const support = externalDatabaseUrl
         companyId,
         name: "Executor",
         role: "engineer",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
       });
       await db.insert(issues).values({
         id: issueId,
@@ -105,13 +105,13 @@ const support = externalDatabaseUrl
         contextSnapshot: {
           issueId,
           preservedRecoveryContext: true,
-          paperclipWake: { comments: [{ id: "stale-comment" }] },
-          paperclipWakeComment: { id: "stale-comment" },
-          paperclipTaskMarkdown: "stale historical task",
-          paperclipTaskMarkdownCompact: "stale historical compact task",
-          paperclipTaskMarkdownAssignment: "stale assignment task",
-          paperclipTaskMarkdownAssignmentCompact: "stale assignment compact task",
-          paperclipTurnContext: {
+          bionicWake: { comments: [{ id: "stale-comment" }] },
+          bionicWakeComment: { id: "stale-comment" },
+          bionicTaskMarkdown: "stale historical task",
+          bionicTaskMarkdownCompact: "stale historical compact task",
+          bionicTaskMarkdownAssignment: "stale assignment task",
+          bionicTaskMarkdownAssignmentCompact: "stale assignment compact task",
+          bionicTurnContext: {
             version: 1,
             assignment: { owner: "task_markdown" },
             events: { owner: "wake_prompt", comments: [{ id: "stale-comment" }] },
@@ -141,7 +141,7 @@ const support = externalDatabaseUrl
       async (mode) => {
         // The stopped-session verifier is the injected boundary here. These are
         // scheduler/database tests, not evidence that SIGKILL is a safe boundary.
-        const workspace = await mkdtemp(join(tmpdir(), "paperclip-recovery-work-"));
+        const workspace = await mkdtemp(join(tmpdir(), "bionic-recovery-work-"));
         try {
           const file = join(workspace, "saved.txt");
           const saved = "Completed work from before the interruption.\n";
@@ -189,13 +189,13 @@ const support = externalDatabaseUrl
               preservedRecoveryContext: true,
             });
             for (const key of [
-              "paperclipWake",
-              "paperclipWakeComment",
-              "paperclipTaskMarkdown",
-              "paperclipTaskMarkdownCompact",
-              "paperclipTaskMarkdownAssignment",
-              "paperclipTaskMarkdownAssignmentCompact",
-              "paperclipTurnContext",
+              "bionicWake",
+              "bionicWakeComment",
+              "bionicTaskMarkdown",
+              "bionicTaskMarkdownCompact",
+              "bionicTaskMarkdownAssignment",
+              "bionicTaskMarkdownAssignmentCompact",
+              "bionicTurnContext",
             ]) {
               expect(successors[0]!.contextSnapshot).not.toHaveProperty(key);
             }
@@ -232,7 +232,7 @@ const support = externalDatabaseUrl
         run.id === source.runId && mode !== "unproven" ? { evidence: { completedTaskControlCallIds: ["completion"] }, retire } : null);
       await appendHeartbeatRunEvent(db, { companyId: source.companyId, runId: source.runId, agentId: source.agentId,
         eventType: "tool.execution.started", stream: "system",
-        payload: { name: "paperclip_finish", executionId: "completion", transport: "process" },
+        payload: { name: "bionic_finish", executionId: "completion", transport: "process" },
       });
       await reconcileSafeNativeReplacements(db, new Date(), { verifyStoppedSession });
       await reconcileSafeNativeReplacements(db, new Date(), { verifyStoppedSession });

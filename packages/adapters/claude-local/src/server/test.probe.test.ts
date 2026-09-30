@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { AdapterExecutionTarget } from "@paperclipai/adapter-utils/execution-target";
+import type { AdapterExecutionTarget } from "@bionicai/adapter-utils/execution-target";
 
 const {
   ensureAdapterExecutionTargetDirectory,
@@ -38,13 +38,13 @@ const {
       };
     }),
     describeAdapterExecutionTarget: vi.fn(() => "Daytona"),
-    resolveAdapterExecutionTargetCwd: vi.fn(() => "/home/daytona/paperclip-workspace"),
+    resolveAdapterExecutionTargetCwd: vi.fn(() => "/home/daytona/bionic-workspace"),
   };
 });
 
-vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/execution-target")>(
-    "@paperclipai/adapter-utils/execution-target",
+vi.mock("@bionicai/adapter-utils/execution-target", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/execution-target")>(
+    "@bionicai/adapter-utils/execution-target",
   );
   return {
     ...actual,
@@ -63,7 +63,7 @@ const sandboxTarget: AdapterExecutionTarget = {
   kind: "remote",
   transport: "sandbox",
   providerKey: "daytona",
-  remoteCwd: "/home/daytona/paperclip-workspace",
+  remoteCwd: "/home/daytona/bionic-workspace",
   runner: {
     execute: async () => ({
       exitCode: 0,
@@ -78,7 +78,7 @@ const sandboxTarget: AdapterExecutionTarget = {
 };
 
 const initLine =
-  '{"type":"system","subtype":"init","cwd":"/home/daytona/paperclip-workspace","session_id":"abc","tools":["Bash","Read"]}';
+  '{"type":"system","subtype":"init","cwd":"/home/daytona/bionic-workspace","session_id":"abc","tools":["Bash","Read"]}';
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -573,7 +573,7 @@ describe("claude CLI local hello probe hardening", () => {
   let savedEnv: Record<string, string | undefined> = {};
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-cli-localprobe-"));
+    tempDir = await mkdtemp(path.join(os.tmpdir(), "bionic-cli-localprobe-"));
     claudePath = path.join(tempDir, "claude");
     await writeFile(claudePath, "#!/bin/sh\nexit 0\n");
     await chmod(claudePath, 0o755);
@@ -586,7 +586,7 @@ describe("claude CLI local hello probe hardening", () => {
     }
     // The mocked cwd resolver returns a sandbox path; the local probe reads it
     // as the cwd, so no host directory is touched.
-    resolveAdapterExecutionTargetCwd.mockReturnValue("/home/daytona/paperclip-workspace");
+    resolveAdapterExecutionTargetCwd.mockReturnValue("/home/daytona/bionic-workspace");
   });
 
   afterEach(async () => {
@@ -643,7 +643,7 @@ describe("claude CLI local hello probe hardening", () => {
     ["claude-fable-5-1", "2.1.251"],
     ["claude-opus-5-5", "2.1.280"],
   ])("warns without executing %s when runtime PATH selects a different executable", async (model, minimumVersion) => {
-    const runtimeDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-cli-runtime-path-"));
+    const runtimeDir = await mkdtemp(path.join(os.tmpdir(), "bionic-cli-runtime-path-"));
     const runtimeClaudePath = path.join(runtimeDir, "claude");
     await writeFile(runtimeClaudePath, "#!/bin/sh\nexit 0\n");
     await chmod(runtimeClaudePath, 0o755);
@@ -689,6 +689,6 @@ describe("claude CLI local hello probe hardening", () => {
 
     const targetCheck = result.checks.find((check) => check.code === "claude_environment_target");
     expect(targetCheck).toBeTruthy();
-    expect(targetCheck?.message).toContain("Paperclip host");
+    expect(targetCheck?.message).toContain("Bionic host");
   });
 });

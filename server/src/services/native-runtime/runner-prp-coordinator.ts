@@ -2,19 +2,19 @@ import { resolve } from "node:path";
 
 import { and, eq } from "drizzle-orm";
 
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agents,
   completionContracts,
   heartbeatRuns,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   DurablePrpControlPlane,
   type PaperclipSemanticToolDefinition,
   type PrpStructuredRunResult,
   type PrpTerminalState,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 
 import { registerRunnerPrpAuthority } from "../../realtime/runner-prp-ws.js";
 import { NativeRunCoordinatorStore } from "./native-run-coordinator-store.js";

@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
-import type { Db } from "@paperclipai/db";
-import { agents, companies, connectionGrants, issueThreadInteractions, toolConnectionInstalls } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { agents, companies, connectionGrants, issueThreadInteractions, toolConnectionInstalls } from "@bionicai/db";
 import { and, eq, or } from "drizzle-orm";
 import {
   APP_STORE_DEFINITIONS,
@@ -51,7 +51,7 @@ import {
   updateToolPolicySchema,
   updateToolProfileEntrySchema,
   updateToolProfileWithEntriesSchema,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { validate } from "../middleware/validate.js";
 import { getActorInfo, assertBoard, assertCompanyAccess, assertInstanceAdmin, getAccessibleResource, hasCompanyAccess } from "./authz.js";
 import { badRequest, forbidden, HttpError, notFound, unprocessable } from "../errors.js";
@@ -64,16 +64,16 @@ import {
   isPaperclipCloudConnectorStrategy,
   invalidatePaperclipCloudConnectorCapabilities,
   type PaperclipCloudConnector,
-  paperclipCloudConnectorCapabilitiesFromEnv,
-} from "../services/paperclip-cloud-connector.js";
+  bionicCloudConnectorCapabilitiesFromEnv,
+} from "../services/bionic-cloud-connector.js";
 import { runtimeCanonicalOrigin } from "../services/cloud-runtime-identity.js";
 import { instanceSettingsService } from "../services/instance-settings.js";
 import {
   completePaperclipCloudConnectorEnrollment,
   loadPaperclipCloudConnectorIdentity,
   startPaperclipCloudConnectorEnrollment,
-} from "../services/paperclip-cloud-connector-enrollment.js";
-import { reconcilePaperclipCloudConnectorEnrollmentStatus } from "../services/paperclip-cloud-connector-status.js";
+} from "../services/bionic-cloud-connector-enrollment.js";
+import { reconcilePaperclipCloudConnectorEnrollmentStatus } from "../services/bionic-cloud-connector-status.js";
 import {
   OAUTH_CLIENT_ID_METADATA_DOCUMENT_PATH,
   oauthClientIdMetadataDocument,
@@ -168,7 +168,7 @@ export function connectionIntentOAuthOutcomeHtml(input: {
   // authorization URL stay server-side; the opener refreshes the task from the
   // interaction id instead of trusting provider-window data.
   const message = JSON.stringify({
-    type: "paperclip.connection-intent.oauth",
+    type: "bionic.connection-intent.oauth",
     interactionId: input.interactionId,
     outcome: input.outcome,
   }).replace(/</g, "\\u003c");
@@ -188,15 +188,15 @@ export function connectionIntentOAuthOutcomeHtml(input: {
     }
   })();
   const targetOrigin = JSON.stringify(openerOrigin ?? "");
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Connection authorization</title></head><body><p>Returning to Paperclip…</p><script>const message=${message};const targetOrigin=${targetOrigin}||window.location.origin;if(window.opener&&window.opener!==window){window.opener.postMessage(message,targetOrigin);window.close();}else{window.location.replace(${fallback});}</script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Connection authorization</title></head><body><p>Returning to Bionic…</p><script>const message=${message};const targetOrigin=${targetOrigin}||window.location.origin;if(window.opener&&window.opener!==window){window.opener.postMessage(message,targetOrigin);window.close();}else{window.location.replace(${fallback});}</script></body></html>`;
 }
 
 function normalizeCloudConnectorEnrollmentReturnTo(returnTo?: string | null): string | null {
   if (!returnTo || returnTo.length > 2_048) return null;
   try {
-    const parsed = new URL(returnTo, "http://paperclip.local");
+    const parsed = new URL(returnTo, "http://bionic.local");
     if (
-      parsed.origin !== "http://paperclip.local"
+      parsed.origin !== "http://bionic.local"
       || parsed.pathname !== "/apps/connect"
       || parsed.username
       || parsed.password
@@ -214,14 +214,14 @@ export function cloudConnectorEnrollmentOutcomeHtml(issuePrefix: string, returnT
   const fallback = JSON.stringify(fallbackPath).replaceAll("<", "\\u003c");
   // This document is served only after server-verified enrollment. The parent
   // independently re-reads enrollment status; browser messages grant no access.
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Paperclip connected</title></head><body><p>Paperclip is connected. Return to your task to finish connecting the app.</p><script>if(window.opener&&window.opener!==window){window.close();}else{const link=document.createElement("a");link.href=${fallback};link.textContent=${JSON.stringify(issueId ? "Return to task" : "Continue setup")};document.body.append(link);}</script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Bionic connected</title></head><body><p>Bionic is connected. Return to your task to finish connecting the app.</p><script>if(window.opener&&window.opener!==window){window.close();}else{const link=document.createElement("a");link.href=${fallback};link.textContent=${JSON.stringify(issueId ? "Return to task" : "Continue setup")};document.body.append(link);}</script></body></html>`;
 }
 
 export function cloudConnectorEnrollmentReturnPath(issuePrefix: string, returnTo?: string | null): string {
   const companyRoot = `/${encodeURIComponent(issuePrefix)}`;
   const normalizedReturnTo = normalizeCloudConnectorEnrollmentReturnTo(returnTo);
   if (normalizedReturnTo) {
-    const parsed = new URL(normalizedReturnTo, "http://paperclip.local");
+    const parsed = new URL(normalizedReturnTo, "http://bionic.local");
     parsed.searchParams.set("cloud_connector", "enrolled");
     return `${companyRoot}${parsed.pathname}${parsed.search}`;
   }
@@ -240,7 +240,7 @@ export function toolAccessRoutes(
     remoteHttpEndpointLookup?: NonNullable<Parameters<typeof toolAccessService>[1]>["remoteHttpEndpointLookup"];
     remoteHttpRequest?: NonNullable<Parameters<typeof toolAccessService>[1]>["remoteHttpRequest"];
     vercelConnectClient?: VercelConnectClient | null;
-    paperclipCloudConnector?: PaperclipCloudConnector | null;
+    bionicCloudConnector?: PaperclipCloudConnector | null;
     connectionIntentHeartbeat?: Pick<Heartbeat, "wakeup">;
   } = {},
 ) {
@@ -307,12 +307,12 @@ export function toolAccessRoutes(
     const runtimeOrigin = runtimeCanonicalOrigin();
     if (runtimeOrigin) return runtimeOrigin;
     const raw = (
-      process.env.PAPERCLIP_AUTH_PUBLIC_BASE_URL?.trim()
+      process.env.BIONIC_AUTH_PUBLIC_BASE_URL?.trim()
       || process.env.BETTER_AUTH_URL?.trim()
       || process.env.BETTER_AUTH_BASE_URL?.trim()
       || options.authPublicBaseUrl?.trim()
-      || process.env.PAPERCLIP_PUBLIC_URL?.trim()
-      || process.env.PAPERCLIP_MANAGED_RUNTIME_PUBLIC_URL?.trim()
+      || process.env.BIONIC_PUBLIC_URL?.trim()
+      || process.env.BIONIC_MANAGED_RUNTIME_PUBLIC_URL?.trim()
     );
     if (!raw) return null;
     try {
@@ -416,7 +416,7 @@ export function toolAccessRoutes(
       ?? requestLoopbackBaseUrl(req);
     if (!baseUrl) {
       throw unprocessable(
-        "This Paperclip needs a browser-reachable HTTPS address (or loopback HTTP) before browser sign-in can start.",
+        "This Bionic needs a browser-reachable HTTPS address (or loopback HTTP) before browser sign-in can start.",
         { code: "oauth_redirect_origin_unsupported" },
       );
     }
@@ -786,7 +786,7 @@ function connectorEnrollmentPrincipal(req: Request): string {
       res.status(401).json({ error: "Agent run id required", code: "run_id_required" });
       return;
     }
-    const headerRunId = req.get("X-Paperclip-Run-Id")?.trim();
+    const headerRunId = req.get("X-Bionic-Run-Id")?.trim();
     if (headerRunId && headerRunId !== req.actor.runId) {
       res.status(403).json({ error: "Run id header does not match agent token", code: "run_id_mismatch" });
       return;
@@ -809,10 +809,10 @@ function connectorEnrollmentPrincipal(req: Request): string {
     assertBoard(req);
     const companyId = req.params.companyId as string;
     assertCompanyAccess(req, companyId);
-    const advertisedProfiles = options.paperclipCloudConnector === undefined
-      ? await paperclipCloudConnectorCapabilitiesFromEnv()
-      : options.paperclipCloudConnector
-        ? await options.paperclipCloudConnector.getCapabilities()
+    const advertisedProfiles = options.bionicCloudConnector === undefined
+      ? await bionicCloudConnectorCapabilitiesFromEnv()
+      : options.bionicCloudConnector
+        ? await options.bionicCloudConnector.getCapabilities()
         : [];
     const vercelConnect = vercelConnectIntegrationStatus();
     const { enableMemoryConnectors } = await instanceSettingsService(db).getExperimental();
@@ -827,8 +827,8 @@ function connectorEnrollmentPrincipal(req: Request): string {
           reason: vercelConnect.enabled
             ? vercelConnect.configured
               ? null
-              : "Vercel Connect needs workload OIDC or PAPERCLIP_VERCEL_CONNECT_ACCESS_TOKEN."
-            : "Vercel Connect setup is disabled on this Paperclip instance.",
+              : "Vercel Connect needs workload OIDC or BIONIC_VERCEL_CONNECT_ACCESS_TOKEN."
+            : "Vercel Connect setup is disabled on this Bionic instance.",
         },
       },
       apps: APP_STORE_DEFINITIONS.filter((app) => (enableMemoryConnectors || !isMemoryConnectorId(app.slug))).map((app) =>
@@ -846,13 +846,13 @@ function connectorEnrollmentPrincipal(req: Request): string {
   });
 
   /**
-   * Paperclip's Client ID Metadata Document (PAP-17087).
+   * Bionic's Client ID Metadata Document (PAP-17087).
    *
-   * The document's own URL is the `client_id` Paperclip presents to an
+   * The document's own URL is the `client_id` Bionic presents to an
    * authorization server that supports CIMD, so this endpoint has to be publicly
    * readable — an authorization server fetches it server-to-server with no
-   * Paperclip session. It contains only this deployment's callback and the
-   * grant/response/auth methods Paperclip uses: no company, connection or secret
+   * Bionic session. It contains only this deployment's callback and the
+   * grant/response/auth methods Bionic uses: no company, connection or secret
    * data of any kind.
    */
   router.get(OAUTH_CLIENT_ID_METADATA_DOCUMENT_PATH.replace(/^\/api/, ""), (_req, res) => {
@@ -1006,7 +1006,7 @@ function connectorEnrollmentPrincipal(req: Request): string {
   router.post("/tools/oauth/cloud-connector/enrollment", async (req, res) => {
     assertInstanceAdmin(req);
     const companyId = typeof req.body?.companyId === "string" ? req.body.companyId : "";
-    if (!companyId) throw badRequest("Paperclip Cloud enrollment requires a company");
+    if (!companyId) throw badRequest("Bionic Cloud enrollment requires a company");
     assertCompanyAccess(req, companyId);
     const origin = new URL(oauthRedirectUri(req)).origin;
     const returnTo = normalizeCloudConnectorEnrollmentReturnTo(
@@ -1022,15 +1022,15 @@ function connectorEnrollmentPrincipal(req: Request): string {
         returnTo,
       });
     } catch {
-      throw unprocessable("Paperclip Cloud enrollment could not be started", {
-        code: "paperclip_cloud_connector_enrollment_failed",
+      throw unprocessable("Bionic Cloud enrollment could not be started", {
+        code: "bionic_cloud_connector_enrollment_failed",
       });
     }
     await logActivity(db, {
       companyId,
       actorType: "user",
       actorId: req.actor.userId ?? "board",
-      action: "paperclip_cloud_connector.enrollment_started",
+      action: "bionic_cloud_connector.enrollment_started",
       entityType: "connector_instance",
       entityId: status.instanceId ?? "pending",
       details: { environment: status.environment, status: status.status },
@@ -1043,13 +1043,13 @@ function connectorEnrollmentPrincipal(req: Request): string {
     const enrollmentId = typeof req.query.enrollment_id === "string" ? req.query.enrollment_id : "";
     const approvalCode = typeof req.query.approval_code === "string" ? req.query.approval_code : "";
     const state = typeof req.query.state === "string" ? req.query.state : "";
-    if (!enrollmentId || !approvalCode || !state) throw badRequest("Invalid Paperclip Cloud enrollment callback");
+    if (!enrollmentId || !approvalCode || !state) throw badRequest("Invalid Bionic Cloud enrollment callback");
     const pending = loadPaperclipCloudConnectorIdentity()?.pending;
     if (pending?.companyId && !hasCompanyAccess(req, pending.companyId)) {
-      throw notFound("Paperclip Cloud enrollment not found");
+      throw notFound("Bionic Cloud enrollment not found");
     }
     if (pending?.initiatedBy && pending.initiatedBy !== connectorEnrollmentPrincipal(req)) {
-      throw notFound("Paperclip Cloud enrollment not found");
+      throw notFound("Bionic Cloud enrollment not found");
     }
     const [company] = pending?.companyId
       ? await db
@@ -1058,29 +1058,29 @@ function connectorEnrollmentPrincipal(req: Request): string {
         .where(eq(companies.id, pending.companyId))
         .limit(1)
       : [];
-    if (!company) throw notFound("Paperclip Cloud enrollment not found");
+    if (!company) throw notFound("Bionic Cloud enrollment not found");
     let status;
     try {
       status = await completePaperclipCloudConnectorEnrollment({ enrollmentId, approvalCode, state });
       invalidatePaperclipCloudConnectorCapabilities();
     } catch {
-      throw badRequest("Invalid or expired Paperclip Cloud enrollment callback");
+      throw badRequest("Invalid or expired Bionic Cloud enrollment callback");
     }
     if (pending?.companyId) {
       await logActivity(db, {
         companyId: pending.companyId,
         actorType: "user",
         actorId: req.actor.userId ?? "board",
-        action: "paperclip_cloud_connector.enrollment_completed",
+        action: "bionic_cloud_connector.enrollment_completed",
         entityType: "connector_instance",
         entityId: status.instanceId ?? enrollmentId,
         details: { environment: status.environment, status: status.status },
       });
     }
     const returnTo = normalizeCloudConnectorEnrollmentReturnTo(pending?.returnTo);
-    if (returnTo && new URL(returnTo, "http://paperclip.local").searchParams.get("enrollment_host") === "dialog") {
+    if (returnTo && new URL(returnTo, "http://bionic.local").searchParams.get("enrollment_host") === "dialog") {
       res.set("Cache-Control", "no-store");
-      const intent = new URL(returnTo, "http://paperclip.local").searchParams.get("intent");
+      const intent = new URL(returnTo, "http://bionic.local").searchParams.get("intent");
       const parsedIntent = startToolOAuthSchema.safeParse({ interactionId: intent });
       const interactionId = parsedIntent.success ? parsedIntent.data.interactionId : undefined;
       const [interaction] = interactionId ? await db.select({ issueId: issueThreadInteractions.issueId })
@@ -1210,7 +1210,7 @@ function connectorEnrollmentPrincipal(req: Request): string {
     }
   };
   router.get("/tools/oauth/cloud-connector/callback", handlePaperclipCloudConnectorCallback);
-  router.get("/tools/oauth/paperclip-id/callback", handlePaperclipCloudConnectorCallback);
+  router.get("/tools/oauth/bionic-id/callback", handlePaperclipCloudConnectorCallback);
 
   router.get("/tools/vercel-connect/callback", async (req, res) => {
     assertBoard(req);
@@ -1312,7 +1312,7 @@ function connectorEnrollmentPrincipal(req: Request): string {
     const code = typeof req.query.code === "string" ? req.query.code : null;
     const error = typeof req.query.error === "string" ? req.query.error : null;
     // `error_description` / `error_uri` are read from neither the query nor the
-    // provider's body: they are provider-authored prose, and Paperclip maps the
+    // provider's body: they are provider-authored prose, and Bionic maps the
     // `error` code to its own copy instead of reflecting them (PAP-17108).
     const iss = typeof req.query.iss === "string" ? req.query.iss : null;
     const pendingState = state ? await svc.peekOAuthState(state) : null;
@@ -1365,7 +1365,7 @@ function connectorEnrollmentPrincipal(req: Request): string {
         details: {
           code: callbackFailureCode,
           status: callbackError instanceof HttpError ? callbackError.status : 500,
-          // HttpError messages are Paperclip-authored. Provider-authored
+          // HttpError messages are Bionic-authored. Provider-authored
           // error_description/error_uri values are never read above and cannot
           // be reflected into the activity stream.
           message: callbackError instanceof HttpError

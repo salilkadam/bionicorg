@@ -1,7 +1,7 @@
 import type {
   ConnectionIntentInteraction,
   ConnectionIntentSetupOptions,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { api } from "./client";
 
 export const connectionIntentsApi = {

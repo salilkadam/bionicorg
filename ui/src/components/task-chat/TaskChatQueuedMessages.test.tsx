@@ -4,7 +4,7 @@ import { act, type ComponentProps } from "react";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { IssueQueuedCommentQueue } from "@paperclipai/shared";
+import type { IssueQueuedCommentQueue } from "@bionicai/shared";
 import {
   reorderQueuedMessageEntries,
   TaskChatQueuedMessages,
@@ -24,7 +24,7 @@ const queue: IssueQueuedCommentQueue = {
   state: "deferred",
   targetRunId: "run-1",
   revision: "rev-1",
-  protocol: "paperclip_runner_v1",
+  protocol: "bionic_runner_v1",
   steeringDisposition: "available",
   entries: ["First queued message", "Second queued message"].map(
     (body, position) => ({
@@ -109,7 +109,7 @@ describe("TaskChatQueuedMessages", () => {
       source: { kind: "interaction" as const, interactionId: "confirmation-1", interactionKind: "request_confirmation",
         requiresFreshSession: runtime === "native-plan" } };
     const props = render({ queue: { ...queue, entries: [entry],
-      protocol: runtime === "legacy" ? "legacy" : "paperclip_runner_v1" },
+      protocol: runtime === "legacy" ? "legacy" : "bionic_runner_v1" },
       onInterrupt: vi.fn().mockResolvedValue(undefined) });
     expect(props.onSteer).not.toHaveBeenCalled();
     expect(props.onInterrupt).not.toHaveBeenCalled();

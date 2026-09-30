@@ -1,5 +1,5 @@
-import type { AdapterEnvironmentTestResult } from "@paperclipai/shared";
-import { ADAPTER_AUTH_MISSING_CHECK_CODE } from "@paperclipai/shared";
+import type { AdapterEnvironmentTestResult } from "@bionicai/shared";
+import { ADAPTER_AUTH_MISSING_CHECK_CODE } from "@bionicai/shared";
 import { agentsApi } from "../api/agents";
 
 /** ACP readiness checks do not authenticate a provider. Verify credentials with
@@ -10,7 +10,7 @@ export async function testAgentSetup(input: {
   adapterType: string;
   providerAdapter: string;
   adapterConfig: Record<string, unknown>;
-  aiConnection?: import("@paperclipai/shared").AiConnectionBinding;
+  aiConnection?: import("@bionicai/shared").AiConnectionBinding;
   testCredentials?: Record<string, string>;
   environmentId: string | null;
 }): Promise<AdapterEnvironmentTestResult> {
@@ -43,8 +43,8 @@ export async function testAgentSetup(input: {
       adapterConfig: {
         ...input.adapterConfig,
         engine: "cli",
-        ...(input.adapterType === "paperclip_runner" && input.providerAdapter === "grok_local"
-          ? { command: "/opt/paperclip/providers/grok/1.0.13/grok" }
+        ...(input.adapterType === "bionic_runner" && input.providerAdapter === "grok_local"
+          ? { command: "/opt/bionic/providers/grok/1.0.13/grok" }
           : {}),
       },
     },

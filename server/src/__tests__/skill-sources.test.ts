@@ -5,7 +5,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { companies, companySkills, companySkillVersions, createDb } from '@paperclipai/db';
+import { companies, companySkills, companySkillVersions, createDb } from '@bionicai/db';
 import { eq, sql } from 'drizzle-orm';
 import { getEmbeddedPostgresTestSupport, startEmbeddedPostgresTestDatabase } from './helpers/embedded-postgres.js';
 import { unprocessable } from '../errors.js';
@@ -18,7 +18,7 @@ describe.skipIf(!support.supported)('skill source persistence', () => {
   let testDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>>;
   let db: ReturnType<typeof createDb>;
   let home: string;
-  const originalHome = process.env.PAPERCLIP_HOME;
+  const originalHome = process.env.BIONIC_HOME;
   const companyId = randomUUID();
   const sha = 'a'.repeat(40);
   const md = (name: string) => `---\nname: ${name}\ndescription: Example\n---\nDo useful work.\n`;
@@ -27,12 +27,12 @@ describe.skipIf(!support.supported)('skill source persistence', () => {
   let commit = sha;
   const context: SkillSourceContext = { actor: { type: 'user', userId: 'board' }, read: () => githubFixture(files, { 'deep/one/scripts/run.sh': '100755' }, commit), authorize: async () => {}, audit: async () => {} };
   beforeAll(async () => {
-    testDb = await startEmbeddedPostgresTestDatabase('paperclip-skill-sources-'); db = createDb(testDb.connectionString);
-    home = await fs.mkdtemp(path.join(os.tmpdir(), 'paperclip-source-test-')); process.env.PAPERCLIP_HOME = home;
+    testDb = await startEmbeddedPostgresTestDatabase('bionic-skill-sources-'); db = createDb(testDb.connectionString);
+    home = await fs.mkdtemp(path.join(os.tmpdir(), 'bionic-source-test-')); process.env.BIONIC_HOME = home;
     await db.insert(companies).values({ id: companyId, name: 'Skills', issuePrefix: 'SKL' });
   }, 30000);
   afterAll(async () => {
-    if (originalHome === undefined) delete process.env.PAPERCLIP_HOME; else process.env.PAPERCLIP_HOME = originalHome;
+    if (originalHome === undefined) delete process.env.BIONIC_HOME; else process.env.BIONIC_HOME = originalHome;
     await testDb?.cleanup(); if (home) await fs.rm(home, { recursive: true, force: true });
   });
   it('imports duplicate names independently, stores complete snapshots and refreshes without duplicates', async () => {
@@ -162,7 +162,7 @@ describe.skipIf(!support.supported)('skill source persistence', () => {
     await db.insert(companies).values({ id: legacyCompany, name: 'Legacy', issuePrefix: 'LEG' });
     const [legacy, bundled] = await db.insert(companySkills).values([
       { companyId: legacyCompany, key: 'legacy/custom', slug: 'original-slug', name: 'Original name', markdown: md('legacy'), sourceType: 'github', sourceRef: sha, metadata: { hostname: 'github.com', owner: 'acme', repo: 'skills', trackingRef: 'legacy', repoSkillDir: 'legacy' } },
-      { companyId: legacyCompany, key: 'paperclipai/paperclip/bundled', slug: 'bundled', name: 'Bundled', markdown: md('bundled'), sourceType: 'github', metadata: { hostname: 'github.com', owner: 'acme', repo: 'skills', sourceKind: 'paperclip_bundled' } },
+      { companyId: legacyCompany, key: 'bionicai/bionic/bundled', slug: 'bundled', name: 'Bundled', markdown: md('bundled'), sourceType: 'github', metadata: { hostname: 'github.com', owner: 'acme', repo: 'skills', sourceKind: 'bionic_bundled' } },
     ]).returning();
     const migration = await fs.readFile(new URL('../../../packages/db/src/migrations/0291_conscious_secret_warriors.sql', import.meta.url), 'utf8');
     await db.execute(sql.raw(migration.slice(migration.indexOf('DO $$', migration.indexOf('-- Adopt only')))));

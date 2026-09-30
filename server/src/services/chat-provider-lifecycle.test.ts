@@ -160,15 +160,15 @@ describe("chat provider lifecycle normalization", () => {
           {
             id: 101,
             name: "enabled",
-            full_name: "paperclip/enabled",
-            html_url: "https://github.com/paperclip/enabled",
+            full_name: "bionic/enabled",
+            html_url: "https://github.com/bionic/enabled",
           },
         ],
         repositories_removed: [
           {
             id: 202,
             name: "removed",
-            full_name: "paperclip/removed",
+            full_name: "bionic/removed",
           },
         ],
       },
@@ -227,7 +227,7 @@ describe("chat provider lifecycle normalization", () => {
         isGroup: true,
       },
       channelData: {
-        team: { id: "team-1", name: "Paperclip Test" },
+        team: { id: "team-1", name: "Bionic Test" },
         channel: { id: "channel-1", name: "Bots" },
       },
     };

@@ -22,7 +22,7 @@ import {
   statusDecisions,
   workAssessments,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type { NativeEvidenceAssessment } from "../services/native-runtime/evidence-classifier.js";
 import { classifyNativeEvidence } from "../services/native-runtime/evidence-classifier.js";
 import {
@@ -120,7 +120,7 @@ type FixtureObservation = PolicyObservation & {
 type DisabledLiveEntrypoint = "attention" | "cancellation" | "reconciliation" | "rollout";
 
 const corpusPath = fileURLToPath(new URL(
-  "../../../packages/paperclip-runner/spec/fixtures/status-authority-sdk.json",
+  "../../../packages/bionic-runner/spec/fixtures/status-authority-sdk.json",
   import.meta.url,
 ));
 
@@ -380,7 +380,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
   const outsideAgentId = randomUUID();
 
   beforeAll(async () => {
-    temporary = await startEmbeddedPostgresTestDatabase("paperclip-status-corpus-");
+    temporary = await startEmbeddedPostgresTestDatabase("bionic-status-corpus-");
     db = createDb(temporary.connectionString);
     await db.insert(companies).values({ id: companyId, name: "Status corpus", issuePrefix: "PSC" });
     await db.insert(companies).values({ id: outsideCompanyId, name: "Outside corpus", issuePrefix: "OUT" });
@@ -459,7 +459,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
       companyId,
       issueId,
       revision: 1,
-      schemaVersion: "paperclip.completion-contract.v1",
+      schemaVersion: "bionic.completion-contract.v1",
       policyVersion: "phase6-v1",
       risk: "standard",
       completionAuthority: "server_arbiter",
@@ -516,7 +516,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
       companyId,
       issueId,
       type: "artifact",
-      provider: "paperclip",
+      provider: "bionic",
       title: `${fixture.id} evidence`,
       status: "ready_for_review",
       reviewState: completionState === "new_evidence_satisfies_contract" ? "none" : "approved",
@@ -572,7 +572,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
       agent: {
         id: agentId,
         status: "running",
-        adapterType: fixture.mode === "native" ? "paperclip_runner" : "codex_local",
+        adapterType: fixture.mode === "native" ? "bionic_runner" : "codex_local",
       },
       issue: { id: seeded.issueId, workMode: "standard" },
       target: { kind: "local" },
@@ -860,7 +860,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
           enabled,
           runtimeConfig,
           adapterConfig: { provider: "codex" },
-          agent: { id: agentId, status: "running", adapterType: "paperclip_runner" },
+          agent: { id: agentId, status: "running", adapterType: "bionic_runner" },
           issue: { id: seeded.issueId, workMode: "standard" },
           target: { kind: "local" },
           workspaceId: "fixture-workspace",
@@ -873,7 +873,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
             enabled,
             runtimeConfig,
             adapterConfig: { provider: "codex" },
-            agent: { id: agentId, status: "running", adapterType: "paperclip_runner" },
+            agent: { id: agentId, status: "running", adapterType: "bionic_runner" },
             issue: { id: seeded.issueId, workMode: "standard" },
             target: { kind: "local" },
             workspaceId: "fixture-workspace",
@@ -889,7 +889,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
         if (
           activeResolution.kind !== "native"
           || freshMode !== "rejected"
-          || freshReason !== "paperclip_runner_rollout_disabled"
+          || freshReason !== "bionic_runner_rollout_disabled"
           || runtimeConfig.nativeRunner.mode !== "native"
         ) {
           throw new Error(`${fixture.id}: global kill-switch transition missing`);
@@ -1756,7 +1756,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
         if (
           execution.observed.activeMode !== "native"
           || execution.observed.freshMode !== "rejected"
-          || execution.observed.freshReason !== "paperclip_runner_rollout_disabled"
+          || execution.observed.freshReason !== "bionic_runner_rollout_disabled"
           || execution.observed.profileMode !== "native"
         ) continue;
       }
@@ -1818,7 +1818,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
   }
 
   it("executes all 53 fixtures in their production consumers and joins all 70 matrix rows", async () => {
-    expect(corpus.schema).toBe("paperclip.status-authority-conformance.v1");
+    expect(corpus.schema).toBe("bionic.status-authority-conformance.v1");
     expect(corpus.fixtures).toHaveLength(53);
 
     const observations = new Map<string, FixtureObservation>();
@@ -2111,7 +2111,7 @@ describe("P6-31 Section 18.13 executable status-authority corpus", () => {
   it("rejects wrong, missing, and duplicate criterion IDs before accepting completion", async () => {
     const seeded = await seedFixture({ ...corpus.fixtures[0]!, id: `criteria-feedback-${randomUUID()}` });
     const [stored] = await db.select().from(nativeRunResults).where(eq(nativeRunResults.id, seeded.resultId!));
-    const valid = stored!.resultJson.result as import("../vendor/paperclip-runner/index.js").PrpStructuredRunResult;
+    const valid = stored!.resultJson.result as import("../vendor/bionic-runner/index.js").PrpStructuredRunResult;
     for (const criteria of [[], [{ criterionId: "invented", status: "satisfied", evidenceRefs: [] }], [...valid.completionClaim.criteria, ...valid.completionClaim.criteria]]) {
       await expect(nativeCompletionFeedback(db, seeded.runId, { ...valid, completionClaim: { ...valid.completionClaim, criteria } } as never)).rejects.toThrow("exactly these criterion IDs");
     }

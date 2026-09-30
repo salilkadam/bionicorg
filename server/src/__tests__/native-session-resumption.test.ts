@@ -25,7 +25,7 @@ import {
   statusDecisionEffects,
   statusDecisions,
   workAssessments,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   type NativeExecutionInputV1,
   type NativeExecutionInput,
@@ -33,11 +33,11 @@ import {
   type NativeSessionBackend,
   type PersistedNativeSession,
   type PrpEvent,
-} from "@paperclipai/paperclip-runner";
+} from "@bionicai/bionic-runner";
 import {
   CONTROL_PLANE_CONFORMANCE_RESULT,
   CONTROL_PLANE_CONFORMANCE_TERMINAL,
-} from "../vendor/paperclip-runner/testing.js";
+} from "../vendor/bionic-runner/testing.js";
 import { startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import { drainHeartbeatRunsToQuiescence } from "./helpers/drain-heartbeat-runs.js";
 import { waitForPendingRunFailureReports } from "../services/run-failure-report.js";
@@ -93,7 +93,7 @@ describe("P6-25 pre-result native session recovery", () => {
   const observedLivePidRunId = "79000000-0000-4000-8000-000000000011";
   const persistedProfile = {
     mode: "native",
-    nativeExecutionInput: { schema: "paperclip.native-execution-input.v1", binding: { runId } },
+    nativeExecutionInput: { schema: "bionic.native-execution-input.v1", binding: { runId } },
     sessionCheckpoint: {
       backendKind: "codex_app_server",
       sessionId: "persisted-session",
@@ -104,7 +104,7 @@ describe("P6-25 pre-result native session recovery", () => {
   };
 
   beforeAll(async () => {
-    temporary = await startEmbeddedPostgresTestDatabase("paperclip-native-resume-");
+    temporary = await startEmbeddedPostgresTestDatabase("bionic-native-resume-");
     db = createDb(temporary.connectionString);
     await db.insert(companies).values({ id: companyId, name: "Native resume", issuePrefix: "NRR" });
     await db.insert(agents).values({
@@ -445,7 +445,7 @@ describe("P6-25 pre-result native session recovery", () => {
         },
       }));
       const heartbeat = heartbeatService(db, {
-        runtimeEnv: { PAPERCLIP_INSTANCE_ID: "observed-owner-test" },
+        runtimeEnv: { BIONIC_INSTANCE_ID: "observed-owner-test" },
         nativeSessionBackendFactory: backendFactory,
       });
 
@@ -654,7 +654,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
       reportedWorkDisposition: result.reportedWorkDisposition,
     };
     const execution: NativeExecutionInputV1 = {
-      schema: "paperclip.native-execution-input.v1",
+      schema: "bionic.native-execution-input.v1",
       binding: { companyId, runId, issueId, agentId, executionWorkspaceId },
       task: {
         identifier: "NRR-1",
@@ -677,7 +677,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
       completionContract: {
         id: contractId,
         sha256: contractSha,
-        schemaVersion: "paperclip.completion-contract.v1",
+        schemaVersion: "bionic.completion-contract.v1",
         contract,
       },
       interactionResponses: [],
@@ -694,7 +694,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
       lineage: [],
     };
     const providerTerminalEvent: PrpEvent = {
-      schema: "paperclip.prp.event.v1",
+      schema: "bionic.prp.event.v1",
       sourceEventId: `${runnerInstanceId}:provider-terminal`,
       sourceSeq: 1,
       sourceInstanceId: runnerInstanceId,
@@ -782,7 +782,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
 
     beforeAll(async () => {
       temporary = await startEmbeddedPostgresTestDatabase(
-        "paperclip-native-reaper-e2e-",
+        "bionic-native-reaper-e2e-",
       );
       db = createDb(temporary.connectionString);
       await instanceSettingsService(db).updateExperimental({
@@ -815,7 +815,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
         id: agentId,
         companyId,
         name: "Native recovery agent",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         // Match the persisted fixture workspace's strategy explicitly. A
         // metadata-free workspace is not proof of the current config; an actual
         // strategy change correctly refuses immutable native-input rebinding.
@@ -883,7 +883,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
         companyId,
         issueId,
         revision: 1,
-        schemaVersion: "paperclip.completion-contract.v1",
+        schemaVersion: "bionic.completion-contract.v1",
         policyVersion: "phase6-v1",
         risk: "standard",
         completionAuthority: "server_arbiter",
@@ -898,7 +898,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
         companyId,
         issueId,
         type: "artifact",
-        provider: "paperclip",
+        provider: "bionic",
         title: "Recovered result evidence",
         status: "ready_for_review",
         reviewState: "approved",
@@ -966,7 +966,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
         await drainHeartbeatRunsToQuiescence(
           db,
           heartbeatService(db, {
-            runtimeEnv: { PAPERCLIP_INSTANCE_ID: "phase6-recovery-test" },
+            runtimeEnv: { BIONIC_INSTANCE_ID: "phase6-recovery-test" },
             nativeSessionBackendFactory: () => backend,
           }),
         );
@@ -1093,7 +1093,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
         return input.binding.runId === runId ? backend : freshBackend(input);
       });
       const heartbeat = heartbeatService(db, {
-        runtimeEnv: { PAPERCLIP_INSTANCE_ID: "phase6-recovery-test" },
+        runtimeEnv: { BIONIC_INSTANCE_ID: "phase6-recovery-test" },
         nativeSessionBackendFactory: backendFactory,
       });
       if (newerRequest) {
@@ -1112,7 +1112,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
           payload: {
             issueId,
             commentId: newerCommentId,
-            _paperclipWakeContext: {
+            _bionicWakeContext: {
               issueId,
               taskId: issueId,
               commentId: newerCommentId,
@@ -1373,7 +1373,7 @@ describe.each(["unchanged", "newer_active", "stale_idle"] as const)(
           .where(eq(statusDecisions.issueId, issueId)),
       ).resolves.toHaveLength(1);
 
-      // The persisted Paperclip Runner run above remains recoverable while the
+      // The persisted Bionic Runner run above remains recoverable while the
       // flag is off. Switching the agent back to a direct adapter now proves a
       // fresh run ignores the stale native profile and stays on the legacy path.
       await db

@@ -3,17 +3,17 @@ import type {
   AgentInstructionsBundle,
   AgentSkillSnapshot,
   CompanySkillListItem,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   storybookHiredAgent,
   storybookAgents,
   storybookIssues,
   storybookSecrets,
-} from "../../fixtures/paperclipData";
-import { models as claudeModels } from "@paperclipai/adapter-claude-local";
-import { models as openCodeModels } from "@paperclipai/adapter-opencode-local";
+} from "../../fixtures/bionicData";
+import { models as claudeModels } from "@bionicai/adapter-claude-local";
+import { models as openCodeModels } from "@bionicai/adapter-opencode-local";
 import { storybookEnvironments } from "../../fixtures/onboardingEnvironment";
-import { models as codexModels } from "@paperclipai/adapter-codex-local";
+import { models as codexModels } from "@bionicai/adapter-codex-local";
 import { runtimeTestResult, type TestOutcome } from "../new-agent-fixtures";
 export const COMPANY = "company-storybook";
 export const ID = "agent-settings-preview";
@@ -21,8 +21,8 @@ export const REF = "nova";
 
 export const library = [
   [
-    "paperclip",
-    "Paperclip",
+    "bionic",
+    "Bionic",
     "Coordinate tasks, report progress, and work with your team.",
   ],
   [
@@ -116,7 +116,7 @@ export function createSettingsFixtures(
       grants: [],
     },
   };
-  let desiredSkills = ["paperclip", "design-guide"];
+  let desiredSkills = ["bionic", "design-guide"];
   const files: Record<string, string> = {
     "AGENTS.md":
       "# Nova\n\nYou are a product engineer. Build interfaces that are clear, useful, and reliable.\n\n## Working style\n\n- Read the task and relevant code before making changes.\n- Keep changes focused and preserve existing behavior.\n- Test the experience in the browser before handing it back.\n\nRead [workflow.md](workflow.md) for your delivery checklist.\n",
@@ -163,7 +163,7 @@ export function createSettingsFixtures(
       managed: true,
       state: "configured",
       origin: "company_managed",
-      originLabel: "Managed by Paperclip",
+      originLabel: "Managed by Bionic",
       readOnly: false,
       sourcePath: `skills/${key}`,
       targetPath: null,
@@ -311,7 +311,7 @@ export function createSettingsFixtures(
             url.pathname.includes("claude")
               ? claudeModels
               : url.pathname.includes("codex") ||
-                  url.pathname.includes("paperclip_runner")
+                  url.pathname.includes("bionic_runner")
                 ? codexModels
                 : url.pathname.includes("opencode")
                   ? openCodeModels
@@ -325,7 +325,7 @@ export function createSettingsFixtures(
               url.pathname.split("/").at(-2) ?? agent.adapterType,
               outcome,
               data.adapterConfig?.model ?? "",
-              "Paperclip Computer",
+              "Bionic Computer",
             ),
           );
         }

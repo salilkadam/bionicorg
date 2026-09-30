@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { agents, heartbeatRuns, issues, toolCatalogEntries, toolConnectionInstalls, toolInvocations, companies, companyMemberships, instanceSettings, createDb, toolConnections, toolPolicies, toolProfileEntries } from "@paperclipai/db";
+import { agents, heartbeatRuns, issues, toolCatalogEntries, toolConnectionInstalls, toolInvocations, companies, companyMemberships, instanceSettings, createDb, toolConnections, toolPolicies, toolProfileEntries } from "@bionicai/db";
 import { eq } from "drizzle-orm";
 import { startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import { toolAccessService } from "../services/tool-access.js";
@@ -20,7 +20,7 @@ describe("remote connector lifecycle", () => {
   let keyDir: string;
   beforeAll(async () => {
     keyDir = await mkdtemp(join(tmpdir(), "mcp-connector-secrets-"));
-    vi.stubEnv("PAPERCLIP_SECRETS_MASTER_KEY_FILE", join(keyDir, "key"));
+    vi.stubEnv("BIONIC_SECRETS_MASTER_KEY_FILE", join(keyDir, "key"));
     fixture = await startEmbeddedPostgresTestDatabase("mcp-connectors-test-");
     db = createDb(fixture.connectionString);
   });
@@ -58,7 +58,7 @@ describe("remote connector lifecycle", () => {
     const org = await company(); const remote = remoteFixture();
     const app = express();
     app.use((req, _res, next) => { req.actor = { type: "board", userId: actor.actorId, source: "local_implicit", isInstanceAdmin: true }; next(); });
-    app.use("/api", toolAccessRoutes(db, { paperclipCloudConnector: null }));
+    app.use("/api", toolAccessRoutes(db, { bionicCloudConnector: null }));
     const gallery = await request(app).get(`/api/companies/${org.id}/tools/gallery`);
     expect(gallery.status).toBe(200);
     expect(gallery.body.apps.map((entry: { slug: string }) => entry.slug)).toEqual(expect.arrayContaining(["zapier", "arcade", "composio", "executor", "notion"]));
@@ -187,7 +187,7 @@ describe("remote connector lifecycle", () => {
     await callback();
     expect((await service.listConnectionInstalls(connected.connectionId))).toHaveLength(0);
   });
-  it("enforces agent and action permissions before dispatch, and preserves provider resume after Paperclip approval", async () => {
+  it("enforces agent and action permissions before dispatch, and preserves provider resume after Bionic approval", async () => {
     const org = await company();
     const [allowed, denied] = await db.insert(agents).values(["Allowed", "Denied"].map((name) => ({ companyId: org.id, name, role: "engineer", adapterType: "process", adapterConfig: {}, runtimeConfig: {} }))).returning();
     const calls: { name: string; arguments: unknown; session: string | null }[] = [];

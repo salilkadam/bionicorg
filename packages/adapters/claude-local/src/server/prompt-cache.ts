@@ -2,12 +2,12 @@ import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash, type Hash } from "node:crypto";
-import type { AdapterExecutionContext } from "@paperclipai/adapter-utils";
+import type { AdapterExecutionContext } from "@bionicai/adapter-utils";
 import {
   ensurePaperclipSkillSymlink,
   resolvePaperclipInstanceRootForAdapter,
   type PaperclipSkillEntry,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 
 type SkillEntry = PaperclipSkillEntry;
 
@@ -27,8 +27,8 @@ function resolveManagedClaudePromptCacheRoot(
   companyId: string,
 ): string {
   const instanceRoot = resolvePaperclipInstanceRootForAdapter({
-    homeDir: nonEmpty(env.PAPERCLIP_HOME) ?? undefined,
-    instanceId: nonEmpty(env.PAPERCLIP_INSTANCE_ID) ?? undefined,
+    homeDir: nonEmpty(env.BIONIC_HOME) ?? undefined,
+    instanceId: nonEmpty(env.BIONIC_INSTANCE_ID) ?? undefined,
     env,
   });
   return path.resolve(
@@ -90,7 +90,7 @@ async function buildClaudePromptBundleKey(input: {
   instructionsContents: string | null;
 }): Promise<string> {
   const hash = createHash("sha256");
-  hash.update("paperclip-claude-prompt-bundle:v1\n");
+  hash.update("bionic-claude-prompt-bundle:v1\n");
   if (input.instructionsContents) {
     hash.update("instructions\n");
     hash.update(input.instructionsContents);
@@ -153,7 +153,7 @@ export async function prepareClaudePromptBundle(input: {
     } catch (err) {
       await onLog(
         "stderr",
-        `[paperclip] Failed to materialize Claude skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
+        `[bionic] Failed to materialize Claude skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
       );
     }
   }

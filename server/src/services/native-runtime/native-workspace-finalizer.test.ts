@@ -21,7 +21,7 @@ import {
   issueRecoveryActions,
   projects,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { startEmbeddedPostgresTestDatabase } from "../../__tests__/helpers/embedded-postgres.js";
 import { resumeNativeWorkspaceFinalization } from "./native-workspace-finalizer.js";
 
@@ -59,7 +59,7 @@ describe("native workspace finalization recovery", () => {
       companyId,
       issueId,
       revision: 1,
-      schemaVersion: "paperclip.completion-contract.v1",
+      schemaVersion: "bionic.completion-contract.v1",
       policyVersion: "native-workspace-finalizer-test-v1",
       risk: "standard",
       completionAuthority: "server_arbiter",
@@ -106,7 +106,7 @@ describe("native workspace finalization recovery", () => {
 
   beforeAll(async () => {
     workspaceRoot = await fs.mkdtemp(
-      path.join(os.tmpdir(), "paperclip-native-workspace-finalizer-"),
+      path.join(os.tmpdir(), "bionic-native-workspace-finalizer-"),
     );
     priorLogRoot = process.env.WORKSPACE_OPERATION_LOG_BASE_PATH;
     process.env.WORKSPACE_OPERATION_LOG_BASE_PATH = path.join(
@@ -114,7 +114,7 @@ describe("native workspace finalization recovery", () => {
       "operation-logs",
     );
     temporary = await startEmbeddedPostgresTestDatabase(
-      "paperclip-native-workspace-finalizer-",
+      "bionic-native-workspace-finalizer-",
     );
     db = createDb(temporary.connectionString);
 
@@ -130,7 +130,7 @@ describe("native workspace finalization recovery", () => {
       id: agentId,
       companyId,
       name: "Native workspace agent",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       status: "running",
     });
     await db.insert(projects).values([

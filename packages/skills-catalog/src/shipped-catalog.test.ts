@@ -5,26 +5,26 @@ import { describe, expect, it } from "vitest";
 import { catalogManifest, catalogSkills, resolveCatalogSkillRef } from "./index.js";
 
 const EXPECTED_BUNDLED_KEYS = [
-  "paperclipai/bundled/docs/doc-maintenance",
-  "paperclipai/bundled/paperclip-operations/issue-triage",
-  "paperclipai/bundled/paperclip-operations/reflection-coach",
-  "paperclipai/bundled/paperclip-operations/status-card-query",
-  "paperclipai/bundled/paperclip-operations/summarize-status",
-  "paperclipai/bundled/paperclip-operations/task-planning",
-  "paperclipai/bundled/product/paperclip-capsules",
-  "paperclipai/bundled/product/wireframe",
-  "paperclipai/bundled/quality/qa-acceptance",
-  "paperclipai/bundled/software-development/github-pr-workflow",
+  "bionicai/bundled/docs/doc-maintenance",
+  "bionicai/bundled/bionic-operations/issue-triage",
+  "bionicai/bundled/bionic-operations/reflection-coach",
+  "bionicai/bundled/bionic-operations/status-card-query",
+  "bionicai/bundled/bionic-operations/summarize-status",
+  "bionicai/bundled/bionic-operations/task-planning",
+  "bionicai/bundled/product/bionic-capsules",
+  "bionicai/bundled/product/wireframe",
+  "bionicai/bundled/quality/qa-acceptance",
+  "bionicai/bundled/software-development/github-pr-workflow",
 ];
 
 const EXPECTED_OPTIONAL_KEYS = [
-  "paperclipai/optional/browser/agent-browser",
-  "paperclipai/optional/content/release-announcement",
-  "paperclipai/optional/content/simplified-english",
-  "paperclipai/optional/finance/ramp",
-  "paperclipai/optional/product/design-critique",
-  "paperclipai/optional/research/last30days",
-  "paperclipai/optional/software-development/prepare-mcp-integration",
+  "bionicai/optional/browser/agent-browser",
+  "bionicai/optional/content/release-announcement",
+  "bionicai/optional/content/simplified-english",
+  "bionicai/optional/finance/ramp",
+  "bionicai/optional/product/design-critique",
+  "bionicai/optional/research/last30days",
+  "bionicai/optional/software-development/prepare-mcp-integration",
 ];
 
 const MAX_FRONTMATTER_DESCRIPTION_LENGTH = 300;
@@ -41,7 +41,7 @@ const SKILL_FRONTMATTER_ROOTS = [
 function listSkillFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     // Standalone provider installs can contain third-party skills. They are not
-    // shipped Paperclip skills and must not participate in this repo audit.
+    // shipped Bionic skills and must not participate in this repo audit.
     if (entry.name === "node_modules") return [];
     const entryPath = path.join(dir, entry.name);
     if (entry.isDirectory()) return listSkillFiles(entryPath);
@@ -77,7 +77,7 @@ describe("shipped skills catalog", () => {
     const skill = readFileSync(
       path.join(
         REPO_ROOT,
-        "packages/skills-catalog/catalog/bundled/paperclip-operations/summarize-status/SKILL.md",
+        "packages/skills-catalog/catalog/bundled/bionic-operations/summarize-status/SKILL.md",
       ),
       "utf8",
     );
@@ -131,7 +131,7 @@ describe("shipped skills catalog", () => {
     // carry the "assets" trust level and are installable.
     const scriptBearing = catalogSkills.filter((skill) => skill.trustLevel === "scripts_executables");
     expect(scriptBearing.map((skill) => skill.key)).toEqual([
-      "paperclipai/optional/research/last30days",
+      "bionicai/optional/research/last30days",
     ]);
   });
 
@@ -154,11 +154,11 @@ describe("shipped skills catalog", () => {
     expect(issues).toEqual([]);
   });
 
-  it("uses canonical paperclipai keys derived from kind/category/slug", () => {
+  it("uses canonical bionicai keys derived from kind/category/slug", () => {
     const violations: string[] = [];
     for (const skill of catalogSkills) {
-      const expectedKey = `paperclipai/${skill.kind}/${skill.category}/${skill.slug}`;
-      const expectedId = `paperclipai:${skill.kind}:${skill.category}:${skill.slug}`;
+      const expectedKey = `bionicai/${skill.kind}/${skill.category}/${skill.slug}`;
+      const expectedId = `bionicai:${skill.kind}:${skill.category}:${skill.slug}`;
       if (skill.key !== expectedKey) violations.push(`${skill.key} should be ${expectedKey}`);
       if (skill.id !== expectedId) violations.push(`${skill.id} should be ${expectedId}`);
     }
@@ -167,12 +167,12 @@ describe("shipped skills catalog", () => {
 
   it("exposes a stable manifest header for downstream consumers", () => {
     expect(catalogManifest.schemaVersion).toBe(1);
-    expect(catalogManifest.packageName).toBe("@paperclipai/skills-catalog");
+    expect(catalogManifest.packageName).toBe("@bionicai/skills-catalog");
     expect(catalogSkills.length).toBe(EXPECTED_BUNDLED_KEYS.length + EXPECTED_OPTIONAL_KEYS.length);
   });
 
   it("resolves shipped skills by id, key, and unique slug", () => {
-    const sample = catalogSkills.find((skill) => skill.key === "paperclipai/bundled/software-development/github-pr-workflow");
+    const sample = catalogSkills.find((skill) => skill.key === "bionicai/bundled/software-development/github-pr-workflow");
     expect(sample, "expected github-pr-workflow to ship in the bundled catalog").toBeDefined();
     if (!sample) return;
 
@@ -185,7 +185,7 @@ describe("shipped skills catalog", () => {
     const rampSkill = readFileSync(new URL("../catalog/optional/finance/ramp/SKILL.md", import.meta.url), "utf8");
 
     expect(rampSkill).toContain("mixes Official and Community playbooks");
-    expect(rampSkill).toContain("do not execute them inside Paperclip unless a Paperclip approval explicitly names the playbook");
+    expect(rampSkill).toContain("do not execute them inside Bionic unless a Bionic approval explicitly names the playbook");
     expect(rampSkill).toContain("third-party browser automation, MCP server, CLI, or connector");
   });
 

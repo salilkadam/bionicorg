@@ -9,7 +9,7 @@ const script = new URL("../provision-worktree.sh", import.meta.url).pathname;
 const runtimeScript = new URL("../provision-worktree-runtime.sh", import.meta.url).pathname;
 
 // Keep the PATH minimal so the fallback ladder is deterministic: node must be
-// reachable, but a globally installed `paperclipai` must not shadow the paths
+// reachable, but a globally installed `bionicai` must not shadow the paths
 // under test.
 const testPath = [path.dirname(process.execPath), "/usr/bin", "/bin"].join(":");
 
@@ -26,7 +26,7 @@ function makeTempDir(prefix) {
  * instance config of its own, so this is the seed source the scripts fall back to.
  */
 function makeInstanceHome() {
-  const home = makeTempDir("paperclip-provision-instance-home-");
+  const home = makeTempDir("bionic-provision-instance-home-");
   fs.mkdirSync(path.join(home, "instances", "default"), { recursive: true });
   fs.writeFileSync(path.join(home, "instances", "default", "config.json"), "{}\n");
   return home;
@@ -47,7 +47,7 @@ test.after(() => {
  *           writes a marker config so tests can tell CLI init from fallback.
  */
 function makeBaseWorkspace({ helpExit, initExit, ensureExit = 0 }) {
-  const baseCwd = makeTempDir("paperclip-provision-base-");
+  const baseCwd = makeTempDir("bionic-provision-base-");
   const runnerPath = path.join(baseCwd, "cli", "node_modules", "tsx", "dist", "cli.mjs");
   const entryPath = path.join(baseCwd, "cli", "src", "index.ts");
   fs.mkdirSync(path.dirname(runnerPath), { recursive: true });
@@ -68,9 +68,9 @@ if (cliArgs[0] === "worktree" && cliArgs[1] === "init") {
     console.error("fake worktree init failure");
     process.exit(${initExit});
   }
-  fs.mkdirSync(".paperclip", { recursive: true });
-  fs.writeFileSync(".paperclip/config.json", JSON.stringify({ $meta: { source: "fake-cli" } }));
-  fs.writeFileSync(".paperclip/.env", "PAPERCLIP_IN_WORKTREE=true\\n");
+  fs.mkdirSync(".bionic", { recursive: true });
+  fs.writeFileSync(".bionic/config.json", JSON.stringify({ $meta: { source: "fake-cli" } }));
+  fs.writeFileSync(".bionic/.env", "BIONIC_IN_WORKTREE=true\\n");
   process.exit(0);
 }
 if (cliArgs[0] === "worktree" && cliArgs[1] === "ensure-seeded") {
@@ -78,11 +78,11 @@ if (cliArgs[0] === "worktree" && cliArgs[1] === "ensure-seeded") {
     console.error("fake worktree ensure-seeded failure");
     process.exit(${ensureExit});
   }
-  fs.rmSync(".paperclip/seed-pending", { force: true });
-  fs.rmSync(".paperclip/seed-complete", { force: true });
-  fs.writeFileSync(".paperclip/seed-manifest.json", JSON.stringify({
+  fs.rmSync(".bionic/seed-pending", { force: true });
+  fs.rmSync(".bionic/seed-complete", { force: true });
+  fs.writeFileSync(".bionic/seed-manifest.json", JSON.stringify({
     version: 2,
-    source: { instanceId: "base-source", configPath: ${JSON.stringify(path.join(baseCwd, ".paperclip", "config.json"))} },
+    source: { instanceId: "base-source", configPath: ${JSON.stringify(path.join(baseCwd, ".bionic", "config.json"))} },
     snapshotAt: "2026-08-19T00:00:00.000Z",
     seedMode: "minimal",
     migrationRevision: "0142_test.sql",
@@ -103,44 +103,44 @@ process.exit(0);
 }
 
 function runProvision(baseCwd, { pathPrefix, setupWorktree, existingWorktree } = {}) {
-  const worktreeCwd = existingWorktree ?? makeTempDir("paperclip-provision-worktree-");
+  const worktreeCwd = existingWorktree ?? makeTempDir("bionic-provision-worktree-");
   setupWorktree?.(worktreeCwd);
-  const worktreesHome = makeTempDir("paperclip-provision-home-");
-  const paperclipHome = makeInstanceHome();
+  const worktreesHome = makeTempDir("bionic-provision-home-");
+  const bionicHome = makeInstanceHome();
   const result = spawnSync("bash", [script], {
     cwd: worktreeCwd,
     encoding: "utf8",
     env: {
       PATH: pathPrefix ? `${pathPrefix}:${testPath}` : testPath,
       HOME: os.homedir(),
-      PAPERCLIP_WORKSPACE_BASE_CWD: baseCwd,
-      PAPERCLIP_WORKSPACE_CWD: worktreeCwd,
-      PAPERCLIP_WORKSPACE_BRANCH: "feature/provision-test",
-      PAPERCLIP_WORKTREES_DIR: worktreesHome,
-      PAPERCLIP_HOME: paperclipHome,
-      PAPERCLIP_PROJECT_WORKSPACE_ID: "project-workspace-1",
-      PAPERCLIP_SEED_EXPECTED_COMPANY_ID: "company-1",
+      BIONIC_WORKSPACE_BASE_CWD: baseCwd,
+      BIONIC_WORKSPACE_CWD: worktreeCwd,
+      BIONIC_WORKSPACE_BRANCH: "feature/provision-test",
+      BIONIC_WORKTREES_DIR: worktreesHome,
+      BIONIC_HOME: bionicHome,
+      BIONIC_PROJECT_WORKSPACE_ID: "project-workspace-1",
+      BIONIC_SEED_EXPECTED_COMPANY_ID: "company-1",
     },
   });
-  return { result, worktreeCwd, worktreesHome, paperclipHome };
+  return { result, worktreeCwd, worktreesHome, bionicHome };
 }
 
 function runRuntimeProvision(baseCwd, worktreeCwd) {
-  const worktreesHome = makeTempDir("paperclip-provision-runtime-home-");
-  const paperclipHome = makeInstanceHome();
+  const worktreesHome = makeTempDir("bionic-provision-runtime-home-");
+  const bionicHome = makeInstanceHome();
   return spawnSync("bash", [runtimeScript], {
     cwd: worktreeCwd,
     encoding: "utf8",
     env: {
       PATH: testPath,
       HOME: os.homedir(),
-      PAPERCLIP_WORKSPACE_BASE_CWD: baseCwd,
-      PAPERCLIP_WORKSPACE_CWD: worktreeCwd,
-      PAPERCLIP_WORKSPACE_BRANCH: "feature/provision-runtime-test",
-      PAPERCLIP_WORKTREES_DIR: worktreesHome,
-      PAPERCLIP_HOME: paperclipHome,
-      PAPERCLIP_PROJECT_WORKSPACE_ID: "project-workspace-1",
-      PAPERCLIP_COMPANY_ID: "company-1",
+      BIONIC_WORKSPACE_BASE_CWD: baseCwd,
+      BIONIC_WORKSPACE_CWD: worktreeCwd,
+      BIONIC_WORKSPACE_BRANCH: "feature/provision-runtime-test",
+      BIONIC_WORKTREES_DIR: worktreesHome,
+      BIONIC_HOME: bionicHome,
+      BIONIC_PROJECT_WORKSPACE_ID: "project-workspace-1",
+      BIONIC_COMPANY_ID: "company-1",
     },
   });
 }
@@ -157,7 +157,7 @@ function readCliInvocations(baseCwd) {
 }
 
 function readWorktreeConfig(worktreeCwd) {
-  const configPath = path.join(worktreeCwd, ".paperclip", "config.json");
+  const configPath = path.join(worktreeCwd, ".bionic", "config.json");
   assert.ok(fs.existsSync(configPath), `expected ${configPath} to exist`);
   return JSON.parse(fs.readFileSync(configPath, "utf8"));
 }
@@ -170,7 +170,7 @@ test("uses the base CLI when its import graph boots", () => {
   const config = readWorktreeConfig(worktreeCwd);
   assert.equal(config.$meta.source, "fake-cli");
   assert.equal(
-    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".paperclip", "seed-manifest.json"), "utf8")).state,
+    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".bionic", "seed-manifest.json"), "utf8")).state,
     "pending",
   );
   const initInvocation = readCliInvocations(baseCwd).find(
@@ -184,8 +184,8 @@ test("uses the base CLI when its import graph boots", () => {
 
 test("rejects a dangling base workspace config symlink instead of falling back", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-  fs.mkdirSync(path.join(baseCwd, ".paperclip"), { recursive: true });
-  fs.symlinkSync(path.join(baseCwd, "absent.json"), path.join(baseCwd, ".paperclip", "config.json"));
+  fs.mkdirSync(path.join(baseCwd, ".bionic"), { recursive: true });
+  fs.symlinkSync(path.join(baseCwd, "absent.json"), path.join(baseCwd, ".bionic", "config.json"));
 
   const { result } = runProvision(baseCwd);
 
@@ -193,16 +193,16 @@ test("rejects a dangling base workspace config symlink instead of falling back",
   assert.match(result.stderr, /is missing or is not a canonical file/);
 });
 
-test("rejects a dangling base workspace .paperclip symlink instead of falling back", () => {
+test("rejects a dangling base workspace .bionic symlink instead of falling back", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-  // `-e`/`-L` on the config resolve `.paperclip` first, so the config reads as absent
+  // `-e`/`-L` on the config resolve `.bionic` first, so the config reads as absent
   // here even though the workspace is malformed rather than a plain checkout.
-  fs.symlinkSync(path.join(baseCwd, "absent-dir"), path.join(baseCwd, ".paperclip"));
+  fs.symlinkSync(path.join(baseCwd, "absent-dir"), path.join(baseCwd, ".bionic"));
 
   const { result } = runProvision(baseCwd);
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /\.paperclip is a broken symlink/);
+  assert.match(result.stderr, /\.bionic is a broken symlink/);
 });
 
 test("falls back to an isolated config when the base CLI cannot boot", () => {
@@ -222,24 +222,24 @@ test("falls back to an isolated config when the base CLI cannot boot", () => {
     !path.relative(worktreesHome, dataDir).startsWith(".."),
     `expected ${dataDir} to live under ${worktreesHome}`,
   );
-  const env = fs.readFileSync(path.join(worktreeCwd, ".paperclip", ".env"), "utf8");
-  assert.match(env, /PAPERCLIP_IN_WORKTREE=true/);
+  const env = fs.readFileSync(path.join(worktreeCwd, ".bionic", ".env"), "utf8");
+  assert.match(env, /BIONIC_IN_WORKTREE=true/);
   assert.equal(
-    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".paperclip", "seed-manifest.json"), "utf8")).state,
+    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".bionic", "seed-manifest.json"), "utf8")).state,
     "pending",
   );
 });
 
 test("reconciles deployment mode from the registered source when reusing a guest config", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 1, initExit: 0 });
-  const { result: first, worktreeCwd, worktreesHome, paperclipHome } = runProvision(baseCwd);
+  const { result: first, worktreeCwd, worktreesHome, bionicHome } = runProvision(baseCwd);
   assert.equal(first.status, 0, first.stderr);
   assert.equal(readWorktreeConfig(worktreeCwd).server.deploymentMode, "local_trusted");
 
   // A base workspace that does carry its own instance config outranks the fallback.
-  fs.mkdirSync(path.join(baseCwd, ".paperclip"), { recursive: true });
+  fs.mkdirSync(path.join(baseCwd, ".bionic"), { recursive: true });
   fs.writeFileSync(
-    path.join(baseCwd, ".paperclip", "config.json"),
+    path.join(baseCwd, ".bionic", "config.json"),
     `${JSON.stringify({
       server: {
         deploymentMode: "authenticated",
@@ -254,19 +254,19 @@ test("reconciles deployment mode from the registered source when reusing a guest
     env: {
       PATH: testPath,
       HOME: os.homedir(),
-      PAPERCLIP_WORKSPACE_BASE_CWD: baseCwd,
-      PAPERCLIP_WORKSPACE_CWD: worktreeCwd,
-      PAPERCLIP_WORKSPACE_BRANCH: "feature/provision-test",
-      PAPERCLIP_WORKTREES_DIR: worktreesHome,
-      PAPERCLIP_HOME: paperclipHome,
-      PAPERCLIP_PROJECT_WORKSPACE_ID: "project-workspace-1",
-      PAPERCLIP_SEED_EXPECTED_COMPANY_ID: "company-1",
+      BIONIC_WORKSPACE_BASE_CWD: baseCwd,
+      BIONIC_WORKSPACE_CWD: worktreeCwd,
+      BIONIC_WORKSPACE_BRANCH: "feature/provision-test",
+      BIONIC_WORKTREES_DIR: worktreesHome,
+      BIONIC_HOME: bionicHome,
+      BIONIC_PROJECT_WORKSPACE_ID: "project-workspace-1",
+      BIONIC_SEED_EXPECTED_COMPANY_ID: "company-1",
     },
   });
 
   assert.equal(second.status, 0, second.stderr);
-  assert.match(second.stderr, /Reusing existing isolated Paperclip worktree config/);
-  assert.match(second.stderr, /Reconciled isolated Paperclip worktree deployment mode/);
+  assert.match(second.stderr, /Reusing existing isolated Bionic worktree config/);
+  assert.match(second.stderr, /Reconciled isolated Bionic worktree deployment mode/);
   assert.equal(readWorktreeConfig(worktreeCwd).server.deploymentMode, "authenticated");
   assert.equal(readWorktreeConfig(worktreeCwd).server.exposure, "private");
 });
@@ -282,7 +282,7 @@ test("repairs an unhealthy base install under the lock and then uses the CLI", (
 
   // The CLI's health is controlled by a flag file, and a fake `pnpm install`
   // creates that flag — modeling a forced reinstall that relinks the store.
-  const baseCwd = makeTempDir("paperclip-provision-repair-base-");
+  const baseCwd = makeTempDir("bionic-provision-repair-base-");
   const healthFlag = path.join(baseCwd, "cli-healthy.flag");
   const runnerPath = path.join(baseCwd, "cli", "node_modules", "tsx", "dist", "cli.mjs");
   const entryPath = path.join(baseCwd, "cli", "src", "index.ts");
@@ -298,9 +298,9 @@ if (cliArgs.includes("--help")) {
   process.exit(fs.existsSync(${JSON.stringify(healthFlag)}) ? 0 : 1);
 }
 if (cliArgs[0] === "worktree" && cliArgs[1] === "init") {
-  fs.mkdirSync(".paperclip", { recursive: true });
-  fs.writeFileSync(".paperclip/config.json", JSON.stringify({ $meta: { source: "fake-cli" } }));
-  fs.writeFileSync(".paperclip/.env", "PAPERCLIP_IN_WORKTREE=true\\n");
+  fs.mkdirSync(".bionic", { recursive: true });
+  fs.writeFileSync(".bionic/config.json", JSON.stringify({ $meta: { source: "fake-cli" } }));
+  fs.writeFileSync(".bionic/.env", "BIONIC_IN_WORKTREE=true\\n");
   process.exit(0);
 }
 process.exit(0);
@@ -310,7 +310,7 @@ process.exit(0);
   fs.writeFileSync(path.join(baseCwd, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
   spawnSync("git", ["init", "-q", baseCwd], { env: { PATH: testPath } });
 
-  const fakeBin = makeTempDir("paperclip-provision-fakebin-");
+  const fakeBin = makeTempDir("bionic-provision-fakebin-");
   const installLog = path.join(baseCwd, "pnpm-invocations.log");
   fs.writeFileSync(
     path.join(fakeBin, "pnpm"),
@@ -335,7 +335,7 @@ exit 1
   assert.match(installs[0], /--force/);
   assert.match(installs[0], /--frozen-lockfile/);
   assert.ok(
-    fs.existsSync(path.join(baseCwd, ".git", "paperclip-provision-repair.lock")),
+    fs.existsSync(path.join(baseCwd, ".git", "bionic-provision-repair.lock")),
     "expected the repair lock file inside the resolved git dir",
   );
 });
@@ -350,23 +350,23 @@ test("a failed CLI init fails provisioning instead of being masked as success", 
 
   assert.equal(result.status, 3, result.stderr);
   assert.match(result.stderr, /fake worktree init failure/);
-  assert.ok(!fs.existsSync(path.join(worktreeCwd, ".paperclip", "config.json")));
+  assert.ok(!fs.existsSync(path.join(worktreeCwd, ".bionic", "config.json")));
 });
 
 test("runtime provisioning invokes ensure-seeded once and fast-exits after success", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-  const worktreeCwd = makeTempDir("paperclip-provision-runtime-worktree-");
-  fs.mkdirSync(path.join(worktreeCwd, ".paperclip"), { recursive: true });
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "config.json"), "{}\n");
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "seed-pending"), "{}\n");
+  const worktreeCwd = makeTempDir("bionic-provision-runtime-worktree-");
+  fs.mkdirSync(path.join(worktreeCwd, ".bionic"), { recursive: true });
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "config.json"), "{}\n");
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "seed-pending"), "{}\n");
 
   const first = runRuntimeProvision(baseCwd, worktreeCwd);
   assert.equal(first.status, 0, first.stderr);
   assert.equal(
-    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".paperclip", "seed-manifest.json"), "utf8")).state,
+    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".bionic", "seed-manifest.json"), "utf8")).state,
     "verified",
   );
-  assert.ok(!fs.existsSync(path.join(worktreeCwd, ".paperclip", "seed-pending")));
+  assert.ok(!fs.existsSync(path.join(worktreeCwd, ".bionic", "seed-pending")));
 
   const ensureCallsAfterFirst = readCliInvocations(baseCwd)
     .filter((args) => args[0] === "worktree" && args[1] === "ensure-seeded");
@@ -384,11 +384,11 @@ test("runtime provisioning invokes ensure-seeded once and fast-exits after succe
 
 test("runtime provisioning omits the source override when the base config exists", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-  fs.mkdirSync(path.join(baseCwd, ".paperclip"), { recursive: true });
-  fs.writeFileSync(path.join(baseCwd, ".paperclip", "config.json"), "{}\n");
-  const worktreeCwd = makeTempDir("paperclip-provision-runtime-base-config-");
-  fs.mkdirSync(path.join(worktreeCwd, ".paperclip"), { recursive: true });
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "config.json"), "{}\n");
+  fs.mkdirSync(path.join(baseCwd, ".bionic"), { recursive: true });
+  fs.writeFileSync(path.join(baseCwd, ".bionic", "config.json"), "{}\n");
+  const worktreeCwd = makeTempDir("bionic-provision-runtime-base-config-");
+  fs.mkdirSync(path.join(worktreeCwd, ".bionic"), { recursive: true });
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "config.json"), "{}\n");
 
   const result = runRuntimeProvision(baseCwd, worktreeCwd);
 
@@ -417,9 +417,9 @@ test("runtime provisioning guards every optional source-config expansion for Bas
 
 test("runtime provisioning seeds a worktree config that has no seed markers", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-  const worktreeCwd = makeTempDir("paperclip-provision-runtime-unmarked-config-");
-  fs.mkdirSync(path.join(worktreeCwd, ".paperclip"), { recursive: true });
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "config.json"), "{}\n");
+  const worktreeCwd = makeTempDir("bionic-provision-runtime-unmarked-config-");
+  fs.mkdirSync(path.join(worktreeCwd, ".bionic"), { recursive: true });
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "config.json"), "{}\n");
 
   const result = runRuntimeProvision(baseCwd, worktreeCwd);
 
@@ -430,17 +430,17 @@ test("runtime provisioning seeds a worktree config that has no seed markers", ()
     1,
   );
   assert.equal(
-    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".paperclip", "seed-manifest.json"), "utf8")).state,
+    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".bionic", "seed-manifest.json"), "utf8")).state,
     "verified",
   );
 });
 
-test("runtime provisioning bootstraps and seeds an empty .paperclip directory", () => {
+test("runtime provisioning bootstraps and seeds an empty .bionic directory", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
   fs.mkdirSync(path.join(baseCwd, "scripts"), { recursive: true });
   fs.copyFileSync(script, path.join(baseCwd, "scripts", "provision-worktree.sh"));
-  const worktreeCwd = makeTempDir("paperclip-provision-runtime-empty-state-");
-  fs.mkdirSync(path.join(worktreeCwd, ".paperclip"), { recursive: true });
+  const worktreeCwd = makeTempDir("bionic-provision-runtime-empty-state-");
+  fs.mkdirSync(path.join(worktreeCwd, ".bionic"), { recursive: true });
 
   const result = runRuntimeProvision(baseCwd, worktreeCwd);
 
@@ -456,32 +456,32 @@ test("runtime provisioning bootstraps and seeds an empty .paperclip directory", 
     1,
   );
   assert.equal(
-    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".paperclip", "seed-manifest.json"), "utf8")).state,
+    JSON.parse(fs.readFileSync(path.join(worktreeCwd, ".bionic", "seed-manifest.json"), "utf8")).state,
     "verified",
   );
 });
 
 test("runtime provisioning leaves seed-pending in place when ensure-seeded fails", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0, ensureExit: 4 });
-  const worktreeCwd = makeTempDir("paperclip-provision-runtime-failure-");
-  fs.mkdirSync(path.join(worktreeCwd, ".paperclip"), { recursive: true });
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "config.json"), "{}\n");
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "seed-pending"), "{}\n");
+  const worktreeCwd = makeTempDir("bionic-provision-runtime-failure-");
+  fs.mkdirSync(path.join(worktreeCwd, ".bionic"), { recursive: true });
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "config.json"), "{}\n");
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "seed-pending"), "{}\n");
 
   const result = runRuntimeProvision(baseCwd, worktreeCwd);
   assert.equal(result.status, 4, result.stderr);
   assert.match(result.stderr, /fake worktree ensure-seeded failure/);
-  assert.ok(fs.existsSync(path.join(worktreeCwd, ".paperclip", "seed-pending")));
-  assert.ok(!fs.existsSync(path.join(worktreeCwd, ".paperclip", "seed-complete")));
+  assert.ok(fs.existsSync(path.join(worktreeCwd, ".bionic", "seed-pending")));
+  assert.ok(!fs.existsSync(path.join(worktreeCwd, ".bionic", "seed-complete")));
 });
 
 test("runtime provisioning does not trust a truncated verified manifest", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0, ensureExit: 4 });
-  const worktreeCwd = makeTempDir("paperclip-provision-runtime-truncated-");
-  fs.mkdirSync(path.join(worktreeCwd, ".paperclip"), { recursive: true });
-  fs.writeFileSync(path.join(worktreeCwd, ".paperclip", "config.json"), "{}\n");
+  const worktreeCwd = makeTempDir("bionic-provision-runtime-truncated-");
+  fs.mkdirSync(path.join(worktreeCwd, ".bionic"), { recursive: true });
+  fs.writeFileSync(path.join(worktreeCwd, ".bionic", "config.json"), "{}\n");
   fs.writeFileSync(
-    path.join(worktreeCwd, ".paperclip", "seed-manifest.json"),
+    path.join(worktreeCwd, ".bionic", "seed-manifest.json"),
     JSON.stringify({ version: 2, state: "verified" }),
   );
 
@@ -529,7 +529,7 @@ test("every pnpm install call site silences DEP0169 without overwriting NODE_OPT
 for (const failure of ["ERR_PNPM_LOCKFILE_CONFIG_MISMATCH", "ERR_PNPM_OUTDATED_LOCKFILE", "ENOTFOUND", "retry-fails"]) {
   test(`dependency provisioning preserves failures and bounds recovery: ${failure}`, () => {
     const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-    const bin = makeTempDir("paperclip-fake-pnpm-");
+    const bin = makeTempDir("bionic-fake-pnpm-");
     fs.writeFileSync(path.join(bin, "pnpm"), `#!/bin/sh
 printf '%s\\n' "$*" >> pnpm-calls
 case "$*" in
@@ -546,7 +546,7 @@ esac
     });
     const recovers = failure.startsWith("ERR_PNPM_");
     assert.equal(result.status, recovers ? 0 : failure === "ENOTFOUND" ? 42 : 1, result.stderr);
-    assert.equal(fs.existsSync(path.join(worktreeCwd, ".paperclip/pnpm-install-fingerprint")), recovers);
+    assert.equal(fs.existsSync(path.join(worktreeCwd, ".bionic/pnpm-install-fingerprint")), recovers);
     const calls = fs.readFileSync(path.join(worktreeCwd, "pnpm-calls"), "utf8").trim().split("\n").filter((call) => call.startsWith("install "));
     assert.equal(calls.length, failure === "ENOTFOUND" ? 1 : 2);
     if (calls.length === 2) assert.match(calls[1], /--no-frozen-lockfile/);
@@ -555,7 +555,7 @@ esac
 
 test("patch content changes invalidate an otherwise matching install fingerprint", () => {
   const baseCwd = makeBaseWorkspace({ helpExit: 0, initExit: 0 });
-  const bin = makeTempDir("paperclip-patch-pnpm-");
+  const bin = makeTempDir("bionic-patch-pnpm-");
   fs.writeFileSync(path.join(bin, "pnpm"), '#!/bin/sh\ncase "$1" in install) echo install >> pnpm-calls; mkdir -p node_modules cli/node_modules ;; esac\n', { mode: 0o700 });
   const first = runProvision(baseCwd, { pathPrefix: bin, setupWorktree(root) {
     fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ pnpm: { patchedDependencies: { "dependency@1": "patches/dependency.diff" } } }));

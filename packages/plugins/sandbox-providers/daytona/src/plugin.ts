@@ -9,7 +9,7 @@ import type {
   Resources,
   Sandbox,
 } from "@daytonaio/sdk";
-import { decodeChannelBytes, definePlugin, NOOP_PLUGIN_TRACER, PluginEnvironmentCreationCleanupError, readEnvironmentCreationCleanupError } from "@paperclipai/plugin-sdk";
+import { decodeChannelBytes, definePlugin, NOOP_PLUGIN_TRACER, PluginEnvironmentCreationCleanupError, readEnvironmentCreationCleanupError } from "@bionicai/plugin-sdk";
 import type {
   PluginContext,
   PluginEnvironmentCreationCleanup,
@@ -43,7 +43,7 @@ import type {
   PluginEnvironmentValidateConfigParams,
   PluginEnvironmentValidationResult,
   PluginSyncOperation,
-} from "@paperclipai/plugin-sdk";
+} from "@bionicai/plugin-sdk";
 import { performSyncIn, performSyncOut, withProviderSpan } from "./file-sync.js";
 import { DEFAULT_DAYTONA_OPERATION_TIMEOUT_MS } from "./manifest.js";
 
@@ -51,7 +51,7 @@ import { DEFAULT_DAYTONA_OPERATION_TIMEOUT_MS } from "./manifest.js";
 // The session runs the login command on a real pseudo-terminal, streams the
 // terminal output, and delivers the delayed browser code plus the Enter byte. A
 // later phase binds the opener to `sandbox.process` and wraps it with the
-// `createLoginPtyTransport` factory from `@paperclipai/adapter-utils` to
+// `createLoginPtyTransport` factory from `@bionicai/adapter-utils` to
 // build the transport the login runner drives.
 export {
   createDaytonaLoginPtySessionOpener,
@@ -204,7 +204,7 @@ type DaytonaSnapshotService = {
   delete?: (snapshot: unknown) => Promise<void>;
 };
 
-const WORKSPACE_SENTINEL_RELATIVE_PATH = ".paperclip-runtime/reusable-sandbox-lease.json";
+const WORKSPACE_SENTINEL_RELATIVE_PATH = ".bionic-runtime/reusable-sandbox-lease.json";
 
 // Quota-safety defaults (minutes). Daytona counts *stopped* sandboxes against
 // the storage quota; only *archived* sandboxes move to cold object storage and
@@ -383,13 +383,13 @@ function buildSandboxLabels(input: {
   reuseLease: boolean;
 }): Record<string, string> {
   return {
-    "paperclip-provider": "daytona",
-    "paperclip-company-id": input.companyId,
-    "paperclip-environment-id": input.environmentId,
-    "paperclip-reuse-lease": input.reuseLease ? "true" : "false",
-    ...(input.runId ? { "paperclip-run-id": input.runId } : {}),
-    ...(input.setupSessionId ? { "paperclip-setup-session-id": input.setupSessionId } : {}),
-    ...(input.purpose ? { "paperclip-purpose": input.purpose } : {}),
+    "bionic-provider": "daytona",
+    "bionic-company-id": input.companyId,
+    "bionic-environment-id": input.environmentId,
+    "bionic-reuse-lease": input.reuseLease ? "true" : "false",
+    ...(input.runId ? { "bionic-run-id": input.runId } : {}),
+    ...(input.setupSessionId ? { "bionic-setup-session-id": input.setupSessionId } : {}),
+    ...(input.purpose ? { "bionic-purpose": input.purpose } : {}),
   };
 }
 
@@ -517,7 +517,7 @@ async function resolveSandboxWorkingDirectory(sandbox: Sandbox, create = true): 
   const root = (await sandbox.getWorkDir())?.trim()
     || (await sandbox.getUserHomeDir())?.trim()
     || "/home/daytona";
-  const remoteCwd = path.posix.join(root, "paperclip-workspace");
+  const remoteCwd = path.posix.join(root, "bionic-workspace");
   if (create) await sandbox.fs.createFolder(remoteCwd, "755");
   return remoteCwd;
 }
@@ -685,7 +685,7 @@ function leaseMetadata(input: {
     ...(input.resumedLease
       ? { resumedFromState: input.resumedFromState ?? null }
       : {}),
-    // Record the resources Paperclip attempted to request so future diagnosis
+    // Record the resources Bionic attempted to request so future diagnosis
     // can compare requested allocation against what Daytona provisioned.
     ...(input.config.cpu != null ? { cpu: input.config.cpu } : {}),
     ...(input.config.memory != null ? { memory: input.config.memory } : {}),
@@ -709,7 +709,7 @@ function expiresAtForMinutes(minutes: number): string {
 }
 
 // Configure a provider-side time-to-live so Daytona destroys the sandbox at or
-// before the caller-requested deadline, even after a Paperclip crash or outage.
+// before the caller-requested deadline, even after a Bionic crash or outage.
 // `setTtl` counts wall-clock time regardless of the sandbox state, so the destroy
 // happens even when the sandbox is stopped, paused, or archived. The function
 // returns the real provider destroy time (`autoDestroyAt`) as evidence of the
@@ -958,7 +958,7 @@ async function createSandbox(
   // The SDK can create a sandbox and then throw while waiting for it to start.
   // Keep an attempt-specific provider name so that failure cannot lose ownership.
   const attemptId = randomUUID();
-  const name = `paperclip-create-${attemptId}`;
+  const name = `bionic-create-${attemptId}`;
   const labels = { ...buildSandboxLabels({
     companyId: params.companyId,
     environmentId: params.environmentId,
@@ -966,7 +966,7 @@ async function createSandbox(
     setupSessionId: "sessionId" in params ? params.sessionId : undefined,
     purpose: options.purpose,
     reuseLease: config.reuseLease,
-  }), "paperclip-create-attempt": attemptId };
+  }), "bionic-create-attempt": attemptId };
   // The SDK mutates params.labels (for example, code-toolbox-language).
   // Preserve our immutable ownership snapshot for validation and retry.
   const createParams = { ...buildCreateParams(config, { ...labels }), name };
@@ -1002,13 +1002,13 @@ async function destroyFailedCreation(
   config: DaytonaDriverConfig, cleanup: PluginEnvironmentCreationCleanup,
   requireDurableObservation = false,
 ): Promise<void> {
-  if (cleanup.providerLeaseId !== `paperclip-create-${cleanup.attemptId}` ||
+  if (cleanup.providerLeaseId !== `bionic-create-${cleanup.attemptId}` ||
       cleanup.accountFingerprint !== sandboxAccountDiscriminator(config) ||
-      cleanup.labels["paperclip-provider"] !== "daytona" ||
-      cleanup.labels["paperclip-create-attempt"] !== cleanup.attemptId ||
-      cleanup.labels["paperclip-company-id"] !== cleanup.companyId ||
-      cleanup.labels["paperclip-environment-id"] !== cleanup.environmentId ||
-      (cleanup.runId !== undefined && cleanup.labels["paperclip-run-id"] !== cleanup.runId)) {
+      cleanup.labels["bionic-provider"] !== "daytona" ||
+      cleanup.labels["bionic-create-attempt"] !== cleanup.attemptId ||
+      cleanup.labels["bionic-company-id"] !== cleanup.companyId ||
+      cleanup.labels["bionic-environment-id"] !== cleanup.environmentId ||
+      (cleanup.runId !== undefined && cleanup.labels["bionic-run-id"] !== cleanup.runId)) {
     throw new Error("Failed-create sandbox ownership does not match");
   }
   const client = createDaytonaClient(config);
@@ -1642,7 +1642,7 @@ async function getOrCreateSession(sandbox: Sandbox, scope: SandboxScope): Promis
   // session. The guard checks and starts the create in one synchronous step, so
   // no second command can slip in between the store read and the create start.
   return sandboxHandleSessionStore.runSingle(scope, async () => {
-    const sessionId = `paperclip-${randomUUID()}`;
+    const sessionId = `bionic-${randomUUID()}`;
     // Wrap the session create in a short `session.open` provider span. The span
     // carries no session id and no command text, only the provider family. The
     // host maps the name to `sandbox.daytona.session.open`.
@@ -1704,7 +1704,7 @@ async function executeOneShot(
   const timeoutMs = resolveTimeoutMs(params.timeoutMs, config);
   const effectiveTimeoutMs = gitNet ? Math.min(timeoutMs, GIT_NETWORK_TIMEOUT_MS) : timeoutMs;
   const timeoutSeconds = toTimeoutSeconds(effectiveTimeoutMs);
-  const stdinPath = params.stdin != null ? `/tmp/paperclip-stdin-${randomUUID()}` : null;
+  const stdinPath = params.stdin != null ? `/tmp/bionic-stdin-${randomUUID()}` : null;
 
   // Marks the start of the `executeCommand` REST round-trip. Hoisted out of the
   // try so the timeout path below can still attribute the exec wall-time it spent
@@ -1942,7 +1942,7 @@ async function executeInSession(
   const timeoutMs = resolveTimeoutMs(params.timeoutMs, config);
   const effectiveTimeoutMs = gitNet ? Math.min(timeoutMs, GIT_NETWORK_TIMEOUT_MS) : timeoutMs;
   const timeoutSeconds = toTimeoutSeconds(effectiveTimeoutMs);
-  const stdinPath = params.stdin != null ? `/tmp/paperclip-stdin-${randomUUID()}` : null;
+  const stdinPath = params.stdin != null ? `/tmp/bionic-stdin-${randomUUID()}` : null;
 
   // Marks the start of the session dispatch and poll. The timeout paths report
   // the exec wall-time spent before the abort, so a slow command is still
@@ -2269,7 +2269,7 @@ const plugin = definePlugin({
         const shellCommand = await detectSandboxShellCommand(sandbox, toTimeoutSeconds(Math.max(1, deadline - Date.now())));
         assertActive();
         // Configure a provider-side destroy time at or before a caller deadline, so
-        // an abandoned sandbox self-destroys even if Paperclip is down. The lease
+        // an abandoned sandbox self-destroys even if Bionic is down. The lease
         // carries the real provider expiry (or none) as evidence of the bound.
         phase = "expiry";
         const expiresAt = await configureSandboxExpiry({
@@ -2585,7 +2585,7 @@ const plugin = definePlugin({
     const config = parseDriverConfig(params.config);
     if (params.leaseMetadata?.failedCreateCleanup !== undefined) {
       const cleanup = readEnvironmentCreationCleanupError({ data: {
-        schema: "paperclip/environment-creation-cleanup/v1", cleanup: params.leaseMetadata.failedCreateCleanup,
+        schema: "bionic/environment-creation-cleanup/v1", cleanup: params.leaseMetadata.failedCreateCleanup,
       } });
       if (!cleanup || cleanup.companyId !== params.companyId || cleanup.environmentId !== params.environmentId ||
           cleanup.providerLeaseId !== params.providerLeaseId) {
@@ -2627,7 +2627,7 @@ const plugin = definePlugin({
       typeof params.lease.metadata?.remoteCwd === "string" &&
       params.lease.metadata.remoteCwd.trim().length > 0
         ? params.lease.metadata.remoteCwd.trim()
-        : params.workspace.remotePath ?? params.workspace.localPath ?? "/paperclip-workspace";
+        : params.workspace.remotePath ?? params.workspace.localPath ?? "/bionic-workspace";
 
     if (params.lease.providerLeaseId) {
       const scope: SandboxScope = {
@@ -2787,7 +2787,7 @@ const plugin = definePlugin({
     }
     const templateRef = sanitizeSnapshotName(
       params.templateLabel,
-      `paperclip-${params.environmentId}-${randomUUID().slice(0, 8)}`,
+      `bionic-${params.environmentId}-${randomUUID().slice(0, 8)}`,
     );
     const timeoutMs = typeof params.timeoutMs === "number" && Number.isFinite(params.timeoutMs) && params.timeoutMs > 0
       ? Math.trunc(params.timeoutMs)

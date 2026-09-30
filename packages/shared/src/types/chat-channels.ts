@@ -1,4 +1,4 @@
-/** Provider-neutral contracts for Paperclip's native external chat subsystem. */
+/** Provider-neutral contracts for Bionic's native external chat subsystem. */
 export const CHAT_PROVIDERS = [
   "slack",
   "github",
@@ -301,8 +301,8 @@ export interface ChatIdentityLink {
   lastConnectAt?: string | null;
   externalLabel: string;
   externalDetail?: string | null;
-  paperclipUserId?: string | null;
-  paperclipUserLabel?: string | null;
+  bionicUserId?: string | null;
+  bionicUserLabel?: string | null;
   status: ChatIdentityLinkStatus;
   expiresAt?: string | null;
   confirmedAt?: string | null;
@@ -365,7 +365,7 @@ export type SafeExternalChatCardAction =
     };
 
 export interface SafeExternalChatCard {
-  schema: "paperclip.chat.card.v1";
+  schema: "bionic.chat.card.v1";
   kind: SafeExternalChatCardKind;
   title: string;
   body?: string;

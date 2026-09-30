@@ -18,8 +18,8 @@ import {
   issues,
   toolApplications,
   toolConnections,
-} from "@paperclipai/db";
-import type { ChatProvider } from "@paperclipai/shared";
+} from "@bionicai/db";
+import type { ChatProvider } from "@bionicai/shared";
 import { enqueueTerminalIssueInteractionChatPublications } from "../services/chat-interaction-publications.js";
 import { issueThreadInteractionService } from "../services/issue-thread-interactions.js";
 import {
@@ -39,20 +39,20 @@ describeEmbeddedPostgres(
     let tempDb: Awaited<
       ReturnType<typeof startEmbeddedPostgresTestDatabase>
     > | null = null;
-    const previousPublicUrl = process.env.PAPERCLIP_PUBLIC_URL;
+    const previousPublicUrl = process.env.BIONIC_PUBLIC_URL;
 
     beforeAll(async () => {
-      process.env.PAPERCLIP_PUBLIC_URL = "https://paperclip.example";
+      process.env.BIONIC_PUBLIC_URL = "https://bionic.example";
       tempDb = await startEmbeddedPostgresTestDatabase(
-        "paperclip-terminal-chat-interaction-",
+        "bionic-terminal-chat-interaction-",
       );
       db = createDb(tempDb.connectionString);
     }, 20_000);
 
     afterAll(async () => {
       if (previousPublicUrl === undefined)
-        delete process.env.PAPERCLIP_PUBLIC_URL;
-      else process.env.PAPERCLIP_PUBLIC_URL = previousPublicUrl;
+        delete process.env.BIONIC_PUBLIC_URL;
+      else process.env.BIONIC_PUBLIC_URL = previousPublicUrl;
       await tempDb?.cleanup();
     });
 
@@ -73,7 +73,7 @@ describeEmbeddedPostgres(
         name: "Native chat agent",
         role: "operator",
         status: "idle",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
         runtimeConfig: {},
         permissions: {},
@@ -239,7 +239,7 @@ describeEmbeddedPostgres(
         name: "Foreign agent",
         role: "operator",
         status: "idle",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
         runtimeConfig: {},
         permissions: {},
@@ -312,7 +312,7 @@ describeEmbeddedPostgres(
       ).toBe(true);
     });
 
-    it("keeps unsupported governance interactions authoritative in Paperclip", async () => {
+    it("keeps unsupported governance interactions authoritative in Bionic", async () => {
       const fixture = await seedBoundIssue();
       const interaction = await issueThreadInteractionService(db).create(
         { id: fixture.issueId, companyId: fixture.companyId },
@@ -534,7 +534,7 @@ describeEmbeddedPostgres(
           "private free-text label",
         );
         expect(JSON.stringify(settlement.payload)).not.toContain(
-          "Answered in Paperclip",
+          "Answered in Bionic",
         );
       }
     });
@@ -670,7 +670,7 @@ describeEmbeddedPostgres(
       expect(skippedSettlements).toHaveLength(2);
       expect(
         skippedSettlements.every(
-          (row) => row.payload.card?.body === "Skipped in Paperclip.",
+          (row) => row.payload.card?.body === "Skipped in Bionic.",
         ),
       ).toBe(true);
       expect(
@@ -716,7 +716,7 @@ describeEmbeddedPostgres(
           originals.find((row) => row.endpointId === fixture.endpointIds.slack)
             ?.payload.card?.actions,
         ).toEqual([
-          expect.objectContaining({ type: "link", label: "Open in Paperclip" }),
+          expect.objectContaining({ type: "link", label: "Open in Bionic" }),
         ]);
         expect(
           originals.find(

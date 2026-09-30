@@ -459,7 +459,7 @@ export {
   suggestTasksResultSchema,
   askUserQuestionsQuestionOptionSchema,
   askUserQuestionsQuestionSchema,
-  paperclipQuestionSetPayloadSchema,
+  bionicQuestionSetPayloadSchema,
   askUserQuestionsPayloadSchema,
   askUserQuestionsAnswerSchema,
   askUserQuestionsResultSchema,

@@ -29,9 +29,9 @@ on:
       - Dockerfile
       - .dockerignore
       - scripts/check-docker-runner-cache.sh
-      - packages/paperclip-runner/rust-toolchain.toml
-      - packages/paperclip-runner/runner/**
-      - packages/paperclip-runner/protocol/**
+      - packages/bionic-runner/rust-toolchain.toml
+      - packages/bionic-runner/runner/**
+      - packages/bionic-runner/protocol/**
 
 permissions: {}
 
@@ -58,7 +58,7 @@ jobs:
       # Compile the real target, then change source in a disposable context.
       # A fresh builder must import dependencies and produce changed binary metadata.
       # The baseline build anonymously seeds from the public BuildKit cache at
-      # ghcr.io/paperclipai/paperclip:buildcache-{amd64,arm64}; the verification
+      # ghcr.io/bionicai/bionic:buildcache-{amd64,arm64}; the verification
       # build imports only this run's locally exported cache on a fresh builder.
       # No registry credentials or image publication.
       - name: Verify native build and dependency cache reuse
@@ -86,7 +86,7 @@ jobs:
           TARGET_BRANCH: ${{ inputs.target_branch || github.ref_name }}
         run: |
           set -euo pipefail
-          test "$REPOSITORY" = paperclipai/paperclip
+          test "$REPOSITORY" = bionicai/bionic
           test "$REPOSITORY_ID" = 1170821064
           jq -e 'type == "array" and length > 0 and all(.[]; type == "number")' <<< "$ALLOWED_IDS" >/dev/null
           triggering_id="$(gh api "users/$TRIGGERING_ACTOR" --jq .id)"
@@ -100,7 +100,7 @@ jobs:
   manual_image:
     name: Build and verify on EC2
     needs: authorize_manual
-    runs-on: runs-on/fleet=paperclip-public-pr-x64/env=public-ci
+    runs-on: runs-on/fleet=bionic-public-pr-x64/env=public-ci
     timeout-minutes: 90
     permissions:
       contents: read
@@ -116,7 +116,7 @@ jobs:
           ALLOWED_IDS: ${{ vars.AWS_CI_TRUSTED_USER_IDS }}
         run: |
           set -euo pipefail
-          test "$REPOSITORY" = paperclipai/paperclip
+          test "$REPOSITORY" = bionicai/bionic
           test "$REPOSITORY_ID" = 1170821064
           jq -e 'type == "array" and length > 0 and all(.[]; type == "number")' <<< "$ALLOWED_IDS" >/dev/null
           triggering_id="$(gh api "users/$TRIGGERING_ACTOR" --jq .id)"
@@ -153,14 +153,14 @@ jobs:
           SOURCE_SHA: ${{ needs.authorize_manual.outputs.target_sha }}
         run: |
           set -euo pipefail
-          image="ghcr.io/paperclipai/paperclip-daytona-runner:qualification-${SOURCE_SHA}-${GITHUB_RUN_ID}"
+          image="ghcr.io/bionicai/bionic-daytona-runner:qualification-${SOURCE_SHA}-${GITHUB_RUN_ID}"
           lock_sha="$(sha256sum pnpm-lock.yaml | cut -d ' ' -f 1)"
           docker buildx build --platform linux/amd64 \
             --file docker/daytona-runner/Dockerfile \
-            --build-arg "PAPERCLIP_RUNNER_SOURCE_REVISION=$SOURCE_SHA" \
-            --build-arg "PAPERCLIP_RUNNER_CONTENT_ID=qualification-$SOURCE_SHA" \
-            --build-arg "PAPERCLIP_RUNNER_LOCK_SHA256=$lock_sha" \
-            --cache-from type=registry,ref=ghcr.io/paperclipai/paperclip-daytona-runner:e2e-buildcache-amd64 \
+            --build-arg "BIONIC_RUNNER_SOURCE_REVISION=$SOURCE_SHA" \
+            --build-arg "BIONIC_RUNNER_CONTENT_ID=qualification-$SOURCE_SHA" \
+            --build-arg "BIONIC_RUNNER_LOCK_SHA256=$lock_sha" \
+            --cache-from type=registry,ref=ghcr.io/bionicai/bionic-daytona-runner:e2e-buildcache-amd64 \
             --tag "$image" --metadata-file remote-verification/image.json --push .
           digest="$(jq -r '."containerimage.digest"' remote-verification/image.json)"
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
@@ -200,9 +200,9 @@ jobs:
         if: always() && (inputs.verify_source || inputs.build_eval_viewer)
         run: |
           set -euo pipefail
-          pnpm install --frozen-lockfile --ignore-scripts --filter '@paperclipai/paperclip-runner...'
-          pnpm --filter @paperclipai/paperclip-runner build:issue-thread > remote-verification/viewer-build.log 2>&1
-          tar -czf remote-verification/eval-viewer.tar.gz -C packages/paperclip-runner dist-issue-thread
+          pnpm install --frozen-lockfile --ignore-scripts --filter '@bionicai/bionic-runner...'
+          pnpm --filter @bionicai/bionic-runner build:issue-thread > remote-verification/viewer-build.log 2>&1
+          tar -czf remote-verification/eval-viewer.tar.gz -C packages/bionic-runner dist-issue-thread
           sha256sum remote-verification/eval-viewer.tar.gz > remote-verification/eval-viewer.sha256
       - name: Retain source, image and verification evidence
         if: always()

@@ -21,11 +21,11 @@ import {
   issueComments,
   issueReferenceMentions,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   companySearchQuerySchema,
   LOW_TRUST_REVIEW_PRESET,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -38,7 +38,7 @@ import { issueReferenceService } from "../services/issue-references.js";
 import { issueService } from "../services/issues.js";
 import type { StorageService } from "../storage/types.js";
 
-const externalTestDatabaseUrl = process.env.PAPERCLIP_TEST_DATABASE_URL;
+const externalTestDatabaseUrl = process.env.BIONIC_TEST_DATABASE_URL;
 const embeddedPostgresSupport = externalTestDatabaseUrl
   ? { supported: true }
   : await getEmbeddedPostgresTestSupport();
@@ -63,7 +63,7 @@ describeEmbeddedPostgres("deleted issue comment redaction", () => {
       db = createDb(externalTestDatabaseUrl);
     } else {
       tempDb = await startEmbeddedPostgresTestDatabase(
-        "paperclip-comment-redaction-",
+        "bionic-comment-redaction-",
       );
       db = createDb(tempDb.connectionString);
     }

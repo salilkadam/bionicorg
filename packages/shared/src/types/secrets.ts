@@ -209,7 +209,7 @@ export interface SecretProviderConfigDiscoverySignal {
   kmsKeyId: string | null;
   hasKmsKey: boolean;
   sampleCount: number;
-  paperclipManagedSampleCount: number;
+  bionicManagedSampleCount: number;
   skippedForeignPaperclipSampleCount: number;
 }
 

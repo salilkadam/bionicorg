@@ -3,15 +3,15 @@ import { createReadStream } from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { environmentLeases, heartbeatRuns } from "@paperclipai/db";
-import type { EnvironmentLease } from "@paperclipai/shared";
+import type { Db } from "@bionicai/db";
+import { environmentLeases, heartbeatRuns } from "@bionicai/db";
+import type { EnvironmentLease } from "@bionicai/shared";
 import {
   prepareAdapterExecutionTargetRuntime,
   type AdapterExecutionTarget,
   type PreparedAdapterExecutionTargetRuntime,
-} from "@paperclipai/adapter-utils/execution-target";
-import { disposeGitWorkspaceSnapshot, type GitWorkspaceSnapshot } from "@paperclipai/adapter-utils/git-workspace-sync";
+} from "@bionicai/adapter-utils/execution-target";
+import { disposeGitWorkspaceSnapshot, type GitWorkspaceSnapshot } from "@bionicai/adapter-utils/git-workspace-sync";
 import {
   directorySnapshotSha256,
   disposeDirectorySnapshot,
@@ -20,20 +20,20 @@ import {
   serializeDirectorySnapshot,
   type DirectorySnapshot,
   type SerializedDirectorySnapshot,
-} from "@paperclipai/adapter-utils/workspace-restore-merge";
+} from "@bionicai/adapter-utils/workspace-restore-merge";
 import type {
   WorkspaceDurableSeedPaths,
   WorkspaceInboundMode,
-} from "@paperclipai/adapter-utils/sandbox-managed-runtime";
-import { assertWorkspaceManifestDiskSpace, isPathManifest, manifestFileSha256, readManifestRecords, type PathManifest, type WorkspacePaths } from "@paperclipai/adapter-utils/workspace-manifest";
+} from "@bionicai/adapter-utils/sandbox-managed-runtime";
+import { assertWorkspaceManifestDiskSpace, isPathManifest, manifestFileSha256, readManifestRecords, type PathManifest, type WorkspacePaths } from "@bionicai/adapter-utils/workspace-manifest";
 import { resolvePaperclipInstanceRoot } from "../../home-paths.js";
 import { parseObject } from "../../adapters/utils.js";
 import type { NativeRestartRecoveryClaim } from "./native-restart-recovery.js";
 
-const LEGACY_DESCRIPTOR_SCHEMA = "paperclip.native-workspace-sync/v1";
-const DESCRIPTOR_SCHEMA = "paperclip.native-workspace-sync/v2";
+const LEGACY_DESCRIPTOR_SCHEMA = "bionic.native-workspace-sync/v1";
+const DESCRIPTOR_SCHEMA = "bionic.native-workspace-sync/v2";
 type DescriptorSchema = typeof DESCRIPTOR_SCHEMA | typeof LEGACY_DESCRIPTOR_SCHEMA;
-const STAMP_SCHEMA = "paperclip.native-workspace-stamp/v1";
+const STAMP_SCHEMA = "bionic.native-workspace-stamp/v1";
 const STATE_ROOT_NAME = "native-workspace-sync";
 const DESCRIPTOR_NAME = "descriptor";
 const WORKSPACE_SEED_NAME = "workspace-seed.tar";
@@ -404,7 +404,7 @@ function parseGitSnapshot(
     const seen = new Set<string>();
     for (const raw of candidate.repositories) {
       const repo = parseObject(raw);
-      if (typeof repo.path !== "string" || !/^\.paperclip-repositories\/[a-zA-Z0-9_-]+$/.test(repo.path) || seen.has(repo.path)) return undefined;
+      if (typeof repo.path !== "string" || !/^\.bionic-repositories\/[a-zA-Z0-9_-]+$/.test(repo.path) || seen.has(repo.path)) return undefined;
       const snapshot = parseGitSnapshot(repo.snapshot, true);
       if (!snapshot) return undefined;
       seen.add(repo.path);
@@ -653,8 +653,8 @@ async function writeRemoteStamp(input: {
   }
   const runtimeDir = path.posix.join(
     input.target.remoteCwd,
-    ".paperclip-runtime",
-    "paperclip-runner",
+    ".bionic-runtime",
+    "bionic-runner",
   );
   const stampPath = path.posix.join(runtimeDir, REMOTE_STAMP_NAME);
   const tempPath = `${stampPath}.tmp`;
@@ -684,8 +684,8 @@ async function remoteStampMatches(input: {
   if (!input.target.runner) return false;
   const stampPath = path.posix.join(
     input.target.remoteCwd,
-    ".paperclip-runtime",
-    "paperclip-runner",
+    ".bionic-runtime",
+    "bionic-runner",
     REMOTE_STAMP_NAME,
   );
   const result = await input.target.runner.execute({
@@ -756,7 +756,7 @@ async function prepareRuntime(input: {
   return prepareAdapterExecutionTargetRuntime({
     runId: input.runId,
     target: input.target,
-    adapterKey: "paperclip-runner",
+    adapterKey: "bionic-runner",
     workspaceLocalDir: input.workspaceLocalDir,
     workspaceRemoteDir: input.target.remoteCwd,
     workspaceInboundMode: input.mode,
@@ -777,7 +777,7 @@ async function finalizePreparedRuntime(input: {
   await input.runtime.restoreWorkspace();
   await input.assertOwnership?.();
   const finalSnapshot =
-    await import("@paperclipai/adapter-utils/workspace-restore-merge").then(
+    await import("@bionicai/adapter-utils/workspace-restore-merge").then(
       ({ captureDirectorySnapshot }) =>
         captureDirectorySnapshot(input.descriptor.binding.localCwd, {
           exclude: input.runtime.workspaceSyncSnapshot?.baseline.exclude ?? [],

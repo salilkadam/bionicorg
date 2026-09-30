@@ -1,6 +1,6 @@
-import { probeAcpxClaudeInstallation } from "@paperclipai/paperclip-runner/live";
+import { probeAcpxClaudeInstallation } from "@bionicai/bionic-runner/live";
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { buildSandboxNpmInstallCommand } from "@paperclipai/adapter-utils";
+import { buildSandboxNpmInstallCommand } from "@bionicai/adapter-utils";
 import type { ServerAdapterModule } from "../adapters/index.js";
 
 import {
@@ -17,7 +17,7 @@ import {
   setOverridePaused,
 } from "../adapters/registry.js";
 
-vi.mock("@paperclipai/paperclip-runner/live", () => ({
+vi.mock("@bionicai/bionic-runner/live", () => ({
   probeAcpxClaudeInstallation: vi.fn(async () => undefined),
   probeAcpxGrokInstallation: vi.fn(async () => undefined),
 }));
@@ -238,20 +238,20 @@ describe("server adapter registry", () => {
   });
 
   it("rejects an incomplete managed runner provider before probing Codex", async () => {
-    const adapter = requireServerAdapter("paperclip_runner");
+    const adapter = requireServerAdapter("bionic_runner");
     expect(adapter.supportsInstructionsBundle).toBe(true);
     expect(adapter.instructionsPathKey).toBe("instructionsFilePath");
     const result = await adapter.testEnvironment({
       companyId: "company-1",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       config: { provider: "claude_managed" },
     });
 
     expect(result).toMatchObject({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       status: "fail",
       checks: [{
-        code: "paperclip_runner_claude_managed_profile_required",
+        code: "bionic_runner_claude_managed_profile_required",
         level: "error",
       }],
     });
@@ -267,14 +267,14 @@ describe("server adapter registry", () => {
       agentCoreRetentionAcknowledged: true,
     }, "aws_agentcore_profile_selected"],
   ] as const)("accepts a complete %s profile selection", async (provider, config, code) => {
-    const result = await requireServerAdapter("paperclip_runner").testEnvironment({
+    const result = await requireServerAdapter("bionic_runner").testEnvironment({
       companyId: "company-1",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       config: { provider, ...config },
     });
 
     expect(result).toMatchObject({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       status: "warn",
       checks: expect.arrayContaining([expect.objectContaining({ code, level: "info" })]),
     });
@@ -283,9 +283,9 @@ describe("server adapter registry", () => {
   it.each([
     ["claude", "claude-sonnet-5"],
   ] as const)("does not claim runtime readiness from the remote ACPX %s platform alone", async (acpxAgent, model) => {
-    const result = await requireServerAdapter("paperclip_runner").testEnvironment({
+    const result = await requireServerAdapter("bionic_runner").testEnvironment({
       companyId: "company-1",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       config: { provider: "acpx", acpxAgent, model },
       executionTarget: {
         kind: "remote",
@@ -297,7 +297,7 @@ describe("server adapter registry", () => {
     });
 
     expect(result).toMatchObject({
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       status: "warn",
       checks: [{ code: "acpx_remote_runtime_unverified", level: "warn" }],
     });
@@ -307,8 +307,8 @@ describe("server adapter registry", () => {
     const probe = vi.mocked(probeAcpxClaudeInstallation);
     if (ready) probe.mockResolvedValueOnce(undefined);
     else probe.mockRejectedValueOnce(new Error("Runtime package integrity verification failed"));
-    const result = await requireServerAdapter("paperclip_runner").testEnvironment({
-      companyId: "company-1", adapterType: "paperclip_runner",
+    const result = await requireServerAdapter("bionic_runner").testEnvironment({
+      companyId: "company-1", adapterType: "bionic_runner",
       config: { provider: "acpx", acpxAgent: "claude", model: "custom-claude-model" },
     });
     expect(probe).toHaveBeenLastCalledWith("custom-claude-model");
@@ -319,9 +319,9 @@ describe("server adapter registry", () => {
   });
 
   it("keeps the ACPX Pi profile unavailable", async () => {
-    const result = await requireServerAdapter("paperclip_runner").testEnvironment({
+    const result = await requireServerAdapter("bionic_runner").testEnvironment({
       companyId: "company-1",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       config: {
         provider: "acpx",
         acpxAgent: "pi",
@@ -331,16 +331,16 @@ describe("server adapter registry", () => {
 
     expect(result).toMatchObject({
       status: "fail",
-      checks: [{ code: "paperclip_runner_acpx_agent_unavailable" }],
+      checks: [{ code: "bionic_runner_acpx_agent_unavailable" }],
     });
   });
   it("reports qualification-only readiness for an exact host-authorized candidate", async () => {
-    const key = "PAPERCLIP_RUNNER_ACPX_QUALIFICATION";
+    const key = "BIONIC_RUNNER_ACPX_QUALIFICATION";
     const previous = process.env[key];
     process.env[key] = JSON.stringify([{ agent: "cursor", model: "exact-model" }]);
     try {
-      const result = await requireServerAdapter("paperclip_runner").testEnvironment({
-        companyId: "company-1", adapterType: "paperclip_runner",
+      const result = await requireServerAdapter("bionic_runner").testEnvironment({
+        companyId: "company-1", adapterType: "bionic_runner",
         config: { provider: "acpx", acpxAgent: "cursor", model: "exact-model" },
       });
       expect(result).toMatchObject({ status: "warn", checks: [{ code: "acpx_candidate_qualification_only" }] });
@@ -377,18 +377,18 @@ describe("server adapter registry", () => {
       detectCommand: "opencode",
       installCommand: expectedOpenCodeInstall,
     });
-    expect(findActiveServerAdapter("paperclip_runner")?.getRuntimeCommandSpec?.({ provider: "codex" })).toEqual({
+    expect(findActiveServerAdapter("bionic_runner")?.getRuntimeCommandSpec?.({ provider: "codex" })).toEqual({
       command: "codex",
       detectCommand: "codex",
       installCommand: expectedRunnerCodexInstall,
     });
-    expect(findActiveServerAdapter("paperclip_runner")?.getRuntimeCommandSpec?.({ provider: "opencode" })).toEqual({
+    expect(findActiveServerAdapter("bionic_runner")?.getRuntimeCommandSpec?.({ provider: "opencode" })).toEqual({
       command: "opencode",
       detectCommand: "opencode",
       installCommand: expectedRunnerOpenCodeInstall,
     });
-    expect(findActiveServerAdapter("paperclip_runner")?.getRuntimeCommandSpec?.({ provider: "acpx" })).toEqual({
-      command: "paperclip-runnerd",
+    expect(findActiveServerAdapter("bionic_runner")?.getRuntimeCommandSpec?.({ provider: "acpx" })).toEqual({
+      command: "bionic-runnerd",
       detectCommand: null,
       installCommand: null,
     });

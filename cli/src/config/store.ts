@@ -3,7 +3,7 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import {
   mergePaperclipConfig,
-  paperclipConfigSchema,
+  bionicConfigSchema,
   type PaperclipConfig,
 } from "./schema.js";
 import {
@@ -18,7 +18,7 @@ function findConfigFileFromAncestors(startDir: string): string | null {
   let currentDir = absoluteStartDir;
 
   while (true) {
-    const candidate = path.resolve(currentDir, ".paperclip", DEFAULT_CONFIG_BASENAME);
+    const candidate = path.resolve(currentDir, ".bionic", DEFAULT_CONFIG_BASENAME);
     if (fs.existsSync(candidate)) {
       return candidate;
     }
@@ -33,7 +33,7 @@ function findConfigFileFromAncestors(startDir: string): string | null {
 
 export function resolveConfigPath(overridePath?: string): string {
   if (overridePath) return path.resolve(overridePath);
-  if (process.env.PAPERCLIP_CONFIG) return path.resolve(process.env.PAPERCLIP_CONFIG);
+  if (process.env.BIONIC_CONFIG) return path.resolve(process.env.BIONIC_CONFIG);
   return findConfigFileFromAncestors(process.cwd()) ?? resolveDefaultConfigPath(resolvePaperclipInstanceId());
 }
 
@@ -93,7 +93,7 @@ export function readConfig(configPath?: string): PaperclipConfig | null {
   if (!fs.existsSync(filePath)) return null;
   const raw = parseJson(filePath);
   const migrated = migrateLegacyConfig(raw);
-  const parsed = paperclipConfigSchema.safeParse(migrated);
+  const parsed = bionicConfigSchema.safeParse(migrated);
   if (!parsed.success) {
     throw new Error(`Invalid config at ${filePath}: ${formatValidationError(parsed.error)}`);
   }
@@ -192,11 +192,11 @@ export function writeConfig(
   const dir = path.dirname(filePath);
   fs.mkdirSync(dir, { recursive: true });
 
-  let nextConfig = paperclipConfigSchema.parse(config);
+  let nextConfig = bionicConfigSchema.parse(config);
   if (fs.existsSync(filePath)) {
     try {
-      const source = paperclipConfigSchema.parse(migrateLegacyConfig(parseJson(filePath)));
-      nextConfig = paperclipConfigSchema.parse(mergePaperclipConfig(source, nextConfig));
+      const source = bionicConfigSchema.parse(migrateLegacyConfig(parseJson(filePath)));
+      nextConfig = bionicConfigSchema.parse(mergePaperclipConfig(source, nextConfig));
       if (isDeepStrictEqual(effectiveConfig(source), effectiveConfig(nextConfig))) {
         return false;
       }

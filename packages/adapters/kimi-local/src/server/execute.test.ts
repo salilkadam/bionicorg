@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AdapterExecutionContext } from "@paperclipai/adapter-utils";
-import { createPromptContextFixture } from "@paperclipai/adapter-utils/test-fixtures/prompt-context";
+import type { AdapterExecutionContext } from "@bionicai/adapter-utils";
+import { createPromptContextFixture } from "@bionicai/adapter-utils/test-fixtures/prompt-context";
 
 const ensureRuntimeInstalledMock = vi.hoisted(() => vi.fn(async () => {}));
 const ensureCommandMock = vi.hoisted(() => vi.fn(async () => {}));
@@ -14,7 +14,7 @@ const prepareRuntimeMock = vi.hoisted(() => vi.fn(async () => ({
 const resolveCommandForLogsMock = vi.hoisted(() => vi.fn(async () => "kimi"));
 const runProcessMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@paperclipai/adapter-utils/execution-target", () => ({
+vi.mock("@bionicai/adapter-utils/execution-target", () => ({
   adapterExecutionTargetIsRemote: () => false,
   adapterExecutionTargetRemoteCwd: (_target: unknown, cwd: string) => cwd,
   overrideAdapterExecutionTargetRemoteCwd: (target: unknown, _cwd: string) => target,
@@ -40,7 +40,7 @@ import { execute } from "./execute.js";
 const tempRoots: string[] = [];
 
 async function makeTempRoot() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-kimi-local-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-kimi-local-"));
   tempRoots.push(root);
   return root;
 }
@@ -149,7 +149,7 @@ describe("kimi_local execute", () => {
       context: fixture,
     }));
 
-    expect(deliveredPrompt).toContain(fixture.paperclipTaskMarkdownAssignment);
+    expect(deliveredPrompt).toContain(fixture.bionicTaskMarkdownAssignment);
     expect(deliveredPrompt.indexOf("Append the same ledger entry.")).toBeLessThan(
       deliveredPrompt.lastIndexOf("Append the same ledger entry."),
     );
@@ -290,7 +290,7 @@ describe("kimi_local execute", () => {
     expect(runProcessMock).toHaveBeenCalledTimes(2);
     expect(seenArgLists[0]).toContain("-r");
     expect(seenArgLists[1]).not.toContain("-r");
-    expect(seenArgLists[1].at(-1)).toContain(fixture.paperclipTaskMarkdownAssignment);
+    expect(seenArgLists[1].at(-1)).toContain(fixture.bionicTaskMarkdownAssignment);
     expect(seenArgLists[1].at(-1)).toContain("BOOTSTRAP run-1");
     expect(seenArgLists[1].at(-1)).toContain("comment-first");
     expect(result).toMatchObject({ exitCode: 0, sessionId: "session_abc-123" });
@@ -447,6 +447,6 @@ describe("kimi_local execute", () => {
     await execute(makeContext(root, { config: { cwd: root, model: "kimi-code/k3" } }));
 
     expect(seenArgs).toContain("--skills-dir");
-    expect(seenArgs[seenArgs.indexOf("--skills-dir") + 1]).toContain("paperclip-kimi-skills-");
+    expect(seenArgs[seenArgs.indexOf("--skills-dir") + 1]).toContain("bionic-kimi-skills-");
   });
 });

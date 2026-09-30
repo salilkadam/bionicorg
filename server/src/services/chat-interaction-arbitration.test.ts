@@ -13,7 +13,7 @@ import {
   issueThreadInteractions,
   toolApplications,
   toolConnections,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { startEmbeddedPostgresTestDatabase } from "../__tests__/helpers/embedded-postgres.js";
 import { hasChatRunOwnedProviderInteraction } from "./chat-interaction-arbitration.js";
 
@@ -50,7 +50,7 @@ describe("provider-owned interaction arbitration", () => {
         id,
         companyId,
         name: "Chat agent",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "active",
       })),
     );

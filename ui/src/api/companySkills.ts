@@ -39,7 +39,7 @@ import type {
   CompanySkillUpdateStatus,
   CompanySkillVersion,
   CompanySkillVersionCreateRequest,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { api } from "./client";
 
 export interface CatalogListQuery {

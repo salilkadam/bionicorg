@@ -81,7 +81,7 @@ const diagnosticProcessKinds = new Set([
   "codex",
   "google-chrome",
   "node",
-  "paperclip-runnerd",
+  "bionic-runnerd",
   "playwright",
   "pnpm",
   "postgres",
@@ -148,7 +148,7 @@ async function terminateProcessGroup(pid: number) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   return processGroupIsAlive(pid)
-    ? `Paperclip/Playwright process group ${pid} survived SIGKILL`
+    ? `Bionic/Playwright process group ${pid} survived SIGKILL`
     : null;
 }
 
@@ -305,7 +305,7 @@ async function prepareProviderPath(
   const toolBin = path.join(temporaryRoot, "provider-bin");
   await mkdir(toolBin, { recursive: true });
   const runnerRequire = createRequire(
-    path.join(repositoryRoot, "packages/paperclip-runner/package.json"),
+    path.join(repositoryRoot, "packages/bionic-runner/package.json"),
   );
   const codexAcpPackage = runnerRequire.resolve(
     "@agentclientprotocol/codex-acp/package.json",
@@ -329,7 +329,7 @@ async function prepareProviderPath(
   );
   const packageBin = path.join(
     repositoryRoot,
-    "packages/paperclip-runner/node_modules/.bin",
+    "packages/bionic-runner/node_modules/.bin",
   );
   return [toolBin, packageBin, inheritedPath]
     .filter(Boolean)
@@ -547,7 +547,7 @@ function syntheticResult(
 ): RunnerE2EResult {
   const finishedAtMs = Date.now();
   return {
-    schema: "paperclip.runner-e2e.result/v2",
+    schema: "bionic.runner-e2e.result/v2",
     executionId: execution.id,
     suiteId: execution.suite.id,
     suiteDefinitionHash: execution.suiteDefinitionHash,
@@ -622,25 +622,25 @@ async function runAttempt(input: {
   const startedAtMs = Date.now();
   const sharedMemoryBaseline = snapshotDarwinSharedMemory();
   const temporaryRoot = await mkdtemp(
-    path.join(os.tmpdir(), "paperclip-runner-e2e-"),
+    path.join(os.tmpdir(), "bionic-runner-e2e-"),
   );
   const publishedResults: RunnerE2EResult[] = [];
   const publishedResultPaths = new Map<string, string>();
   let attemptSecrets: string[] = [];
   try {
-    const paperclipHome = path.join(temporaryRoot, "paperclip-home");
+    const bionicHome = path.join(temporaryRoot, "bionic-home");
     const workspace = path.join(temporaryRoot, "workspace");
     const privateDir = path.join(temporaryRoot, "artifacts-private");
     const instanceId = `runner-e2e-${randomBytes(8).toString("hex")}`;
     const configPath = path.join(
-      paperclipHome,
+      bionicHome,
       "instances",
       instanceId,
       "config.json",
     );
     const port = await reserveRunnerE2EServerPort();
     await Promise.all([
-      mkdir(paperclipHome, { recursive: true }),
+      mkdir(bionicHome, { recursive: true }),
       mkdir(workspace, { recursive: true }),
       mkdir(privateDir, { recursive: true }),
     ]);
@@ -670,23 +670,23 @@ async function runAttempt(input: {
     const childEnv: NodeJS.ProcessEnv = {
       ...buildRunnerE2EProcessEnvironment(process.env, executions),
       PATH: providerPath,
-      PAPERCLIP_RUNNER_E2E_EXECUTION_IDS: JSON.stringify(
+      BIONIC_RUNNER_E2E_EXECUTION_IDS: JSON.stringify(
         executions.map((candidate) => candidate.id),
       ),
-      PAPERCLIP_RUNNER_E2E_ATTEMPT: String(attempt),
-      PAPERCLIP_RUNNER_E2E_PORT: String(port),
-      PAPERCLIP_RUNNER_E2E_TEMP_ROOT: temporaryRoot,
-      PAPERCLIP_RUNNER_E2E_PRIVATE_DIR: privateDir,
-      PAPERCLIP_RUNNER_E2E_WORKSPACE: workspace,
-      PAPERCLIP_RUNNER_E2E_SERVER_LOG: path.join(privateDir, "server.log"),
-      PAPERCLIP_RUNNER_BINARY: runnerBinary,
-      PAPERCLIP_RUNNER_REMOTE_BINARY_PATH:
+      BIONIC_RUNNER_E2E_ATTEMPT: String(attempt),
+      BIONIC_RUNNER_E2E_PORT: String(port),
+      BIONIC_RUNNER_E2E_TEMP_ROOT: temporaryRoot,
+      BIONIC_RUNNER_E2E_PRIVATE_DIR: privateDir,
+      BIONIC_RUNNER_E2E_WORKSPACE: workspace,
+      BIONIC_RUNNER_E2E_SERVER_LOG: path.join(privateDir, "server.log"),
+      BIONIC_RUNNER_BINARY: runnerBinary,
+      BIONIC_RUNNER_REMOTE_BINARY_PATH:
         resolvePaperclipRemoteRunnerBinaryForHarness(executions, runnerBinary),
       // Vite's optimized dependency cache embeds revision query strings. A
       // private per-attempt cache prevents an earlier cell or local rebuild
       // from producing `504 Outdated Optimize Dep` during browser bootstrap.
-      PAPERCLIP_VITE_CACHE_DIR: path.join(temporaryRoot, "vite-cache"),
-      PAPERCLIP_RUNNER_E2E_TEST_TIMEOUT_MS: String(
+      BIONIC_VITE_CACHE_DIR: path.join(temporaryRoot, "vite-cache"),
+      BIONIC_RUNNER_E2E_TEST_TIMEOUT_MS: String(
         Math.max(
           ...executions.map(
             (candidate) =>
@@ -694,12 +694,12 @@ async function runAttempt(input: {
           ),
         ) + 90_000,
       ),
-      PAPERCLIP_HOME: paperclipHome,
-      PAPERCLIP_INSTANCE_ID: instanceId,
-      PAPERCLIP_CONFIG: configPath,
-      PAPERCLIP_AGENT_JWT_SECRET: agentJwtSecret,
-      PAPERCLIP_DECISION_SIGNING_SECRET: decisionSigningSecret,
-      PAPERCLIP_TOOL_ACTION_SIGNING_SECRET: toolActionSigningSecret,
+      BIONIC_HOME: bionicHome,
+      BIONIC_INSTANCE_ID: instanceId,
+      BIONIC_CONFIG: configPath,
+      BIONIC_AGENT_JWT_SECRET: agentJwtSecret,
+      BIONIC_DECISION_SIGNING_SECRET: decisionSigningSecret,
+      BIONIC_TOOL_ACTION_SIGNING_SECRET: toolActionSigningSecret,
       BETTER_AUTH_SECRET: betterAuthSecret,
     };
     // The database URLs are stripped here and again at the Playwright web-server
@@ -788,7 +788,7 @@ async function runAttempt(input: {
       try {
         const expectedEphemeralCredentials = new Set<string>();
         for (const [label, directory] of [
-          ["Paperclip home", paperclipHome],
+          ["Bionic home", bionicHome],
           ["workspace", workspace],
         ] as const) {
           while (true) {
@@ -798,13 +798,13 @@ async function runAttempt(input: {
               includeShapes: false,
               ignoreFile: (file) => expectedEphemeralCredentials.has(file),
               allowDisappearedFile: (file) =>
-                label === "Paperclip home" &&
-                isEphemeralPostgresScanFile(paperclipHome, file),
+                label === "Bionic home" &&
+                isEphemeralPostgresScanFile(bionicHome, file),
             });
             if (!leak) break;
             const isManagedCodexRuntimeAuth =
-              label === "Paperclip home" &&
-              isEphemeralCodexRuntimeAuthFile(paperclipHome, leak.file);
+              label === "Bionic home" &&
+              isEphemeralCodexRuntimeAuthFile(bionicHome, leak.file);
             if (isManagedCodexRuntimeAuth) {
               const metadata = await lstat(leak.file);
               if (metadata.isFile() && (metadata.mode & 0o777) === 0o600) {
@@ -942,7 +942,7 @@ async function runAttempt(input: {
     reapNewDetachedDarwinSharedMemory(sharedMemoryBaseline);
     let cleanupError: unknown;
     if (
-      temporaryRoot.startsWith(`${os.tmpdir()}${path.sep}paperclip-runner-e2e-`)
+      temporaryRoot.startsWith(`${os.tmpdir()}${path.sep}bionic-runner-e2e-`)
     ) {
       for (let cleanupAttempt = 1; cleanupAttempt <= 3; cleanupAttempt += 1) {
         try {
@@ -1112,15 +1112,15 @@ async function main() {
   }
   if (
     executions.some((execution) => execution.environment.id === "daytona") &&
-    !isImmutableDaytonaImage(process.env.PAPERCLIP_E2E_DAYTONA_IMAGE)
+    !isImmutableDaytonaImage(process.env.BIONIC_E2E_DAYTONA_IMAGE)
   ) {
     throw new Error(
-      "PAPERCLIP_E2E_DAYTONA_IMAGE must be an immutable image@sha256 digest for Daytona cells",
+      "BIONIC_E2E_DAYTONA_IMAGE must be an immutable image@sha256 digest for Daytona cells",
     );
   }
 
   const campaignId = cleanId(
-    process.env.PAPERCLIP_E2E_CAMPAIGN_ID ??
+    process.env.BIONIC_E2E_CAMPAIGN_ID ??
       `local-${new Date().toISOString().replace(/[:.]/g, "-")}`,
   );
   const summaryDir = path.join(resultsRoot, campaignId);

@@ -1,10 +1,10 @@
-import { createProviderStoppedBoundary } from "@paperclipai/adapter-utils/provider-stopped-boundary";
-import { withWorkspaceRestore } from "@paperclipai/adapter-utils/workspace-restore-result";
-import { cancellableSandboxStartup } from "@paperclipai/adapter-utils/acpx-engine/startup-cancellation";
+import { createProviderStoppedBoundary } from "@bionicai/adapter-utils/provider-stopped-boundary";
+import { withWorkspaceRestore } from "@bionicai/adapter-utils/workspace-restore-result";
+import { cancellableSandboxStartup } from "@bionicai/adapter-utils/acpx-engine/startup-cancellation";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AdapterExecutionContext, AdapterExecutionResult } from "@paperclipai/adapter-utils";
+import type { AdapterExecutionContext, AdapterExecutionResult } from "@bionicai/adapter-utils";
 import {
   adapterExecutionTargetIsRemote,
   adapterExecutionTargetRemoteCwd,
@@ -19,7 +19,7 @@ import {
   resolveAdapterExecutionTargetCommandForLogs,
   resolveAdapterExecutionTargetTimeoutSec,
   runAdapterExecutionTargetProcess,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import {
   asBoolean,
   asNumber,
@@ -41,9 +41,9 @@ import {
   isPaperclipRecoveryWakePayload,
   resolveLegacyPaperclipDesiredSkillNames,
   refreshPaperclipWorkspaceEnvForExecution,
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
-  DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE,
-} from "@paperclipai/adapter-utils/server-utils";
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE,
+} from "@bionicai/adapter-utils/server-utils";
 import { DEFAULT_GROK_LOCAL_MODEL } from "../index.js";
 import { copyBackGrokAuth } from "./grok-auth-copyback.js";
 import { grokHomeHasUsableAuth, resolveManagedGrokHomeDir, stageGrokHomeForSync } from "./grok-home.js";
@@ -66,13 +66,13 @@ function hasNonEmptyEnvValue(env: Record<string, string | undefined>, key: strin
 }
 
 function renderPaperclipEnvNote(env: Record<string, string>): string {
-  const paperclipKeys = Object.keys(env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+  const bionicKeys = Object.keys(env)
+    .filter((key) => key.startsWith("BIONIC_"))
     .sort();
-  if (paperclipKeys.length === 0) return "";
+  if (bionicKeys.length === 0) return "";
   return [
-    "Paperclip runtime note:",
-    `The following PAPERCLIP_* environment variables are available in this run: ${paperclipKeys.join(", ")}`,
+    "Bionic runtime note:",
+    `The following BIONIC_* environment variables are available in this run: ${bionicKeys.join(", ")}`,
     "Do not assume these variables are missing without checking your shell environment.",
     "",
     "",
@@ -80,11 +80,11 @@ function renderPaperclipEnvNote(env: Record<string, string>): string {
 }
 
 function renderApiAccessNote(env: Record<string, string>): string {
-  if (!hasNonEmptyEnvValue(env, "PAPERCLIP_API_URL") || !hasNonEmptyEnvValue(env, "PAPERCLIP_API_KEY")) return "";
+  if (!hasNonEmptyEnvValue(env, "BIONIC_API_URL") || !hasNonEmptyEnvValue(env, "BIONIC_API_KEY")) return "";
   return [
-    "Paperclip API access note:",
-    "Use shell commands with curl to make Paperclip API requests when needed.",
-    "Include X-Paperclip-Run-Id on mutating requests.",
+    "Bionic API access note:",
+    "Use shell commands with curl to make Bionic API requests when needed.",
+    "Include X-Bionic-Run-Id on mutating requests.",
     "",
     "",
   ].join("\n");
@@ -135,7 +135,7 @@ async function stageGrokProjectAssets(input: {
       rulesFilePath = input.instructionsFilePath;
       await input.onLog(
         "stdout",
-        `[paperclip] Grok workspace already contains ${instructionsTarget}; using --rules @${input.instructionsFilePath} instead of overwriting it.\n`,
+        `[bionic] Grok workspace already contains ${instructionsTarget}; using --rules @${input.instructionsFilePath} instead of overwriting it.\n`,
       );
     }
   } else {
@@ -166,7 +166,7 @@ async function stageGrokProjectAssets(input: {
       if (await pathExists(target)) {
         await input.onLog(
           "stdout",
-          `[paperclip] Grok skill target already exists at ${target}; leaving it unchanged.\n`,
+          `[bionic] Grok skill target already exists at ${target}; leaving it unchanged.\n`,
         );
         continue;
       }
@@ -257,8 +257,8 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
   const promptTemplate = asString(
     config.promptTemplate,
     context.conversationMode === true
-      ? DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE
-      : DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+      ? DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE
+      : DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
   );
   const command = asString(config.command, "grok");
   const model = asString(config.model, DEFAULT_GROK_LOCAL_MODEL).trim();
@@ -272,15 +272,15 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
   const alwaysApprove = asBoolean(config.alwaysApprove, true);
   const disableWebSearch = asBoolean(config.disableWebSearch, true);
 
-  const workspaceContext = parseObject(context.paperclipWorkspace);
+  const workspaceContext = parseObject(context.bionicWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
   const workspaceId = asString(workspaceContext.workspaceId, "");
   const workspaceRepoUrl = asString(workspaceContext.repoUrl, "");
   const workspaceRepoRef = asString(workspaceContext.repoRef, "");
   const agentHome = asString(workspaceContext.agentHome, "");
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.bionicWorkspaces)
+    ? context.bionicWorkspaces.filter(
         (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
@@ -313,7 +313,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       ...buildPaperclipEnv(agent),
       ...buildRuntimeToolsEnv(ctx.runtimeTools),
     };
-    env.PAPERCLIP_RUN_ID = runId;
+    env.BIONIC_RUN_ID = runId;
     const wakeTaskId =
       (typeof context.taskId === "string" && context.taskId.trim().length > 0 && context.taskId.trim()) ||
       (typeof context.issueId === "string" && context.issueId.trim().length > 0 && context.issueId.trim()) ||
@@ -338,13 +338,13 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       ? context.issueIds.filter((value: unknown): value is string => typeof value === "string" && value.trim().length > 0)
       : [];
     const issueWorkMode = readPaperclipIssueWorkModeFromContext(context);
-    if (wakeTaskId) env.PAPERCLIP_TASK_ID = wakeTaskId;
-    if (issueWorkMode) env.PAPERCLIP_ISSUE_WORK_MODE = issueWorkMode;
-    if (wakeReason) env.PAPERCLIP_WAKE_REASON = wakeReason;
-    if (wakeCommentId) env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
-    if (approvalId) env.PAPERCLIP_APPROVAL_ID = approvalId;
-    if (approvalStatus) env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
-    if (linkedIssueIds.length > 0) env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
+    if (wakeTaskId) env.BIONIC_TASK_ID = wakeTaskId;
+    if (issueWorkMode) env.BIONIC_ISSUE_WORK_MODE = issueWorkMode;
+    if (wakeReason) env.BIONIC_WAKE_REASON = wakeReason;
+    if (wakeCommentId) env.BIONIC_WAKE_COMMENT_ID = wakeCommentId;
+    if (approvalId) env.BIONIC_APPROVAL_ID = approvalId;
+    if (approvalStatus) env.BIONIC_APPROVAL_STATUS = approvalStatus;
+    if (linkedIssueIds.length > 0) env.BIONIC_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
     refreshPaperclipWorkspaceEnvForExecution({
       env,
       envConfig,
@@ -359,7 +359,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       executionCwd: effectiveExecutionCwd,
     });
     if (authToken) {
-      env.PAPERCLIP_API_KEY = authToken;
+      env.BIONIC_API_KEY = authToken;
     }
     // Held before the remote block below, so the remote lane can stage this
     // same host home into the sandbox without re-resolving it.
@@ -406,7 +406,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
     if (executionTargetIsRemote) {
       await onLog(
         "stdout",
-        `[paperclip] Syncing Grok workspace to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
+        `[bionic] Syncing Grok workspace to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
       );
       // Stage only the credential file the remote lane needs into a curated
       // temp dir and ship THAT as the `home` asset, the same curated-snapshot
@@ -473,7 +473,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       if (isGrokSubscriptionMode) {
         env.GROK_HOME =
           preparedExecutionTargetRuntime.assetDirs.home ??
-          path.posix.join(effectiveExecutionCwd, ".paperclip-runtime", "grok", "home");
+          path.posix.join(effectiveExecutionCwd, ".bionic-runtime", "grok", "home");
       }
     }
 
@@ -508,12 +508,12 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
     if (executionTargetIsRemote && runtimeSessionId && !canResumeSession) {
       await onLog(
         "stdout",
-        `[paperclip] Grok session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
+        `[bionic] Grok session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
       );
     } else if (runtimeSessionId && !canResumeSession) {
       await onLog(
         "stdout",
-        `[paperclip] Grok session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
+        `[bionic] Grok session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
       );
     }
 
@@ -527,7 +527,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
         notes.push(`Applied fallback instructions via --rules @${stagedAssets.rulesFilePath}.`);
       }
       if (stagedAssets.stagedSkillsCount > 0) {
-        notes.push(`Staged ${stagedAssets.stagedSkillsCount} Paperclip skill(s) into .claude/skills for native Grok discovery.`);
+        notes.push(`Staged ${stagedAssets.stagedSkillsCount} Bionic skill(s) into .claude/skills for native Grok discovery.`);
       }
       return notes;
     })();
@@ -541,8 +541,8 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       run: { id: runId, source: "on_demand" },
       context,
     };
-    const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
-    const paperclipEnvNote = renderPaperclipEnvNote(env);
+    const sessionHandoffNote = asString(context.bionicSessionHandoffMarkdown, "").trim();
+    const bionicEnvNote = renderPaperclipEnvNote(env);
     const apiAccessNote = renderApiAccessNote(env);
 
     const buildArgs = (resumeSessionId: string | null, prompt: string) => {
@@ -573,14 +573,14 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       });
       const attemptWakePrompt = attemptSections.wakePrompt;
       const attemptRenderedPrompt = Boolean(resumeSessionId) && attemptWakePrompt.length > 0
-        || isPaperclipRecoveryWakePayload(context.paperclipWake)
+        || isPaperclipRecoveryWakePayload(context.bionicWake)
         ? ""
         : renderTemplate(promptTemplate, templateData);
       const attemptBasePrompt = joinPromptSections([
         attemptWakePrompt,
         attemptSections.taskContextNote,
         sessionHandoffNote,
-        paperclipEnvNote,
+        bionicEnvNote,
         apiAccessNote,
         attemptRenderedPrompt,
       ]);
@@ -593,7 +593,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
         wakePromptChars: attemptWakePrompt.length,
         taskContextChars: attemptSections.taskContextNote.length,
         sessionHandoffChars: sessionHandoffNote.length,
-        runtimeNoteChars: paperclipEnvNote.length + apiAccessNote.length,
+        runtimeNoteChars: bionicEnvNote.length + apiAccessNote.length,
         heartbeatPromptChars: attemptRenderedPrompt.length,
       };
       const args = buildArgs(resumeSessionId, prompt);
@@ -714,7 +714,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
     ) {
       await onLog(
         "stdout",
-        `[paperclip] Grok resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
+        `[bionic] Grok resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
       );
       const retry = await runAttempt(null);
       return toResult(retry, true, true);
@@ -736,7 +736,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
             await providerStop.collectBeforeRestore();
           } catch {
             collectionFailed = true;
-            await onLog("stderr", `[paperclip] ${collectionFailureMessage}\n`).catch(() => undefined);
+            await onLog("stderr", `[bionic] ${collectionFailureMessage}\n`).catch(() => undefined);
           }
         }
         if (!collectionFailed) return result;
@@ -757,7 +757,7 @@ async function executeTurn(ctx: AdapterExecutionContext): Promise<AdapterExecuti
       await fs.rm(stagedGrokHomeDir, { recursive: true, force: true }).catch(async (error) => {
         await onLog(
           "stderr",
-          `[paperclip] Failed to remove staged Grok home "${stagedGrokHomeDir}": ${
+          `[bionic] Failed to remove staged Grok home "${stagedGrokHomeDir}": ${
             error instanceof Error ? error.message : String(error)
           }\n`,
         );

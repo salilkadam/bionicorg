@@ -47,9 +47,9 @@ vi.mock("./acp.js", () => ({
       : { engine: "acp", explicit: false },
 }));
 
-vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/execution-target")>(
-    "@paperclipai/adapter-utils/execution-target",
+vi.mock("@bionicai/adapter-utils/execution-target", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/execution-target")>(
+    "@bionicai/adapter-utils/execution-target",
   );
   return {
     ...actual,
@@ -60,9 +60,9 @@ vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
   };
 });
 
-vi.mock("@paperclipai/adapter-utils/server-utils", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/server-utils")>(
-    "@paperclipai/adapter-utils/server-utils",
+vi.mock("@bionicai/adapter-utils/server-utils", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/server-utils")>(
+    "@bionicai/adapter-utils/server-utils",
   );
   return {
     ...actual,
@@ -71,7 +71,7 @@ vi.mock("@paperclipai/adapter-utils/server-utils", async () => {
 });
 
 import { execute } from "./execute.js";
-import { createPromptContextFixture } from "@paperclipai/adapter-utils/test-fixtures/prompt-context";
+import { createPromptContextFixture } from "@bionicai/adapter-utils/test-fixtures/prompt-context";
 
 function buildContext(config: Record<string, unknown> = {}) {
   return {
@@ -133,7 +133,7 @@ describe("gemini_local ACP startup fallback", () => {
         await execute({
           ...ctx,
           runtime: { ...ctx.runtime, sessionId: state === "fresh" ? null : "previous" },
-          context: { paperclipTaskCommunicationGuidance: "Frozen Slack preferences." },
+          context: { bionicTaskCommunicationGuidance: "Frozen Slack preferences." },
           onMeta: async (meta) => { prompts.push(meta.prompt ?? ""); },
         });
         if (state === "fresh") {

@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { executionWorkspaces, heartbeatRunEvents, issueWorkProducts, workspaceRuntimeServices } from "@paperclipai/db";
-import type { IssueWorkProduct } from "@paperclipai/shared";
+import type { Db } from "@bionicai/db";
+import { executionWorkspaces, heartbeatRunEvents, issueWorkProducts, workspaceRuntimeServices } from "@bionicai/db";
+import type { IssueWorkProduct } from "@bionicai/shared";
 import { unprocessable } from "../errors.js";
 import { insertRowsInChunks } from "./batch-insert.js";
 import {
@@ -58,7 +58,7 @@ export function workProductDiffSummaryFromEventPayload(payload: unknown): WorkPr
   const wrappedEvent = outer.prpEvent && typeof outer.prpEvent === "object" && !Array.isArray(outer.prpEvent)
     ? outer.prpEvent as Record<string, unknown>
     : null;
-  const eventPayload = wrappedEvent?.payload ?? (outer.schema === "paperclip.prp.event.v1" ? outer.payload : outer);
+  const eventPayload = wrappedEvent?.payload ?? (outer.schema === "bionic.prp.event.v1" ? outer.payload : outer);
   if (!eventPayload || typeof eventPayload !== "object" || Array.isArray(eventPayload)) return null;
   const totals = (eventPayload as Record<string, unknown>).totals;
   if (!totals || typeof totals !== "object" || Array.isArray(totals)) return null;

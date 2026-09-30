@@ -29,8 +29,8 @@
  *
  * Control plane where failure issues + amber notes are recorded (the REAL
  * Paperclip company — provided in every routine run's env):
- *   PAPERCLIP_API_URL, PAPERCLIP_API_KEY, PAPERCLIP_COMPANY_ID, PAPERCLIP_RUN_ID
- *   ROUTINE_ISSUE_ID=<uuid>            issue to record against (default PAPERCLIP_TASK_ID)
+ *   BIONIC_API_URL, BIONIC_API_KEY, BIONIC_COMPANY_ID, BIONIC_RUN_ID
+ *   ROUTINE_ISSUE_ID=<uuid>            issue to record against (default BIONIC_TASK_ID)
  *   SMOKE_OWNER_DEFAULT / SMOKE_OWNER_UI / SMOKE_OWNER_CTO  owner overrides
  *   SMOKE_DRY_RUN=1                    log the control-plane writes, don't perform them
  */
@@ -47,13 +47,13 @@ const ONLY = process.env.SMOKE_ONLY ?? "";
 const DRY = process.env.SMOKE_DRY_RUN === "1";
 
 const CP_BASE = (() => {
-  const b = (process.env.PAPERCLIP_API_URL ?? "").replace(/\/$/, "");
+  const b = (process.env.BIONIC_API_URL ?? "").replace(/\/$/, "");
   return b.replace(/\/api$/, "");
 })();
-const CP_KEY = process.env.PAPERCLIP_API_KEY ?? "";
-const CP_COMPANY = process.env.PAPERCLIP_COMPANY_ID ?? "";
-const CP_RUN = process.env.PAPERCLIP_RUN_ID ?? "";
-const ROUTINE_ISSUE_ID = process.env.ROUTINE_ISSUE_ID ?? process.env.PAPERCLIP_TASK_ID ?? "";
+const CP_KEY = process.env.BIONIC_API_KEY ?? "";
+const CP_COMPANY = process.env.BIONIC_COMPANY_ID ?? "";
+const CP_RUN = process.env.BIONIC_RUN_ID ?? "";
+const ROUTINE_ISSUE_ID = process.env.ROUTINE_ISSUE_ID ?? process.env.BIONIC_TASK_ID ?? "";
 
 // Owning coder per plan (§5): S1/S4 governance+catalog = CodexCoder; S2 UI = ClaudeCoder;
 // escalation fallback = CTO. Steps recorded by the runner are governance/API behaviours,
@@ -96,7 +96,7 @@ async function cp(method: string, apiPath: string, body?: Json): Promise<any> {
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${CP_KEY}`,
-      "x-paperclip-run-id": CP_RUN,
+      "x-bionic-run-id": CP_RUN,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -148,7 +148,7 @@ async function cpUploadAsset(file: string): Promise<string | null> {
     form.append("namespace", "smoke-lab");
     const res = await fetch(`${CP_BASE}/api/companies/${CP_COMPANY}/assets/images`, {
       method: "POST",
-      headers: { authorization: `Bearer ${CP_KEY}`, "x-paperclip-run-id": CP_RUN },
+      headers: { authorization: `Bearer ${CP_KEY}`, "x-bionic-run-id": CP_RUN },
       body: form as any,
     });
     if (!res.ok) {
@@ -174,7 +174,7 @@ async function cpAttach(issueId: string, file: string): Promise<boolean> {
     form.append("file", new Blob([buf], { type: "image/png" }), path.basename(file));
     const res = await fetch(`${CP_BASE}/api/companies/${CP_COMPANY}/issues/${issueId}/attachments`, {
       method: "POST",
-      headers: { authorization: `Bearer ${CP_KEY}`, "x-paperclip-run-id": CP_RUN },
+      headers: { authorization: `Bearer ${CP_KEY}`, "x-bionic-run-id": CP_RUN },
       body: form as any,
     });
     if (!res.ok) {

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import type { PaperclipPluginManifestV1 } from "@paperclipai/shared";
+import type { PaperclipPluginManifestV1 } from "@bionicai/shared";
 import { pluginCapabilityValidator } from "./plugin-capability-validator.js";
 
 const segment = z.string().regex(/^[a-z][a-z0-9.-]{0,99}$/);
@@ -149,17 +149,17 @@ export function readDistributionPluginCatalog(
     if (!info.isDirectory() || info.isSymbolicLink()) throw new Error("Invalid distribution bundle directory");
     if (distributionBundleDigest(localPath) !== entry.digest) throw new Error(`Distribution bundle digest mismatch: ${entry.key}`);
     const pkg = JSON.parse(fs.readFileSync(path.join(localPath, "package.json"), "utf8"));
-    if (pkg.version !== entry.version || !pkg.paperclipPlugin) throw new Error("Distribution package version or entrypoints missing");
+    if (pkg.version !== entry.version || !pkg.bionicPlugin) throw new Error("Distribution package version or entrypoints missing");
     for (const name of ["manifest", "worker", "ui"] as const) {
-      const declared = pkg.paperclipPlugin[name];
+      const declared = pkg.bionicPlugin[name];
       if (name === "ui" && declared === undefined) continue;
       const relative = bundleEntrypoint(declared);
       const target = fs.statSync(path.join(localPath, relative));
       if (name === "ui" ? !target.isDirectory() : !target.isFile()) throw new Error("Distribution entrypoint is not prebuilt");
     }
     return { ...entry, localPath, entrypoints: {
-      worker: bundleEntrypoint(pkg.paperclipPlugin.worker),
-      ...(pkg.paperclipPlugin.ui === undefined ? {} : { ui: bundleEntrypoint(pkg.paperclipPlugin.ui) }),
+      worker: bundleEntrypoint(pkg.bionicPlugin.worker),
+      ...(pkg.bionicPlugin.ui === undefined ? {} : { ui: bundleEntrypoint(pkg.bionicPlugin.ui) }),
     } };
   });
 }

@@ -20,20 +20,20 @@ const serverRoot = path.join(repoRoot, "server");
 const serverSrcDir = path.join(repoRoot, "server", "src");
 const serverTestsDir = path.join(repoRoot, "server", "src", "__tests__");
 const nonServerProjects = [
-  "@paperclipai/shared",
-  "@paperclipai/skills-catalog",
-  "@paperclipai/db",
-  "@paperclipai/adapter-utils",
-  "@paperclipai/adapter-claude-local",
-  "@paperclipai/adapter-codex-local",
-  "@paperclipai/adapter-grok-local",
-  "@paperclipai/adapter-openclaw-gateway",
-  "@paperclipai/adapter-opencode-local",
-  "@paperclipai/plugin-daytona",
-  "@paperclipai/plugin-sdk",
-  "@paperclipai/create-paperclip-plugin",
-  "@paperclipai/ui",
-  "paperclipai",
+  "@bionicai/shared",
+  "@bionicai/skills-catalog",
+  "@bionicai/db",
+  "@bionicai/adapter-utils",
+  "@bionicai/adapter-claude-local",
+  "@bionicai/adapter-codex-local",
+  "@bionicai/adapter-grok-local",
+  "@bionicai/adapter-openclaw-gateway",
+  "@bionicai/adapter-opencode-local",
+  "@bionicai/plugin-daytona",
+  "@bionicai/plugin-sdk",
+  "@bionicai/create-bionic-plugin",
+  "@bionicai/ui",
+  "bionicai",
 ];
 const routeTestPattern = /[^/]*(?:route|routes|authz)[^/]*\.test\.ts$/;
 const additionalSerializedServerTests = new Set([
@@ -79,10 +79,10 @@ const chatSuite = "server/src/__tests__/chat-channels.integration.test.ts";
 const nativeRunnerSuite =
   "server/src/services/native-runtime/native-codex-runner.integration.test.ts";
 // In the PR workflow (pr.yml, the caller of pr-trusted.yml — reusable
-// workflows inherit the caller's GITHUB_WORKFLOW), the last Verify Paperclip
+// workflows inherit the caller's GITHUB_WORKFLOW), the last Verify Bionic
 // Runner vitest shard runs the native-runner group instead, because those
 // lanes restore the shared release-runner-v1 Rust cache (see
-// packages/paperclip-runner/scripts/run-pr-vitest-lane.mjs). Every other
+// packages/bionic-runner/scripts/run-pr-vitest-lane.mjs). Every other
 // caller — local runs, release-verify.yml under the Release and Cloud
 // readiness workflows — keeps the suite in the server shards, so a renamed or
 // unknown workflow degrades to today's slower-but-covered behavior rather
@@ -94,7 +94,7 @@ const withoutChatExcludedSuites = nativeRunnerSuiteRunsInRustCachedLane
   : [chatSuite];
 const generalWorkspacesAGroupName = "general-workspaces-a";
 const generalWorkspacesBGroupName = "general-workspaces-b";
-const generalWorkspacesAProjects = ["@paperclipai/ui", "paperclipai"];
+const generalWorkspacesAProjects = ["@bionicai/ui", "bionicai"];
 const generalWorkspacesBProjects = nonServerProjects.filter((project) => !generalWorkspacesAProjects.includes(project));
 const generalGroupNames = [generalServerGroupName, generalWorkspacesAGroupName, generalWorkspacesBGroupName];
 const allowedGeneralGroupNames = [
@@ -314,14 +314,14 @@ function runVitest(args, label, testShard = null) {
   const env = {
     ...process.env,
     NODE_ENV: "test",
-    PAPERCLIP_HOME: path.join(testRoot, "h"),
-    // Config discovery otherwise prefers the checkout's .paperclip/config.json
-    // over PAPERCLIP_HOME, importing preview scheduling policy into unit tests.
-    PAPERCLIP_CONFIG: path.join(testRoot, "h", "config.json"),
-    PAPERCLIP_INSTANCE_ID: `vt-${process.pid}-${invocationIndex}`,
+    BIONIC_HOME: path.join(testRoot, "h"),
+    // Config discovery otherwise prefers the checkout's .bionic/config.json
+    // over BIONIC_HOME, importing preview scheduling policy into unit tests.
+    BIONIC_CONFIG: path.join(testRoot, "h", "config.json"),
+    BIONIC_INSTANCE_ID: `vt-${process.pid}-${invocationIndex}`,
     TMPDIR: path.join(testRoot, "t"),
   };
-  mkdirSync(env.PAPERCLIP_HOME, { recursive: true });
+  mkdirSync(env.BIONIC_HOME, { recursive: true });
   mkdirSync(env.TMPDIR, { recursive: true });
   if (testShard) {
     const collect = (filters, name) => {
@@ -377,13 +377,13 @@ function runProjectGroup(projects, groupName, shardIndex = null, shardCount = nu
 
 function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = null) {
   if (groupName === generalChatGroupName) {
-    runVitest(["--project", "@paperclipai/server", ...serializedServerVitestArgs, chatSuite],
+    runVitest(["--project", "@bionicai/server", ...serializedServerVitestArgs, chatSuite],
       "chat integration test shard", { index: shardIndex ?? 0, count: shardCount ?? 1 });
     return;
   }
   if (groupName === generalServerNativeRunnerGroupName) {
     runVitest(
-      ["--project", "@paperclipai/server", ...serializedServerVitestArgs, nativeRunnerSuite],
+      ["--project", "@bionicai/server", ...serializedServerVitestArgs, nativeRunnerSuite],
       "native runner vertical-slice suite",
     );
     return;
@@ -413,7 +413,7 @@ function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = 
       runVitest(
         [
           "--project",
-          "@paperclipai/server",
+          "@bionicai/server",
           ...serializedServerVitestArgs,
           ...shardFiles,
         ],
@@ -431,7 +431,7 @@ function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = 
     runVitest(
       [
         "--project",
-        "@paperclipai/server",
+        "@bionicai/server",
         ...serializedServerVitestArgs,
         ...excludeRouteArgs,
       ],
@@ -467,7 +467,7 @@ function runSerializedSuites(routeTests, shardIndex, shardCount) {
     runVitest(
       [
         "--project",
-        "@paperclipai/server",
+        "@bionicai/server",
         routeTest.repoPath,
         "--pool=forks",
         "--isolate",

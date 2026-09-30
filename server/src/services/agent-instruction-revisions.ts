@@ -9,14 +9,14 @@ import {
   agentInstructionHeads as heads,
   agentInstructionRevisions as revisions,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type {
   AgentInstructionCommitReceipt,
   AgentInstructionDiff,
   AgentInstructionHistory,
   AgentInstructionSnapshot,
   AgentInstructionSource,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { conflict, forbidden, notFound, unprocessable } from "../errors.js";
 import {
   agentInstructionsBundleMode,
@@ -118,7 +118,7 @@ export function agentInstructionRevisionService(db: Db) {
   // Trusted host-only reset authority. No HTTP or agent tool accepts this actor.
   async function authorizePluginReset(tx: Tx, actor: PluginResetActor, target: InstructionTarget, agent: typeof agents.$inferSelect) {
     const [plugin] = await tx.select().from(plugins).where(and(eq(plugins.id, actor.pluginId), eq(plugins.pluginKey, actor.pluginKey)));
-    const marker = agent.metadata?.paperclipManagedResource as Record<string, unknown> | undefined;
+    const marker = agent.metadata?.bionicManagedResource as Record<string, unknown> | undefined;
     const [binding] = await tx.select().from(pluginManagedResources).where(and(
       eq(pluginManagedResources.pluginId, actor.pluginId), eq(pluginManagedResources.pluginKey, actor.pluginKey),
       eq(pluginManagedResources.companyId, target.companyId), eq(pluginManagedResources.resourceKind, "agent"),

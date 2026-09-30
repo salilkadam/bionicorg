@@ -18,7 +18,7 @@ import {
   toolProfiles,
   toolProfileBindings,
   toolConnectionInstalls,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type { RuntimeToolsTokenClaims } from "../runtime-tools-token.js";
 import { connectionIntentService } from "../services/connection-intents.js";
 import { instanceSettingsService } from "../services/instance-settings.js";
@@ -38,7 +38,7 @@ const support = await getEmbeddedPostgresTestSupport();
     let runId!: string;
     beforeAll(async () => {
       const tempDb = await startEmbeddedPostgresTestDatabase(
-        "paperclip-connection-intents-",
+        "bionic-connection-intents-",
       );
       cleanup = tempDb.cleanup;
       connectionString = tempDb.connectionString;

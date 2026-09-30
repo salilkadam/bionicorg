@@ -6,8 +6,8 @@ import {
   type DuplexObservabilityEventRecord,
   type DuplexObservabilityRecorder,
   type DuplexObservabilitySpanRecord,
-} from "@paperclipai/adapter-utils/duplex-observability";
-import { getActiveStepContext } from "@paperclipai/adapter-utils/acpx-engine/startup-timing";
+} from "@bionicai/adapter-utils/duplex-observability";
+import { getActiveStepContext } from "@bionicai/adapter-utils/acpx-engine/startup-timing";
 
 /**
  * The host binding for the fixed duplex telemetry surface. This module maps each

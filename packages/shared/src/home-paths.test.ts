@@ -20,9 +20,9 @@ afterEach(() => {
 
 describe("home path resolution", () => {
   it("resolves config and runtime data directly under the instance root", () => {
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-home-paths-"));
-    process.env.PAPERCLIP_HOME = home;
-    delete process.env.PAPERCLIP_INSTANCE_ID;
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-home-paths-"));
+    process.env.BIONIC_HOME = home;
+    delete process.env.BIONIC_INSTANCE_ID;
 
     const instanceRoot = path.join(home, "instances", "default");
     expect(resolvePaperclipInstanceRoot()).toBe(instanceRoot);

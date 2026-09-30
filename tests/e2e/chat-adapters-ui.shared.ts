@@ -11,7 +11,7 @@ import {
 /**
  * Deterministic browser coverage for the native chat-connector UI.
  *
- * Provider APIs are deliberately not contacted here. The shared Paperclip
+ * Provider APIs are deliberately not contacted here. The shared Bionic
  * server supplies the company, agent, and connector catalog, while a small
  * stateful route fixture emulates the chat-control-plane responses. Live
  * provider webhook and credential qualification belongs in the manual runbook
@@ -48,7 +48,7 @@ export const PROVIDERS: ProviderCase[] = [
     name: "Slack",
     accountLabel: "Acme Workspace",
     botLabel: "Maya",
-    botUsername: "maya-paperclip",
+    botUsername: "maya-bionic",
     resourceLabel: "#product",
     secondaryResourceLabel: "#support",
     resourceType: "channel",
@@ -61,15 +61,15 @@ export const PROVIDERS: ProviderCase[] = [
     provider: "github",
     slug: "github",
     name: "GitHub",
-    accountLabel: "paperclip-ai",
+    accountLabel: "bionic-ai",
     botLabel: "Maya",
     // GitHub's API returns the actor login with this suffix, while people
     // invoke the App with the bare slug.
-    botUsername: "maya-paperclip[bot]",
-    resourceLabel: "paperclip-ai/paperclip",
-    secondaryResourceLabel: "paperclip-ai/chat-e2e",
+    botUsername: "maya-bionic[bot]",
+    resourceLabel: "bionic-ai/bionic",
+    secondaryResourceLabel: "bionic-ai/chat-e2e",
     resourceType: "repository",
-    externalUrl: "https://github.com/paperclip-ai/paperclip/issues/123",
+    externalUrl: "https://github.com/bionic-ai/bionic/issues/123",
     setupHeading: /Create or connect a GitHub App/i,
     setupButton: "Connect and verify",
     chatAndTool: true,
@@ -80,7 +80,7 @@ export const PROVIDERS: ProviderCase[] = [
     name: "Microsoft Teams",
     accountLabel: "Acme Tenant",
     botLabel: "Maya",
-    botUsername: "maya-paperclip",
+    botUsername: "maya-bionic",
     resourceLabel: "Product / General",
     secondaryResourceLabel: "Product / Incidents",
     resourceType: "channel",
@@ -95,7 +95,7 @@ export const PROVIDERS: ProviderCase[] = [
     name: "Discord",
     accountLabel: "Clawd",
     botLabel: "Maya",
-    botUsername: "maya-paperclip",
+    botUsername: "maya-bionic",
     resourceLabel: "#general",
     secondaryResourceLabel: "#support",
     resourceType: "channel",
@@ -109,13 +109,13 @@ export const PROVIDERS: ProviderCase[] = [
     provider: "telegram",
     slug: "telegram",
     name: "Telegram",
-    accountLabel: "@maya_paperclip_bot",
+    accountLabel: "@maya_bionic_bot",
     botLabel: "Maya",
-    botUsername: "maya_paperclip_bot",
+    botUsername: "maya_bionic_bot",
     resourceLabel: "Maya test chat",
     secondaryResourceLabel: "Maya group chat",
     resourceType: "direct_message",
-    externalUrl: "https://t.me/maya_paperclip_bot",
+    externalUrl: "https://t.me/maya_bionic_bot",
     setupHeading: /Create Maya in Telegram/i,
     setupButton: "Connect bot",
     chatAndTool: false,
@@ -149,9 +149,9 @@ export const PROVIDER_LIFECYCLE_COPY: Record<
   },
   telegram: {
     reconnect:
-      "Reconnect verifies this same BotFather bot and automatically refreshes its Paperclip webhook and command menu.",
+      "Reconnect verifies this same BotFather bot and automatically refreshes its Bionic webhook and command menu.",
     remove:
-      "queues durable removal of its Telegram webhook and command menu. After Telegram confirms that cleanup, Paperclip retires the saved token",
+      "queues durable removal of its Telegram webhook and command menu. After Telegram confirms that cleanup, Bionic retires the saved token",
   },
 };
 
@@ -291,8 +291,8 @@ export function endpointFixture(provider: ProviderCase, seed: Seed) {
                 ? "https://discord.com/developers/applications"
                 : "https://api.slack.com/apps",
       providerUrl: provider.externalUrl,
-      webhookUrl: `https://paperclip.example.test/api/chat-webhooks/public-${provider.provider}/${provider.provider}`,
-      messagingEndpoint: `https://paperclip.example.test/api/chat-webhooks/public-${provider.provider}/microsoft-teams`,
+      webhookUrl: `https://bionic.example.test/api/chat-webhooks/public-${provider.provider}/${provider.provider}`,
+      messagingEndpoint: `https://bionic.example.test/api/chat-webhooks/public-${provider.provider}/microsoft-teams`,
       command: provider.provider === "slack" ? "/maya-public" : undefined,
       testStartedAt: null as string | null,
       webhookVerifiedAt: null,
@@ -430,7 +430,7 @@ export async function installChatControlPlaneMock(
         await fulfill(route, githubConfiguration); return;
       }
       if (operation === "progress") {
-        Object.assign(endpoint.setup, { github: { appSlug: githubAppConnected ? "maya-paperclip" : undefined, stage: body.stage, managementUrl: "https://github.com/settings/installations/2468" } });
+        Object.assign(endpoint.setup, { github: { appSlug: githubAppConnected ? "maya-bionic" : undefined, stage: body.stage, managementUrl: "https://github.com/settings/installations/2468" } });
         await fulfill(route, endpoint); return;
       }
       if (operation === "app") {
@@ -438,8 +438,8 @@ export async function installChatControlPlaneMock(
         state.configuredCredentialKeys = Object.keys(body).sort();
         if (state.setupAttempts === 1) { await fulfill(route, { error: "GitHub rejected the supplied App credentials." }, 422); return; }
         githubAppConnected = true;
-        Object.assign(endpoint, { status: "attention", botUsername: "maya-paperclip[bot]" });
-        Object.assign(endpoint.setup, { github: { stage: "install", appSlug: "maya-paperclip", installationUrl: "https://github.com/apps/maya-paperclip/installations/new", managementUrl: "https://github.com/settings/installations/2468" } });
+        Object.assign(endpoint, { status: "attention", botUsername: "maya-bionic[bot]" });
+        Object.assign(endpoint.setup, { github: { stage: "install", appSlug: "maya-bionic", installationUrl: "https://github.com/apps/maya-bionic/installations/new", managementUrl: "https://github.com/settings/installations/2468" } });
         await fulfill(route, endpoint); return;
       }
       if (operation === "repositories/refresh") { state.githubRepositoryRefreshes++; await fulfill(route, resources); return; }
@@ -634,7 +634,7 @@ export async function installChatControlPlaneMock(
       return;
     }
     if (pathname === `/api/chat-endpoints/${endpoint.id}/principals/principal-slack-self/link-intent` && method === "POST") {
-      await fulfill(route, { confirmationUrl: `https://paperclip.example.test/${seed.prefix}/chat-identity/confirm?token=e2e-self` });
+      await fulfill(route, { confirmationUrl: `https://bionic.example.test/${seed.prefix}/chat-identity/confirm?token=e2e-self` });
       return;
     }
     if (pathname === "/api/chat-identity-links/confirm" && method === "POST") {
@@ -678,7 +678,7 @@ export async function installChatControlPlaneMock(
           ...(provider.provider === "slack" && (slackIdentityLinked || endpoint.setup.step === "test") ? [{
             id: "link-slack-self", principalId: "principal-slack-self", externalLabel: "Test operator",
             externalDetail: "operator@slack", lastConnectAt: new Date().toISOString(),
-            paperclipUserId: slackIdentityLinked ? "local-board" : null,
+            bionicUserId: slackIdentityLinked ? "local-board" : null,
             status: slackIdentityLinked ? "linked" : "pending",
           }] : []),
           {
@@ -686,8 +686,8 @@ export async function installChatControlPlaneMock(
             principalId: `principal-${provider.provider}`,
             externalLabel: "Ada Lovelace",
             externalDetail: `ada@${provider.provider}`,
-            paperclipUserId: null,
-            paperclipUserLabel: null,
+            bionicUserId: null,
+            bionicUserLabel: null,
             status: "pending",
           },
           {
@@ -695,12 +695,12 @@ export async function installChatControlPlaneMock(
             principalId: `principal-${provider.provider}-linked`,
             externalLabel: "Grace Hopper",
             externalDetail: `grace@${provider.provider}`,
-            paperclipUserId:
+            bionicUserId:
               state.revokedPrincipalId ===
               `principal-${provider.provider}-linked`
                 ? null
-                : "paperclip-user-grace",
-            paperclipUserLabel:
+                : "bionic-user-grace",
+            bionicUserLabel:
               state.revokedPrincipalId ===
               `principal-${provider.provider}-linked`
                 ? null
@@ -723,7 +723,7 @@ export async function installChatControlPlaneMock(
     ) {
       state.linkIntentPrincipalId = `principal-${provider.provider}`;
       await fulfill(route, {
-        confirmationUrl: `https://paperclip.example.test/${seed.prefix}/chat-identity/confirm?token=e2e-redacted`,
+        confirmationUrl: `https://bionic.example.test/${seed.prefix}/chat-identity/confirm?token=e2e-redacted`,
       });
       return;
     }
@@ -846,7 +846,7 @@ export async function fillProviderSetup(page: Page, provider: ProviderCase) {
       "Choose GitHub App private key file",
     );
     await privateKeyFile.setInputFiles({
-      name: "paperclip-test.pem",
+      name: "bionic-test.pem",
       mimeType: "application/x-pem-file",
       buffer: Buffer.alloc(64 * 1024 + 1, "x"),
     });
@@ -860,7 +860,7 @@ export async function fillProviderSetup(page: Page, provider: ProviderCase) {
     await page.getByRole("button", { name: "Choose .pem file" }).click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles({
-      name: "paperclip-test.pem",
+      name: "bionic-test.pem",
       mimeType: "application/x-pem-file",
       buffer: Buffer.from(GITHUB_PRIVATE_KEY_FIXTURE),
     });
@@ -879,7 +879,7 @@ export async function fillProviderSetup(page: Page, provider: ProviderCase) {
     await expect(page.locator("body")).not.toContainText(
       GITHUB_PRIVATE_KEY_FIXTURE,
     );
-    await expect(page.locator("body")).not.toContainText("paperclip-test.pem");
+    await expect(page.locator("body")).not.toContainText("bionic-test.pem");
     await page.getByRole("button", { name: provider.setupButton }).click();
     await expect(page.getByRole("alert")).toContainText("Connection failed");
     await page
@@ -924,7 +924,7 @@ export async function fillProviderSetup(page: Page, provider: ProviderCase) {
     ) as { webApplicationInfo?: { id?: string; resource?: string } };
     expect(manifest.webApplicationInfo).toEqual({
       id: clientId,
-      resource: "https://paperclip.ing",
+      resource: "https://bionic.ing",
     });
     await expect(
       page.getByRole("button", { name: "Copy manifest settings" }),
@@ -962,14 +962,14 @@ export async function expectSetupRail(page: Page) {
 
 export function expectedSlackManifest(webhookUrl: string) {
   return `display_information:
-  name: "maya-paperclip"
+  name: "maya-bionic"
 features:
   app_home:
     home_tab_enabled: false
     messages_tab_enabled: true
     messages_tab_read_only_enabled: false
   agent_view:
-    agent_description: "Work with a Paperclip agent in a task-backed conversation."
+    agent_description: "Work with a Bionic agent in a task-backed conversation."
   bot_user:
     display_name: "maya"
   slash_commands:
@@ -1046,7 +1046,7 @@ settings:
 }
 
 export async function expectMinimumProviderSetup(page: Page, provider: ProviderCase) {
-  const webhookUrl = `https://paperclip.example.test/api/chat-webhooks/public-${provider.provider}/${provider.provider}`;
+  const webhookUrl = `https://bionic.example.test/api/chat-webhooks/public-${provider.provider}/${provider.provider}`;
   if (provider.provider === "slack") {
     await expect(page.getByLabel("Slack app name", { exact: true })).toBeEditable();
     await expect(page.getByLabel("Bot display name", { exact: true })).toBeEditable();
@@ -1083,7 +1083,7 @@ export async function expectMinimumProviderSetup(page: Page, provider: ProviderC
 
   if (provider.provider === "microsoft-teams") {
     const messagingEndpoint =
-      "https://paperclip.example.test/api/chat-webhooks/public-microsoft-teams/microsoft-teams";
+      "https://bionic.example.test/api/chat-webhooks/public-microsoft-teams/microsoft-teams";
     await expect(
       page.getByText(messagingEndpoint, { exact: true }),
     ).toBeVisible();
@@ -1133,10 +1133,10 @@ export async function expectMinimumProviderSetup(page: Page, provider: ProviderC
       ],
       webApplicationInfo: {
         id: "<application-client-id>",
-        resource: "https://paperclip.ing",
+        resource: "https://bionic.ing",
       },
     });
-    expect(manifest).not.toContain("api://paperclip-chat/");
+    expect(manifest).not.toContain("api://bionic-chat/");
     expect(manifest).not.toContain("supportsTargetedMessages");
     await expect(
       page.getByRole("button", { name: "Copy manifest settings" }),
@@ -1223,7 +1223,7 @@ export async function expectProviderTryInstructions(
   provider: ProviderCase,
 ) {
   if (provider.provider === "slack") {
-    for (const text of ["Open a channel and invite @maya-paperclip if needed.", "@maya-paperclip you there?", "Continue the conversation in the thread."]) {
+    for (const text of ["Open a channel and invite @maya-bionic if needed.", "@maya-bionic you there?", "Continue the conversation in the thread."]) {
       await expect(page.getByText(text, { exact: true })).toBeVisible();
     }
     await expect(page.getByRole("button", { name: "Copy message" })).toBeVisible();
@@ -1234,19 +1234,19 @@ export async function expectProviderTryInstructions(
     provider.provider === "github"
         ? [
             "Open an installed issue or pull request.",
-            "Mention @maya-paperclip in a comment.",
+            "Mention @maya-bionic in a comment.",
             "Add another comment to continue the same task.",
           ]
         : provider.provider === "microsoft-teams"
           ? [
               "Open an installed channel and start a new post.",
-              "Mention @maya-paperclip in the post.",
+              "Mention @maya-bionic in the post.",
               "Reply once beneath the post.",
             ]
           : provider.provider === "discord"
             ? [
                 "Open a text channel where the bot is installed.",
-                "Mention @maya-paperclip in a new root message.",
+                "Mention @maya-bionic in a new root message.",
                 "Reply once inside Maya's new Discord thread.",
               ]
             : [

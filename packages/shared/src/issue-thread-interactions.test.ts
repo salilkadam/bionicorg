@@ -10,7 +10,7 @@ import {
   askUserQuestionsResultSchema,
   askUserQuestionsPayloadSchema,
   createIssueThreadInteractionSchema,
-  paperclipQuestionSetPayloadSchema,
+  bionicQuestionSetPayloadSchema,
   requestConfirmationPayloadSchema,
   requestConfirmationResultSchema,
   requestItemVerdictsResultSchema,
@@ -262,7 +262,7 @@ describe("issue thread interaction schemas", () => {
 
   it("retains canonical runner question sets without narrowing their public bounds", () => {
     const questionSet = {
-      schema: "paperclip.question_set.v1" as const,
+      schema: "bionic.question_set.v1" as const,
       title: "Runner input",
       questions: [{
         id: "deployment-color",
@@ -292,7 +292,7 @@ describe("issue thread interaction schemas", () => {
     if (parsed.kind !== "ask_user_questions") return;
     expect(parsed.payload.questionSet).toEqual(questionSet);
 
-    expect(() => paperclipQuestionSetPayloadSchema.parse({
+    expect(() => bionicQuestionSetPayloadSchema.parse({
       ...questionSet,
       questions: [{ ...questionSet.questions[0], answerMode: "text", options: questionSet.questions[0].options }],
     })).toThrow("text questions cannot define options");
@@ -305,7 +305,7 @@ describe("issue thread interaction schemas", () => {
         { id: "club_name", prompt: "Club name?", selectionMode: "single", required: true, options: [{ id: "text", label: "Answer", freeText: true }] },
         { id: "audience", prompt: "Audience?", selectionMode: "single", required: true, options: [{ id: "beginners", label: "Beginners" }, { id: "everyone", label: "Everyone" }] },
       ],
-      questionSet: { schema: "paperclip.question_set.v1", questions: [{ id: "club_name", prompt: "Club name?", answerMode: "text", required: true }] },
+      questionSet: { schema: "bionic.question_set.v1", questions: [{ id: "club_name", prompt: "Club name?", answerMode: "text", required: true }] },
     };
     expect(() => createIssueThreadInteractionSchema.parse({ kind: "ask_user_questions", payload })).toThrow("must present every questions entry");
     expect(askUserQuestionsPayloadSchema.parse(payload).questions).toHaveLength(2);
@@ -323,7 +323,7 @@ describe("issue thread interaction schemas", () => {
     const payload = {
       version: 1,
       questions: [{ id: "color", prompt: "Color?", required: true, selectionMode: "single", options: [{ id: "blue", label: "Blue" }] }],
-      questionSet: { schema: "paperclip.question_set.v1", questions: [{ id: "color", prompt: "Color?", required: true, answerMode: "single_select", options: [{ id: "blue", label: "Blue" }], ...changes }] },
+      questionSet: { schema: "bionic.question_set.v1", questions: [{ id: "color", prompt: "Color?", required: true, answerMode: "single_select", options: [{ id: "blue", label: "Blue" }], ...changes }] },
     };
     expect(() => createIssueThreadInteractionSchema.parse({ kind: "ask_user_questions", payload })).toThrow("must match");
     expect(askUserQuestionsPayloadSchema.parse(payload).questions).toHaveLength(1);

@@ -36,15 +36,15 @@ import {
   toolApplications,
   toolConnections,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type {
   PrpStructuredRunResult,
   PrpTerminalState,
-} from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
 
 import { startEmbeddedPostgresTestDatabase } from "../../__tests__/helpers/embedded-postgres.js";
 import { finalizeNativeRun } from "./native-run-finalizer.js";
-import { PaperclipControlPlanePort } from "./paperclip-control-plane-port.js";
+import { PaperclipControlPlanePort } from "./bionic-control-plane-port.js";
 import {
   authorizeNativeChatReviewPresentation,
   hasMaterializedNativeReviewResponse,
@@ -65,14 +65,14 @@ import { questionResponseDeliveryValues } from "../question-response-delivery.js
 import { resolveExternalChatQuestionResponse } from "./external-chat-question-response.js";
 import { materializeExternalChatQuestionResponseInput } from "./external-chat-question-response-input.js";
 import * as nativeInteractionBridge from "./native-interaction-bridge.js";
-import type { AskUserQuestionsInteraction } from "@paperclipai/shared";
-import { PaperclipRunnerToolAuthority } from "./paperclip-runner-tool-authority.js";
+import type { AskUserQuestionsInteraction } from "@bionicai/shared";
+import { PaperclipRunnerToolAuthority } from "./bionic-runner-tool-authority.js";
 import { createLocalDiskStorageProvider } from "../../storage/local-disk-provider.js";
 import { createStorageService } from "../../storage/service.js";
 import { subscribeAllCompanyLiveEvents } from "../live-events.js";
 
 describe("native external-chat response wait", () => {
-  const externalTestDatabaseUrl = process.env.PAPERCLIP_TEST_DATABASE_URL;
+  const externalTestDatabaseUrl = process.env.BIONIC_TEST_DATABASE_URL;
   let temporary: Awaited<
     ReturnType<typeof startEmbeddedPostgresTestDatabase>
   > | null = null;
@@ -135,7 +135,7 @@ describe("native external-chat response wait", () => {
       id: agentId,
       companyId,
       name: "Waiting chat agent",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "codex" },
       runtimeConfig: {},
       status: "active",
@@ -155,7 +155,7 @@ describe("native external-chat response wait", () => {
       companyId,
       issueId,
       revision: 1,
-      schemaVersion: "paperclip.completion-contract.v1",
+      schemaVersion: "bionic.completion-contract.v1",
       policyVersion: "phase6-v3",
       risk: "low",
       completionAuthority: "agent_claim_policy",
@@ -225,10 +225,10 @@ describe("native external-chat response wait", () => {
       endpointId,
       type: provider === "github" ? "repository" : "direct_message",
       providerResourceId:
-        provider === "github" ? "paperclip/test-repository" : "telegram-user",
+        provider === "github" ? "bionic/test-repository" : "telegram-user",
       label:
         provider === "github"
-          ? "Paperclip test repository"
+          ? "Bionic test repository"
           : "Telegram direct message",
       availability: "available",
       enabled: true,
@@ -258,7 +258,7 @@ describe("native external-chat response wait", () => {
       companyId,
       endpointId,
       principalId,
-      paperclipUserId: userId,
+      bionicUserId: userId,
       status: "linked",
     });
     await db.insert(companyMemberships).values({
@@ -304,11 +304,11 @@ describe("native external-chat response wait", () => {
       .set({
         contextSnapshot: {
           source: `chat:${provider}`,
-          paperclipHarnessCheckedOut: true,
+          bionicHarnessCheckedOut: true,
           issueId,
           wakeCommentId: commentId,
           wakeCommentIds: [commentId],
-          paperclipWake: {
+          bionicWake: {
             reason: "External chat message received",
             externalChatProvider: provider,
             checkedOutByHarness: true,
@@ -336,7 +336,7 @@ describe("native external-chat response wait", () => {
       sourceInstanceId: runnerInstanceId,
     });
     const result: PrpStructuredRunResult = {
-      schema: "paperclip.run_result.v1",
+      schema: "bionic.run_result.v1",
       reportedWorkDisposition: "yielded",
       summary:
         "The requested photo is prepared. I will wait for your next message.",
@@ -363,7 +363,7 @@ describe("native external-chat response wait", () => {
       },
     };
     const terminal: PrpTerminalState = {
-      schema: "paperclip.prp.terminal.v1",
+      schema: "bionic.prp.terminal.v1",
       turnTerminalState: "completed",
       runTerminalState: "succeeded",
       reportedWorkDisposition: "yielded",
@@ -494,7 +494,7 @@ describe("native external-chat response wait", () => {
                 allowOther: true,
                 options: [
                   {
-                    id: "__paperclip_text__",
+                    id: "__bionic_text__",
                     label: "Type an answer",
                     freeText: true,
                   },
@@ -726,9 +726,9 @@ describe("native external-chat response wait", () => {
       })
       .where(eq(chatDeliveries.id, fixture.deliveryId));
     const interactionSvc = issueThreadInteractionService(db);
-    const previousPublicUrl = process.env.PAPERCLIP_PUBLIC_URL;
-    process.env.PAPERCLIP_PUBLIC_URL = withLink
-      ? "https://board.paperclip.example"
+    const previousPublicUrl = process.env.BIONIC_PUBLIC_URL;
+    process.env.BIONIC_PUBLIC_URL = withLink
+      ? "https://board.bionic.example"
       : "http://127.0.0.1:3103";
     let interaction: Awaited<ReturnType<typeof interactionSvc.create>>;
     try {
@@ -759,8 +759,8 @@ describe("native external-chat response wait", () => {
       );
     } finally {
       if (previousPublicUrl === undefined)
-        delete process.env.PAPERCLIP_PUBLIC_URL;
-      else process.env.PAPERCLIP_PUBLIC_URL = previousPublicUrl;
+        delete process.env.BIONIC_PUBLIC_URL;
+      else process.env.BIONIC_PUBLIC_URL = previousPublicUrl;
     }
     const publicationKey = `interaction:${interaction.id}:${fixture.endpointId}`;
     const [publication] = await db
@@ -866,7 +866,7 @@ describe("native external-chat response wait", () => {
         ),
       ).not.toBeNull();
       await attestAnswer(fixture);
-      expect(fixture.context.paperclipWake).toMatchObject({
+      expect(fixture.context.bionicWake).toMatchObject({
         externalChatProvider: "github",
       });
       await db
@@ -1057,7 +1057,7 @@ describe("native external-chat response wait", () => {
         }),
       ).toBe(false);
       expect(
-        fixture.context.paperclipExternalChatQuestionResponse,
+        fixture.context.bionicExternalChatQuestionResponse,
       ).toBeUndefined();
       await expect(
         db
@@ -1126,16 +1126,16 @@ describe("native external-chat response wait", () => {
         contextSnapshot: fixture.context,
       }),
     ).toBe(true);
-    expect(fixture.context.paperclipExternalChatQuestionResponse).toMatchObject(
+    expect(fixture.context.bionicExternalChatQuestionResponse).toMatchObject(
       {
-        schema: "paperclip.external_chat_question_response.v1",
+        schema: "bionic.external_chat_question_response.v1",
         interactionId: fixture.interactionId,
         sourceRunId: fixture.sourceRunId,
         responseDeliveryId: fixture.responseDeliveryId,
       },
     );
-    fixture.context.paperclipExternalChatExecutionBound = true;
-    fixture.context.paperclipWake = await buildPaperclipWakePayload({
+    fixture.context.bionicExternalChatExecutionBound = true;
+    fixture.context.bionicWake = await buildPaperclipWakePayload({
       db,
       companyId: fixture.companyId,
       agentId: fixture.agentId,
@@ -1367,8 +1367,8 @@ describe("native external-chat response wait", () => {
         contextSnapshot: fixture.context,
       }),
     ).resolves.toBe(true);
-    expect(fixture.context.paperclipExternalChatQuestionResponse).toMatchObject({
-      schema: "paperclip.external_chat_question_response.v1",
+    expect(fixture.context.bionicExternalChatQuestionResponse).toMatchObject({
+      schema: "bionic.external_chat_question_response.v1",
       interactionId: fixture.interactionId,
       responseDeliveryId: fixture.responseDeliveryId,
       sourceRunId: fixture.sourceRunId,
@@ -1481,7 +1481,7 @@ describe("native external-chat response wait", () => {
         }),
       ).resolves.toBe(false);
       expect(fixture.context).not.toHaveProperty(
-        "paperclipExternalChatQuestionResponse",
+        "bionicExternalChatQuestionResponse",
       );
     },
   );
@@ -1502,7 +1502,7 @@ describe("native external-chat response wait", () => {
         async ({ fixture, invoke }) => {
           // Answer text is intentionally ephemeral. A prompt-shape predicate on
           // the durable wake is not the authority for this file delivery mode.
-          expect(fixture.context.paperclipWake).not.toHaveProperty(
+          expect(fixture.context.bionicWake).not.toHaveProperty(
             "questionResponse",
           );
           const first = await invoke();
@@ -1512,7 +1512,7 @@ describe("native external-chat response wait", () => {
               provider,
               mode:
                 provider === "github"
-                  ? "paperclip_task_only"
+                  ? "bionic_task_only"
                   : "provider_attachment",
               preparationState: "prepared",
               providerDeliveryConfirmed: false,
@@ -1552,7 +1552,7 @@ describe("native external-chat response wait", () => {
               .where(eq(chatEndpoints.id, fixture.endpointId));
           }
           await expect(invoke()).rejects.toThrow(
-            "paperclip_runner_chat_attachment_destination_denied",
+            "bionic_runner_chat_attachment_destination_denied",
           );
           expect(
             await db
@@ -1578,7 +1578,7 @@ describe("native external-chat response wait", () => {
             .where(eq(issueAttachments.issueId, fixture.issueId));
           const context = structuredClone(fixture.context);
           (
-            context.paperclipExternalChatQuestionResponse as Record<
+            context.bionicExternalChatQuestionResponse as Record<
               string,
               unknown
             >
@@ -1588,7 +1588,7 @@ describe("native external-chat response wait", () => {
             .set({ contextSnapshot: context })
             .where(eq(heartbeatRuns.id, fixture.runId));
           await expect(invoke()).rejects.toThrow(
-            "paperclip_runner_chat_attachment_binding_denied",
+            "bionic_runner_chat_attachment_binding_denied",
           );
           await expect(
             db
@@ -1626,7 +1626,7 @@ describe("native external-chat response wait", () => {
           if (mutation === "forged_marker") {
             const context = structuredClone(fixture.context);
             const marker =
-              context.paperclipExternalChatQuestionResponse as Record<
+              context.bionicExternalChatQuestionResponse as Record<
                 string,
                 unknown
               >;
@@ -1653,8 +1653,8 @@ describe("native external-chat response wait", () => {
           }
           await expect(invoke()).rejects.toThrow(
             mutation === "membership_revoked"
-              ? "paperclip_runner_chat_attachment_principal_denied"
-              : "paperclip_runner_chat_attachment_binding_denied",
+              ? "bionic_runner_chat_attachment_principal_denied"
+              : "bionic_runner_chat_attachment_binding_denied",
           );
           expect(
             await db
@@ -1736,7 +1736,7 @@ describe("native external-chat response wait", () => {
         );
       // Neither a caller timestamp nor an untrusted marker field is the source.
       fixture.context.answeredAtMs = 1;
-      fixture.context.paperclipExternalChatQuestionResponse = {
+      fixture.context.bionicExternalChatQuestionResponse = {
         answeredAtMs: 2,
       };
       const onQuestionResponseAttested = vi.fn();
@@ -1754,7 +1754,7 @@ describe("native external-chat response wait", () => {
       expect(fixture.context.sourceCommentId).toBe(fixture.commentId);
       expect(fixture.context.wakeCommentIds).toEqual([fixture.commentId]);
       expect(
-        fixture.context.paperclipExternalChatQuestionResponse,
+        fixture.context.bionicExternalChatQuestionResponse,
       ).not.toHaveProperty("answeredAtMs");
       const [comment] = await db
         .select()
@@ -1893,7 +1893,7 @@ describe("native external-chat response wait", () => {
         }),
       ).rejects.toThrow(
         kind === "membership_revoked"
-          ? "paperclip_runner_chat_attachment_principal_denied"
+          ? "bionic_runner_chat_attachment_principal_denied"
           : "reviewed_chat_execution_binding_not_authorized",
       );
     },
@@ -2013,7 +2013,7 @@ describe("native external-chat response wait", () => {
       const parent = parents[0]!;
       if (kind === "missing_parent_marker") {
         const context = { ...parent.context };
-        delete context.paperclipExternalChatQuestionResponse;
+        delete context.bionicExternalChatQuestionResponse;
         await db
           .update(heartbeatRuns)
           .set({ contextSnapshot: context })
@@ -2127,7 +2127,7 @@ describe("native external-chat response wait", () => {
         }),
       ).toBe(false);
       expect(
-        fixture.context.paperclipExternalChatQuestionResponse,
+        fixture.context.bionicExternalChatQuestionResponse,
       ).toBeUndefined();
     },
   );
@@ -2241,7 +2241,7 @@ describe("native external-chat response wait", () => {
             companyId: fixture.companyId,
             endpointId: fixture.endpointId,
             principalId,
-            paperclipUserId: "second-user",
+            bionicUserId: "second-user",
             status: "linked",
           });
         await db
@@ -2353,7 +2353,7 @@ describe("native external-chat response wait", () => {
         }),
       ).toBe(false);
       expect(
-        fixture.context.paperclipExternalChatQuestionResponse,
+        fixture.context.bionicExternalChatQuestionResponse,
       ).toBeUndefined();
       expect(
         await db
@@ -2577,7 +2577,7 @@ describe("native external-chat response wait", () => {
       await Promise.allSettled([holder, reader]);
     }
     expect(await reader).toBe(
-      "paperclip_runner_chat_attachment_binding_denied",
+      "bionic_runner_chat_attachment_binding_denied",
     );
   });
 
@@ -2702,7 +2702,7 @@ describe("native external-chat response wait", () => {
         fixture.issueId,
         "Prepared exactly these files for this chat response.",
         { agentId: fixture.agentId, runId: fixture.runId },
-        { authorizationReason: "paperclip_runner_protocol" },
+        { authorizationReason: "bionic_runner_protocol" },
       );
       const selected = [];
       for (const [originalFilename, contentType] of [
@@ -3474,7 +3474,7 @@ describe("native external-chat response wait", () => {
         fixture.issueId,
         "Prepared the original file",
         { agentId: fixture.agentId, runId: fixture.runId },
-        { authorizationReason: "paperclip_runner_protocol" },
+        { authorizationReason: "bionic_runner_protocol" },
       );
       const attachment = await issueService(db).createAttachment({
         issueId: fixture.issueId,
@@ -3733,10 +3733,10 @@ describe("native external-chat response wait", () => {
       .where(eq(heartbeatRuns.id, fixture.runId));
     const context = {
       ...run!.contextSnapshot,
-      paperclipRuntimeServices: [
+      bionicRuntimeServices: [
         { name: "preview", url: "http://127.0.0.1:9000" },
       ],
-      paperclipRuntimePrimaryUrl: "http://127.0.0.1:9000",
+      bionicRuntimePrimaryUrl: "http://127.0.0.1:9000",
     };
     await db
       .update(heartbeatRuns)

@@ -15,7 +15,7 @@
  * and transport logic.
  */
 
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import type {
   Environment,
   EnvironmentLease,
@@ -24,7 +24,7 @@ import type {
   ExecutionWorkspace,
   ExecutionWorkspaceConfig,
   IssueExecutionWorkspaceSettings,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { resolveRunnerEnvironmentForRun } from "./runner-environment-lifecycle.js";
 import { environmentService } from "./environments.js";
 import {
@@ -44,8 +44,8 @@ import {
   type AdapterExecutionTarget,
   type AdapterRemoteExecutionSpec,
   type AdapterWorkspaceRealization,
-} from "@paperclipai/adapter-utils/execution-target";
-import type { DuplexObservabilityRecorder } from "@paperclipai/adapter-utils/duplex-observability";
+} from "@bionicai/adapter-utils/execution-target";
+import type { DuplexObservabilityRecorder } from "@bionicai/adapter-utils/duplex-observability";
 import { buildWorkspaceRealizationRequest } from "./workspace-realization.js";
 import { executionWorkspaceService } from "./execution-workspaces.js";
 import { logActivity } from "./activity-log.js";
@@ -593,7 +593,7 @@ export function environmentRunOrchestrator(
     failureReason?: string;
     /** Explicit Stop during adapter startup; never used for ordinary cleanup. */
     cancelActiveWork?: boolean;
-    /** Explicit paperclip_runner resource lifecycle. Omitted for legacy adapters. */
+    /** Explicit bionic_runner resource lifecycle. Omitted for legacy adapters. */
     providerResourceDisposition?: ProviderResourceDisposition;
     nativeLifecycleTelemetry?: {
       provider: string;

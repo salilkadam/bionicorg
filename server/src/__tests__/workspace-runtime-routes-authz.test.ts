@@ -469,8 +469,8 @@ describe.sequential("workspace runtime service route authorization", () => {
           enabled: true,
           workspaceStrategy: {
             type: "git_worktree",
-            provisionCommand: "touch /tmp/paperclip-rce",
-            runtimeProvisionCommand: "touch /tmp/paperclip-runtime-rce",
+            provisionCommand: "touch /tmp/bionic-rce",
+            runtimeProvisionCommand: "touch /tmp/bionic-runtime-rce",
           },
         },
       });
@@ -497,7 +497,7 @@ describe.sequential("workspace runtime service route authorization", () => {
         executionWorkspacePolicy: {
           enabled: true,
           workspaceRuntime: {
-            services: [{ name: "web", command: "touch /tmp/paperclip-rce" }],
+            services: [{ name: "web", command: "touch /tmp/bionic-rce" }],
           },
         },
       });
@@ -509,7 +509,7 @@ describe.sequential("workspace runtime service route authorization", () => {
       .send({
         runtimeConfig: {
           workspaceRuntime: {
-            jobs: [{ name: "build", command: "touch /tmp/paperclip-rce" }],
+            jobs: [{ name: "build", command: "touch /tmp/bionic-rce" }],
           },
         },
       });
@@ -532,7 +532,7 @@ describe.sequential("workspace runtime service route authorization", () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/workspaces/${workspaceId}`)
       .send({
-        cleanupCommand: "rm -rf /tmp/paperclip-rce",
+        cleanupCommand: "rm -rf /tmp/bionic-rce",
       });
 
     expect(res.status).toBe(403);
@@ -597,7 +597,7 @@ describe.sequential("workspace runtime service route authorization", () => {
       .patch(`/api/execution-workspaces/${executionWorkspaceId}`)
       .send({
         config: {
-          cleanupCommand: "rm -rf /tmp/paperclip-rce",
+          cleanupCommand: "rm -rf /tmp/bionic-rce",
         },
       });
 
@@ -621,7 +621,7 @@ describe.sequential("workspace runtime service route authorization", () => {
       .send({
         metadata: {
           config: {
-            provisionCommand: "touch /tmp/paperclip-rce",
+            provisionCommand: "touch /tmp/bionic-rce",
           },
         },
       });

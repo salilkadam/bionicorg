@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import type {
   CatalogManifest,
   CatalogTeam,
@@ -19,9 +19,9 @@ import type {
   CompanyPortabilityPreview,
   CompanyPortabilityPreviewResult,
   CompanyPortabilitySource,
-} from "@paperclipai/shared";
-import { normalizeAgentUrlKey } from "@paperclipai/shared";
-import { parseFrontmatterMarkdown } from "@paperclipai/shared/frontmatter";
+} from "@bionicai/shared";
+import { normalizeAgentUrlKey } from "@bionicai/shared";
+import { parseFrontmatterMarkdown } from "@bionicai/shared/frontmatter";
 import { conflict, forbidden, HttpError, notFound, unprocessable } from "../errors.js";
 import { agentService } from "./agents.js";
 import { companyPortabilityService } from "./company-portability.js";
@@ -142,7 +142,7 @@ let cachedCatalogManifest: {
 } | null = null;
 
 function buildCatalogPackageRootCandidates() {
-  const configuredRoot = process.env.PAPERCLIP_TEAMS_CATALOG_DIR?.trim();
+  const configuredRoot = process.env.BIONIC_TEAMS_CATALOG_DIR?.trim();
   const candidates = [
     ...(configuredRoot ? [path.resolve(configuredRoot)] : []),
     path.resolve(process.cwd(), "packages/teams-catalog"),
@@ -164,7 +164,7 @@ async function statCatalogManifest() {
     }
   }
   throw new Error(
-    `Teams catalog manifest not found. Checked: ${catalogPackageRootCandidates.map((root) => path.join(root, "generated/catalog.json")).join(", ")}. Run pnpm --filter @paperclipai/teams-catalog build:manifest.`,
+    `Teams catalog manifest not found. Checked: ${catalogPackageRootCandidates.map((root) => path.join(root, "generated/catalog.json")).join(", ")}. Run pnpm --filter @bionicai/teams-catalog build:manifest.`,
   );
 }
 
@@ -238,7 +238,7 @@ interface CatalogTeamProvenance {
 }
 
 /**
- * Extract `metadata.paperclip.catalogTeam` provenance written by the team
+ * Extract `metadata.bionic.catalogTeam` provenance written by the team
  * importer (see `renderCatalogProvenanceYaml`). Returns null when the agent was
  * not installed from a catalog team.
  */
@@ -246,8 +246,8 @@ export function readCatalogTeamProvenance(
   metadata: Record<string, unknown> | null | undefined,
 ): CatalogTeamProvenance | null {
   if (!isPlainRecord(metadata)) return null;
-  const paperclip = isPlainRecord(metadata.paperclip) ? metadata.paperclip : null;
-  const catalogTeam = paperclip && isPlainRecord(paperclip.catalogTeam) ? paperclip.catalogTeam : null;
+  const bionic = isPlainRecord(metadata.bionic) ? metadata.bionic : null;
+  const catalogTeam = bionic && isPlainRecord(bionic.catalogTeam) ? bionic.catalogTeam : null;
   if (!catalogTeam) return null;
   const catalogId = readNonEmptyString(catalogTeam.catalogId);
   if (!catalogId) return null;
@@ -465,7 +465,7 @@ async function renderCatalogProvenanceYaml(team: CatalogTeam, targetManager: Cat
         }
       : {}),
     metadata: {
-      paperclip: {
+      bionic: {
         catalogTeam: {
           catalogId: provenance.catalogId,
           catalogKey: provenance.catalogKey,
@@ -481,7 +481,7 @@ async function renderCatalogProvenanceYaml(team: CatalogTeam, targetManager: Cat
   });
 
   const extension: Record<string, unknown> = {
-    schema: "paperclip/v1",
+    schema: "bionic/v1",
     agents: Object.fromEntries(agentSlugs.map((slug) => [
       slug,
       renderEntity(slug, {
@@ -684,7 +684,7 @@ async function readCatalogTeamSourceFiles(team: CatalogTeam): Promise<Record<str
 const FALLBACK_SAFE_CATALOG_ADAPTER_TYPE = "claude_local";
 
 function defaultSafeCatalogAdapterType() {
-  return process.env.PAPERCLIP_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE?.trim() || FALLBACK_SAFE_CATALOG_ADAPTER_TYPE;
+  return process.env.BIONIC_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE?.trim() || FALLBACK_SAFE_CATALOG_ADAPTER_TYPE;
 }
 
 /**
@@ -792,11 +792,11 @@ export function teamsCatalogService(db: Db) {
     const targetManager = await resolveTargetManagerReference(companyId, options);
     const files = await readCatalogTeamSourceFiles(team);
     const existingExtension =
-      typeof files[".paperclip.yaml"] === "string"
-        ? parseYamlDocument(files[".paperclip.yaml"])
+      typeof files[".bionic.yaml"] === "string"
+        ? parseYamlDocument(files[".bionic.yaml"])
         : {};
     const generatedExtension = parseYamlDocument(await renderCatalogProvenanceYaml(team, targetManager));
-    files[".paperclip.yaml"] = renderYamlFile(mergePlainRecords(existingExtension, generatedExtension));
+    files[".bionic.yaml"] = renderYamlFile(mergePlainRecords(existingExtension, generatedExtension));
     rewriteAgentCatalogSkillRefs(team, files);
 
     return {
@@ -934,7 +934,7 @@ export function teamsCatalogService(db: Db) {
       ...importPreview.warnings,
       ...(defaultedAdapterSlugs.length > 0
         ? [
-            `Catalog agents without explicit overrides (${defaultedAdapterSlugs.join(", ")}) default to ${defaultAdapterType}. Pass adapterOverrides or PAPERCLIP_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE to use a different supported adapter.`,
+            `Catalog agents without explicit overrides (${defaultedAdapterSlugs.join(", ")}) default to ${defaultAdapterType}. Pass adapterOverrides or BIONIC_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE to use a different supported adapter.`,
           ]
         : []),
     ];

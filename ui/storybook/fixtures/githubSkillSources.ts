@@ -1,9 +1,9 @@
-import { parseGitHubSkillRepositoryUrl } from "@paperclipai/shared";
-import type { AgentDesiredSkillEntry, CompanySkillDetail, CompanySkillListItem, CompanySkillVersion, CompanySkill, SkillSource, SkillPackageInspection, SkillSourceCandidate, SkillSourceEntry, SkillSourceRefreshResult } from "@paperclipai/shared";
+import { parseGitHubSkillRepositoryUrl } from "@bionicai/shared";
+import type { AgentDesiredSkillEntry, CompanySkillDetail, CompanySkillListItem, CompanySkillVersion, CompanySkill, SkillSource, SkillPackageInspection, SkillSourceCandidate, SkillSourceEntry, SkillSourceRefreshResult } from "@bionicai/shared";
 import { companySkillsApi } from "@/api/companySkills";
 import { agentsApi } from "@/api/agents";
 import { foldersApi } from "@/api/folders";
-import { storybookAgents } from "./paperclipData";
+import { storybookAgents } from "./bionicData";
 import { skillSourcesApi } from "@/api/skillSources";
 
 export const COMPANY_ID = "company-storybook";

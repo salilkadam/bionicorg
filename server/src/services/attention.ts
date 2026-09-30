@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, notInArray, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agents,
   approvals,
@@ -25,8 +25,8 @@ import {
   documents,
   projects,
   projectWorkspaces,
-} from "@paperclipai/db";
-import { deriveProjectUrlKey } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { deriveProjectUrlKey } from "@bionicai/shared";
 import type {
   AttentionDecisionVerb,
   AttentionFeed,
@@ -46,7 +46,7 @@ import type {
   IssueThreadInteractionEffectiveResolverPolicySource,
   IssueThreadInteractionResolverPolicyProvenance,
   IssueReviewPolicy,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { badRequest } from "../errors.js";
 import { listAttentionExhaustedRuns } from "./attention-exhausted-runs.js";
 import { budgetService } from "./budgets.js";

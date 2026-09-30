@@ -6,7 +6,7 @@ const packageJsonPath = fileURLToPath(
   new URL("../../package.json", import.meta.url),
 );
 const runnerShimPath = fileURLToPath(
-  new URL("../vendor/paperclip-runner/index.ts", import.meta.url),
+  new URL("../vendor/bionic-runner/index.ts", import.meta.url),
 );
 const evidenceClassifierPath = fileURLToPath(
   new URL("../services/native-runtime/evidence-classifier.ts", import.meta.url),
@@ -49,16 +49,16 @@ describe("server package build script", () => {
     };
 
     expect(
-      packageJson.dependencies?.["@paperclipai/paperclip-runner"],
+      packageJson.dependencies?.["@bionicai/bionic-runner"],
     ).toBeUndefined();
-    expect(packageJson.devDependencies?.["@paperclipai/paperclip-runner"]).toBe(
+    expect(packageJson.devDependencies?.["@bionicai/bionic-runner"]).toBe(
       "workspace:*",
     );
     expect(packageJson.scripts?.["prepare:runner-vendor"]).toBe(
-      "pnpm --filter @paperclipai/paperclip-runner build",
+      "pnpm --filter @bionicai/bionic-runner build",
     );
     expect(packageJson.scripts?.build).toContain(
-      "cp -R ../packages/paperclip-runner/dist/. dist/vendor/paperclip-runner/",
+      "cp -R ../packages/bionic-runner/dist/. dist/vendor/bionic-runner/",
     );
   });
 
@@ -67,7 +67,7 @@ describe("server package build script", () => {
       scripts?: Record<string, string>;
     };
 
-    // See scripts/verify-runner-vendor-dependencies.mjs: packages/paperclip-runner
+    // See scripts/verify-runner-vendor-dependencies.mjs: packages/bionic-runner
     // is vendored with a raw `cp -R` of its compiled dist/, so every runtime
     // dependency it imports must also be a direct dependency of server. This
     // check derives that requirement from an esbuild scan of the vendored
@@ -82,10 +82,10 @@ describe("server package build script", () => {
     const shim = readFileSync(runnerShimPath, "utf8");
 
     expect(shim).toContain(
-      '"../../../../packages/paperclip-runner/src/index.ts"',
+      '"../../../../packages/bionic-runner/src/index.ts"',
     );
     expect(shim).not.toContain(
-      'export * from "@paperclipai/paperclip-runner"',
+      'export * from "@bionicai/bionic-runner"',
     );
   });
 
@@ -96,8 +96,8 @@ describe("server package build script", () => {
     ]) {
       const consumer = readFileSync(consumerPath, "utf8");
 
-      expect(consumer).toContain('vendor/paperclip-runner/index.js"');
-      expect(consumer).not.toContain('from "@paperclipai/paperclip-runner"');
+      expect(consumer).toContain('vendor/bionic-runner/index.js"');
+      expect(consumer).not.toContain('from "@bionicai/bionic-runner"');
     }
   });
 });

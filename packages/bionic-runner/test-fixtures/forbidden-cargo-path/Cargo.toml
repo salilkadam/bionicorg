@@ -1,0 +1,7 @@
+[package]
+name = "forbidden-bionic-core-import"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+bionic-server = { path = "../../../../server" }

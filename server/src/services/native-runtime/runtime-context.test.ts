@@ -1,11 +1,11 @@
 import { mkdtemp, mkdir, readFile, readdir, chmod, lstat, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
-  PAPERCLIP_OPERATIONAL_SKILL_KEY,
+  BIONIC_OPERATIONAL_SKILL_KEY,
   type PaperclipSkillEntry,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const serviceMocks = vi.hoisted(() => ({
@@ -58,12 +58,12 @@ beforeEach(async () => {
   vi.clearAllMocks();
   serviceMocks.readCommittedForRuntime.mockResolvedValue(null);
   serviceMocks.githubBotConnectionIdsForRun.mockResolvedValue(new Set());
-  previousPaperclipHome = process.env.PAPERCLIP_HOME;
-  previousInstanceId = process.env.PAPERCLIP_INSTANCE_ID;
-  const root = await mkdtemp(path.join(tmpdir(), "paperclip-native-context-"));
+  previousPaperclipHome = process.env.BIONIC_HOME;
+  previousInstanceId = process.env.BIONIC_INSTANCE_ID;
+  const root = await mkdtemp(path.join(tmpdir(), "bionic-native-context-"));
   temporaryRoots.push(root);
-  process.env.PAPERCLIP_HOME = root;
-  process.env.PAPERCLIP_INSTANCE_ID = "runtime_context_test";
+  process.env.BIONIC_HOME = root;
+  process.env.BIONIC_INSTANCE_ID = "runtime_context_test";
   serviceMocks.getEffectiveProfilesForAgent.mockResolvedValue({
     agentId: "agent-1",
     profiles: [],
@@ -82,10 +82,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  if (previousPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-  else process.env.PAPERCLIP_HOME = previousPaperclipHome;
-  if (previousInstanceId === undefined) delete process.env.PAPERCLIP_INSTANCE_ID;
-  else process.env.PAPERCLIP_INSTANCE_ID = previousInstanceId;
+  if (previousPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+  else process.env.BIONIC_HOME = previousPaperclipHome;
+  if (previousInstanceId === undefined) delete process.env.BIONIC_INSTANCE_ID;
+  else process.env.BIONIC_INSTANCE_ID = previousInstanceId;
   // A rejected Promise.all does not cancel the other materializers. Let their
   // bounded local writes settle before removing the read-only asset tree.
   await new Promise((resolve) => setTimeout(resolve, 25));
@@ -107,7 +107,7 @@ describe("buildNativeRuntimeContext", () => {
     });
     const context = await buildNativeRuntimeContext({
       db: {} as Db,
-      agent: { id: "agent-1", companyId: "company-1", name: "Reviewer", adapterType: "paperclip_runner", adapterConfig: { instructionsBundleMode: "managed" } },
+      agent: { id: "agent-1", companyId: "company-1", name: "Reviewer", adapterType: "bionic_runner", adapterConfig: { instructionsBundleMode: "managed" } },
       runId: "run-1", runtimeConfig: {}, runtimeSkillEntries: [],
     });
     expect(await readFile(path.join(context.instructions.bundle.rootPath, context.instructions.entryPath), "utf8"))
@@ -139,7 +139,7 @@ describe("buildNativeRuntimeContext", () => {
     await writeFile(path.join(workingRoot, "instructions/CHARter.md"), "Original instructions.\n");
     const context = await buildNativeRuntimeContext({
       db: {} as Db,
-      agent: { id: "agent-1", companyId: "company-1", name: "Reviewer", adapterType: "paperclip_runner", adapterConfig: {} },
+      agent: { id: "agent-1", companyId: "company-1", name: "Reviewer", adapterType: "bionic_runner", adapterConfig: {} },
       runId: "run-1",
       runtimeConfig: {},
       runtimeSkillEntries: [],
@@ -180,7 +180,7 @@ describe("buildNativeRuntimeContext", () => {
           id: "agent-1",
           companyId: "company-1",
           name: "Reviewer",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           adapterConfig: {},
         },
         runId: "run-1",
@@ -235,7 +235,7 @@ describe("buildNativeRuntimeContext", () => {
         id: "agent-1",
         companyId: "company-1",
         name: "Reviewer",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
       },
       runId: "run-1",
@@ -255,7 +255,7 @@ describe("buildNativeRuntimeContext", () => {
         "references/policy.md": "Company policy sibling.\n",
       },
     });
-    const sourceRoot = await mkdtemp(path.join(tmpdir(), "paperclip-native-skill-"));
+    const sourceRoot = await mkdtemp(path.join(tmpdir(), "bionic-native-skill-"));
     temporaryRoots.push(sourceRoot);
     const selectedRoot = path.join(sourceRoot, "reviewer");
     const unselectedRoot = path.join(sourceRoot, "unused");
@@ -274,11 +274,11 @@ describe("buildNativeRuntimeContext", () => {
         id: "agent-1",
         companyId: "company-1",
         name: "Reviewer",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
       },
       runId: "run-1",
-      runtimeConfig: { paperclipSkillSync: { desiredSkills: ["company-1/reviewer"] } },
+      runtimeConfig: { bionicSkillSync: { desiredSkills: ["company-1/reviewer"] } },
       runtimeSkillEntries: entries,
     };
 
@@ -325,14 +325,14 @@ describe("buildNativeRuntimeContext", () => {
         id: "agent-1",
         companyId: "company-1",
         name: "Reviewer",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
       },
       runId: "run-1",
     };
     await expect(buildNativeRuntimeContext({
       ...base,
-      runtimeConfig: { paperclipSkillSync: { desiredSkills: ["company-1/missing"] } },
+      runtimeConfig: { bionicSkillSync: { desiredSkills: ["company-1/missing"] } },
       runtimeSkillEntries: [{
         key: "company-1/missing",
         runtimeName: "missing",
@@ -341,20 +341,20 @@ describe("buildNativeRuntimeContext", () => {
         missingDetail: "assigned skill checkout is unavailable",
       }],
     })).rejects.toThrow("assigned skill checkout is unavailable");
-    const supportedRoot = await mkdtemp(path.join(tmpdir(), "paperclip-native-supported-skill-"));
+    const supportedRoot = await mkdtemp(path.join(tmpdir(), "bionic-native-supported-skill-"));
     temporaryRoots.push(supportedRoot);
     await writeFile(path.join(supportedRoot, "SKILL.md"), "# Supported\n");
     const context = await buildNativeRuntimeContext({
       ...base,
       runtimeConfig: {
-        paperclipSkillSync: {
-          desiredSkills: [PAPERCLIP_OPERATIONAL_SKILL_KEY, "company-1/supported"],
+        bionicSkillSync: {
+          desiredSkills: [BIONIC_OPERATIONAL_SKILL_KEY, "company-1/supported"],
         },
       },
       runtimeSkillEntries: [
         {
-          key: PAPERCLIP_OPERATIONAL_SKILL_KEY,
-          runtimeName: "paperclip",
+          key: BIONIC_OPERATIONAL_SKILL_KEY,
+          runtimeName: "bionic",
           source: "/unused",
         },
         {

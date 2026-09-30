@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   findPaperclipConfigKeyWarnings,
   mergePaperclipConfig,
-  paperclipConfigSchema,
+  bionicConfigSchema,
 } from "./config-schema.js";
 
-describe("paperclip config schema", () => {
+describe("bionic config schema", () => {
   it("defaults omitted runtime paths to legacy instance-root locations", () => {
-    const parsed = paperclipConfigSchema.parse({
+    const parsed = bionicConfigSchema.parse({
       $meta: {
         version: 1,
         updatedAt: "2026-05-10T00:00:00.000Z",
@@ -22,15 +22,15 @@ describe("paperclip config schema", () => {
       server: {},
     });
 
-    expect(parsed.database.embeddedPostgresDataDir).toBe("~/.paperclip/instances/default/db");
-    expect(parsed.database.backup.dir).toBe("~/.paperclip/instances/default/data/backups");
-    expect(parsed.logging.logDir).toBe("~/.paperclip/instances/default/logs");
-    expect(parsed.storage.localDisk.baseDir).toBe("~/.paperclip/instances/default/data/storage");
-    expect(parsed.secrets.localEncrypted.keyFilePath).toBe("~/.paperclip/instances/default/secrets/master.key");
+    expect(parsed.database.embeddedPostgresDataDir).toBe("~/.bionic/instances/default/db");
+    expect(parsed.database.backup.dir).toBe("~/.bionic/instances/default/data/backups");
+    expect(parsed.logging.logDir).toBe("~/.bionic/instances/default/logs");
+    expect(parsed.storage.localDisk.baseDir).toBe("~/.bionic/instances/default/data/storage");
+    expect(parsed.secrets.localEncrypted.keyFilePath).toBe("~/.bionic/instances/default/secrets/master.key");
   });
 
   it("retains extension keys at the top level and every nested config boundary", () => {
-    const parsed = paperclipConfigSchema.parse({
+    const parsed = bionicConfigSchema.parse({
       $meta: {
         version: 1,
         updatedAt: "2026-05-10T00:00:00.000Z",
@@ -81,7 +81,7 @@ describe("paperclip config schema", () => {
   });
 
   it("merges retained extensions without resurrecting removed known fields", () => {
-    const source = paperclipConfigSchema.parse({
+    const source = bionicConfigSchema.parse({
       $meta: {
         version: 1,
         updatedAt: "2026-05-10T00:00:00.000Z",
@@ -97,7 +97,7 @@ describe("paperclip config schema", () => {
       server: { port: 3100, serverExtension: "keep" },
       topLevelExtension: "keep",
     });
-    const update = paperclipConfigSchema.parse({
+    const update = bionicConfigSchema.parse({
       ...source,
       llm: {
         provider: "openai",

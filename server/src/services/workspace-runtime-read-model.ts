@@ -1,9 +1,9 @@
-import type { Db } from "@paperclipai/db";
-import { workspaceRuntimeServices } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { workspaceRuntimeServices } from "@bionicai/db";
 import {
   listWorkspaceServiceCommandDefinitions,
   matchWorkspaceRuntimeServiceToCommand,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
 type WorkspaceRuntimeServiceRow = typeof workspaceRuntimeServices.$inferSelect;

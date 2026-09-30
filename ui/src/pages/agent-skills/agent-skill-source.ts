@@ -1,6 +1,6 @@
 import { Boxes, Folder, Link2, Paperclip, type LucideIcon } from "lucide-react";
 import { GithubIcon } from "@/components/icons/github-icon";
-import type { CompanySkillListItem } from "@paperclipai/shared";
+import type { CompanySkillListItem } from "@bionicai/shared";
 
 export interface AgentSkillSourceMeta {
   icon: LucideIcon;
@@ -103,8 +103,8 @@ export function buildAgentSkillSourceMeta(skill: SourceSkill): AgentSkillSourceM
     return { icon: Link2, label: hostLabel(skill.sourceLabel) ?? hostLabel(skill.sourceLocator) ?? "URL" };
   }
 
-  if (skill.sourceBadge === "paperclip") {
-    return { icon: Paperclip, label: skill.sourceLabel?.trim() || "Paperclip managed" };
+  if (skill.sourceBadge === "bionic") {
+    return { icon: Paperclip, label: skill.sourceLabel?.trim() || "Bionic managed" };
   }
 
   if (skill.sourceBadge === "catalog" || skill.sourceType === "catalog") {

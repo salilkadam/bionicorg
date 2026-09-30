@@ -4,13 +4,13 @@ import { fileURLToPath } from "node:url";
 import type {
   AdapterSkillContext,
   AdapterSkillSnapshot,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import {
   buildRuntimeMountedSkillSnapshot,
   readPaperclipRuntimeSkillEntries,
   readInstalledSkillTargets,
   resolveLegacyPaperclipDesiredSkillNames,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,10 +37,10 @@ async function buildClaudeSkillSnapshot(config: Record<string, unknown>): Promis
     adapterType: "claude_local",
     availableEntries,
     desiredSkills,
-    configuredDetail: "Will be materialized into the stable Paperclip-managed Claude prompt bundle on the next run.",
+    configuredDetail: "Will be materialized into the stable Bionic-managed Claude prompt bundle on the next run.",
     externalInstalled: installed,
     externalLocationLabel: "~/.claude/skills",
-    externalDetail: "Installed outside Paperclip management in the Claude skills home.",
+    externalDetail: "Installed outside Bionic management in the Claude skills home.",
     skillsHome,
   });
 }

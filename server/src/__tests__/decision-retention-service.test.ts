@@ -8,7 +8,7 @@ import {
   decisionArchiveNotificationOutbox,
   decisionRetention,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { getEmbeddedPostgresTestSupport, startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import { attentionService } from "../services/attention.js";
 import { decisionRetentionService } from "../services/decision-retention.js";
@@ -21,7 +21,7 @@ describePg("decision retention", () => {
   let db: ReturnType<typeof createDb>;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-decision-retention-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-decision-retention-");
     db = createDb(tempDb.connectionString);
   }, 30_000);
 

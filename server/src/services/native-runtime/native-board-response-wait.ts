@@ -12,7 +12,7 @@ import {
   nativeRunResults,
   statusDecisions,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { nativeSha256 } from "./canonical.js";
 import { isConversation } from "../agent-conversations.js";
 
@@ -30,7 +30,7 @@ function record(value: unknown): Record<string, unknown> {
 
 /** A server-issued decision receipt, never a caller/context-supplied grant. */
 export interface NativeBoardResponseWaitSource extends Binding {
-  schema: "paperclip.native_board_response_wait.v1";
+  schema: "bionic.native_board_response_wait.v1";
   wakeupRequestId: string;
   sourceCommentId: string;
   sourceUserId: string;
@@ -45,7 +45,7 @@ export type NativeBoardResponseWaitOrigin = Omit<
   NativeBoardResponseWaitSource,
   "schema" | "sourceSha256"
 > & {
-  schema: "paperclip.native_board_response_wait_origin.v1";
+  schema: "bionic.native_board_response_wait_origin.v1";
 };
 
 /**
@@ -137,7 +137,7 @@ export async function readNativeBoardResponseWaitOrigin(
   const terminal = record(record(row.result.resultJson).terminal);
   const continuation = record(result.continuation);
   if (
-    result.schema !== "paperclip.run_result.v1" ||
+    result.schema !== "bionic.run_result.v1" ||
     result.reportedWorkDisposition !== "yielded" ||
     continuation.kind !== "response_wake" ||
     typeof continuation.idempotencyKey !== "string" ||
@@ -150,7 +150,7 @@ export async function readNativeBoardResponseWaitOrigin(
   )
     return null;
   return {
-    schema: "paperclip.native_board_response_wait_origin.v1",
+    schema: "bionic.native_board_response_wait_origin.v1",
     companyId: binding.companyId,
     issueId: binding.issueId,
     runId: binding.runId,
@@ -339,7 +339,7 @@ export async function readNativeBoardResponseWaitSource(
   const terminal = record(envelope.terminal);
   const continuation = record(result.continuation);
   if (
-    result.schema !== "paperclip.run_result.v1" ||
+    result.schema !== "bionic.run_result.v1" ||
     result.reportedWorkDisposition !== "yielded" ||
     continuation.kind !== "response_wake" ||
     typeof continuation.idempotencyKey !== "string" ||
@@ -355,7 +355,7 @@ export async function readNativeBoardResponseWaitSource(
     return null;
   return {
     source: {
-      schema: "paperclip.native_board_response_wait.v1",
+      schema: "bionic.native_board_response_wait.v1",
       companyId: binding.companyId,
       issueId: binding.issueId,
       runId: binding.runId,

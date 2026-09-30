@@ -14,12 +14,12 @@
  *
  * Usage:
  *   tsx packages/db/scripts/clean-poisoned-claude-sessions.ts \
- *     --config /path/to/paperclip/config.json \
+ *     --config /path/to/bionic/config.json \
  *     [--claude-config-dir ~/.claude] \
  *     [--dry-run] [--json]
  *
- * Or in a Paperclip checkout shell:
- *   pnpm --filter @paperclipai/db exec tsx scripts/clean-poisoned-claude-sessions.ts --dry-run
+ * Or in a Bionic checkout shell:
+ *   pnpm --filter @bionicai/db exec tsx scripts/clean-poisoned-claude-sessions.ts --dry-run
  *
  * Exits 0 on success even when nothing was healed. Idempotent.
  */
@@ -193,8 +193,8 @@ const USAGE = `Usage:
   tsx packages/db/scripts/clean-poisoned-claude-sessions.ts [flags]
 
 Flags:
-  --config <path>            Path to paperclip config.json (defaults to
-                             $PAPERCLIP_HOME/instances/default/config.json or
+  --config <path>            Path to bionic config.json (defaults to
+                             $BIONIC_HOME/instances/default/config.json or
                              the standard locations).
   --database-url <url>       Override DB connection string entirely.
   --claude-config-dir <path> Override Claude CLI config dir (default:
@@ -220,16 +220,16 @@ function readDatabaseUrlFromConfig(configPath: string): string {
     return parsed.database.connectionString;
   }
   const port = parsed.database?.embeddedPostgresPort ?? 54329;
-  return `postgres://paperclip:paperclip@127.0.0.1:${port}/paperclip`;
+  return `postgres://bionic:bionic@127.0.0.1:${port}/bionic`;
 }
 
 function defaultConfigPath(): string | null {
   const candidates: string[] = [];
   const home = os.homedir();
-  if (process.env.PAPERCLIP_HOME) {
-    candidates.push(path.join(process.env.PAPERCLIP_HOME, "config.json"));
+  if (process.env.BIONIC_HOME) {
+    candidates.push(path.join(process.env.BIONIC_HOME, "config.json"));
   }
-  candidates.push(path.join(home, ".paperclip", "instances", "default", "config.json"));
+  candidates.push(path.join(home, ".bionic", "instances", "default", "config.json"));
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) return candidate;
   }
@@ -289,7 +289,7 @@ async function main(argv: string[]): Promise<void> {
     (configPath ? readDatabaseUrlFromConfig(configPath) : null);
   if (!databaseUrl) {
     throw new Error(
-      "Unable to resolve database URL. Pass --database-url or --config <paperclip config.json>.",
+      "Unable to resolve database URL. Pass --database-url or --config <bionic config.json>.",
     );
   }
   const claudeConfigDir = resolveClaudeConfigDir(process.env, args.claudeConfigDir ?? undefined);

@@ -9,7 +9,7 @@ import type {
   ToolProfileNewToolsReview,
   ToolProfileSummary,
   ToolProfileWithDetails,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { queryKeys } from "@/lib/queryKeys";
 import { AgentToolsTab } from "@/pages/AgentToolsTab";
 import { ProfileDetail } from "@/pages/tools/profiles/ProfileDetail";
@@ -276,7 +276,7 @@ const CONNECTIONS: ToolConnection[] = [
     ownership: "customer",
     transport: "mcp_remote",
     authKind: "oauth",
-    credentialSource: "paperclip_vault",
+    credentialSource: "bionic_vault",
     credentialPolicy: "per_user",
     status: "active",
     transportConfig: {},
@@ -313,7 +313,7 @@ const CONNECTIONS: ToolConnection[] = [
     ownership: "customer",
     transport: "mcp_remote",
     authKind: "oauth",
-    credentialSource: "paperclip_vault",
+    credentialSource: "bionic_vault",
     credentialPolicy: "per_user",
     status: "active",
     transportConfig: {},

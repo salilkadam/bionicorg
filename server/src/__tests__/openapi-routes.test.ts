@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { COMPANY_IMPORT_TRANSFERS_ROUTE_PATH } from "@paperclipai/shared/company-import-transfer";
+import { COMPANY_IMPORT_TRANSFERS_ROUTE_PATH } from "@bionicai/shared/company-import-transfer";
 import { errorHandler } from "../middleware/index.js";
 import { buildOpenApiSpec, openApiRoutes } from "../routes/openapi.js";
 
@@ -93,7 +93,7 @@ const explicitOpenApiCoverageExclusions = new Set<string>();
 
 const explicitOpenApiOperationCoverageExclusions = new Set([
   // This endpoint is authenticated by the provider signature rather than by a
-  // Paperclip board/agent credential. It intentionally stays out of the public
+  // Bionic board/agent credential. It intentionally stays out of the public
   // board API document, while this exact exclusion keeps route coverage honest.
   "POST /api/chat-webhooks/agentmail/{publicId}",
   "POST /api/chat-webhooks/{publicId}/{provider}",
@@ -235,7 +235,7 @@ describe("openapi routes", () => {
     const dismiss = spec.paths["/api/announcements/{id}/dismiss"].post;
     for (const operation of [current, image, animation, dismiss]) {
       expect(operation.security).toEqual([{ BoardSessionAuth: [] }, { BoardApiKeyAuth: [] }]);
-      expect(operation["x-paperclip-authorization"]).toEqual({ actor: "board" });
+      expect(operation["x-bionic-authorization"]).toEqual({ actor: "board" });
       const success = operation.responses["200"] ?? operation.responses["204"];
       expect(success.headers["Cache-Control"].schema.enum).toEqual(["private, no-store"]);
     }
@@ -263,7 +263,7 @@ describe("openapi routes", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.openapi).toBe("3.0.0");
-    expect(res.body.info.title).toBe("Paperclip API");
+    expect(res.body.info.title).toBe("Bionic API");
     expect(res.body.paths["/api/openapi.json"].get.summary).toBe(
       "Get the generated OpenAPI document",
     );
@@ -280,7 +280,7 @@ describe("openapi routes", () => {
     });
     expect(res.body.paths["/api/health"].get.security).toEqual([]);
     expect(res.body.paths["/api/mcp/project-tools"].post.security).toEqual([{ AgentRunAuth: [] }]);
-    expect(res.body.paths["/api/mcp/project-tools"].post["x-paperclip-authorization"]).toEqual({ actor: "agent", heartbeatBound: true, taskBound: true });
+    expect(res.body.paths["/api/mcp/project-tools"].post["x-bionic-authorization"]).toEqual({ actor: "agent", heartbeatBound: true, taskBound: true });
     expect(res.body.paths["/mcp/gateways/{gatewayPublicId}"].post.security).toEqual([]);
     expect(res.body.paths["/api/mcp/gateways/{gatewayPublicId}"]).toBeUndefined();
     expect(res.body.paths["/api/companies"].get.parameters).toContainEqual({
@@ -471,7 +471,7 @@ describe("openapi routes", () => {
         operation.security,
         `${method.toUpperCase()} ${routePath} is board-only`,
       ).toEqual(boardSecurity);
-      expect(operation["x-paperclip-authorization"]).toEqual({
+      expect(operation["x-bionic-authorization"]).toEqual({
         actor: "board",
       });
       expect(operation.tags).toContain("chat-channels");
@@ -747,7 +747,7 @@ describe("openapi routes", () => {
     const discovery = spec.paths["/api/companies/{companyId}/project-repositories"].get;
     const replacement = spec.paths["/api/projects/{id}/repositories"].put;
     for (const operation of [discovery, replacement]) {
-      expect(operation["x-paperclip-authorization"]).toEqual({ actor: "board" });
+      expect(operation["x-bionic-authorization"]).toEqual({ actor: "board" });
       expect(operation.security).toEqual([{ BoardSessionAuth: [] }, { BoardApiKeyAuth: [] }]);
     }
     expect(replacement.requestBody.content["application/json"].schema.required).toContain("repositoryIds");
@@ -766,7 +766,7 @@ describe("openapi routes", () => {
       { BoardApiKeyAuth: [] },
     ]);
     expect(
-      spec.paths["/api/plugins/install"].post["x-paperclip-authorization"],
+      spec.paths["/api/plugins/install"].post["x-bionic-authorization"],
     ).toEqual({
       actor: "board",
       instanceAdmin: true,
@@ -777,7 +777,7 @@ describe("openapi routes", () => {
     ).toEqual([{ BoardSessionAuth: [] }, { BoardApiKeyAuth: [] }]);
     expect(
       spec.paths["/api/execution-workspaces/{id}/reconcile-branch"].post[
-        "x-paperclip-authorization"
+        "x-bionic-authorization"
       ],
     ).toEqual({
       actor: "board",

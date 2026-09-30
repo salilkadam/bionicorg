@@ -52,7 +52,7 @@ async function main() {
   const dbUrl =
     config.database?.mode === "postgres"
       ? config.database.connectionString
-      : `postgres://paperclip:paperclip@127.0.0.1:${embeddedPort}/paperclip`;
+      : `postgres://bionic:bionic@127.0.0.1:${embeddedPort}/bionic`;
   if (!dbUrl) {
     throw new Error(`Could not resolve database connection from ${configPath}`);
   }

@@ -9,7 +9,7 @@ import {
   getSshEnvLabSupport,
   startSshEnvLabFixture,
   stopSshEnvLabFixture,
-} from "@paperclipai/adapter-utils/ssh";
+} from "@bionicai/adapter-utils/ssh";
 import {
   agents,
   builtInManagedResources,
@@ -24,7 +24,7 @@ import {
   issues,
   plugins,
   projects,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -49,7 +49,7 @@ import {
   getActiveStepContext,
   runWithRuntimeParent,
   type StartupSpanContext,
-} from "@paperclipai/adapter-utils/acpx-engine/startup-timing";
+} from "@bionicai/adapter-utils/acpx-engine/startup-timing";
 import { traceparentFromContextToken } from "../instrumentation.ts";
 import { ROOT_CONTEXT, trace } from "@opentelemetry/api";
 import { buildNativeHarnessBackupManifest } from "../services/native-runtime/native-session-executor.ts";
@@ -382,7 +382,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Reusable Sandbox Provider",
         description: "Test provider with reusable lease support",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -468,7 +468,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   }
 
   it("acquires and resumes a reusable lease after a task changes from per-turn to warm", async () => {
-    const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
+    const seeded = await seedReusablePluginSandboxLease("bionic_runner");
     await environmentService(db).releaseLease(seeded.reusableLease.id, "expired");
     const environment = { ...seeded.environment, config: { ...seeded.environment.config, reuseLease: false } };
     await environmentService(db).update(environment.id, { config: environment.config });
@@ -494,12 +494,12 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     } as unknown as PluginWorkerManager });
     const input = {
       companyId: seeded.companyId, agentId: seeded.agentId, issueId,
-      adapterType: "paperclip_runner", persistedExecutionWorkspace: { id: seeded.executionWorkspaceId, mode: "shared_workspace" as const },
+      adapterType: "bionic_runner", persistedExecutionWorkspace: { id: seeded.executionWorkspaceId, mode: "shared_workspace" as const },
     };
     const cold = await runtime.acquireRunLease({ ...input, environment, heartbeatRunId: seeded.runId });
     expect(cold.lease.leasePolicy).toBe("ephemeral");
     await runtime.releaseRunLeases(seeded.runId, "released");
-    const warmEnvironment = resolveRunnerEnvironmentForRun(environment, "paperclip_runner", { lifecycleMode: "warm" });
+    const warmEnvironment = resolveRunnerEnvironmentForRun(environment, "bionic_runner", { lifecycleMode: "warm" });
     const warmRunId = randomUUID();
     await db.insert(heartbeatRuns).values({ id: warmRunId, companyId: seeded.companyId, agentId: seeded.agentId, status: "running" });
     const warm = await runtime.acquireRunLease({ ...input, environment: warmEnvironment, heartbeatRunId: warmRunId });
@@ -546,7 +546,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
 
   it.each(["release_only", "stopped", "stop_failed", "unconfirmed", "restart", "competing_owner", "missing_pin", "late_receipt"])(
     "never dispatches destructive release for an untagged stop-and-retain request: %s", async outcome => {
-      const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
+      const seeded = await seedReusablePluginSandboxLease("bionic_runner");
       const lease = seeded.reusableLease;
       await db.update(environmentLeases).set({ leasePolicy: "ephemeral", metadata: {
         ...lease.metadata, reuseLease: false, ...(outcome === "missing_pin" ? { pluginId: undefined } : {}),
@@ -714,7 +714,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     })));
     const nextAgentId = scenario === "different agent" ? randomUUID() : seeded.agentId;
     if (nextAgentId !== seeded.agentId) await db.insert(agents).values({
-      id: nextAgentId, companyId: seeded.companyId, name: "Other agent", adapterType: "paperclip_runner",
+      id: nextAgentId, companyId: seeded.companyId, name: "Other agent", adapterType: "bionic_runner",
     });
     let acquisitions = 0;
     const call = vi.fn(async (_pluginId: string, method: string) => {
@@ -768,15 +768,15 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     const seeded = await seedReusablePluginSandboxLease();
     await environmentService(db).releaseLease(seeded.reusableLease.id, "expired");
     const attemptId = randomUUID();
-    const providerLeaseId = `paperclip-create-${attemptId}`;
+    const providerLeaseId = `bionic-create-${attemptId}`;
     const cleanup = {
       providerLeaseId, attemptId, companyId: mode === "foreign scope" ? randomUUID() : seeded.companyId,
       environmentId: mode === "foreign environment" ? randomUUID() : seeded.environment.id,
       runId: mode === "foreign run" ? randomUUID() : seeded.runId,
-      accountFingerprint: mode === "malformed" ? "invalid" : "a".repeat(64), labels: { "paperclip-provider": "fake-plugin" },
+      accountFingerprint: mode === "malformed" ? "invalid" : "a".repeat(64), labels: { "bionic-provider": "fake-plugin" },
     };
     const failure = Object.assign(new Error("Provider creation cleanup required"), {
-      data: { schema: "paperclip/environment-creation-cleanup/v1", cleanup },
+      data: { schema: "bionic/environment-creation-cleanup/v1", cleanup },
     });
     let available = mode === "inline";
     const call = vi.fn(async (_id: string, method: string, params: Record<string, unknown>) => {
@@ -828,13 +828,13 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
       const seeded = await seedReusablePluginSandboxLease();
       await environmentService(db).releaseLease(seeded.reusableLease.id, "expired");
       const cleanup = {
-        providerLeaseId: `paperclip-create-${randomUUID()}`, attemptId: randomUUID(),
+        providerLeaseId: `bionic-create-${randomUUID()}`, attemptId: randomUUID(),
         companyId: seeded.companyId, environmentId: seeded.environment.id, runId: seeded.runId,
-        accountFingerprint: "a".repeat(64), labels: { "paperclip-provider": "fake-plugin" },
+        accountFingerprint: "a".repeat(64), labels: { "bionic-provider": "fake-plugin" },
       };
       const observed = { ...cleanup, observedProviderLeaseId: "verified-provider-id" };
       const failure = Object.assign(new Error("Creation uncertain"), {
-        data: { schema: "paperclip/environment-creation-cleanup/v1", cleanup },
+        data: { schema: "bionic/environment-creation-cleanup/v1", cleanup },
       });
       let injected = false;
       let deleted = false;
@@ -851,7 +851,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
           if (!injected && fault === "foreign observation") {
             injected = true;
             throw Object.assign(new Error("Foreign observation"), {
-              data: { schema: "paperclip/environment-creation-cleanup/v1", cleanup: { ...observed, companyId: "another-company" } },
+              data: { schema: "bionic/environment-creation-cleanup/v1", cleanup: { ...observed, companyId: "another-company" } },
             });
           }
           if (!injected && fault === "journal write failed") {
@@ -859,7 +859,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
             vi.spyOn(db, "update").mockImplementationOnce(() => { throw new Error("Database unavailable"); });
           }
           throw Object.assign(new Error("Persist observed sandbox identity before cleanup"), {
-            data: { schema: "paperclip/environment-creation-cleanup/v1", cleanup: observed },
+            data: { schema: "bionic/environment-creation-cleanup/v1", cleanup: observed },
           });
         }
         const rows = await db.select().from(environmentLeases).where(eq(environmentLeases.providerLeaseId, cleanup.providerLeaseId));
@@ -940,7 +940,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
       },
     });
     const workspaceSyncStamp = {
-      schema: "paperclip.native-workspace-stamp/v1",
+      schema: "bionic.native-workspace-stamp/v1",
       workspaceId: seeded.executionWorkspaceId,
       providerLeaseId: "sandbox-exact-resume",
       remoteCwd: "/workspace",
@@ -1071,7 +1071,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     );
   });
 
-  it("destroys a disposable paperclip_runner sandbox after the turn", async () => {
+  it("destroys a disposable bionic_runner sandbox after the turn", async () => {
     const { pluginId, runId, reusableLease } = await seedReusablePluginSandboxLease();
     const workerManager = {
       isRunning: vi.fn((id: string) => id === pluginId),
@@ -1117,7 +1117,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
           string,
           unknown
         >) ?? {}),
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
       },
       sandboxLeaseAcquisition: { outcome: "created" },
     });
@@ -1211,7 +1211,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         host: "ssh.example.test",
         port: 22,
         username: "ssh-user",
-        remoteWorkspacePath: "/srv/paperclip/workspace",
+        remoteWorkspacePath: "/srv/bionic/workspace",
         privateKey: null,
         knownHosts: null,
         strictHostKeyChecking: true,
@@ -1251,7 +1251,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
       return;
     }
 
-    const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "paperclip-environment-runtime-ssh-"));
+    const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "bionic-environment-runtime-ssh-"));
     fixtureRoots.push(fixtureRoot);
     const statePath = path.join(fixtureRoot, "state.json");
     const fixture = await startSshEnvLabFixture({ statePath });
@@ -1478,18 +1478,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -1819,18 +1819,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -2596,18 +2596,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -2963,18 +2963,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-ready-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-ready-sandbox",
+      pluginKey: "bionic.fake-plugin-ready-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-ready-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-ready-sandbox-provider",
+        id: "bionic.fake-plugin-ready-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Ready Sandbox Provider",
         description: "Test fake plugin provider readiness",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -3062,18 +3062,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-reload-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-reload-sandbox",
+      pluginKey: "bionic.fake-plugin-reload-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-reload-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-reload-sandbox-provider",
+        id: "bionic.fake-plugin-reload-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Reload Sandbox Provider",
         description: "Test fake plugin provider reload readiness",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -3180,18 +3180,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     // provider and the probe reports ready.
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-missing-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-missing-sandbox",
+      pluginKey: "bionic.fake-plugin-missing-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-missing-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-missing-sandbox-provider",
+        id: "bionic.fake-plugin-missing-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Missing Sandbox Provider",
         description: "Test fake plugin provider missing readiness",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -3306,7 +3306,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   // orphan teardown must resolve that recorded ref even when the environment
   // binding is gone, so these tests register a provider with a real secret-ref
   // field, unlike the plain `fake-plugin` tests above.
-  const SECRET_REF_PLUGIN_KEY = "paperclip.secret-plugin-sandbox-provider";
+  const SECRET_REF_PLUGIN_KEY = "bionic.secret-plugin-sandbox-provider";
   const SECRET_REF_PROVIDER = "secret-plugin";
 
   async function registerSecretRefPluginProvider(): Promise<string> {
@@ -3314,7 +3314,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     await db.insert(plugins).values({
       id: pluginId,
       pluginKey: SECRET_REF_PLUGIN_KEY,
-      packageName: "@paperclipai/plugin-secret-sandbox",
+      packageName: "@bionicai/plugin-secret-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
@@ -3324,7 +3324,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Secret Plugin Sandbox Provider",
         description: "Test plugin provider with a secret-ref config field",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -3570,18 +3570,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -3694,18 +3694,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -3833,18 +3833,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -4152,18 +4152,18 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     });
     await db.insert(plugins).values({
       id: pluginId,
-      pluginKey: "paperclip.fake-plugin-sandbox-provider",
-      packageName: "@paperclipai/plugin-fake-sandbox",
+      pluginKey: "bionic.fake-plugin-sandbox-provider",
+      packageName: "@bionicai/plugin-fake-sandbox",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
       manifestJson: {
-        id: "paperclip.fake-plugin-sandbox-provider",
+        id: "bionic.fake-plugin-sandbox-provider",
         apiVersion: 1,
         version: "1.0.0",
         displayName: "Fake Plugin Sandbox Provider",
         description: "Test fake plugin provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -4396,7 +4396,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Secure Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -4550,7 +4550,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Secure Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -4895,7 +4895,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Long Lease Sandbox Provider",
         description: "Test plugin worker acquire timeout",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -4993,7 +4993,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Fake Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -5136,7 +5136,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   });
 
   it("resumes only the exact stopped sandbox lifecycle without acquiring or reseeding", async () => {
-    const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
+    const seeded = await seedReusablePluginSandboxLease("bionic_runner");
     await environmentService(db).releaseLease(seeded.reusableLease.id, "released", { cleanupStatus: "success" });
     const lease = (await environmentService(db).getLeaseById(seeded.reusableLease.id))!;
     const call = vi.fn(async (_id: string, method: string) => {
@@ -5158,7 +5158,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   });
 
   it.each(["stopped", "unconfirmed", "foreign_marker", "competing_owner", "retained_owner", "no_stop_capability", "live_request", "late_receipt", "duplicate_key", "owner_stopped", "owner_driver_changed", "owner_missing", "legacy_intent", "foreign_plugin_pin", "v2_missing_pin"])("recovers a pending export resume with stop-only cleanup after restart: %s", async outcome => {
-    const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
+    const seeded = await seedReusablePluginSandboxLease("bionic_runner");
     const lease = seeded.reusableLease;
     const requestId = randomUUID();
     if (["duplicate_key", "owner_stopped", "owner_driver_changed", "owner_missing", "legacy_intent"].includes(outcome)) {
@@ -5170,7 +5170,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     }
     await db.update(environmentLeases).set({ status: "pending_cleanup", cleanupStatus: "failed", metadata: {
       ...lease.metadata,
-      nativeWorkspaceExportResume: { schema: outcome === "v2_missing_pin" ? "paperclip.workspace-export-resume.v2" : "paperclip.workspace-export-resume.v1", requestId, companyId: seeded.companyId,
+      nativeWorkspaceExportResume: { schema: outcome === "v2_missing_pin" ? "bionic.workspace-export-resume.v2" : "bionic.workspace-export-resume.v1", requestId, companyId: seeded.companyId,
         ...(["legacy_intent", "v2_missing_pin"].includes(outcome) ? {} : { pluginId: outcome === "foreign_plugin_pin" ? randomUUID() : seeded.pluginId }),
         runId: outcome === "foreign_marker" ? randomUUID() : lease.heartbeatRunId, leaseId: lease.id,
         provider: lease.provider, providerLeaseId: lease.providerLeaseId, resultId: randomUUID() },
@@ -5209,12 +5209,12 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   });
 
   it.each(["stopped", "stop_failed", "unconfirmed", "restart", "committed_release", "inflight"])("preserves terminal ephemeral export work through release and restart: %s", async outcome => {
-    const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
+    const seeded = await seedReusablePluginSandboxLease("bionic_runner");
     const lease = seeded.reusableLease, requestId = randomUUID();
     await db.update(heartbeatRuns).set({ status: outcome === "committed_release" ? "succeeded" : "failed" }).where(eq(heartbeatRuns.id, seeded.runId));
     await db.update(environmentLeases).set({ status: outcome === "committed_release" ? "active" : "pending_cleanup", leasePolicy: "ephemeral", cleanupStatus: "failed", metadata: {
       ...lease.metadata, reuseLease: false,
-      nativeWorkspaceExportResume: { schema: "paperclip.workspace-export-resume.v2", purpose: "terminal_export", requestId,
+      nativeWorkspaceExportResume: { schema: "bionic.workspace-export-resume.v2", purpose: "terminal_export", requestId,
         companyId: seeded.companyId, pluginId: seeded.pluginId, runId: seeded.runId, resultId: randomUUID(),
         leaseId: lease.id, provider: lease.provider, providerLeaseId: lease.providerLeaseId },
       pendingCleanupAttemptId: requestId, pendingCleanupInFlight: outcome === "inflight",
@@ -5243,7 +5243,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   });
 
   it("does not allocate a native-runner replacement without a verified backup", async () => {
-    const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
+    const seeded = await seedReusablePluginSandboxLease("bionic_runner");
     const workerManager = {
       isRunning: vi.fn((id: string) => id === seeded.pluginId),
       call: vi.fn(async (_pluginId: string, method: string) => {
@@ -5271,7 +5271,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
       environment: seeded.environment,
       issueId: null,
       agentId: seeded.agentId,
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       heartbeatRunId: seeded.runId,
       persistedExecutionWorkspace: {
         id: seeded.executionWorkspaceId,
@@ -5294,10 +5294,10 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
   });
 
   it("permits native-runner replacement only after verifying the stamped backup", async () => {
-    const seeded = await seedReusablePluginSandboxLease("paperclip_runner");
-    const backupBase = await mkdtemp(path.join(os.tmpdir(), "paperclip-runtime-replacement-"));
-    const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
-    process.env.PAPERCLIP_RUNNER_STATE_DIR = backupBase;
+    const seeded = await seedReusablePluginSandboxLease("bionic_runner");
+    const backupBase = await mkdtemp(path.join(os.tmpdir(), "bionic-runtime-replacement-"));
+    const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
+    process.env.BIONIC_RUNNER_STATE_DIR = backupBase;
     try {
       const normalizedSessionId = "native-replacement-session";
       const runnerInstanceId = "native-replacement-runner";
@@ -5389,7 +5389,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         environment: seeded.environment,
         issueId: null,
         agentId: seeded.agentId,
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         heartbeatRunId: seeded.runId,
         persistedExecutionWorkspace: {
           id: seeded.executionWorkspaceId,
@@ -5404,9 +5404,9 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
       });
     } finally {
       if (previousStateDirectory === undefined) {
-        delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
+        delete process.env.BIONIC_RUNNER_STATE_DIR;
       } else {
-        process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+        process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
       }
       await rm(backupBase, { recursive: true, force: true });
     }
@@ -5445,7 +5445,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Fake Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -5650,7 +5650,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Fake Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -5813,7 +5813,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Fake Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -6001,7 +6001,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Secure Sandbox Provider",
         description: "Test schema-driven provider",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -6223,7 +6223,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Non-reusable Sandbox Provider",
         description: "Test provider without reusable lease support",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -6369,7 +6369,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Nested-disabled Sandbox Provider",
         description: "Test provider with a legacy flag and a disabled nested capability",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -6531,7 +6531,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Unverified-worker Sandbox Provider",
         description: "Test provider that declares reusable leases but whose worker lacks the reuse methods",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -6774,7 +6774,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
       status: "expired",
       failureReason: "environment_deleted",
       cleanupStatus: "success",
-      metadata: { remoteExecutionTermination: { schema: "paperclip.remote-termination.v1",
+      metadata: { remoteExecutionTermination: { schema: "bionic.remote-termination.v1",
         leaseId: reusableLease.id, runId, providerLeaseId: reusableLease.providerLeaseId, state: "destroyed" } },
     });
   });
@@ -6957,7 +6957,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
           version: "1.0.0",
           displayName: "Reusable Sandbox Provider",
           description: "Owner plugin that denies reusable leases",
-          author: "Paperclip",
+          author: "Bionic",
           categories: ["automation"],
           capabilities: ["environment.drivers.register"],
           entrypoints: { worker: "dist/worker.js" },
@@ -6993,7 +6993,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
         version: "1.0.0",
         displayName: "Colliding Sandbox Provider",
         description: "Earlier plugin that shares the driver key",
-        author: "Paperclip",
+        author: "Bionic",
         categories: ["automation"],
         capabilities: ["environment.drivers.register"],
         entrypoints: { worker: "dist/worker.js" },
@@ -7096,7 +7096,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
           version: "1.0.0",
           displayName: "Reusable Sandbox Provider",
           description: "Owner plugin that no longer declares the provider key",
-          author: "Paperclip",
+          author: "Bionic",
           categories: ["automation"],
           capabilities: ["environment.drivers.register"],
           entrypoints: { worker: "dist/worker.js" },
@@ -7156,7 +7156,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
           version: "1.0.0",
           displayName: "Reusable Sandbox Provider",
           description: "Owner plugin that omits the capability declaration",
-          author: "Paperclip",
+          author: "Bionic",
           categories: ["automation"],
           capabilities: ["environment.drivers.register"],
           entrypoints: { worker: "dist/worker.js" },
@@ -7269,7 +7269,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     await db.insert(plugins).values({
       id: pluginId,
       pluginKey: "acme.environments",
-      packageName: "@acme/paperclip-environments",
+      packageName: "@acme/bionic-environments",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
@@ -7395,7 +7395,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     await db.insert(plugins).values({
       id: pluginId,
       pluginKey: "acme.environments",
-      packageName: "@acme/paperclip-environments",
+      packageName: "@acme/bionic-environments",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
@@ -7502,7 +7502,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     await db.insert(plugins).values({
       id: pluginId,
       pluginKey: "acme.environments",
-      packageName: "@acme/paperclip-environments",
+      packageName: "@acme/bionic-environments",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],
@@ -7657,7 +7657,7 @@ describeEmbeddedPostgres("environmentRuntimeService", () => {
     await db.insert(plugins).values({
       id: pluginId,
       pluginKey: "acme.environments",
-      packageName: "@acme/paperclip-environments",
+      packageName: "@acme/bionic-environments",
       version: "1.0.0",
       apiVersion: 1,
       categories: ["automation"],

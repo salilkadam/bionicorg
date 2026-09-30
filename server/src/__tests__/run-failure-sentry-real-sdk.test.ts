@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { collectRunFailureDiagnostics, sanitizeRunFailureDiagnostics } from "../services/run-failure-diagnostics.js";
-import type { heartbeatRuns } from "@paperclipai/db";
+import type { heartbeatRuns } from "@bionicai/db";
 
 // Sentry is an optional peer. When installed, exercise the real SDK with an
 // in-memory transport, including its context behavior without an OTel manager.
@@ -22,7 +22,7 @@ const sentryPackage = (() => {
   }
 })();
 
-if (process.env.PAPERCLIP_REQUIRE_SENTRY_TEST_SDK === "1" && !sentryPackage) {
+if (process.env.BIONIC_REQUIRE_SENTRY_TEST_SDK === "1" && !sentryPackage) {
   throw new Error("The Sentry SDK contract job requires the audited optional peer");
 }
 

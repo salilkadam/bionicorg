@@ -1,9 +1,9 @@
 /**
- * @deprecated Paperclip ID is identity-only. Import the Paperclip Cloud
- * connector names from `paperclip-cloud-connector.ts` for new code.
+ * @deprecated Bionic ID is identity-only. Import the Bionic Cloud
+ * connector names from `bionic-cloud-connector.ts` for new code.
  *
  * These aliases keep source compatibility while deployments and persisted app
- * definitions move from the former Paperclip ID broker prototype.
+ * definitions move from the former Bionic ID broker prototype.
  */
 export {
   GMAIL_CONNECTOR_SCOPES,
@@ -11,9 +11,9 @@ export {
   GOOGLE_WORKSPACE_CONNECTOR_PROFILES,
   PaperclipCloudConnectorError as PaperclipIdConnectorError,
   createPaperclipCloudConnector as createPaperclipIdGmailConnector,
-  paperclipCloudConnectorCapabilitiesFromEnv as paperclipIdGoogleConnectorCapabilitiesFromEnv,
-  paperclipCloudConnectorConfigFromEnv as paperclipIdGmailConnectorConfigFromEnv,
-} from "./paperclip-cloud-connector.js";
+  bionicCloudConnectorCapabilitiesFromEnv as bionicIdGoogleConnectorCapabilitiesFromEnv,
+  bionicCloudConnectorConfigFromEnv as bionicIdGmailConnectorConfigFromEnv,
+} from "./bionic-cloud-connector.js";
 
 export type {
   PaperclipCloudConnector as PaperclipIdGmailConnector,
@@ -23,4 +23,4 @@ export type {
   PaperclipCloudConnectorOperation as PaperclipIdConnectorOperation,
   SealedGmailCredentials,
   SealedGoogleWorkspaceCredentials,
-} from "./paperclip-cloud-connector.js";
+} from "./bionic-cloud-connector.js";

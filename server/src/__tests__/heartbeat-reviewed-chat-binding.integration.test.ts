@@ -19,8 +19,8 @@ import {
   companyMemberships,
   chatDeliveries,
   chatMessageLinks,
-} from "@paperclipai/db";
-import { renderPaperclipWakePrompt } from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/db";
+import { renderPaperclipWakePrompt } from "@bionicai/adapter-utils/server-utils";
 import { startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import {
   attestReviewedExternalChatRun,
@@ -79,7 +79,7 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
         id: agentId,
         companyId,
         name: "Chat runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: { provider: "codex" },
         status: "active",
       });
@@ -215,7 +215,7 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
         companyId,
         endpointId,
         principalId,
-        paperclipUserId: userId,
+        bionicUserId: userId,
         status: "linked",
       });
     await db
@@ -301,7 +301,7 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
       agentId,
       contextSnapshot: {
         ...context,
-        paperclipExternalChatExecutionBound: true,
+        bionicExternalChatExecutionBound: true,
       },
     });
     expect(wake).toMatchObject({
@@ -324,8 +324,8 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
       assigneeAgentId: agentId,
       contextSnapshot: {
         ...context,
-        paperclipHarnessCheckedOut: true,
-        paperclipExternalChatExecutionBound: true,
+        bionicHarnessCheckedOut: true,
+        bionicExternalChatExecutionBound: true,
       },
       reviewAttention: { state: "stalled", paths: [], reason: "Review path consumed" },
       existingWake: false,
@@ -347,8 +347,8 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
   it("reauthorizes a review recovery from its retained message batch without approving the task", async () => {
     const [before] = await db.select().from(issues).where(eq(issues.id, issueId));
     await withReviewRecovery(async (recovery) => {
-      expect(recovery).not.toHaveProperty("paperclipHarnessCheckedOut");
-      expect(recovery).not.toHaveProperty("paperclipExternalChatExecutionBound");
+      expect(recovery).not.toHaveProperty("bionicHarnessCheckedOut");
+      expect(recovery).not.toHaveProperty("bionicExternalChatExecutionBound");
       await expect(attest(recovery)).resolves.toBe(true);
       expect((await db.select().from(issues).where(eq(issues.id, issueId)))[0]).toEqual(before);
       expect((await db.select().from(issueThreadInteractions)
@@ -400,7 +400,7 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
       .where(eq(issues.id, issueId));
     try {
       await expect(
-        attest({ ...context, paperclipExternalChatExecutionBound: true }),
+        attest({ ...context, bionicExternalChatExecutionBound: true }),
       ).resolves.toBe(false);
     } finally {
       await db
@@ -415,7 +415,7 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
       attest({
         ...context,
         source: "chat:telegram",
-        paperclipExternalChatExecutionBound: true,
+        bionicExternalChatExecutionBound: true,
       }),
     ).resolves.toBe(false);
     await db
@@ -559,7 +559,7 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
       agentId,
       contextSnapshot: {
         ...context,
-        paperclipExternalChatExecutionBound: true,
+        bionicExternalChatExecutionBound: true,
       },
     });
     await db
@@ -567,8 +567,8 @@ describe.each(["slack", "discord"] as const)("reviewed %s execution binding", (p
       .set({
         contextSnapshot: {
           ...context,
-          paperclipExternalChatExecutionBound: true,
-          paperclipWake: { ...wake, fallbackFetchNeeded: true },
+          bionicExternalChatExecutionBound: true,
+          bionicWake: { ...wake, fallbackFetchNeeded: true },
         },
       })
       .where(eq(heartbeatRuns.id, runId));

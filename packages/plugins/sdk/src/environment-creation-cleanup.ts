@@ -11,7 +11,7 @@ export interface PluginEnvironmentCreationCleanup {
   labels: Record<string, string>;
 }
 
-const SCHEMA = "paperclip/environment-creation-cleanup/v1";
+const SCHEMA = "bionic/environment-creation-cleanup/v1";
 
 /**
  * Never serialize the provider exceptions: they may contain credentials.
@@ -48,7 +48,7 @@ export function readEnvironmentCreationCleanupError(error: unknown): PluginEnvir
   if (typeof row.accountFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(row.accountFingerprint)) return null;
   if (!row.labels || typeof row.labels !== "object" || Array.isArray(row.labels)) return null;
   const labels = row.labels as Record<string, unknown>;
-  if (Object.keys(labels).length > 16 || Object.entries(labels).some(([key, value]) => !/^paperclip-[a-z-]+$/.test(key) || !identifier(value))) return null;
+  if (Object.keys(labels).length > 16 || Object.entries(labels).some(([key, value]) => !/^bionic-[a-z-]+$/.test(key) || !identifier(value))) return null;
   return {
     providerLeaseId: row.providerLeaseId as string,
     ...(typeof row.observedProviderLeaseId === "string" ? { observedProviderLeaseId: row.observedProviderLeaseId } : {}),

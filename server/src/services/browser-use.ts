@@ -19,14 +19,14 @@ import {
   companies,
   costEvents,
   financeEvents,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   BROWSER_USE_IDLE_MS,
   type BrowserUseControl,
   type BrowserUseSettings,
   type BrowserUseViewportRequest,
   type TaskBrowser,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   browserUseClient,
   browserUseCostCap,
@@ -64,7 +64,7 @@ const argsSchema = z
   })
   .strict();
 const terminalSessions = ["closed", "failed"];
-const requestMarker = (invocationId: string) => `\n\n[Paperclip request: ${invocationId}]`;
+const requestMarker = (invocationId: string) => `\n\n[Bionic request: ${invocationId}]`;
 
 export function browserUseService(
   db: Db,
@@ -183,7 +183,7 @@ export function browserUseService(
   async function assertBinding(binding: Binding, approved = false) {
     if (!binding.issueId || !binding.agentId || !binding.runId)
       throw forbidden(
-        "Browser tasks require an active Paperclip task and agent run. Use browser_profiles for a connection test.",
+        "Browser tasks require an active Bionic task and agent run. Use browser_profiles for a connection test.",
       );
     const [issue] = await db
       .select()
@@ -505,7 +505,7 @@ export function browserUseService(
       // A lost create response can mean paid work exists. Never submit it again.
       const rejected = error instanceof BrowserUseError && error.requestRejected;
       const message = rejected ? error.message :
-        "Browser run creation could not be confirmed. Paperclip is locating and stopping possible provider work. Do not start another run yet.";
+        "Browser run creation could not be confirmed. Bionic is locating and stopping possible provider work. Do not start another run yet.";
       await db.transaction(async tx => {
         const [current] = await tx.select().from(sessions).where(eq(sessions.id, s.id)).for("update");
         // A restart must not leave a drained rejection attached to a starting
@@ -1197,7 +1197,7 @@ export function browserUseService(
         if (confirmed.status !== "stopped")
           throw new BrowserUseError(
             502,
-            "Browser shutdown is not confirmed. Paperclip will retry.",
+            "Browser shutdown is not confirmed. Bionic will retry.",
           );
         await db
           .update(browsers)
@@ -1305,8 +1305,8 @@ export function browserUseService(
             .set({
               error:
                 s.stopRequested === "end"
-                  ? "Browser shutdown is not confirmed. Paperclip will retry."
-                  : "Browser synchronization failed. Paperclip will retry.",
+                  ? "Browser shutdown is not confirmed. Bionic will retry."
+                  : "Browser synchronization failed. Bionic will retry.",
             })
             .where(eq(sessions.id, s.id));
         } finally {
@@ -1361,7 +1361,7 @@ export function browserUseService(
         .limit(1);
       if (pending)
         throw conflict(
-          "Browser access is disabled. Shutdown is still pending; retry removal after the browsers stop. Paperclip retains the key only for cleanup until then.",
+          "Browser access is disabled. Shutdown is still pending; retry removal after the browsers stop. Bionic retains the key only for cleanup until then.",
         );
     },
     async availableProfiles(

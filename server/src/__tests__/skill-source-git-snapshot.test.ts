@@ -25,7 +25,7 @@ let directory: string, commit: string, laterCommit: string;
 const git = (...args: string[]) => exec('git', ['-C', directory, '-c', 'user.name=Test', '-c', 'user.email=test@example.test', ...args]);
 const request = (values: Partial<Parameters<typeof openGitSkillSnapshot>[0]> = {}) => ({ repositoryUrl: 'https://github.com/acme/skills', ref: 'feature/skills', token: 'test-token-never-on-disk', cacheScope: 'company:alice', ...values });
 beforeAll(async () => {
-  directory = await mkdtemp(path.join(os.tmpdir(), 'paperclip-snapshot-fixture-'));
+  directory = await mkdtemp(path.join(os.tmpdir(), 'bionic-snapshot-fixture-'));
   interception.remote = directory;
   await git('init', '-b', 'feature/skills');
   await mkdir(path.join(directory, '.agents/deep/scripts'), { recursive: true });
@@ -58,7 +58,7 @@ describe('Git skill snapshots', () => {
     const fetch = interception.commands.find(command => command.args.includes('fetch'))!;
     expect(fetch.args).toContain('--depth=1');
     expect(fetch.args.join(' ')).not.toContain('test-token');
-    expect(fetch.env.PAPERCLIP_GIT_TOKEN).toBe('test-token-never-on-disk');
+    expect(fetch.env.BIONIC_GIT_TOKEN).toBe('test-token-never-on-disk');
     const authKey = Object.entries(fetch.env).find(([, value]) => value === 'http.https://github.com/.extraHeader')![0];
     expect(fetch.env[authKey.replace('_KEY_', '_VALUE_')]).toBe(`Authorization: Basic ${Buffer.from('x-access-token:test-token-never-on-disk').toString('base64')}`);
     expect(fetch.env.GIT_TRACE).toBeUndefined();

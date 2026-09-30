@@ -90,8 +90,8 @@ describe("runner API catalog", () => {
   });
   it.each(runnerApiCatalog().filter(operation => operation.transport === "rest"))("resolves the catalog route $operationId inside the bound origin", operation => {
     const pathParams = Object.fromEntries(operation.parameters.filter(parameter => parameter.in === "path").map(parameter => [parameter.name, parameter.name === "companyId" ? context.companyId : "fixture-id"]));
-    const url = runnerApiUrl(operation, { operationId: operation.operationId, pathParams }, context, "https://paperclip.test");
-    expect(url.origin).toBe("https://paperclip.test");
+    const url = runnerApiUrl(operation, { operationId: operation.operationId, pathParams }, context, "https://bionic.test");
+    expect(url.origin).toBe("https://bionic.test");
     expect(url.pathname).not.toContain("{");
     expect(operation.responses).toBeDefined();
     expect(operation.authorization.actor).toBeTruthy();
@@ -113,9 +113,9 @@ describe("runner API catalog", () => {
         operation,
         { operationId: operation.operationId, pathParams },
         context,
-        "https://paperclip.test",
+        "https://bionic.test",
       );
-      expect(url.origin).toBe("https://paperclip.test");
+      expect(url.origin).toBe("https://bionic.test");
       expect(url.pathname).not.toContain("{");
       expect(operation.responses).toBeDefined();
       expect(operation.authorization.actor).toBeTruthy();
@@ -303,9 +303,9 @@ describe("runner API request boundary", () => {
       runnerApiOperation(projects),
       input,
       context,
-      "https://paperclip.test/api",
+      "https://bionic.test/api",
     );
-    expect(url.origin).toBe("https://paperclip.test");
+    expect(url.origin).toBe("https://bionic.test");
     expect(url.pathname).toBe("/api/companies/company-a/projects");
     expect(url.searchParams.get("q")).toBe("hello & goodbye");
   });
@@ -321,7 +321,7 @@ describe("runner API request boundary", () => {
           runnerApiOperation(input.operationId),
           input,
           context,
-          "https://paperclip.test",
+          "https://bionic.test",
         ),
       ).toThrow();
     },
@@ -405,7 +405,7 @@ describe("runner API request boundary", () => {
     expect(new Headers(options.headers).get("Authorization")).toBe(
       "Bearer private-agent-token",
     );
-    expect(new Headers(options.headers).get("X-Paperclip-Run-Id")).toBe(
+    expect(new Headers(options.headers).get("X-Bionic-Run-Id")).toBe(
       context.runId,
     );
     expect(options.redirect).toBe("manual");

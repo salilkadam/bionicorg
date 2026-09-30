@@ -1,7 +1,7 @@
-import type { NativeExecutionInput } from "../../vendor/paperclip-runner/index.js";
+import type { NativeExecutionInput } from "../../vendor/bionic-runner/index.js";
 
 /** Operator-only admission for an exact candidate/model during qualification. */
-export const ACPX_QUALIFICATION_ENV = "PAPERCLIP_RUNNER_ACPX_QUALIFICATION";
+export const ACPX_QUALIFICATION_ENV = "BIONIC_RUNNER_ACPX_QUALIFICATION";
 export type AcpxQualificationCandidate = "cursor" | "copilot" | "pi";
 
 export function resolveAcpxQualification(

@@ -16,10 +16,10 @@ describe("home path resolution", () => {
     process.env = { ...ORIGINAL_ENV };
   });
 
-  it("defaults to ~/.paperclip and default instance", () => {
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-home-paths-"));
-    process.env.PAPERCLIP_HOME = home;
-    delete process.env.PAPERCLIP_INSTANCE_ID;
+  it("defaults to ~/.bionic and default instance", () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-home-paths-"));
+    process.env.BIONIC_HOME = home;
+    delete process.env.BIONIC_INSTANCE_ID;
 
     const paths = describeLocalInstancePaths();
     expect(paths.homeDir).toBe(home);
@@ -27,16 +27,16 @@ describe("home path resolution", () => {
     expect(paths.configPath).toBe(path.resolve(home, "instances", "default", "config.json"));
   });
 
-  it("supports PAPERCLIP_HOME and explicit instance ids", () => {
-    process.env.PAPERCLIP_HOME = "~/paperclip-home";
+  it("supports BIONIC_HOME and explicit instance ids", () => {
+    process.env.BIONIC_HOME = "~/bionic-home";
 
     const home = resolvePaperclipHomeDir();
-    expect(home).toBe(path.resolve(os.homedir(), "paperclip-home"));
+    expect(home).toBe(path.resolve(os.homedir(), "bionic-home"));
     expect(resolvePaperclipInstanceId("dev_1")).toBe("dev_1");
   });
 
   it("rejects invalid instance ids", () => {
-    expect(() => resolvePaperclipInstanceId("bad/id")).toThrow(/Invalid PAPERCLIP_INSTANCE_ID/);
+    expect(() => resolvePaperclipInstanceId("bad/id")).toThrow(/Invalid BIONIC_INSTANCE_ID/);
   });
 
   it("expands ~ prefixes", () => {

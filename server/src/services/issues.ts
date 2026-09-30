@@ -6,7 +6,7 @@ import { documentService } from "./documents.js";
 import { parseTaskSearch, taskSearchCtes, taskSearchScore } from "./task-search.js";
 import { createdFromIssueCondition } from "./issue-creation-origin.js";
 import { executionProjectionsForRuns } from "./execution-projection.js";
-import type { ExecutionProjection } from "@paperclipai/shared";
+import type { ExecutionProjection } from "@bionicai/shared";
 import { Buffer } from "node:buffer";
 import { createHash, randomUUID } from "node:crypto";
 import {
@@ -29,7 +29,7 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   activityLog,
   chatActions,
@@ -75,7 +75,7 @@ import {
   projects,
   toolConnections,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type {
   AcceptedPlanDecomposition,
   IssueComment,
@@ -92,7 +92,7 @@ import type {
   IssueWatchdogSummary,
   LowTrustBoundary,
   SuccessfulRunHandoffState,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   clampIssueRequestDepth,
   extractAgentMentionIds,
@@ -102,7 +102,7 @@ import {
   issueCommentPresentationSchema,
   isUuidLike,
   normalizeIssueIdentifier as normalizeIssueReferenceIdentifier,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { conflict, HttpError, notFound, unprocessable } from "../errors.js";
 import { isForeignKeyViolation } from "../db-errors.js";
 import { logger } from "../middleware/logger.js";
@@ -288,8 +288,8 @@ function wakeRequestTargetsIssue(issueId: string) {
   return sql`(
     ${agentWakeupRequests.payload} ->> 'issueId' = ${issueId}
     or ${agentWakeupRequests.payload} ->> 'taskId' = ${issueId}
-    or ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'issueId' = ${issueId}
-    or ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'taskId' = ${issueId}
+    or ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'issueId' = ${issueId}
+    or ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'taskId' = ${issueId}
   )`;
 }
 
@@ -1106,7 +1106,7 @@ async function freshChatSourceAfterPublishedControl(
   } catch (error) {
     if (
       error instanceof Error &&
-      /^paperclip_runner_chat_attachment_(binding|destination|principal)_denied$/.test(
+      /^bionic_runner_chat_attachment_(binding|destination|principal)_denied$/.test(
         error.message,
       )
     )
@@ -1616,7 +1616,7 @@ export function isExplicitExternalAgentComment(
   metadata: IssueCommentMetadata | null | undefined,
 ): boolean {
   const reason = metadata?.authorizationReason?.trim() ?? "";
-  return reason === "paperclip_runner_protocol" || reason.startsWith("allow_");
+  return reason === "bionic_runner_protocol" || reason.startsWith("allow_");
 }
 
 type SelectedChatPresentationAttachment = {
@@ -1662,7 +1662,7 @@ async function listSelectedChatPresentationAttachments(
         eq(issueComments.authorAgentId, input.agentId),
         isNull(issueComments.deletedAt),
         sql<boolean>`(
-          coalesce(${issueComments.metadata}->>'authorizationReason', '') = 'paperclip_runner_protocol'
+          coalesce(${issueComments.metadata}->>'authorizationReason', '') = 'bionic_runner_protocol'
           or left(coalesce(${issueComments.metadata}->>'authorizationReason', ''), 6) = 'allow_'
         )`,
       ),
@@ -3043,9 +3043,9 @@ function inboxVisibleForUserCondition(companyId: string, userId: string) {
 }
 
 const LEGACY_PLUGIN_OPERATION_ORIGIN_KINDS = [
-  "plugin:paperclipai.content-machine:case",
-  "plugin:paperclipai.content-machine:evaluation",
-  "plugin:paperclipai.content-machine:source-sync",
+  "plugin:bionicai.content-machine:case",
+  "plugin:bionicai.content-machine:evaluation",
+  "plugin:bionicai.content-machine:source-sync",
 ] as const;
 
 function nonPluginOperationIssueCondition() {
@@ -4527,8 +4527,8 @@ async function listIssueReviewAttentionMap(
         issueId: sql<string | null>`coalesce(
           ${agentWakeupRequests.payload} ->> 'issueId',
           ${agentWakeupRequests.payload} ->> 'taskId',
-          ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'issueId',
-          ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'taskId'
+          ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'issueId',
+          ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'taskId'
         )`,
         agentId: agentWakeupRequests.agentId,
         status: agentWakeupRequests.status,
@@ -4548,8 +4548,8 @@ async function listIssueReviewAttentionMap(
             sql<string>`coalesce(
           ${agentWakeupRequests.payload} ->> 'issueId',
           ${agentWakeupRequests.payload} ->> 'taskId',
-          ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'issueId',
-          ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'taskId'
+          ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'issueId',
+          ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'taskId'
         )`,
             reviewIds,
           ),
@@ -5622,8 +5622,8 @@ async function listIssueBlockedInboxAttentionMap(
             issueId: sql<string | null>`coalesce(
               ${agentWakeupRequests.payload} ->> 'issueId',
               ${agentWakeupRequests.payload} ->> 'taskId',
-              ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'issueId',
-              ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'taskId'
+              ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'issueId',
+              ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'taskId'
             )`,
             agentId: agentWakeupRequests.agentId,
             status: agentWakeupRequests.status,
@@ -5639,8 +5639,8 @@ async function listIssueBlockedInboxAttentionMap(
                 sql<string>`coalesce(
               ${agentWakeupRequests.payload} ->> 'issueId',
               ${agentWakeupRequests.payload} ->> 'taskId',
-              ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'issueId',
-              ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'taskId'
+              ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'issueId',
+              ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'taskId'
             )`,
                 graphIssueIds,
               ),
@@ -8894,8 +8894,8 @@ export function issueService(db: Db) {
           coalesce(
             wake.payload ->> 'issueId',
             wake.payload ->> 'taskId',
-            wake.payload -> '_paperclipWakeContext' ->> 'issueId',
-            wake.payload -> '_paperclipWakeContext' ->> 'taskId'
+            wake.payload -> '_bionicWakeContext' ->> 'issueId',
+            wake.payload -> '_bionicWakeContext' ->> 'taskId'
           )
         `;
         const rawWakeRows = Array.from(
@@ -9910,8 +9910,8 @@ export function issueService(db: Db) {
             issueData.projectId = workspaceSource.projectId;
           }
           // Workspace linkage is only inheritable inside the source project. A
-          // cross-project child (for example, a Paperclip ID issue created from
-          // a Paperclip App parent) must fall through to its own project's
+          // cross-project child (for example, a Bionic ID issue created from
+          // a Bionic App parent) must fall through to its own project's
           // default workspaces, otherwise the inherited ids fail the
           // project-match assertions below and the create is impossible without
           // the caller naming the target workspaces explicitly.
@@ -12129,7 +12129,7 @@ export function issueService(db: Db) {
         sourceTrust?: typeof issueComments.$inferInsert.sourceTrust;
         createdAt?: Date | string | null;
         clientRequestId?: string;
-        /** Server-only: authenticated Paperclip messages also belong in the Slack thread. */
+        /** Server-only: authenticated Bionic messages also belong in the Slack thread. */
         mirrorToSlack?: boolean;
       },
       dbOrTx: any = db,
@@ -12644,9 +12644,9 @@ export function issueService(db: Db) {
       // Only an explicitly authored comment from the run causally woken by an
       // inbound chat message is automatically publishable. Presentation,
       // recovery, automation, and ordinary internal agent comments stay in
-      // Paperclip even while a bound conversation is active.
+      // Bionic even while a bound conversation is active.
       if (authorType === "agent" && isExplicitExternalAgentComment(metadata)) {
-        // An external-chat run may perform ordinary Paperclip lifecycle or
+        // An external-chat run may perform ordinary Bionic lifecycle or
         // bookkeeping writes before its adapter result is finalized. Those
         // writes remain internal: only heartbeat's selected final presentation
         // may consume this provider response slot. Explicit board "Send to
@@ -12929,7 +12929,7 @@ export function issueService(db: Db) {
                 companyId: issue.companyId,
                 issueId: issue.id,
                 type: "artifact",
-                provider: "paperclip",
+                provider: "bionic",
                 externalId: attachment.id,
                 title: asset.originalFilename ?? "Attachment",
                 status: "active",

@@ -3,7 +3,7 @@ import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { paperclipConfigSchema } from "../../packages/shared/src/config-schema.js";
+import { bionicConfigSchema } from "../../packages/shared/src/config-schema.js";
 import {
   reserveRunnerE2EDatabasePort,
   type LoopbackPortReservation,
@@ -64,7 +64,7 @@ describe("isolated paid E2E database ports", () => {
     roots.push(temporaryRoot);
     const configPath = path.join(
       temporaryRoot,
-      "paperclip-home",
+      "bionic-home",
       "instances",
       "fixture",
       "config.json",
@@ -74,7 +74,7 @@ describe("isolated paid E2E database ports", () => {
     expect(reservation).not.toBeNull();
     reservations.push(reservation!);
     const encoded = await readFile(configPath, "utf8");
-    const config = paperclipConfigSchema.parse(JSON.parse(encoded));
+    const config = bionicConfigSchema.parse(JSON.parse(encoded));
     expect(config.database.embeddedPostgresPort).toBe(reservation!.port);
     expect(config.database.mode).toBe("embedded-postgres");
     for (const directory of [

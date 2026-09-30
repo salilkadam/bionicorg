@@ -5,7 +5,7 @@
 import type { SshRemoteExecutionSpec } from "./ssh.js";
 import type { AdapterExecutionTarget } from "./execution-target.js";
 import type { RuntimeStatusSink } from "./runtime-progress.js";
-import type { ExecutionContinuationEnvelope, NativeFinalizationResult } from "@paperclipai/shared";
+import type { ExecutionContinuationEnvelope, NativeFinalizationResult } from "@bionicai/shared";
 
 export interface AdapterAgent {
   id: string;
@@ -326,7 +326,7 @@ export interface AdapterEnvironmentTestContext {
   /**
    * Optional execution target the adapter should run probes against.
    *
-   * If omitted (or `kind === "local"`), the adapter tests on the Paperclip
+   * If omitted (or `kind === "local"`), the adapter tests on the Bionic
    * host. For SSH/sandbox targets the adapter should run command/auth probes
    * inside the remote environment so the result reflects what an agent run
    * would actually see at execution time.
@@ -429,7 +429,7 @@ export interface AdapterConfigSchema {
 
 export interface AdapterRuntimeCommandSpec {
   /**
-   * The command Paperclip should execute for this adapter in the current config.
+   * The command Bionic should execute for this adapter in the current config.
    */
   command: string;
   /**
@@ -463,7 +463,7 @@ export interface ServerAdapterModule {
   sessionCodec?: AdapterSessionCodec;
   sessionManagement?: import("./session-compaction.js").AdapterSessionManagement;
   supportsLocalAgentJwt?: boolean;
-  /** How this adapter receives Paperclip's run-scoped control tools. */
+  /** How this adapter receives Bionic's run-scoped control tools. */
   runtimeToolDelivery?: AdapterRuntimeToolDelivery;
   models?: AdapterModel[];
   listModels?: () => Promise<AdapterModel[]>;
@@ -471,7 +471,7 @@ export interface ServerAdapterModule {
    * Optional explicit refresh hook for model discovery.
    * Use this when the adapter caches discovered models and needs a bypass path
    * so the UI can fetch newly released models without waiting for cache expiry
-   * or a Paperclip code update.
+   * or a Bionic code update.
    */
   refreshModels?: () => Promise<AdapterModel[]>;
   agentConfigurationDoc?: string;
@@ -529,7 +529,7 @@ export interface ServerAdapterModule {
   /**
    * Adapter needs runtime skill entries materialized (written to disk)
    * before being passed via config. Used by adapters that scan a directory
-   * rather than reading config.paperclipRuntimeSkills.
+   * rather than reading config.bionicRuntimeSkills.
    */
   requiresMaterializedRuntimeSkills?: boolean;
   /**
@@ -624,7 +624,7 @@ export interface PaperclipQuestion {
 }
 
 export interface PaperclipQuestionSet {
-  schema: "paperclip.question_set.v1";
+  schema: "bionic.question_set.v1";
   title?: string;
   description?: string;
   submitLabel?: string;
@@ -632,7 +632,7 @@ export interface PaperclipQuestionSet {
 }
 
 export interface PaperclipQuestionResponse {
-  schema: "paperclip.question_response.v1";
+  schema: "bionic.question_response.v1";
   answers: Record<string, { selectedOptionIds?: string[]; text?: string; customText?: string }>;
 }
 
@@ -673,8 +673,8 @@ export interface CLIAdapterModule {
 export interface CreateConfigValues {
   adapterType: string;
   codexPermissionMode?: "never" | "on-request" | "untrusted";
-  paperclipRunnerLifecycleMode?: "per_turn" | "warm";
-  paperclipRunnerIdleTimeoutMs?: number;
+  bionicRunnerLifecycleMode?: "per_turn" | "warm";
+  bionicRunnerIdleTimeoutMs?: number;
   cwd: string;
   instructionsFilePath?: string;
   promptTemplate: string;
@@ -749,7 +749,7 @@ export interface CreateConfigValues {
   devicePrivateKeyPem?: string;
   role?: string;
   scopes?: string;
-  paperclipApiUrl?: string;
+  bionicApiUrl?: string;
   headersJson?: string;
   password?: string;
 }

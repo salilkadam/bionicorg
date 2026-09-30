@@ -115,7 +115,7 @@ export function isAiConnectionCompatible(
   runnerProvider?: unknown,
   acpxAgent?: unknown,
 ): boolean {
-  if (adapterType === "paperclip_runner")
+  if (adapterType === "bionic_runner")
     adapterType =
       runnerProvider === "claude" ||
       (runnerProvider === "acpx" && acpxAgent === "claude")

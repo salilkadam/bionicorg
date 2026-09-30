@@ -114,7 +114,7 @@ describe("Discord owned native-command registration", () => {
     const f = fixture();
     await reconcileDiscordCommandRegistration(f.options());
     const prior = discordPaperclipCommandDefinition(f.stored.ownerId);
-    prior.options[2]!.description = "Close the current Paperclip task";
+    prior.options[2]!.description = "Close the current Bionic task";
     if (f.stored.phase !== "registered") throw new Error("Missing receipt");
     f.stored = {
       ...f.stored,
@@ -240,7 +240,7 @@ describe("Discord owned native-command registration", () => {
     expect(f.commit).not.toHaveBeenCalled();
   });
 
-  it("describes closing a conversation without claiming to close the Paperclip task", () => {
+  it("describes closing a conversation without claiming to close the Bionic task", () => {
     const definition = discordPaperclipCommandDefinition(
       createDiscordCommandRegistration(scope).ownerId,
     );
@@ -299,7 +299,7 @@ describe("Discord owned native-command registration", () => {
       reconcileDiscordCommandRegistration(f.options()),
     ).resolves.toMatchObject({ kind: "registered" });
     expect(f.commands.slice(0, 4)).toEqual([f.unrelated, ...generic]);
-    expect(f.commands[4]!.name).toBe("paperclip");
+    expect(f.commands[4]!.name).toBe("bionic");
   });
 
   it("reconciles a committed create after lost response without sending another POST", async () => {

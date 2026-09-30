@@ -1,14 +1,14 @@
 import { createHash } from "node:crypto";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { heartbeatRuns } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { heartbeatRuns } from "@bionicai/db";
 import { REDACTED_EVENT_VALUE } from "../redaction.js";
 import { getSecretProvider } from "../secrets/provider-registry.js";
 import type { StoredSecretVersionMaterial } from "../secrets/types.js";
 
-const REGISTRY_KEY = "paperclipSecretRedactions";
+const REGISTRY_KEY = "bionicSecretRedactions";
 // Project only the registry: run contexts can contain megabytes of prompt data.
-const registrySnapshot = sql`jsonb_build_object('paperclipSecretRedactions', ${heartbeatRuns.contextSnapshot} -> 'paperclipSecretRedactions')`;
+const registrySnapshot = sql`jsonb_build_object('bionicSecretRedactions', ${heartbeatRuns.contextSnapshot} -> 'bionicSecretRedactions')`;
 
 type RegistryEntry = {
   fingerprintSha256: string;
@@ -85,7 +85,7 @@ export function createRunSecretRedactionRegistry(db: Db) {
         eq(heartbeatRuns.companyId, companyId),
         or(
           sql`${heartbeatRuns.contextSnapshot} ->> 'issueId' = ${issueId}`,
-          sql`${heartbeatRuns.contextSnapshot} -> 'paperclipIssue' ->> 'id' = ${issueId}`,
+          sql`${heartbeatRuns.contextSnapshot} -> 'bionicIssue' ->> 'id' = ${issueId}`,
         ),
       ));
     return valuesForRuns(rows);

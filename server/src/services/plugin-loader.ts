@@ -4,8 +4,8 @@
  * This service is the entry point for the plugin system's I/O boundary:
  *
  * 1. **Discovery** — Scans the local plugin directory
- *    (`~/.paperclip/plugins/`) and `node_modules` for packages matching
- *    the `paperclip-plugin-*` naming convention. Aggregates results with
+ *    (`~/.bionic/plugins/`) and `node_modules` for packages matching
+ *    the `bionic-plugin-*` naming convention. Aggregates results with
  *    path-based deduplication.
  *
  * 2. **Installation** — `installPlugin()` downloads from npm (or reads a
@@ -31,14 +31,14 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import type { Db } from "@paperclipai/db";
-import { PLUGIN_RPC_ERROR_CODES } from "@paperclipai/plugin-sdk";
+import type { Db } from "@bionicai/db";
+import { PLUGIN_RPC_ERROR_CODES } from "@bionicai/plugin-sdk";
 import type {
   PaperclipPluginManifestV1,
   PluginLauncherDeclaration,
   PluginRecord,
   PluginUiSlotDeclaration,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { logger } from "../middleware/logger.js";
 import { pluginManifestValidator } from "./plugin-manifest-validator.js";
 import { pluginCapabilityValidator } from "./plugin-capability-validator.js";
@@ -58,19 +58,19 @@ export const REPO_ROOT = path.resolve(__dirname, "../../..");
 export const BUNDLED_LOCAL_PLUGIN_ROOT = path.join(REPO_ROOT, "packages", "plugins");
 export const STANDALONE_BUNDLED_PLUGIN_ROOT = path.join(BUNDLED_LOCAL_PLUGIN_ROOT, "sandbox-providers");
 export const LOCAL_PLUGIN_AUTOBUILD_TIMEOUT_MS = 120_000;
-const STANDALONE_BUNDLED_PLUGIN_SDK_PACKAGE = "@paperclipai/plugin-sdk";
+const STANDALONE_BUNDLED_PLUGIN_SDK_PACKAGE = "@bionicai/plugin-sdk";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 /**
- * Naming convention for npm-published Paperclip plugins.
- * Packages matching this pattern are considered Paperclip plugins.
+ * Naming convention for npm-published Bionic plugins.
+ * Packages matching this pattern are considered Bionic plugins.
  *
  * @see PLUGIN_SPEC.md §10 — Package Contract
  */
-export const NPM_PLUGIN_PACKAGE_PREFIX = "paperclip-plugin-";
+export const NPM_PLUGIN_PACKAGE_PREFIX = "bionic-plugin-";
 
 /**
  * Default local plugin directory.  The loader scans this directory for
@@ -80,7 +80,7 @@ export const NPM_PLUGIN_PACKAGE_PREFIX = "paperclip-plugin-";
  */
 export const DEFAULT_LOCAL_PLUGIN_DIR = path.join(
   os.homedir(),
-  ".paperclip",
+  ".bionic",
   "plugins",
 );
 
@@ -88,7 +88,7 @@ const DEV_TSX_LOADER_PATH = path.resolve(__dirname, "../../../cli/node_modules/t
 
 /**
  * Model-provider API keys that sandbox-provider plugins (e.g.
- * `@paperclipai/plugin-kubernetes`) are allowed to read from the
+ * `@bionicai/plugin-kubernetes`) are allowed to read from the
  * server's process environment so they can inject them into per-run
  * pod Secrets. All other host env vars remain stripped from plugin
  * workers (see `PluginWorkerManager.spawnProcess`). The passthrough
@@ -106,7 +106,7 @@ const ADAPTER_ENV_PASSTHROUGH = [
 
 /**
  * In-cluster Kubernetes service-discovery vars. A sandbox-provider plugin that
- * runs in-cluster (e.g. `@paperclipai/plugin-kubernetes` with inCluster=true)
+ * runs in-cluster (e.g. `@bionicai/plugin-kubernetes` with inCluster=true)
  * builds its API client via `KubeConfig.loadFromCluster()`, which reads these
  * to construct the apiserver URL. Without them the worker fails with "Invalid
  * URL" at lease acquisition. The CA + token are files under
@@ -131,7 +131,7 @@ const K8S_IN_CLUSTER_ENV_PASSTHROUGH = [
  * manifest's declared driver key — but name and manifest are both
  * plugin-authored, so neither is proof of identity on its own. The gate
  * therefore also requires a trusted install origin: a registry install
- * (`packagePath` null — the `@paperclipai` scope is project-controlled at
+ * (`packagePath` null — the `@bionicai` scope is project-controlled at
  * the registry), or a local path inside the repo/bundled plugin catalog,
  * which ships inside the release image and is as trusted as the server
  * code itself. An operator-added local plugin directory can claim any
@@ -141,11 +141,11 @@ const SANDBOX_PROVIDER_CREDENTIAL_ENV_PASSTHROUGH: Record<
   string,
   { driverKey: string; envVars: readonly string[] }
 > = {
-  "@paperclipai/plugin-createos": { driverKey: "createos", envVars: ["CREATEOS_API_KEY"] },
-  "@paperclipai/plugin-daytona": { driverKey: "daytona", envVars: ["DAYTONA_API_KEY"] },
-  "@paperclipai/plugin-e2b": { driverKey: "e2b", envVars: ["E2B_API_KEY"] },
-  "@paperclipai/plugin-exe-dev": { driverKey: "exe-dev", envVars: ["EXE_API_KEY"] },
-  "@paperclipai/plugin-novita-sandbox": { driverKey: "novita", envVars: ["NOVITA_API_KEY"] },
+  "@bionicai/plugin-createos": { driverKey: "createos", envVars: ["CREATEOS_API_KEY"] },
+  "@bionicai/plugin-daytona": { driverKey: "daytona", envVars: ["DAYTONA_API_KEY"] },
+  "@bionicai/plugin-e2b": { driverKey: "e2b", envVars: ["E2B_API_KEY"] },
+  "@bionicai/plugin-exe-dev": { driverKey: "exe-dev", envVars: ["EXE_API_KEY"] },
+  "@bionicai/plugin-novita-sandbox": { driverKey: "novita", envVars: ["NOVITA_API_KEY"] },
 };
 
 export function buildPluginWorkerEnv(input: {
@@ -162,8 +162,8 @@ export function buildPluginWorkerEnv(input: {
 }): Record<string, string> {
   const processEnv = input.processEnv ?? process.env;
   const env: Record<string, string> = {
-    PAPERCLIP_DEPLOYMENT_MODE: input.instanceInfo.deploymentMode ?? "",
-    PAPERCLIP_DEPLOYMENT_EXPOSURE: input.instanceInfo.deploymentExposure ?? "",
+    BIONIC_DEPLOYMENT_MODE: input.instanceInfo.deploymentMode ?? "",
+    BIONIC_DEPLOYMENT_EXPOSURE: input.instanceInfo.deploymentExposure ?? "",
   };
   const canRegisterEnvironmentDrivers = Array.isArray(input.manifest.capabilities)
     && input.manifest.capabilities.includes("environment.drivers.register");
@@ -219,8 +219,8 @@ export interface DiscoveredPlugin {
  * @see PLUGIN_SPEC.md §8.1 — On-Disk Layout
  */
 export type PluginSource =
-  | "local-filesystem"  // ~/.paperclip/plugins/ local directory
-  | "npm"               // npm packages matching paperclip-plugin-* convention
+  | "local-filesystem"  // ~/.bionic/plugins/ local directory
+  | "npm"               // npm packages matching bionic-plugin-* convention
   | "registry";         // future: remote plugin registry URL
 
 type ParsedSemver = {
@@ -281,7 +281,7 @@ export interface PluginLoaderOptions {
   }) => void;
   /**
    * Path to the local plugin directory to scan.
-   * Defaults to ~/.paperclip/plugins/
+   * Defaults to ~/.bionic/plugins/
    */
   localPluginDir?: string;
 
@@ -295,7 +295,7 @@ export interface PluginLoaderOptions {
   enableLocalFilesystem?: boolean;
 
   /**
-   * Whether to discover installed npm packages matching the paperclip-plugin-*
+   * Whether to discover installed npm packages matching the bionic-plugin-*
    * naming convention.
    * Defaults to true.
    */
@@ -318,7 +318,7 @@ export interface PluginLoaderOptions {
  */
 export interface PluginInstallOptions {
   /**
-   * npm package name to install (e.g. "paperclip-plugin-linear" or "@acme/plugin-linear").
+   * npm package name to install (e.g. "bionic-plugin-linear" or "@acme/plugin-linear").
    * Either packageName or localPath must be set.
    */
   packageName?: string;
@@ -493,8 +493,8 @@ export interface PluginLoader {
   discoverFromLocalFilesystem(dir?: string): Promise<PluginDiscoveryResult>;
 
   /**
-   * Discover Paperclip plugins installed as npm packages in the current
-   * Node.js environment matching the "paperclip-plugin-*" naming convention.
+   * Discover Bionic plugins installed as npm packages in the current
+   * Node.js environment matching the "bionic-plugin-*" naming convention.
    *
    * Looks for packages in node_modules that match the naming convention.
    *
@@ -506,11 +506,11 @@ export interface PluginLoader {
    * Load and parse the plugin manifest from a package directory.
    *
    * Reads the package.json, finds the manifest entrypoint declared under
-   * the "paperclipPlugin.manifest" key, loads the manifest module, and
+   * the "bionicPlugin.manifest" key, loads the manifest module, and
    * validates it against the plugin manifest schema.
    *
-   * Returns null if the package is not a Paperclip plugin.
-   * Throws if the package is a Paperclip plugin but the manifest is invalid.
+   * Returns null if the package is not a Bionic plugin.
+   * Throws if the package is a Bionic plugin but the manifest is invalid.
    *
    * @see PLUGIN_SPEC.md §10 — Package Contract
    */
@@ -657,14 +657,14 @@ export interface PluginLoader {
 // ---------------------------------------------------------------------------
 
 /**
- * Check whether a package name matches the Paperclip plugin naming convention.
- * Accepts both the "paperclip-plugin-" prefix and scoped "@scope/plugin-" packages.
+ * Check whether a package name matches the Bionic plugin naming convention.
+ * Accepts both the "bionic-plugin-" prefix and scoped "@scope/plugin-" packages.
  *
  * @see PLUGIN_SPEC.md §10 — Package Contract
  */
 export function isPluginPackageName(name: string): boolean {
   if (name.startsWith(NPM_PLUGIN_PACKAGE_PREFIX)) return true;
-  // Also accept scoped packages like @acme/plugin-linear or @paperclipai/plugin-*
+  // Also accept scoped packages like @acme/plugin-linear or @bionicai/plugin-*
   if (name.includes("/")) {
     const localPart = name.split("/")[1] ?? "";
     return localPart.startsWith("plugin-");
@@ -734,18 +734,18 @@ export function resolveDeclaredPluginEntrypoints(
   packageRoot: string,
   pkgJson: Record<string, unknown>,
 ): PluginEntrypointPath[] {
-  const paperclipPlugin = pkgJson["paperclipPlugin"];
+  const bionicPlugin = pkgJson["bionicPlugin"];
   if (
-    paperclipPlugin === null
-    || typeof paperclipPlugin !== "object"
-    || Array.isArray(paperclipPlugin)
+    bionicPlugin === null
+    || typeof bionicPlugin !== "object"
+    || Array.isArray(bionicPlugin)
   ) {
     return [];
   }
 
   const entrypoints: PluginEntrypointPath[] = [];
   for (const key of ["manifest", "worker", "ui"] as const) {
-    const relativePath = (paperclipPlugin as Record<string, unknown>)[key];
+    const relativePath = (bionicPlugin as Record<string, unknown>)[key];
     if (typeof relativePath === "string" && relativePath.length > 0) {
       entrypoints.push({
         key,
@@ -793,8 +793,8 @@ function formatLocalPluginManualBuildHint(
   const manualBuildCommand = buildLocalPluginRecoveryCommand(packageRoot, pkgJson, { repoRoot: options.repoRoot });
   if (!manualBuildCommand) return "";
 
-  const autoBuildDisabled = (options.processEnv ?? process.env)["PAPERCLIP_DISABLE_PLUGIN_AUTOBUILD"] === "1"
-    ? " Auto-build is disabled by PAPERCLIP_DISABLE_PLUGIN_AUTOBUILD=1."
+  const autoBuildDisabled = (options.processEnv ?? process.env)["BIONIC_DISABLE_PLUGIN_AUTOBUILD"] === "1"
+    ? " Auto-build is disabled by BIONIC_DISABLE_PLUGIN_AUTOBUILD=1."
     : "";
 
   return `${autoBuildDisabled} Run \`${manualBuildCommand}\` from the repo root and retry.`;
@@ -888,7 +888,7 @@ export async function ensureLocalPluginBuilt(
   } = {},
 ): Promise<void> {
   const processEnv = options.processEnv ?? process.env;
-  if (processEnv["PAPERCLIP_DISABLE_PLUGIN_AUTOBUILD"] === "1") return;
+  if (processEnv["BIONIC_DISABLE_PLUGIN_AUTOBUILD"] === "1") return;
   if (!isRepoBundledPluginPath(packageRoot, { repoRoot: options.repoRoot })) return;
 
   const missingEntrypoints = listMissingDeclaredPluginEntrypoints(packageRoot, pkgJson);
@@ -952,7 +952,7 @@ export async function ensureLocalPluginBuilt(
 /**
  * Resolve the manifest entrypoint from a package.json and package root.
  *
- * The spec defines a "paperclipPlugin" key in package.json with a "manifest"
+ * The spec defines a "bionicPlugin" key in package.json with a "manifest"
  * subkey pointing to the manifest module.  This helper resolves the path.
  *
  * @see PLUGIN_SPEC.md §10 — Package Contract
@@ -961,13 +961,13 @@ function resolveManifestPath(
   packageRoot: string,
   pkgJson: Record<string, unknown>,
 ): string | null {
-  const paperclipPlugin = pkgJson["paperclipPlugin"];
+  const bionicPlugin = pkgJson["bionicPlugin"];
   if (
-    paperclipPlugin !== null &&
-    typeof paperclipPlugin === "object" &&
-    !Array.isArray(paperclipPlugin)
+    bionicPlugin !== null &&
+    typeof bionicPlugin === "object" &&
+    !Array.isArray(bionicPlugin)
   ) {
-    const manifestRelPath = (paperclipPlugin as Record<string, unknown>)[
+    const manifestRelPath = (bionicPlugin as Record<string, unknown>)[
       "manifest"
     ];
     if (typeof manifestRelPath === "string") {
@@ -1111,7 +1111,7 @@ export function getPluginUiContributionMetadata(
  *
  * // Install a specific plugin
  * const discovered = await loader.installPlugin({
- *   packageName: "paperclip-plugin-linear",
+ *   packageName: "bionic-plugin-linear",
  *   version: "^1.0.0",
  * });
  * ```
@@ -1294,7 +1294,7 @@ export function pluginLoader(
         ? formatLocalPluginManualBuildHint(resolvedPackagePath, pkgJson)
         : "";
       throw new Error(
-        `Package ${resolvedPackageName} at ${resolvedPackagePath} does not appear to be a Paperclip plugin (no manifest found).${manualBuildHint}`,
+        `Package ${resolvedPackageName} at ${resolvedPackagePath} does not appear to be a Bionic plugin (no manifest found).${manualBuildHint}`,
       );
     }
 
@@ -1387,7 +1387,7 @@ export function pluginLoader(
   ): Promise<PluginRecord> {
     const manifest = await loadManifestFromPackageRoot(packageRoot);
     if (!manifest) {
-      throw new Error(`Plugin package ${plugin.packageName} no longer exposes a Paperclip manifest`);
+      throw new Error(`Plugin package ${plugin.packageName} no longer exposes a Bionic manifest`);
     }
     if (manifest.id !== plugin.pluginKey) {
       throw new Error(
@@ -1417,7 +1417,7 @@ export function pluginLoader(
 
   /**
    * Build a DiscoveredPlugin from a resolved package directory, or null
-   * if the package is not a Paperclip plugin.
+   * if the package is not a Bionic plugin.
    */
   async function buildDiscoveredPlugin(
     packagePath: string,
@@ -1431,7 +1431,7 @@ export function pluginLoader(
     const version = typeof pkgJson["version"] === "string" ? pkgJson["version"] : "0.0.0";
 
     // Determine if this is a plugin package at all
-    const hasPaperclipPlugin = "paperclipPlugin" in pkgJson;
+    const hasPaperclipPlugin = "bionicPlugin" in pkgJson;
     const nameMatchesConvention = isPluginPackageName(packageName);
 
     if (!hasPaperclipPlugin && !nameMatchesConvention) {
@@ -1710,7 +1710,7 @@ export function pluginLoader(
       const pkgJson = await readPackageJson(packagePath);
       if (!pkgJson) return null;
 
-      const hasPaperclipPlugin = "paperclipPlugin" in pkgJson;
+      const hasPaperclipPlugin = "bionicPlugin" in pkgJson;
       const packageName = typeof pkgJson["name"] === "string" ? pkgJson["name"] : "";
       const nameMatchesConvention = isPluginPackageName(packageName);
 
@@ -2348,7 +2348,7 @@ export function pluginLoader(
       };
 
       // Repo-local plugin installs can resolve workspace TS sources at runtime
-      // (for example @paperclipai/shared exports). Run those workers through
+      // (for example @bionicai/shared exports). Run those workers through
       // the tsx loader so first-party example plugins work in development.
       if (activePlugin.packagePath && existsSync(DEV_TSX_LOADER_PATH)) {
         workerOptions.execArgv = ["--import", DEV_TSX_LOADER_PATH];

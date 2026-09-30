@@ -29,8 +29,8 @@ const publicJwk = {
 };
 
 const ENV = {
-  PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS: JSON.stringify({ keys: [publicJwk] }),
-  PAPERCLIP_CLOUD_STACK_ID: STACK_ID,
+  BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS: JSON.stringify({ keys: [publicJwk] }),
+  BIONIC_CLOUD_STACK_ID: STACK_ID,
 } as NodeJS.ProcessEnv;
 
 function encodeJson(value: Record<string, unknown>) {
@@ -131,8 +131,8 @@ describe("verifyCloudControlAssertion", () => {
       aud: CLOUD_RUNTIME_IDENTITY_AUDIENCE,
       sub: STACK_ID,
       claimId: "claim-1",
-      previousOrigin: "https://pool-1.staging.paperclip.app",
-      canonicalOrigin: "https://gonzo.staging.paperclip.app",
+      previousOrigin: "https://pool-1.staging.bionic.app",
+      canonicalOrigin: "https://gonzo.staging.bionic.app",
       stackSlug: "gonzo",
       iat,
       exp: iat + 60,
@@ -155,7 +155,7 @@ describe("verifyCloudControlAssertion", () => {
       verifyCloudControlAssertion({
         compactJws: controlAssertion(),
         expectedAction: "task-drain:start",
-        env: { PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS: ENV.PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS } as NodeJS.ProcessEnv,
+        env: { BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS: ENV.BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS } as NodeJS.ProcessEnv,
         now: NOW,
       }),
     ).toThrow(/does not match this instance/);
@@ -188,10 +188,10 @@ describe("cloudControlMiddleware", () => {
 
   beforeEach(() => {
     resetCloudControlReplayFenceForTests();
-    savedEnv.PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS = process.env.PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS;
-    savedEnv.PAPERCLIP_CLOUD_STACK_ID = process.env.PAPERCLIP_CLOUD_STACK_ID;
-    process.env.PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS = ENV.PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS;
-    process.env.PAPERCLIP_CLOUD_STACK_ID = STACK_ID;
+    savedEnv.BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS = process.env.BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS;
+    savedEnv.BIONIC_CLOUD_STACK_ID = process.env.BIONIC_CLOUD_STACK_ID;
+    process.env.BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS = ENV.BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS;
+    process.env.BIONIC_CLOUD_STACK_ID = STACK_ID;
   });
 
   afterEach(() => {
@@ -253,7 +253,7 @@ describe("cloudControlMiddleware", () => {
       expect(res.status).toBe(200);
       expect(res.body.actor).toMatchObject({
         type: "board",
-        userId: "paperclip-cloud",
+        userId: "bionic-cloud",
         isInstanceAdmin: true,
         source: "cloud_control",
       });
@@ -348,7 +348,7 @@ describe("cloudControlMiddleware", () => {
     app.use((req, _res, next) => {
       req.actor = {
         type: "board",
-        userId: "paperclip-cloud",
+        userId: "bionic-cloud",
         isInstanceAdmin: true,
         source: "cloud_control",
       };

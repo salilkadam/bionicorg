@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
-import { toolConnections, toolInvocations, type Db } from "@paperclipai/db";
-import { getConnectableAppDefinition } from "@paperclipai/shared";
+import { toolConnections, toolInvocations, type Db } from "@bionicai/db";
+import { getConnectableAppDefinition } from "@bionicai/shared";
 import {
   trackConnectionCreated,
   trackConnectionUpdated,
   trackConnectionInvoked,
-} from "@paperclipai/shared/telemetry";
+} from "@bionicai/shared/telemetry";
 import { logger } from "../middleware/logger.js";
 import { getTelemetryClient } from "../telemetry.js";
 

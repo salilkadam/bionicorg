@@ -1,4 +1,4 @@
-import type { ToolProfileBindingTargetType } from "@paperclipai/shared";
+import type { ToolProfileBindingTargetType } from "@bionicai/shared";
 
 type BindingLike = {
   profileId: string;

@@ -155,7 +155,7 @@ export async function runContextIntegrityFlow(input: {
     checkpoints.push({ phase, issue: { id: issue!.id, status: String(issue!.status) }, comments, queuedComments, documents: detailedDocuments as Array<{ key: string; body?: string | null }>, runs, runEvents: runEvents.flat(), runLogs, assignedSkill: assignedSkill ? { key: String(desiredSkill?.key ?? assignedSkill.key ?? assignedSkill.slug), runtimeName: String(assignedSkill.slug ?? ""), versionId: desiredSkill?.versionId === assignedVersionId ? assignedVersionId : null, markdown: String(assignedSkill.markdown ?? scenario.assignedSkill?.markdown ?? "") } : undefined, skillRequestText: scenario.id === "assigned-skill-explicit-invocation" ? skillRequestText : undefined, skillInvocationEvidence });
     const checks = gradeContextIntegrity({ id: scenario.id, marker: scenario.marker, comments: scenario.comments, checkpoints });
     input.observe(issue!, runs, checks);
-    await input.evidence("context-integrity.json", { schema: "paperclip.context-integrity.v1", scenario, budgetGuard, checkpoints, checks });
+    await input.evidence("context-integrity.json", { schema: "bionic.context-integrity.v1", scenario, budgetGuard, checkpoints, checks });
   }
   async function settle(before: Set<string>) {
     await pollUntil({
@@ -230,6 +230,6 @@ export async function runContextIntegrityFlow(input: {
   } finally {
     const checks = gradeContextIntegrity({ id: scenario.id, marker: scenario.marker, comments: scenario.comments, checkpoints });
     if (issue) input.observe(issue, runs, checks);
-    await input.evidence("context-integrity.json", { schema: "paperclip.context-integrity.v1", scenario, budgetGuard, checkpoints, checks });
+    await input.evidence("context-integrity.json", { schema: "bionic.context-integrity.v1", scenario, budgetGuard, checkpoints, checks });
   }
 }

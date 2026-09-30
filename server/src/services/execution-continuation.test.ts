@@ -9,8 +9,8 @@ import {
   issueComments,
   issueThreadInteractions,
   issues,
-} from "@paperclipai/db";
-import { renderPaperclipWakePrompt } from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/db";
+import { renderPaperclipWakePrompt } from "@bionicai/adapter-utils/server-utils";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -45,7 +45,7 @@ const support = await getEmbeddedPostgresTestSupport();
       interactionId = randomUUID();
     beforeAll(async () => {
       database = await startEmbeddedPostgresTestDatabase(
-        "paperclip-continuation-context-",
+        "bionic-continuation-context-",
       );
       db = createDb(database.connectionString);
       await db
@@ -58,7 +58,7 @@ const support = await getEmbeddedPostgresTestSupport();
           companyId,
           name: "Executor",
           role: "engineer",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
         });
       await db
         .insert(issues)
@@ -172,7 +172,7 @@ const support = await getEmbeddedPostgresTestSupport();
     });
     it("carries completed work across an agent handoff using the interrupted run", async () => {
       const nextAgentId = randomUUID();
-      await db.insert(agents).values({ id: nextAgentId, companyId, name: "Replacement", role: "engineer", adapterType: "paperclip_runner" });
+      await db.insert(agents).values({ id: nextAgentId, companyId, name: "Replacement", role: "engineer", adapterType: "bionic_runner" });
       await db.update(issues).set({ assigneeAgentId: nextAgentId }).where(eq(issues.id, issueId));
       await db.update(heartbeatRuns).set({ status: "cancelled", resultJson: {
         nativeResult: { summary: "Created draft.md with three approved names." },

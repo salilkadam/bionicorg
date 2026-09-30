@@ -15,7 +15,7 @@ describe("redaction", () => {
     const schema = JSON.parse(
       readFileSync(
         new URL(
-          "../../../packages/paperclip-runner/protocol/schemas/event.schema.json",
+          "../../../packages/bionic-runner/protocol/schemas/event.schema.json",
           import.meta.url,
         ),
         "utf8",
@@ -28,7 +28,7 @@ describe("redaction", () => {
     const v1 = JSON.parse(
       readFileSync(
         new URL(
-          "../../../packages/paperclip-runner/protocol/schemas/event.schema.json",
+          "../../../packages/bionic-runner/protocol/schemas/event.schema.json",
           import.meta.url,
         ),
         "utf8",
@@ -37,7 +37,7 @@ describe("redaction", () => {
     const v2 = JSON.parse(
       readFileSync(
         new URL(
-          "../../../packages/paperclip-runner/protocol/schemas/event-v2.schema.json",
+          "../../../packages/bionic-runner/protocol/schemas/event-v2.schema.json",
           import.meta.url,
         ),
         "utf8",
@@ -53,7 +53,7 @@ describe("redaction", () => {
     const fixture = JSON.parse(
       readFileSync(
         new URL(
-          "../../../packages/paperclip-runner/protocol/fixtures/replay/duplicate-event.json",
+          "../../../packages/bionic-runner/protocol/fixtures/replay/duplicate-event.json",
           import.meta.url,
         ),
         "utf8",
@@ -71,12 +71,12 @@ describe("redaction", () => {
 
   it("preserves current PRP v2 session discriminators", () => {
     const schema = JSON.parse(readFileSync(
-      new URL("../../../packages/paperclip-runner/protocol/schemas/event-v2.schema.json", import.meta.url),
+      new URL("../../../packages/bionic-runner/protocol/schemas/event-v2.schema.json", import.meta.url),
       "utf8",
     )) as { properties: { eventType: { enum: string[] } } };
     for (const eventType of schema.properties.eventType.enum) {
       const event = {
-        schema: "paperclip.prp.event.v2",
+        schema: "bionic.prp.event.v2",
         schemaVersion: 2,
         eventType,
         payload: { safe: true },
@@ -89,7 +89,7 @@ describe("redaction", () => {
   it("redacts unknown or mismatched PRP discriminators", () => {
     const unknown = redactEventPayload({
       prpEvent: {
-        schema: "paperclip.prp.event.v2",
+        schema: "bionic.prp.event.v2",
         schemaVersion: 2,
         eventType: "session.not-a-real.event",
       },
@@ -100,7 +100,7 @@ describe("redaction", () => {
 
     const mismatched = redactEventPayload({
       prpEvent: {
-        schema: "paperclip.prp.event.v1",
+        schema: "bionic.prp.event.v1",
         schemaVersion: 2,
         eventType: "session.capabilities.updated",
       },
@@ -111,7 +111,7 @@ describe("redaction", () => {
 
     const secretPayload = redactEventPayload({
       prpEvent: {
-        schema: "paperclip.prp.event.v2",
+        schema: "bionic.prp.event.v2",
         schemaVersion: 2,
         eventType: "session.capabilities.updated",
         payload: { authorization: "Bearer secret-value" },
@@ -148,7 +148,7 @@ describe("redaction", () => {
           type: "plain",
           value: "sk-plain",
         },
-        PAPERCLIP_API_URL: "http://localhost:3100",
+        BIONIC_API_URL: "http://localhost:3100",
       },
     };
 
@@ -173,7 +173,7 @@ describe("redaction", () => {
         type: "plain",
         value: REDACTED_EVENT_VALUE,
       },
-      PAPERCLIP_API_URL: "http://localhost:3100",
+      BIONIC_API_URL: "http://localhost:3100",
     });
   });
 
@@ -193,21 +193,21 @@ describe("redaction", () => {
     expect(result.normal).toBe("plain");
   });
 
-  it("preserves Paperclip protocol schema identifiers", () => {
+  it("preserves Bionic protocol schema identifiers", () => {
     expect(
       sanitizeRecord({
-        schema: "paperclip.question_set.v1",
+        schema: "bionic.question_set.v1",
         nested: {
-          schema: "paperclip.question_response.v1",
-          runtimeSchema: "paperclip.runtime_request.v2",
-          arbitraryProviderValue: "paperclip.question_set.v1",
+          schema: "bionic.question_response.v1",
+          runtimeSchema: "bionic.runtime_request.v2",
+          arbitraryProviderValue: "bionic.question_set.v1",
         },
       }),
     ).toEqual({
-      schema: "paperclip.question_set.v1",
+      schema: "bionic.question_set.v1",
       nested: {
-        schema: "paperclip.question_response.v1",
-        runtimeSchema: "paperclip.runtime_request.v2",
+        schema: "bionic.question_response.v1",
+        runtimeSchema: "bionic.runtime_request.v2",
         arbitraryProviderValue: REDACTED_EVENT_VALUE,
       },
     });
@@ -215,10 +215,10 @@ describe("redaction", () => {
 
   it("preserves native execution v5 and model envelope v3 schema identifiers", () => {
     const input = {
-      schema: "paperclip.native-execution-input.v5",
+      schema: "bionic.native-execution-input.v5",
       nested: {
-        runtimeSchema: "paperclip.native-model-envelope.v3",
-        providerValue: "paperclip.native-execution-input.v5",
+        runtimeSchema: "bionic.native-model-envelope.v3",
+        providerValue: "bionic.native-execution-input.v5",
       },
     };
     expect(sanitizeRecord(input)).toEqual({
@@ -228,16 +228,16 @@ describe("redaction", () => {
         providerValue: REDACTED_EVENT_VALUE,
       },
     });
-    expect(sanitizeRecord({ schema: "paperclip.native-execution-input.v4", runtimeSchema: "paperclip.native-model-envelope.v2" })).toEqual({
-      schema: "paperclip.native-execution-input.v4",
-      runtimeSchema: "paperclip.native-model-envelope.v2",
+    expect(sanitizeRecord({ schema: "bionic.native-execution-input.v4", runtimeSchema: "bionic.native-model-envelope.v2" })).toEqual({
+      schema: "bionic.native-execution-input.v4",
+      runtimeSchema: "bionic.native-model-envelope.v2",
     });
   });
 
   it("preserves only known PRP v1 event discriminators inside validated envelopes", () => {
     const payload = {
       prpEvent: {
-        schema: "paperclip.prp.event.v1",
+        schema: "bionic.prp.event.v1",
         schemaVersion: 1,
         eventType: "tool.execution.started",
         payload: {
@@ -254,7 +254,7 @@ describe("redaction", () => {
 
     expect(sanitized).toEqual({
       prpEvent: {
-        schema: "paperclip.prp.event.v1",
+        schema: "bionic.prp.event.v1",
         schemaVersion: 1,
         eventType: "tool.execution.started",
         payload: {
@@ -272,7 +272,7 @@ describe("redaction", () => {
   it("redacts unknown dotted event values even in a PRP-shaped envelope", () => {
     expect(
       redactEventPayload({
-        schema: "paperclip.prp.event.v1",
+        schema: "bionic.prp.event.v1",
         schemaVersion: 1,
         eventType: "attacker.supplied.token",
       })?.eventType,
@@ -282,8 +282,8 @@ describe("redaction", () => {
   it("does not trust discriminators inside a forged unknown schema", () => {
     expect(
       redactEventPayload({
-        schema: "paperclip.attacker.control.v1",
-        runtimeSchema: "paperclip.attacker.runtime.v1",
+        schema: "bionic.attacker.control.v1",
+        runtimeSchema: "bionic.attacker.runtime.v1",
         schemaVersion: 1,
         eventType: "tool.execution.started",
       }),
@@ -315,7 +315,7 @@ describe("redaction", () => {
 
     for (const span of spanNames) {
       const input = {
-        schema: "paperclip.run-performance-span.v1",
+        schema: "bionic.run-performance-span.v1",
         span,
         parentSpan: "native.session.execute",
         providerHostname: "api.openai.com",
@@ -333,13 +333,13 @@ describe("redaction", () => {
 
     expect(
       redactEventPayload({
-        schema: "paperclip.run-performance-span.v1",
+        schema: "bionic.run-performance-span.v1",
         span: "api.openai.com",
       })?.span,
     ).toBe(REDACTED_EVENT_VALUE);
     expect(
       redactEventPayload({
-        schema: "paperclip.run-performance-span.v1",
+        schema: "bionic.run-performance-span.v1",
         span: "runner.example.com",
       })?.span,
     ).toBe(REDACTED_EVENT_VALUE);
@@ -446,9 +446,9 @@ describe("redaction", () => {
     const input = [
       "Authorization: Bearer live-bearer-token-value",
       `payload {"apiKey":"json-secret-value"}`,
-      `paperclip {"PAPERCLIP_API_KEY":"paperclip-json-secret"}`,
+      `bionic {"BIONIC_API_KEY":"bionic-json-secret"}`,
       `escaped {\\"apiKey\\":\\"escaped-json-secret\\"}`,
-      `export PAPERCLIP_API_KEY='paperclip-shell-secret'`,
+      `export BIONIC_API_KEY='bionic-shell-secret'`,
       `GITHUB_TOKEN=${githubToken}`,
       `session=${jwt}`,
     ].join("\n");
@@ -458,9 +458,9 @@ describe("redaction", () => {
     expect(result).toContain(REDACTED_EVENT_VALUE);
     expect(result).not.toContain("live-bearer-token-value");
     expect(result).not.toContain("json-secret-value");
-    expect(result).not.toContain("paperclip-json-secret");
+    expect(result).not.toContain("bionic-json-secret");
     expect(result).not.toContain("escaped-json-secret");
-    expect(result).not.toContain("paperclip-shell-secret");
+    expect(result).not.toContain("bionic-shell-secret");
     expect(result).not.toContain(githubToken);
     expect(result).not.toContain(jwt);
   });
@@ -685,7 +685,7 @@ second-line\" status=401`,
         "--api-key=sk-inline-example",
       ],
       env: {
-        PAPERCLIP_RESOLVED_COMMAND:
+        BIONIC_RESOLVED_COMMAND:
           "env OPENAI_API_KEY=sk-live-example custom-acp --token ghp_example_secret",
         SAFE_VALUE: "visible",
       },
@@ -704,7 +704,7 @@ second-line\" status=401`,
       `--api-key=${REDACTED_EVENT_VALUE}`,
     ]);
     expect(result?.env).toEqual({
-      PAPERCLIP_RESOLVED_COMMAND: `env OPENAI_API_KEY=${REDACTED_EVENT_VALUE} custom-acp --token ${REDACTED_EVENT_VALUE}`,
+      BIONIC_RESOLVED_COMMAND: `env OPENAI_API_KEY=${REDACTED_EVENT_VALUE} custom-acp --token ${REDACTED_EVENT_VALUE}`,
       SAFE_VALUE: "visible",
     });
   });

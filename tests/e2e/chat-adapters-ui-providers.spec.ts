@@ -332,13 +332,13 @@ test.describe.serial("native chat adapter UI", () => {
 
       if (provider.provider === "slack") {
         await expect(page.getByRole("heading", { name: "Verify Slack connection" })).toBeVisible();
-        await expect(page.getByText("Slack needs to confirm that it can reach your Paperclip instance.")).toBeVisible();
+        await expect(page.getByText("Slack needs to confirm that it can reach your Bionic instance.")).toBeVisible();
         mock.setWebhookVerified();
         await expect(page.getByRole("heading", { name: "Give Maya a face in Slack" })).toBeVisible();
         const downloadEvent = page.waitForEvent("download");
         await page.getByRole("link", { name: "Download avatar" }).click();
         const download = await downloadEvent;
-        expect(download.suggestedFilename()).toBe("maya-paperclip-avatar.png");
+        expect(download.suggestedFilename()).toBe("maya-bionic-avatar.png");
         const png = await readFile((await download.path())!);
         expect(png.subarray(1, 4).toString()).toBe("PNG");
         expect(png.readUInt32BE(16)).toBe(512);
@@ -346,7 +346,7 @@ test.describe.serial("native chat adapter UI", () => {
         await page.getByRole("button", { name: "I’ve uploaded the avatar" }).click();
         await expect(page.getByRole("heading", { name: "Connect your Slack account" })).toBeVisible();
         await expect(page.getByText("/maya-public connect", { exact: true })).toBeVisible();
-        await page.getByRole("button", { name: "Link Test operator to my Paperclip account" }).click();
+        await page.getByRole("button", { name: "Link Test operator to my Bionic account" }).click();
         await page.getByRole("button", { name: "Continue to message test" }).click();
       }
 
@@ -422,7 +422,7 @@ test.describe.serial("native chat adapter UI", () => {
       ).toBeVisible();
       if (provider.provider === "slack") {
         await expect(page.getByRole("heading", { name: "Chat in Slack" })).toBeVisible();
-        await expect(page.getByText("@maya-paperclip you there?", { exact: true })).toBeVisible();
+        await expect(page.getByText("@maya-bionic you there?", { exact: true })).toBeVisible();
         await expect(page.getByRole("button", { name: "Copy message" })).toBeVisible();
         await expect(page.getByRole("heading", { name: "Allowed Channels" })).toBeVisible();
         const avatarSection = page.getByRole("region", { name: "Slack avatar" });
@@ -431,7 +431,7 @@ test.describe.serial("native chat adapter UI", () => {
         await expect(avatarSection.getByRole("link", { name: "Open Slack app Settings" })).toBeVisible();
         const settingsDownloadEvent = page.waitForEvent("download");
         await avatarSection.getByRole("link", { name: "Download avatar" }).click();
-        expect((await settingsDownloadEvent).suggestedFilename()).toBe("maya-paperclip-avatar.png");
+        expect((await settingsDownloadEvent).suggestedFilename()).toBe("maya-bionic-avatar.png");
       }
 
       await expect(
@@ -508,7 +508,7 @@ test.describe.serial("native chat adapter UI", () => {
       ).toBeVisible();
       await expect(
         page.getByText(
-          /Their tasks run only with an isolated workspace and sandbox environment; otherwise Paperclip safely refuses the request/,
+          /Their tasks run only with an isolated workspace and sandbox environment; otherwise Bionic safely refuses the request/,
         ),
       ).toBeVisible();
       const allowUnlinked = page.getByRole("switch", {
@@ -538,7 +538,7 @@ test.describe.serial("native chat adapter UI", () => {
       await expect
         .poll(() => mock.linkIntentPrincipalId)
         .toBe(`principal-${provider.provider}`);
-      const confirmationUrl = `https://paperclip.example.test/${seed.prefix}/chat-identity/confirm?token=e2e-redacted`;
+      const confirmationUrl = `https://bionic.example.test/${seed.prefix}/chat-identity/confirm?token=e2e-redacted`;
       await expect(
         page.getByText(confirmationUrl, { exact: true }),
       ).toBeVisible();
@@ -829,7 +829,7 @@ test.describe("iMessage Photon setup and management", () => {
         enableChatConnectors: true,
       });
       await page.addInitScript(
-        (value) => localStorage.setItem("paperclip.theme", value),
+        (value) => localStorage.setItem("bionic.theme", value),
         theme,
       );
       await page.goto(`/${seed.prefix}/apps`);

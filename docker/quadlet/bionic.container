@@ -1,0 +1,23 @@
+[Unit]
+Description=Bionic AI Agent Orchestrator
+Requires=bionic-db.service
+After=bionic-db.service
+
+[Container]
+Image=bionic-local
+ContainerName=bionic
+Pod=bionic.pod
+Volume=%h/.local/share/bionic:/bionic:Z
+Environment=HOST=0.0.0.0
+Environment=BIONIC_HOME=/bionic
+Environment=BIONIC_DEPLOYMENT_MODE=authenticated
+Environment=BIONIC_DEPLOYMENT_EXPOSURE=private
+Environment=BIONIC_PUBLIC_URL=http://localhost:3100
+EnvironmentFile=%h/.config/containers/systemd/bionic.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

@@ -26,7 +26,7 @@ import {
   issues,
   toolApplications,
   toolConnections,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 
 import { startEmbeddedPostgresTestDatabase } from "../../__tests__/helpers/embedded-postgres.js";
 import { createLocalDiskStorageProvider } from "../../storage/local-disk-provider.js";
@@ -34,7 +34,7 @@ import { createStorageService } from "../../storage/service.js";
 import type { StorageService } from "../../storage/types.js";
 import { issueService } from "../issues.js";
 import { NativeChatAttachmentReadScope } from "./chat-attachment-read.js";
-import { PaperclipRunnerToolAuthority } from "./paperclip-runner-tool-authority.js";
+import { PaperclipRunnerToolAuthority } from "./bionic-runner-tool-authority.js";
 
 const stagingControl = vi.hoisted(() => ({
   beforeStage: undefined as (() => Promise<void>) | undefined,
@@ -86,10 +86,10 @@ describe("native same-conversation historical attachment reading", () => {
     temporary = await startEmbeddedPostgresTestDatabase("native-chat-reuse-");
     db = createDb(temporary.connectionString);
     workspaceRoot = await mkdtemp(
-      path.join(tmpdir(), "paperclip-chat-read-workspace-"),
+      path.join(tmpdir(), "bionic-chat-read-workspace-"),
     );
     const storageRoot = await mkdtemp(
-      path.join(tmpdir(), "paperclip-chat-reuse-"),
+      path.join(tmpdir(), "bionic-chat-reuse-"),
     );
     await mkdir(storageRoot, { recursive: true });
     storage = createStorageService(createLocalDiskStorageProvider(storageRoot));
@@ -103,7 +103,7 @@ describe("native same-conversation historical attachment reading", () => {
       id: agentId,
       companyId,
       name: "Native chat agent",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "codex" },
       runtimeConfig: {},
       status: "active",
@@ -199,7 +199,7 @@ describe("native same-conversation historical attachment reading", () => {
       companyId,
       endpointId,
       principalId,
-      paperclipUserId: userId,
+      bionicUserId: userId,
       status: "linked",
     });
     await db.insert(companyMemberships).values({
@@ -295,10 +295,10 @@ describe("native same-conversation historical attachment reading", () => {
       .set({
         contextSnapshot: {
           source: "chat:discord",
-          paperclipHarnessCheckedOut: true,
+          bionicHarnessCheckedOut: true,
           wakeCommentIds: [currentCommentId],
           commentId: currentCommentId,
-          paperclipWake: {
+          bionicWake: {
             reason: "External chat message received",
             externalChatProvider: "discord",
             checkedOutByHarness: true,
@@ -344,7 +344,7 @@ describe("native same-conversation historical attachment reading", () => {
       sha256: createHash("sha256").update(sourceBody).digest("hex"),
     });
     expect(result).not.toHaveProperty("objectKey");
-    expect(result.workspaceRelativePath).toMatch(/^\.paperclip-inbound\//);
+    expect(result.workspaceRelativePath).toMatch(/^\.bionic-inbound\//);
     const stagedPath = path.join(workspaceRoot, result.workspaceRelativePath);
     expect(await readFile(stagedPath)).toEqual(sourceBody);
     expect(await db.select().from(issueAttachments)).toEqual(before);
@@ -497,12 +497,12 @@ describe("native same-conversation historical attachment reading", () => {
 
   it("rejects a symlinked staging root without touching its target", async () => {
     const unsafeRoot = await mkdtemp(
-      path.join(tmpdir(), "paperclip-chat-read-symlink-"),
+      path.join(tmpdir(), "bionic-chat-read-symlink-"),
     );
     const outside = await mkdtemp(
-      path.join(tmpdir(), "paperclip-chat-read-outside-"),
+      path.join(tmpdir(), "bionic-chat-read-outside-"),
     );
-    await symlink(outside, path.join(unsafeRoot, ".paperclip-inbound"));
+    await symlink(outside, path.join(unsafeRoot, ".bionic-inbound"));
     const reader = scope({ workspaceRoot: unsafeRoot });
     try {
       await expect(reader.read(selection())).rejects.toThrow("path_denied");

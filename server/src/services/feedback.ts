@@ -1,7 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { and, asc, desc, eq, getTableColumns, gte, isNull, lte, ne, or } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agents,
   companies,
@@ -17,11 +17,11 @@ import {
   issueComments,
   issueDocuments,
   issues,
-} from "@paperclipai/db";
-import { readPaperclipSkillSyncPreference } from "@paperclipai/adapter-utils/server-utils";
-import { claudeConfigDir, parseClaudeStreamJson } from "@paperclipai/adapter-claude-local/server";
-import { codexHomeDir, parseCodexJsonl } from "@paperclipai/adapter-codex-local/server";
-import { parseOpenCodeJsonl } from "@paperclipai/adapter-opencode-local/server";
+} from "@bionicai/db";
+import { readPaperclipSkillSyncPreference } from "@bionicai/adapter-utils/server-utils";
+import { claudeConfigDir, parseClaudeStreamJson } from "@bionicai/adapter-claude-local/server";
+import { codexHomeDir, parseCodexJsonl } from "@bionicai/adapter-codex-local/server";
+import { parseOpenCodeJsonl } from "@bionicai/adapter-opencode-local/server";
 import {
   DEFAULT_FEEDBACK_DATA_SHARING_PREFERENCE,
   DEFAULT_FEEDBACK_DATA_SHARING_TERMS_VERSION,
@@ -35,7 +35,7 @@ import {
   type FeedbackTraceStatus,
   type FeedbackTraceTargetSummary,
   type FeedbackVoteValue,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { resolveHomeAwarePath, resolvePaperclipInstanceRoot } from "../home-paths.js";
 import { notFound, unprocessable } from "../errors.js";
 import { agentInstructionsBundleMode, agentInstructionsService } from "./agent-instructions.js";
@@ -49,10 +49,10 @@ import {
 import { getRunLogStore } from "./run-log-store.js";
 import { getOperatorSettingDefaults } from "./setting-defaults.js";
 
-const FEEDBACK_SCHEMA_VERSION = "paperclip-feedback-envelope-v2";
-const FEEDBACK_BUNDLE_VERSION = "paperclip-feedback-bundle-v2";
-const FEEDBACK_PAYLOAD_VERSION = "paperclip-feedback-v1";
-const FEEDBACK_DESTINATION = "paperclip_labs_feedback_v1";
+const FEEDBACK_SCHEMA_VERSION = "bionic-feedback-envelope-v2";
+const FEEDBACK_BUNDLE_VERSION = "bionic-feedback-bundle-v2";
+const FEEDBACK_PAYLOAD_VERSION = "bionic-feedback-v1";
+const FEEDBACK_DESTINATION = "bionic_labs_feedback_v1";
 const FEEDBACK_CONTEXT_WINDOW = 3;
 const MAX_EXCERPT_CHARS = 200;
 const MAX_PRIMARY_CONTENT_CHARS = 8_000;
@@ -372,9 +372,9 @@ function captureStatusFromFiles(files: FeedbackTraceBundleFile[]): FeedbackTrace
   }
 
   const hasAdapterFiles = files.some((file) =>
-    file.source !== "paperclip_run" &&
-    file.source !== "paperclip_run_events" &&
-    file.source !== "paperclip_run_log",
+    file.source !== "bionic_run" &&
+    file.source !== "bionic_run_events" &&
+    file.source !== "bionic_run_log",
   );
   if (hasAdapterFiles) return "partial";
   return files.length > 0 ? "partial" : "unavailable";
@@ -590,7 +590,7 @@ async function buildOpenCodeTraceFiles(input: {
   }
 
   const opencodeRoot = resolveHomeAwarePath(
-    process.env.PAPERCLIP_OPENCODE_STORAGE_DIR ?? "~/.local/share/opencode",
+    process.env.BIONIC_OPENCODE_STORAGE_DIR ?? "~/.local/share/opencode",
   );
   const sessionRoot = path.join(opencodeRoot, "storage", "session");
   const diffRoot = path.join(opencodeRoot, "storage", "session_diff");
@@ -1338,7 +1338,7 @@ async function buildAgentContext(
         entryBody,
       }
       : null,
-    paperclip: {
+    bionic: {
       schemaVersion: FEEDBACK_SCHEMA_VERSION,
       bundleVersion: FEEDBACK_BUNDLE_VERSION,
     },
@@ -1396,7 +1396,7 @@ async function buildPayloadArtifacts(
   const basePayload = {
     schemaVersion: FEEDBACK_SCHEMA_VERSION,
     bundleVersion: FEEDBACK_BUNDLE_VERSION,
-    sourceApp: "paperclip",
+    sourceApp: "bionic",
     capturedAt: input.now.toISOString(),
     consentVersion: input.consentVersion,
     vote: {
@@ -1475,7 +1475,7 @@ async function buildFeedbackTraceBundleFromRow(
   const files: FeedbackTraceBundleFile[] = [];
   const sourceRunId = resolveSourceRunId(payloadSnapshot);
 
-  let paperclipRun: Record<string, unknown> | null = null;
+  let bionicRun: Record<string, unknown> | null = null;
   let rawAdapterTrace: Record<string, unknown> | null = null;
   let normalizedAdapterTrace: Record<string, unknown> | null = null;
   let adapterType: string | null = null;
@@ -1532,7 +1532,7 @@ async function buildFeedbackTraceBundleFromRow(
         .map((entry) => entry.chunk)
         .join("");
 
-      paperclipRun = sanitizeFeedbackValue(
+      bionicRun = sanitizeFeedbackValue(
         {
           id: run.id,
           companyId: run.companyId,
@@ -1562,36 +1562,36 @@ async function buildFeedbackTraceBundleFromRow(
           eventCount: events.length,
         },
         state,
-        "bundle.paperclipRun",
+        "bundle.bionicRun",
         MAX_TRACE_FILE_CHARS,
       ) as Record<string, unknown>;
 
       files.push(makeBundleFile({
-        path: "paperclip/run.json",
+        path: "bionic/run.json",
         contentType: "application/json",
-        source: "paperclip_run",
-        contents: `${JSON.stringify(paperclipRun, null, 2)}\n`,
+        source: "bionic_run",
+        contents: `${JSON.stringify(bionicRun, null, 2)}\n`,
       }));
 
       const sanitizedEvents = sanitizeFeedbackValue(
         events,
         state,
-        "bundle.paperclipRun.events",
+        "bundle.bionicRun.events",
         MAX_TRACE_FILE_CHARS,
       );
       files.push(makeBundleFile({
-        path: "paperclip/run-events.json",
+        path: "bionic/run-events.json",
         contentType: "application/json",
-        source: "paperclip_run_events",
+        source: "bionic_run_events",
         contents: `${JSON.stringify(sanitizedEvents, null, 2)}\n`,
       }));
 
       if (logText) {
         files.push(makeBundleFile({
-          path: "paperclip/run-log.ndjson",
+          path: "bionic/run-log.ndjson",
           contentType: "application/x-ndjson",
-          source: "paperclip_run_log",
-          contents: `${sanitizeFeedbackText(logText, state, "bundle.paperclipRun.log", MAX_TRACE_FILE_CHARS)}\n`,
+          source: "bionic_run_log",
+          contents: `${sanitizeFeedbackText(logText, state, "bundle.bionicRun.log", MAX_TRACE_FILE_CHARS)}\n`,
         }));
       } else {
         appendNote(notes, "run_log_missing");
@@ -1692,7 +1692,7 @@ async function buildFeedbackTraceBundleFromRow(
     notes,
     envelope,
     surface,
-    paperclipRun,
+    bionicRun,
     rawAdapterTrace,
     normalizedAdapterTrace,
     privacy,

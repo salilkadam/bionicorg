@@ -6,9 +6,9 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: /^@paperclipai\/paperclip-runner$/,
+        find: /^@bionicai\/bionic-runner$/,
         replacement: fileURLToPath(
-          new URL("../packages/paperclip-runner/src/index.ts", import.meta.url),
+          new URL("../packages/bionic-runner/src/index.ts", import.meta.url),
         ),
       },
     ],

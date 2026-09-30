@@ -164,26 +164,26 @@ async function stageDashboardBrandAssets(output: string) {
 
 async function main() {
   const root = path.resolve(
-    process.env.PAPERCLIP_RUNNER_E2E_REPORT_ROOT ?? "tests/runner-e2e/results",
+    process.env.BIONIC_RUNNER_E2E_REPORT_ROOT ?? "tests/runner-e2e/results",
   );
   const output = path.resolve(
-    process.env.PAPERCLIP_RUNNER_E2E_REPORT_OUT ?? path.join(root, "merged"),
+    process.env.BIONIC_RUNNER_E2E_REPORT_OUT ?? path.join(root, "merged"),
   );
   const expectedInput = JSON.parse(
-    process.env.PAPERCLIP_RUNNER_E2E_EXPECTED_IDS ?? "[]",
+    process.env.BIONIC_RUNNER_E2E_EXPECTED_IDS ?? "[]",
   ) as string[];
   if (
     !Array.isArray(expectedInput) ||
     expectedInput.some((value) => typeof value !== "string")
   ) {
     throw new Error(
-      "PAPERCLIP_RUNNER_E2E_EXPECTED_IDS must be a JSON string array",
+      "BIONIC_RUNNER_E2E_EXPECTED_IDS must be a JSON string array",
     );
   }
   const expected = expectedInput.map(canonicalExecutionId);
   if (expected.length === 0 || new Set(expected).size !== expected.length) {
     throw new Error(
-      "PAPERCLIP_RUNNER_E2E_EXPECTED_IDS must contain unique selected executions",
+      "BIONIC_RUNNER_E2E_EXPECTED_IDS must contain unique selected executions",
     );
   }
   const resultFiles = (await walk(root)).filter(
@@ -195,8 +195,8 @@ async function main() {
       await readFile(resultFile, "utf8"),
     ) as RunnerE2EResult;
     if (
-      parsed.schema !== "paperclip.runner-e2e.result/v1" &&
-      parsed.schema !== "paperclip.runner-e2e.result/v2"
+      parsed.schema !== "bionic.runner-e2e.result/v1" &&
+      parsed.schema !== "bionic.runner-e2e.result/v2"
     )
       continue;
     const result = upgradeRunnerResult(parsed);
@@ -249,7 +249,7 @@ async function main() {
         (candidate) => candidate.id === executionId,
       )!;
       const missing: RunnerE2EResult = {
-        schema: "paperclip.runner-e2e.result/v2",
+        schema: "bionic.runner-e2e.result/v2",
         executionId,
         suiteId: execution?.suite.id ?? "core-compatibility",
         suiteDefinitionHash: execution?.suiteDefinitionHash,
@@ -301,7 +301,7 @@ async function main() {
   const generatedAt = new Date().toISOString();
   const campaign = buildRunnerCampaign({
     campaignId:
-      process.env.PAPERCLIP_E2E_CAMPAIGN_ID ??
+      process.env.BIONIC_E2E_CAMPAIGN_ID ??
       (process.env.GITHUB_RUN_ID
         ? `gha-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? "1"}`
         : `report-${generatedAt.replace(/[:.]/g, "-")}`),
@@ -345,8 +345,8 @@ async function main() {
     campaignId: normalized.campaignId,
     workflowRunUrl: normalized.source.workflowRunUrl,
     historyPublicBaseUrl:
-      process.env.PAPERCLIP_RUNNER_E2E_HISTORY_PUBLIC_BASE_URL,
-    historyPrefix: process.env.PAPERCLIP_RUNNER_E2E_HISTORY_PREFIX,
+      process.env.BIONIC_RUNNER_E2E_HISTORY_PUBLIC_BASE_URL,
+    historyPrefix: process.env.BIONIC_RUNNER_E2E_HISTORY_PREFIX,
   });
   const publicCampaignUrl = summaryLinks.find(
     (link) => link.kind === "campaign",

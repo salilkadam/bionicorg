@@ -1,6 +1,6 @@
 import { applyConnectorSkills, prepareConnectorSkillDelivery, resolveConnectorAssignments, annotateConnectorSkills } from "../services/connector-runtime.js";
-import { PaperclipRunnerToolAuthority } from "../services/native-runtime/paperclip-runner-tool-authority.js";
-import { renderPaperclipWakePrompt, resolvePaperclipDesiredSkillNames, resolveLegacyPaperclipDesiredSkillNames } from "@paperclipai/adapter-utils/server-utils";
+import { PaperclipRunnerToolAuthority } from "../services/native-runtime/bionic-runner-tool-authority.js";
+import { renderPaperclipWakePrompt, resolvePaperclipDesiredSkillNames, resolveLegacyPaperclipDesiredSkillNames } from "@bionicai/adapter-utils/server-utils";
 import express from "express";
 import type WebSocket from "ws";
 import request from "supertest";
@@ -47,7 +47,7 @@ import {
   toolConnectionInstalls,
   connectionGrants,
   projects,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import { startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import {
   emailChannelService,
@@ -61,21 +61,21 @@ import {
 } from "../services/agentmail-api.js";
 import { emailConnectionService } from "../services/email-connections.js";
 import { toolAccessService } from "../services/tool-access.js";
-import { emailSendSchema } from "@paperclipai/shared";
+import { emailSendSchema } from "@bionicai/shared";
 import { chatChannelService } from "../services/chat-channels.js";
 
 describe("AgentMail durable email pipeline", () => {
   let database: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>>;
   let db: ReturnType<typeof createDb>;
-  const folder = mkdtempSync(path.join(os.tmpdir(), "paperclip-email-"));
-  const previous = process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+  const folder = mkdtempSync(path.join(os.tmpdir(), "bionic-email-"));
+  const previous = process.env.BIONIC_SECRETS_MASTER_KEY_FILE;
   const services: EmailChannelService[] = [];
   beforeAll(async () => {
-    process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE = path.join(
+    process.env.BIONIC_SECRETS_MASTER_KEY_FILE = path.join(
       folder,
       "master.key",
     );
-    database = await startEmbeddedPostgresTestDatabase("paperclip-email-");
+    database = await startEmbeddedPostgresTestDatabase("bionic-email-");
     db = createDb(database.connectionString);
     await instanceSettingsService(db).updateExperimental({
       enableChatConnectors: true,
@@ -105,8 +105,8 @@ describe("AgentMail durable email pipeline", () => {
   afterAll(async () => {
     await database?.cleanup();
     if (previous === undefined)
-      delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
-    else process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE = previous;
+      delete process.env.BIONIC_SECRETS_MASTER_KEY_FILE;
+    else process.env.BIONIC_SECRETS_MASTER_KEY_FILE = previous;
     rmSync(folder, { recursive: true, force: true });
   });
   it("installs one connector skill and provider tools only for the assigned agent", async () => {
@@ -115,26 +115,26 @@ describe("AgentMail durable email pipeline", () => {
     const assignments = await resolveConnectorAssignments(db, binding);
     expect(assignments).toHaveLength(1);
     expect(assignments[0].resources[0].id).toBe(f.endpointId);
-    const base = { paperclipSkillSync: { desiredSkills: [] } };
+    const base = { bionicSkillSync: { desiredSkills: [] } };
     const configured = await applyConnectorSkills(base, [], assignments);
-    expect(base.paperclipSkillSync.desiredSkills).toEqual([]);
-    expect(resolvePaperclipDesiredSkillNames(configured, configured.paperclipRuntimeSkills)).toEqual(["paperclipai/paperclip/agentmail"]);
-    expect(resolveLegacyPaperclipDesiredSkillNames(configured, configured.paperclipRuntimeSkills)).toContain("paperclipai/paperclip/agentmail");
-    const markdown = readFileSync(path.join(configured.paperclipRuntimeSkills[0].source, "SKILL.md"), "utf8");
+    expect(base.bionicSkillSync.desiredSkills).toEqual([]);
+    expect(resolvePaperclipDesiredSkillNames(configured, configured.bionicRuntimeSkills)).toEqual(["bionicai/bionic/agentmail"]);
+    expect(resolveLegacyPaperclipDesiredSkillNames(configured, configured.bionicRuntimeSkills)).toContain("bionicai/bionic/agentmail");
+    const markdown = readFileSync(path.join(configured.bionicRuntimeSkills[0].source, "SKILL.md"), "utf8");
     expect(markdown).toContain(f.endpointId);
     expect(markdown).toContain("agentmail_send");
     expect(markdown).not.toContain("test-key");
     for (const adapterType of ["cursor_local", "gemini_local", "opencode_local", "pi_local", "codex_local"]) {
       const delivery = await prepareConnectorSkillDelivery(configured, adapterType);
-      expect(delivery.config.paperclipRuntimeSkills).toEqual([]);
-      expect(delivery.config.paperclipConnectorSkillDigest).toBe(configured.paperclipConnectorSkillDigest);
+      expect(delivery.config.bionicRuntimeSkills).toEqual([]);
+      expect(delivery.config.bionicConnectorSkillDigest).toBe(configured.bionicConnectorSkillDigest);
       for (const resumedSession of [false, true]) {
         expect(renderPaperclipWakePrompt({ connectorSkillInstructions: delivery.instructions }, { resumedSession })).toContain(f.endpointId);
       }
     }
-    const nativeDelivery = await prepareConnectorSkillDelivery(configured, "paperclip_runner");
+    const nativeDelivery = await prepareConnectorSkillDelivery(configured, "bionic_runner");
     expect(nativeDelivery.instructions).toBe("");
-    expect(nativeDelivery.config.paperclipRuntimeSkills).toHaveLength(1);
+    expect(nativeDelivery.config.bionicRuntimeSkills).toHaveLength(1);
     const authority = new PaperclipRunnerToolAuthority(db, { ...binding, issueId: randomUUID(), runId: randomUUID(), connectorAssignments: assignments });
     expect(authority.definitions().filter((tool) => String(tool.name).startsWith("agentmail_")).map((tool) => tool.name)).toEqual([
       "agentmail_inboxes", "agentmail_read_thread", "agentmail_send", "agentmail_delivery",
@@ -142,9 +142,9 @@ describe("AgentMail durable email pipeline", () => {
     expect(authority.definitions().some((tool) => tool.name === "task_email")).toBe(false);
     expect(await resolveConnectorAssignments(db, { ...binding, agentId: randomUUID() })).toEqual([]);
     expect(await resolveConnectorAssignments(db, { ...binding, companyId: randomUUID() })).toEqual([]);
-    const disconnected = await applyConnectorSkills(configured, configured.paperclipRuntimeSkills, []);
-    expect(disconnected.paperclipRuntimeSkills).toEqual([]);
-    expect(disconnected.paperclipConnectorSkillDigest).toBeNull();
+    const disconnected = await applyConnectorSkills(configured, configured.bionicRuntimeSkills, []);
+    expect(disconnected.bionicRuntimeSkills).toEqual([]);
+    expect(disconnected.bionicConnectorSkillDigest).toBeNull();
     expect(resolvePaperclipDesiredSkillNames(disconnected, [])).toEqual([]);
     expect(new PaperclipRunnerToolAuthority(db, { ...binding, issueId: randomUUID(), runId: randomUUID() }).definitions().some((tool) => String(tool.name).startsWith("agentmail_"))).toBe(false);
     const snapshot = annotateConnectorSkills({ adapterType: "codex_local", supported: true, mode: "ephemeral", desiredSkills: [assignments[0].skillKey], entries: [{ key: assignments[0].skillKey, runtimeName: "agentmail", desired: true, managed: true, state: "configured" }], warnings: [] }, assignments);
@@ -167,11 +167,11 @@ describe("AgentMail durable email pipeline", () => {
     const assignments = await resolveConnectorAssignments(db, binding);
     expect(assignments).toHaveLength(1);
     expect(assignments[0].resources).toHaveLength(2);
-    const after = await applyConnectorSkills(before, before.paperclipRuntimeSkills, assignments);
-    expect(after.paperclipRuntimeSkills).toHaveLength(1);
-    expect(after.paperclipConnectorSkillDigest).not.toBe(before.paperclipConnectorSkillDigest);
-    expect(after.paperclipRuntimeSkills[0].source).not.toBe(before.paperclipRuntimeSkills[0].source);
-    const markdown = readFileSync(path.join(after.paperclipRuntimeSkills[0].source, "SKILL.md"), "utf8");
+    const after = await applyConnectorSkills(before, before.bionicRuntimeSkills, assignments);
+    expect(after.bionicRuntimeSkills).toHaveLength(1);
+    expect(after.bionicConnectorSkillDigest).not.toBe(before.bionicConnectorSkillDigest);
+    expect(after.bionicRuntimeSkills[0].source).not.toBe(before.bionicRuntimeSkills[0].source);
+    const markdown = readFileSync(path.join(after.bionicRuntimeSkills[0].source, "SKILL.md"), "utf8");
     expect(markdown).toContain(first.address);
     expect(markdown).toContain(second.address);
     await second.service.control(extra.id, "remove", { userId: "email-board" });
@@ -304,7 +304,7 @@ describe("AgentMail durable email pipeline", () => {
     const service = emailChannelService(db, {
       heartbeat: { wakeup },
       fetch: fetcher,
-      publicBaseUrl: "https://paperclip.example.test",
+      publicBaseUrl: "https://bionic.example.test",
       createSocket,
       storage,
     });

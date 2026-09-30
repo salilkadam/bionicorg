@@ -1,4 +1,4 @@
-import { toolActionRequests, toolInvocations } from "@paperclipai/db";
+import { toolActionRequests, toolInvocations } from "@bionicai/db";
 import { GitHubPublicationLeaseLost, withGitHubPublicationLease } from "../services/chat-github-publication-lease.js";
 import { githubChatManagementService } from "../services/chat-github-management.js";
 import { githubChatReviewService } from "../services/chat-github-reviews.js";
@@ -7,7 +7,7 @@ import { githubAutomaticReviewEvent } from "../services/chat-github-events.js";
 import { githubBotToolsForSession } from "../services/chat-github-tools.js";
 import { resolveGitHubOperationCredentials } from "../services/github-operation-credentials.js";
 import { initializeRunIdentity } from "../services/run-identity.js";
-import { chatGitHubRegistrations, chatGitHubReviews, toolCatalogEntries } from "@paperclipai/db";
+import { chatGitHubRegistrations, chatGitHubReviews, toolCatalogEntries } from "@bionicai/db";
 import { AsyncLocalStorage } from "node:async_hooks";
 import * as cloudRuntimeIdentity from "../services/cloud-runtime-identity.js";
 import {
@@ -85,9 +85,9 @@ import {
   environmentLeases,
   principalPermissionGrants,
   toolConnections,
-} from "@paperclipai/db";
-import type { ChatProvider } from "@paperclipai/shared";
-import { isPaperclipExternalChatTurn } from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/db";
+import type { ChatProvider } from "@bionicai/shared";
+import { isPaperclipExternalChatTurn } from "@bionicai/adapter-utils/server-utils";
 import type { Attachment, Author, Message, Thread } from "chat";
 import { errorHandler } from "../middleware/index.js";
 import { issueRoutes } from "../routes/issues.js";
@@ -119,7 +119,7 @@ import type { TelegramDraftControl } from "../services/chat-telegram-draft-stop.
 
 // Opt-in private physical candidate; normal CI uses the staged pinned package.
 vi.mock("@chat-adapter/telegram", async (importOriginal) => {
-  const candidate = process.env.PAPERCLIP_TELEGRAM_STOP_ADAPTER_MODULE;
+  const candidate = process.env.BIONIC_TELEGRAM_STOP_ADAPTER_MODULE;
   return candidate ? import(/* @vite-ignore */ candidate) : importOriginal();
 });
 import { createDiscordAdapter } from "@chat-adapter/discord";
@@ -134,7 +134,7 @@ import * as discordQuestionForms from "../services/chat-discord-question-forms.j
 import { issueService } from "../services/issues.js";
 import { instanceSettingsService } from "../services/instance-settings.js";
 import { getExternalChannelBindingSummary } from "../services/chat-channel-binding.js";
-import { PaperclipRunnerToolAuthority } from "../services/native-runtime/paperclip-runner-tool-authority.js";
+import { PaperclipRunnerToolAuthority } from "../services/native-runtime/bionic-runner-tool-authority.js";
 import { NativeChatAttachmentReadScope } from "../services/native-runtime/chat-attachment-read.js";
 import { logActivity } from "../services/activity-log.js";
 import { subscribeCompanyLiveEvents } from "../services/live-events.js";
@@ -180,20 +180,20 @@ import { logger as chatAttachmentLogger } from "../middleware/logger.js";
 import type {
   PrpStructuredRunResult,
   PrpTerminalState,
-} from "../vendor/paperclip-runner/index.js";
+} from "../vendor/bionic-runner/index.js";
 import {
   finalizeNativeRun,
   repairCommittedNativeChatResponse,
 } from "../services/native-runtime/native-run-finalizer.js";
 import { NativeRunCoordinatorStore } from "../services/native-runtime/native-run-coordinator-store.js";
 import { reconcileNativeFinalizations } from "../services/native-runtime/native-finalization-reconciler.js";
-import { PaperclipControlPlanePort } from "../services/native-runtime/paperclip-control-plane-port.js";
+import { PaperclipControlPlanePort } from "../services/native-runtime/bionic-control-plane-port.js";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
 } from "./helpers/embedded-postgres.js";
 
-const externalTestDatabaseUrl = process.env.PAPERCLIP_TEST_DATABASE_URL;
+const externalTestDatabaseUrl = process.env.BIONIC_TEST_DATABASE_URL;
 const embeddedPostgresSupport = externalTestDatabaseUrl
   ? { supported: true }
   : await getEmbeddedPostgresTestSupport();
@@ -412,7 +412,7 @@ class FakeEndpointRuntime {
     control: TelegramDraftControl,
   ) {
     if (!(await control.beforeDraft()) || !(await control.beforeFinal()))
-      return { paperclipDraftStopped: true as const };
+      return { bionicDraftStopped: true as const };
     return this.thread(threadId).post(stream);
   }
 
@@ -759,7 +759,7 @@ function fakeSlackFetch(botId = `U-BOT-${randomUUID()}`) {
           JSON.stringify({
             ok: true,
             team_id: "T-PAPERCLIP",
-            team: "Paperclip Test",
+            team: "Bionic Test",
             user_id: botId,
             user: `maya-${botId.slice(-8)}`,
           }),
@@ -865,8 +865,8 @@ function fakeTelegramFetch(
           ok: true,
           result: {
             id: botId,
-            username: `paperclip_${botId}_bot`,
-            first_name: "Paperclip Test",
+            username: `bionic_${botId}_bot`,
+            first_name: "Bionic Test",
           },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
@@ -1010,15 +1010,15 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   let tempDb: Awaited<
     ReturnType<typeof startEmbeddedPostgresTestDatabase>
   > | null = null;
-  const previousKeyFile = process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+  const previousKeyFile = process.env.BIONIC_SECRETS_MASTER_KEY_FILE;
   const secretsTmpDir = path.join(
     os.tmpdir(),
-    `paperclip-chat-channels-${randomUUID()}`,
+    `bionic-chat-channels-${randomUUID()}`,
   );
 
   beforeAll(async () => {
     mkdirSync(secretsTmpDir, { recursive: true });
-    process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE = path.join(
+    process.env.BIONIC_SECRETS_MASTER_KEY_FILE = path.join(
       secretsTmpDir,
       "master.key",
     );
@@ -1026,7 +1026,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       db = createDb(externalTestDatabaseUrl);
     } else {
       tempDb = await startEmbeddedPostgresTestDatabase(
-        "paperclip-chat-channels-",
+        "bionic-chat-channels-",
       );
       db = createDb(tempDb.connectionString);
     }
@@ -1035,8 +1035,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   afterAll(async () => {
     await tempDb?.cleanup();
     if (previousKeyFile === undefined)
-      delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
-    else process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE = previousKeyFile;
+      delete process.env.BIONIC_SECRETS_MASTER_KEY_FILE;
+    else process.env.BIONIC_SECRETS_MASTER_KEY_FILE = previousKeyFile;
     rmSync(secretsTmpDir, { recursive: true, force: true });
   });
 
@@ -1125,7 +1125,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         name: "Maya",
         role: "engineer",
         status: "idle",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
         runtimeConfig: {},
         permissions: {},
@@ -1136,7 +1136,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         name: "Linus",
         role: "engineer",
         status: "idle",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         adapterConfig: {},
         runtimeConfig: {},
         permissions: {},
@@ -1248,7 +1248,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const service = chatChannelService(db, {
       fetch: providerFetch,
       heartbeat: { cancelRun, wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       runtime: runtime as unknown as ChatSdkRuntime,
       ...serviceOverrides,
     });
@@ -1322,7 +1322,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       publicId,
       "slack",
       new Request(
-        `https://paperclip.example/api/chat-webhooks/${publicId}/slack`,
+        `https://bionic.example/api/chat-webhooks/${publicId}/slack`,
         {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -1373,7 +1373,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       publicId,
       "github",
       new Request(
-        `https://paperclip.example/api/chat-webhooks/${publicId}/github`,
+        `https://bionic.example/api/chat-webhooks/${publicId}/github`,
         {
           method: "POST",
           headers: {
@@ -1439,7 +1439,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const signature = createHmac("sha256", input.webhookSecret)
       .update(body)
       .digest("hex");
-    return new Request(input.url ?? "https://paperclip.example/github", {
+    return new Request(input.url ?? "https://bionic.example/github", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -1630,7 +1630,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
     if (overrides.linkedBoardUser) {
       const [principal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UBOARD" }).returning();
-      await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+      await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
     }
     await recordSlackUrlVerification(context.service, endpoint.publicId);
     await context.service.configure(
@@ -1880,9 +1880,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     let repositories = [
       {
         id: 97531,
-        full_name: "paperclipai/paperclip",
-        html_url: "https://github.com/paperclipai/paperclip",
-        owner: { id: 1357, login: "paperclipai" },
+        full_name: "bionicai/bionic",
+        html_url: "https://github.com/bionicai/bionic",
+        owner: { id: 1357, login: "bionicai" },
         private: false,
       },
     ];
@@ -1947,8 +1947,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           JSON.stringify({
             id: appRegistrationId,
             slug: `maya-${fixture.companyId.slice(0, 8)}`,
-            name: "Maya Paperclip",
-            owner: { login: "paperclipai" },
+            name: "Maya Bionic",
+            owner: { login: "bionicai" },
             permissions: appPermissions,
             events: appEvents,
           }),
@@ -1964,7 +1964,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                     id: installationId,
                     account: {
                       id: 1357,
-                      login: "paperclipai",
+                      login: "bionicai",
                       type: "Organization",
                     },
                     permissions: installationPermissions,
@@ -2126,7 +2126,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: fixture.companyId,
         endpointId: endpoint.id,
         principalId: principal.id,
-        paperclipUserId: "owner-user",
+        bionicUserId: "owner-user",
         status: "linked",
         confirmedAt: new Date(),
       });
@@ -2162,7 +2162,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const registration = await service.startGitHubRegistration(
         endpoint.id,
         "owner-user",
-        "Paperclip Review QA",
+        "Bionic Review QA",
       );
       expect(registration.manifest.redirect_url).toBe(
         "https://reviews.example.test/api/chat-github/manifest/callback",
@@ -2432,8 +2432,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         "owner-user",
       );
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:94",
+        channelId: "bionicai/bionic",
+        id: "github:bionicai/bionic:94",
         name: "Guest review",
       }).thread;
       await deliverMessage({
@@ -2520,9 +2520,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         installation: { id: 2468 },
         repository: {
           id: 97531,
-          full_name: "paperclipai/paperclip",
-          name: "paperclip",
-          owner: { id: 1357, login: "paperclipai" },
+          full_name: "bionicai/bionic",
+          name: "bionic",
+          owner: { id: 1357, login: "bionicai" },
         },
         sender: { id: 77, login: "maintainer" },
         pull_request: {
@@ -2577,7 +2577,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         originKind: "chat_channel",
       });
       const [conversation] = await db.select().from(chatConversations).where(eq(chatConversations.issueId, task.id));
-      expect(conversation.providerUrl).toBe("https://github.com/paperclipai/paperclip/pull/81");
+      expect(conversation.providerUrl).toBe("https://github.com/bionicai/bionic/pull/81");
       expect(reviews[0].event.sender.id).toBe("77");
       expect(reviews[0].event.author.id).toBe("42");
       expect(reviews[0].policySnapshot.ratingThreshold).toBe(5);
@@ -2610,7 +2610,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const payload = {
         action: "synchronize",
         installation: { id: 2468 },
-        repository: { id: 97531, full_name: "paperclipai/paperclip", name: "paperclip", owner: { id: 1357, login: "paperclipai" } },
+        repository: { id: 97531, full_name: "bionicai/bionic", name: "bionic", owner: { id: 1357, login: "bionicai" } },
         sender: { id: 42, login: "octocat" },
         pull_request: {
           number: 82, title: "Rapid pushes", body: "", draft: false,
@@ -2654,7 +2654,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const head = "b".repeat(40);
       const event = githubAutomaticReviewEvent({
         action: "opened", installation: { id: 2468 },
-        repository: { id: 97531, full_name: "paperclipai/paperclip", name: "paperclip", owner: { id: 1357, login: "paperclipai" } },
+        repository: { id: 97531, full_name: "bionicai/bionic", name: "bionic", owner: { id: 1357, login: "bionicai" } },
         sender: { id: 42, login: "octocat" },
         pull_request: {
           number: 83, title: "Manual review required", body: "", draft: false,
@@ -2689,8 +2689,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const f = await reviewBotFixture();
       const [company] = await db.select().from(companies).where(eq(companies.id, f.companyId));
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:91",
+        channelId: "bionicai/bionic",
+        id: "github:bionicai/bionic:91",
         name: "Review PR",
       }).thread;
       await deliverMessage({
@@ -2768,7 +2768,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       });
       f.setSupplementalProviderFetch(async (input, init) => {
         const url = String(input);
-        if (!url.includes("/repos/paperclipai/paperclip/")) return undefined;
+        if (!url.includes("/repos/bionicai/bionic/")) return undefined;
         if (init?.method === "POST" || init?.method === "PATCH") {
           const body = JSON.parse(String(init.body));
           mutations.push({ url, body });
@@ -2838,7 +2838,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(await db.select().from(chatGitHubReviews).where(eq(chatGitHubReviews.endpointId, f.endpoint.id))).toHaveLength(1);
       await githubReviewCheckService(db, f.providerFetch).processPending();
       expect(mutations.at(-1)).toMatchObject({
-        url: "https://api.github.com/repos/paperclipai/paperclip/check-runs",
+        url: "https://api.github.com/repos/bionicai/bionic/check-runs",
         body: {
           status: "in_progress", external_id: `${f.endpoint.id}:91:${head}`,
           details_url: `https://current-vanity.example/${company.issuePrefix}/issues/${conversation.issueId}`,
@@ -2888,7 +2888,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(
         mutations.find((m) => m.body.conclusion === "failure")?.body,
       ).toMatchObject({
-        name: "Paperclip Review",
+        name: "Bionic Review",
         head_sha: head,
         conclusion: "failure",
         details_url: `https://current-vanity.example/${company.issuePrefix}/issues/${conversation.issueId}`,
@@ -3378,7 +3378,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         expect(f.calls).toEqual(["GET", "POST"]);
         expect(f.commandRows().map((row) => row.name)).toEqual([
           "other",
-          "paperclip",
+          "bionic",
         ]);
         const [registration] = await db
           .select()
@@ -3522,7 +3522,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           f
             .commandRows()
             .map((command) =>
-              command.name === "paperclip"
+              command.name === "bionic"
                 ? { ...command, description: "Owned by another integration" }
                 : command,
             ),
@@ -3684,7 +3684,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     const guid = randomUUID();
     const deliveryId = "9007199254740993";
-    const webhookUrl = `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/github`;
+    const webhookUrl = `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/github`;
     const createdAt = new Date(Date.now() - 30_000).toISOString();
     const body = `@${current.botUsername} recover the original request ${randomUUID()}`;
     const comment = {
@@ -3696,11 +3696,11 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       ...(event === "issue_comment"
         ? {
             issue_url:
-              "https://api.github.com/repos/paperclipai/paperclip/issues/91",
+              "https://api.github.com/repos/bionicai/bionic/issues/91",
           }
         : {
             pull_request_url:
-              "https://api.github.com/repos/paperclipai/paperclip/pulls/91",
+              "https://api.github.com/repos/bionicai/bionic/pulls/91",
           }),
     };
     const payload = {
@@ -3708,9 +3708,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       installation: { id: 2468 },
       repository: {
         id: 97531,
-        full_name: "paperclipai/paperclip",
-        name: "paperclip",
-        owner: { id: 1357, login: "paperclipai" },
+        full_name: "bionicai/bionic",
+        name: "bionic",
+        owner: { id: 1357, login: "bionicai" },
       },
       ...(event === "issue_comment"
         ? { issue: { id: 9190, number: 91 } }
@@ -3742,7 +3742,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     let beforePost: (() => Promise<void>) | undefined;
     const requests: Array<{ method: string; pathname: string }> = [];
     const posts: string[] = [];
-    const commentPath = `/repos/paperclipai/paperclip/${event === "issue_comment" ? "issues" : "pulls"}/comments/9191`;
+    const commentPath = `/repos/bionicai/bionic/${event === "issue_comment" ? "issues" : "pulls"}/comments/9191`;
     // Emit the actual unsafe JSON numeric literal, not a string-only mock.
     const json = (value: unknown) =>
       new Response(
@@ -3818,7 +3818,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .where(
           and(
             eq(chatSdkState.endpointId, endpoint.id),
-            eq(chatSdkState.stateKey, "paperclip:github-webhook-recovery:v1"),
+            eq(chatSdkState.stateKey, "bionic:github-webhook-recovery:v1"),
           ),
         )
         .then((rows) => rows[0]!);
@@ -4022,7 +4022,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await request(app).patch(`/api/chat-endpoints/${github.id}`).send({ communicationInstructions: "Not enabled" }).expect(422);
   });
 
-  it("mirrors Paperclip messages with user attribution and returns only the selected Slack reply", async () => {
+  it("mirrors Bionic messages with user attribution and returns only the selected Slack reply", async () => {
     await instanceSettingsService(db).updateExperimental({ enableChatConnectors: true });
     const fixture = await seedCompany();
     const { callbacks, endpoint, runtime, service, wakeup } = await configuredSlackEndpoint(fixture);
@@ -4034,7 +4034,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     runtime.endpoints.get(endpoint.id)!.posts.length = 0;
     wakeup.mockClear();
     const [boardPrincipal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UBOARD" }).returning();
-    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: boardPrincipal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: boardPrincipal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
     const clientRequestId = randomUUID();
     const comment = await issueService(db).addComment(conversation.issueId, "Please make the plan", { userId: "owner-user" },
       { authorType: "user", mirrorToSlack: true, clientRequestId });
@@ -4042,7 +4042,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { authorType: "user", mirrorToSlack: true, clientRequestId })).id).toBe(comment.id);
     await service.processPendingPublications();
     expect(runtime.endpoints.get(endpoint.id)!.posts).toEqual([
-      { threadId: channel.thread.id, text: "**Owner User (via Paperclip)**\n\nPlease make the plan" },
+      { threadId: channel.thread.id, text: "**Owner User (via Bionic)**\n\nPlease make the plan" },
     ]);
     const runId = randomUUID();
     await db.insert(heartbeatRuns).values({ id: runId, companyId: fixture.companyId, agentId: fixture.assignedAgentId,
@@ -4057,7 +4057,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await service.processPendingPublications();
     await service.processPendingPublications();
     expect(runtime.endpoints.get(endpoint.id)!.posts.map(post => post.text)).toEqual([
-      "**Owner User (via Paperclip)**\n\nPlease make the plan", "The plan is ready.",
+      "**Owner User (via Bionic)**\n\nPlease make the plan", "The plan is ready.",
     ]);
     // The explicit Board composer uses the same mirror and a durable wakeup.
     const key = randomUUID();
@@ -4100,7 +4100,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await expect(issueService(db).addComment(conversation.issueId, "Unlinked Board message", { userId: "owner-user" },
       { authorType: "user", mirrorToSlack: true })).rejects.toMatchObject({ status: 403 });
     const [principal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UBOARD" }).returning();
-    const [link] = await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() }).returning();
+    const [link] = await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() }).returning();
     const comment = await issueService(db).addComment(conversation.issueId, "Queued before access changed", { userId: "owner-user" }, { authorType: "user", mirrorToSlack: true });
     const runId = randomUUID();
     await db.insert(heartbeatRuns).values({ id: runId, companyId: fixture.companyId, agentId: fixture.assignedAgentId, status: "running", responsibleUserId: "owner-user", contextSnapshot: { issueId: conversation.issueId, source: "issue.comment", wakeCommentId: comment.id } });
@@ -4116,7 +4116,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       await db.update(chatIdentityLinks).set({ status: "revoked", revokedAt: new Date() }).where(eq(chatIdentityLinks.id, link.id));
       if (change === "relinked") {
         const [other] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UOTHER" }).returning();
-        await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: other.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+        await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: other.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
       }
       const { slackBoardReplyBindings } = await import("../services/slack-board-messages.js");
       expect(await slackBoardReplyBindings(db, { companyId: fixture.companyId, issueId: conversation.issueId, agentId: fixture.assignedAgentId, userId: "owner-user", commentIds: [comment.id] })).toEqual([]);
@@ -4124,7 +4124,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await service.processPendingPublications();
     if (change === "later-cancelled") {
       expect(runtime.endpoints.get(endpoint.id)!.posts.map(post => post.text)).toEqual([
-        "**Owner User (via Paperclip)**\n\nQueued before access changed", "Queued final before access changed",
+        "**Owner User (via Bionic)**\n\nQueued before access changed", "Queued final before access changed",
       ]);
     } else {
       expect(runtime.endpoints.get(endpoint.id)!.posts).toEqual([]);
@@ -4133,7 +4133,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   });
 
   it.each(["cancelled", "paused", "blocked", "closed-workspace"] as const)("does not bypass %s task guards from the Slack Board composer or its outbox", async (guard) => {
-    const { issueTreeHolds, issueRelations, executionWorkspaces, projects } = await import("@paperclipai/db");
+    const { issueTreeHolds, issueRelations, executionWorkspaces, projects } = await import("@bionicai/db");
     const fixture = await seedCompany();
     const { callbacks, endpoint, service, wakeup, runtime } = await configuredSlackEndpoint(fixture);
     const channel = makeThread({ channelId: "CGUARD", id: "slack:CGUARD:8100.1", name: "guard" });
@@ -4142,7 +4142,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await db.update(chatEndpoints).set({ status: "active" }).where(eq(chatEndpoints.id, endpoint.id));
     const [conversation] = await service.listConversations(endpoint.id);
     const [principal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UBOARD" }).returning();
-    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
     runtime.endpoints.get(endpoint.id)!.posts.length = 0;
     wakeup.mockClear();
     wakeup.mockRejectedValueOnce(new Error("scheduler unavailable"));
@@ -4229,14 +4229,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const worker = chatChannelService(smallDb, {
       fetch: fakeSlackFetch() as typeof fetch,
       heartbeat: { wakeup: smallWake },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       runtime: runtime as unknown as ChatSdkRuntime,
     });
     fixtureServices.add(worker);
     await worker.processPendingDeliveries();
     await worker.processPendingPublications();
     expect(smallWake).toHaveBeenCalledTimes(1);
-    expect(runtime.endpoints.get(endpoint.id)!.posts.map(post => post.text)).toEqual(["**Owner User (via Paperclip)**\n\nSmall pool work"]);
+    expect(runtime.endpoints.get(endpoint.id)!.posts.map(post => post.text)).toEqual(["**Owner User (via Bionic)**\n\nSmall pool work"]);
   }, 15_000);
 
   it("provides assigned Slack tools to routine tasks and can DM only their linked responsible user", async () => {
@@ -4247,7 +4247,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { endpoint, service } = await configuredSlackEndpoint(fixture, { allowUnlinkedPeople: false });
     await db.update(chatEndpoints).set({ status: "active" }).where(eq(chatEndpoints.id, endpoint.id));
     const [principal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UROUTINE" }).returning();
-    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
     const [issue] = await db.insert(issues).values({ companyId: fixture.companyId, title: "10am daily briefing", status: "todo", assigneeAgentId: fixture.assignedAgentId, responsibleUserId: "owner-user" }).returning();
     const runId = randomUUID();
     await db.insert(heartbeatRuns).values({ id: runId, companyId: fixture.companyId, agentId: fixture.assignedAgentId, status: "running", responsibleUserId: "owner-user", contextSnapshot: { issueId: issue.id, source: "routine" } });
@@ -4306,7 +4306,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const fixture = await seedCompany();
     const { callbacks, endpoint, service } = await configuredSlackEndpoint(fixture, { allowUnlinkedPeople: false });
     const [principal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UTOOLS" }).returning();
-    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+    await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: endpoint.id, principalId: principal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
     const thread = makeThread({ channelId: "slack:CTOOLS", id: "slack:CTOOLS:7100.1", name: "tools" });
     await deliverMessage({ callbacks, endpointId: endpoint.id, thread: thread.thread, message: makeMessage({ id: "7100.1", text: "@maya read this channel", mentioned: true, userId: "UTOOLS" }), trigger: "mention" });
     const [conversation] = await db.select().from(chatConversations).where(eq(chatConversations.endpointId, endpoint.id));
@@ -4344,7 +4344,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(assignments.map(a => a.key)).toEqual(["slack"]);
     expect(assignments[0].resources[0].metadata?.channelId).toBe("CTOOLS");
     const skillConfig = await applyConnectorSkills({}, [], assignments);
-    const runnerDelivery = await prepareConnectorSkillDelivery(skillConfig, "paperclip_runner");
+    const runnerDelivery = await prepareConnectorSkillDelivery(skillConfig, "bionic_runner");
     expect(runnerDelivery.instructions).toContain('"channelId": "CTOOLS"');
     expect(runnerDelivery.instructions).toContain("untrusted source material");
     expect(runnerDelivery.instructions).not.toContain("xoxb-test-token");
@@ -4378,7 +4378,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       inspected: [{ channel: "COTHER", count: 1, nextCursor: "older", hasMore: true }],
     });
     await expect(executeSlackTool(db, binding, "slack_history", { channel: "GPRIVATE" }, fetched as typeof fetch)).rejects.toThrow("in a DM");
-    vi.stubEnv("PAPERCLIP_TOOL_ACTION_SIGNING_SECRET", "slack-tools-integration-signing-secret");
+    vi.stubEnv("BIONIC_TOOL_ACTION_SIGNING_SECRET", "slack-tools-integration-signing-secret");
     onTestFinished(() => vi.unstubAllEnvs());
     const originalFetch = globalThis.fetch;
     const postFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -4395,7 +4395,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       req.actor = { type: "agent", source: "agent_key", companyId: binding.companyId, agentId: binding.agentId, runId: binding.runId };
       next();
     });
-    cliApp.use("/api", slackToolRoutes(db, "https://paperclip.example"));
+    cliApp.use("/api", slackToolRoutes(db, "https://bionic.example"));
     cliApp.use(errorHandler);
     await request(cliApp).post(`/api/companies/${binding.companyId}/slack/tasks/${binding.issueId}/tools`).send({ tool: "slack_channel_info", arguments: { channel: "COTHER" } }).expect(200);
     await request(cliApp).post(`/api/companies/${randomUUID()}/slack/tasks/${binding.issueId}/tools`).send({ tool: "slack_history", arguments: { channel: "COTHER" } }).expect(403);
@@ -4462,7 +4462,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(await service.listResources(endpoint.id)).toEqual(expect.arrayContaining([
       expect.objectContaining({ providerResourceId: "CNEWCHANNEL", enabled: false }),
     ]));
-    await service.handleWebhook(endpoint.publicId, "slack", new Request("https://paperclip.example/slack", {
+    await service.handleWebhook(endpoint.publicId, "slack", new Request("https://bionic.example/slack", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ event_id: "Ev-created-channel", event: {
         type: "member_joined_channel", user: (await service.get(endpoint.id)).botExternalId,
@@ -4495,7 +4495,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await expect(resolveChatRunPresentationAuthorizationReason(db, presentation)).resolves.toBe(CHAT_RUN_PRESENTATION_AUTHORIZATION_REASON);
     const approvalBookkeeping = await issueService(db).addComment(
       conversation.issueId, "Recorded approved operation", { agentId: fixture.assignedAgentId, runId: continuationRunId },
-      { authorType: "agent", authorizationReason: "paperclip_runner_protocol" },
+      { authorType: "agent", authorizationReason: "bionic_runner_protocol" },
     );
     expect(await db.select().from(chatPublications).where(eq(chatPublications.commentId, approvalBookkeeping.id))).toHaveLength(0);
     const approvalFinal = await issueService(db).addComment(
@@ -4528,7 +4528,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       }
       throw new Error("Unexpected OAuth request");
     });
-    const oauth = slackSearchOAuthService(db, "https://paperclip.example", oauthFetch as typeof fetch);
+    const oauth = slackSearchOAuthService(db, "https://bionic.example", oauthFetch as typeof fetch);
     await oauth.configure(fixture.companyId, endpoint.id, "owner-user", { clientId: "123.456", clientSecret: "fixture-client-secret" });
     const started = await oauth.start(fixture.companyId, endpoint.id, "owner-user");
     const state = new URL(started.url).searchParams.get("state")!;
@@ -4547,7 +4547,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await rejected;
     await expect(oauth.status(fixture.companyId, endpoint.id, "owner-user")).resolves.toMatchObject({ connected: false });
     await expect(oauth.status(randomUUID(), endpoint.id, "owner-user")).rejects.toThrow("not found");
-    const { toolProfiles, toolProfileBindings } = await import("@paperclipai/db");
+    const { toolProfiles, toolProfileBindings } = await import("@bionicai/db");
     const [slackProfile] = await db.select().from(toolProfiles).where(and(eq(toolProfiles.companyId, fixture.companyId), eq(toolProfiles.profileKey, `slack-bot:${endpoint.id}`)));
     const [removedBinding] = await db.delete(toolProfileBindings).where(and(eq(toolProfileBindings.profileId, slackProfile.id), eq(toolProfileBindings.targetId, binding.agentId))).returning();
     await expect(resolveConnectorAssignments(db, recovered)).resolves.toEqual([]);
@@ -5408,8 +5408,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           return new Response(
             JSON.stringify({
               id: appRegistrationId,
-              slug: "shared-paperclip-app",
-              name: "Shared Paperclip App",
+              slug: "shared-bionic-app",
+              name: "Shared Bionic App",
               owner: { login: owner },
               permissions: {
                 issues: "write",
@@ -5580,9 +5580,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           return new Response(
             JSON.stringify({
               id: appRegistrationId,
-              slug: "maya-paperclip",
-              name: "Maya Paperclip",
-              owner: { login: "paperclipai" },
+              slug: "maya-bionic",
+              name: "Maya Bionic",
+              owner: { login: "bionicai" },
               permissions: {
                 issues: "write",
                 metadata: "read",
@@ -5606,7 +5606,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 id: 2468,
                 account: {
                   id: 1357,
-                  login: "paperclipai",
+                  login: "bionicai",
                   type: "Organization",
                 },
                 permissions: {
@@ -5637,16 +5637,16 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               repositories: [
                 {
                   id: 97531,
-                  full_name: "paperclipai/paperclip",
-                  html_url: "https://github.com/paperclipai/paperclip",
-                  owner: { id: 1357, login: "paperclipai" },
+                  full_name: "bionicai/bionic",
+                  html_url: "https://github.com/bionicai/bionic",
+                  owner: { id: 1357, login: "bionicai" },
                   private: false,
                 },
                 {
                   id: 97532,
-                  full_name: "paperclipai/paperclip-disabled",
-                  html_url: "https://github.com/paperclipai/paperclip-disabled",
-                  owner: { id: 1357, login: "paperclipai" },
+                  full_name: "bionicai/bionic-disabled",
+                  html_url: "https://github.com/bionicai/bionic-disabled",
+                  owner: { id: 1357, login: "bionicai" },
                   private: false,
                 },
               ],
@@ -5722,9 +5722,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(observedIssuer).toBe(appId);
     expect(configured).toMatchObject({
       status: "verifying",
-      providerAccountId: "paperclipai",
+      providerAccountId: "bionicai",
       botExternalId: "789",
-      botUsername: "maya-paperclip[bot]",
+      botUsername: "maya-bionic[bot]",
       setup: { step: "test", webhookVerifiedAt: expect.any(String) },
     });
     expect(
@@ -5778,12 +5778,12 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       })),
     ).toEqual([
       {
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "available",
         enabled: false,
       },
       {
-        providerResourceId: "paperclipai/paperclip-disabled",
+        providerResourceId: "bionicai/bionic-disabled",
         availability: "available",
         enabled: false,
       },
@@ -5795,9 +5795,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       endpointId: endpoint.id,
       provider: "github",
       thread: makeThread({
-        channelId: "PaperclipAI/Paperclip",
-        id: "github:PaperclipAI/Paperclip:issue:17",
-        name: "paperclipai/paperclip",
+        channelId: "PaperclipAI/Bionic",
+        id: "github:PaperclipAI/Bionic:issue:17",
+        name: "bionicai/bionic",
       }).thread,
       message: makeMessage({
         id: "github-root-17",
@@ -5818,9 +5818,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         enabled: resource.enabled,
       })),
     ).toEqual([
-      { providerResourceId: "paperclipai/paperclip", enabled: true },
+      { providerResourceId: "bionicai/bionic", enabled: true },
       {
-        providerResourceId: "paperclipai/paperclip-disabled",
+        providerResourceId: "bionicai/bionic-disabled",
         enabled: false,
       },
     ]);
@@ -5836,9 +5836,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           repositories_removed: [
             {
               id: 97531,
-              full_name: "paperclipai/paperclip",
-              html_url: "https://github.com/paperclipai/paperclip",
-              owner: { id: 1357, login: "paperclipai" },
+              full_name: "bionicai/bionic",
+              html_url: "https://github.com/bionicai/bionic",
+              owner: { id: 1357, login: "bionicai" },
             },
           ],
         },
@@ -5847,12 +5847,12 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "available",
         enabled: true,
       }),
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip-disabled",
+        providerResourceId: "bionicai/bionic-disabled",
         availability: "available",
         enabled: false,
       }),
@@ -5900,9 +5900,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       installation: { id: 2468 },
       repository: {
         id: 97531,
-        full_name: "paperclipai/paperclip",
-        name: "paperclip",
-        owner: { id: 1357, login: "paperclipai" },
+        full_name: "bionicai/bionic",
+        name: "bionic",
+        owner: { id: 1357, login: "bionicai" },
       },
       issue: { number: issueNumber },
       comment: {
@@ -5947,7 +5947,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(accepted.status).toBe(202);
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         enabled: true,
       }),
     ]);
@@ -5962,8 +5962,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       await configuredGitHubEndpoint(fixture);
     const current = await service.get(endpoint.id);
     const { thread, subscribe } = makeThread({
-      channelId: "paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:903",
+      channelId: "bionicai/bionic",
+      id: "github:bionicai/bionic:903",
     });
     let release!: () => void;
     let acquired!: () => void;
@@ -6055,20 +6055,20 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       companyId: endpoint.companyId,
       endpointId: endpoint.id,
       type: "repository",
-      providerResourceId: "paperclipai/paperclip-second",
-      label: "paperclipai/paperclip-second",
+      providerResourceId: "bionicai/bionic-second",
+      label: "bionicai/bionic-second",
       availability: "available",
       enabled: false,
     });
     const roots = [
       {
-        channelId: "paperclipai/paperclip",
+        channelId: "bionicai/bionic",
         issueNumber: 901,
         messageId: 901001,
         repositoryId: 97531,
       },
       {
-        channelId: "paperclipai/paperclip-second",
+        channelId: "bionicai/bionic-second",
         issueNumber: 902,
         messageId: 902001,
         repositoryId: 97532,
@@ -6202,7 +6202,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             id: 991124,
             slug: "maya-selectable-events",
             name: "Maya Selectable Events",
-            owner: { login: "paperclipai" },
+            owner: { login: "bionicai" },
             permissions: {
               issues: "write",
               metadata: "read",
@@ -6220,7 +6220,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               id: 2468,
               account: {
                 id: 1357,
-                login: "paperclipai",
+                login: "bionicai",
                 type: "Organization",
               },
               permissions: {
@@ -6251,9 +6251,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             repositories: [
               {
                 id: 97531,
-                full_name: "paperclipai/paperclip",
-                html_url: "https://github.com/paperclipai/paperclip",
-                owner: { id: 1357, login: "paperclipai" },
+                full_name: "bionicai/bionic",
+                html_url: "https://github.com/bionicai/bionic",
+                owner: { id: 1357, login: "bionicai" },
                 private: false,
               },
             ],
@@ -6287,13 +6287,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       ),
     ).resolves.toMatchObject({
       status: "verifying",
-      providerAccountId: "paperclipai",
+      providerAccountId: "bionicai",
       botExternalId: "991124",
       botUsername: "maya-selectable-events[bot]",
     });
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "available",
       }),
     ]);
@@ -6316,7 +6316,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           id: 991123,
           slug: "maya-over-scoped",
           name: "Maya Over-scoped",
-          owner: { login: "paperclipai" },
+          owner: { login: "bionicai" },
           permissions: {
             contents: "write",
             issues: "write",
@@ -6441,7 +6441,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           id: 991122,
           slug: "maya-under-scoped",
           name: "Maya Under-scoped",
-          owner: { login: "paperclipai" },
+          owner: { login: "bionicai" },
           permissions: {
             issues: "read",
             metadata: "read",
@@ -6828,9 +6828,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { callbacks, endpoint, service } =
       await configuredGitHubEndpoint(fixture);
     const setupThread = makeThread({
-      channelId: "paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:811",
-      name: "paperclipai/paperclip",
+      channelId: "bionicai/bionic",
+      id: "github:bionicai/bionic:issue:811",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -6839,7 +6839,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       thread: setupThread.thread,
       message: makeMessage({
         id: "github-setup-root-811",
-        text: "@maya-paperclip[bot] verify setup state",
+        text: "@maya-bionic[bot] verify setup state",
         mentioned: true,
       }),
       trigger: "mention",
@@ -7220,9 +7220,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const obsoleteRuntime = runtime.endpoints.get(endpoint.id);
     if (!obsoleteRuntime) throw new Error("Expected initial GitHub runtime");
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:909",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:909",
+      name: "bionicai/bionic",
     });
 
     const inbound = deliverMessage({
@@ -7290,9 +7290,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const obsoleteRuntime = runtime.endpoints.get(endpoint.id);
     if (!obsoleteRuntime) throw new Error("Expected initial GitHub runtime");
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:910",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:910",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -7411,20 +7411,20 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { callbacks, endpoint } = await configuredGitHubEndpoint(fixture);
     const cases = [
       {
-        id: "github:paperclipai/paperclip:issue:51",
+        id: "github:bionicai/bionic:issue:51",
         rootId: "51001",
       },
-      { id: "github:paperclipai/paperclip:52", rootId: "52001" },
+      { id: "github:bionicai/bionic:52", rootId: "52001" },
       {
-        id: "github:paperclipai/paperclip:52:rc:88001",
+        id: "github:bionicai/bionic:52:rc:88001",
         rootId: "88001",
       },
     ];
     for (const item of cases) {
       const thread = makeThread({
-        channelId: "github:paperclipai/paperclip",
+        channelId: "github:bionicai/bionic",
         id: item.id,
-        name: "paperclipai/paperclip",
+        name: "bionicai/bionic",
       });
       const rootDelivery = {
         callbacks,
@@ -7491,9 +7491,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
     const githubUserId = "18446744073709551";
     const thread = makeThread({
-      channelId: "paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:59",
-      name: "paperclipai/paperclip",
+      channelId: "bionicai/bionic",
+      id: "github:bionicai/bionic:issue:59",
+      name: "bionicai/bionic",
     });
     const send = (
       id: string,
@@ -7535,7 +7535,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .where(eq(chatDeliveries.endpointId, endpoint.id));
     expect(filtered).toMatchObject({
       state: "filtered",
-      redactedError: "External identity must be linked to a Paperclip account",
+      redactedError: "External identity must be linked to a Bionic account",
       normalizedEvent: { deduplication: { duplicateCount: 1 } },
     });
 
@@ -7618,7 +7618,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .then((rows) => rows[0]);
     expect(suspendedDelivery).toMatchObject({
       state: "filtered",
-      redactedError: "Linked Paperclip account is not currently permitted",
+      redactedError: "Linked Bionic account is not currently permitted",
     });
   });
 
@@ -7631,9 +7631,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         scheduleDeferredWork: (task) => deferred.push(task),
       });
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:71",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:71",
+      name: "bionicai/bionic",
     });
     const providerSentAt = new Date("2026-09-05T18:00:00.000Z");
     const laterReply = makeMessage({
@@ -7715,9 +7715,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         scheduleDeferredWork: (task) => deferred.push(task),
       });
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:72",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:72",
+      name: "bionicai/bionic",
     });
     const laterReply = makeMessage({
       id: "72002",
@@ -7827,9 +7827,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         scheduleDeferredWork: (task) => deferred.push(task),
       });
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:73",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:73",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -7878,9 +7878,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const context = await configuredGitHubEndpoint(fixture);
     const { callbacks, endpoint, runtime, service, webhookSecret } = context;
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:61",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:61",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -7986,7 +7986,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "available",
         enabled: true,
       }),
@@ -8022,9 +8022,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const context = await configuredGitHubEndpoint(fixture);
     const { callbacks, endpoint, runtime, service, webhookSecret } = context;
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:62",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:62",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -8139,9 +8139,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const context = await configuredGitHubEndpoint(fixture);
     const { callbacks, endpoint, service, webhookSecret } = context;
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:63",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:63",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -8215,9 +8215,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { endpoint, runtime, service, webhookSecret } = context;
     const repository = {
       id: 97531,
-      full_name: "paperclipai/paperclip",
-      html_url: "https://github.com/paperclipai/paperclip",
-      owner: { id: 1357, login: "paperclipai" },
+      full_name: "bionicai/bionic",
+      html_url: "https://github.com/bionicai/bionic",
+      owner: { id: 1357, login: "bionicai" },
       private: false,
     };
     const send = (delivery: string, event: string, payload: unknown) =>
@@ -8244,7 +8244,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "removed",
         enabled: true,
       }),
@@ -8278,7 +8278,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "available",
         enabled: true,
       }),
@@ -8319,7 +8319,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const staleCallback = service.handleWebhook(
       endpoint.publicId,
       "github",
-      new Request("https://paperclip.example/github", {
+      new Request("https://bionic.example/github", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -8417,9 +8417,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           installation: { id: 2468 },
           repository: {
             id: 86420,
-            full_name: "paperclipai/stale-secret-repository",
-            html_url: "https://github.com/paperclipai/stale-secret-repository",
-            owner: { id: 1357, login: "paperclipai" },
+            full_name: "bionicai/stale-secret-repository",
+            html_url: "https://github.com/bionicai/stale-secret-repository",
+            owner: { id: 1357, login: "bionicai" },
             private: false,
           },
           issue: { number: 7 },
@@ -8445,7 +8445,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await expect(service.listResources(endpoint.id)).resolves.not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          providerResourceId: "paperclipai/stale-secret-repository",
+          providerResourceId: "bionicai/stale-secret-repository",
         }),
       ]),
     );
@@ -8473,7 +8473,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const response = await service.handleWebhook(
       endpoint.publicId,
       "github",
-      new Request("https://paperclip.example/github", {
+      new Request("https://bionic.example/github", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -8527,7 +8527,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const response = await service.handleWebhook(
       endpoint.publicId,
       "github",
-      new Request("https://paperclip.example/github", {
+      new Request("https://bionic.example/github", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -8600,7 +8600,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "unavailable",
       }),
     ]);
@@ -8643,7 +8643,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
-        providerResourceId: "paperclipai/paperclip",
+        providerResourceId: "bionicai/bionic",
         availability: "available",
       }),
     ]);
@@ -8674,7 +8674,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "github",
-        new Request("https://paperclip.example/github", {
+        new Request("https://bionic.example/github", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -8751,7 +8751,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           action: "created",
           installation: {
             id: 987_654_321,
-            account: { id: 1, login: "paperclip-e2e", type: "User" },
+            account: { id: 1, login: "bionic-e2e", type: "User" },
             permissions: {
               issues: "write",
               metadata: "read",
@@ -8834,7 +8834,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "github",
-        new Request("https://paperclip.example/github", {
+        new Request("https://bionic.example/github", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -9069,9 +9069,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           installation: { id: 2468 },
           repository: {
             id: 97531,
-            full_name: "paperclipai/paperclip",
-            name: "paperclip",
-            owner: { id: 1357, login: "paperclipai" },
+            full_name: "bionicai/bionic",
+            name: "bionic",
+            owner: { id: 1357, login: "bionicai" },
           },
           issue: { number: 91 },
           comment: { id: 9191, body: bodyMarker },
@@ -9114,9 +9114,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           installation: { id: 2468 },
           repository: {
             id: 97531,
-            full_name: "paperclipai/paperclip",
-            name: "paperclip",
-            owner: { id: 1357, login: "paperclipai" },
+            full_name: "bionicai/bionic",
+            name: "bionic",
+            owner: { id: 1357, login: "bionicai" },
           },
           issue: { number: 91 },
           comment: { id: 9191, body: conflictingMarker },
@@ -9189,9 +9189,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           installation: { id: 2468 },
           repository: {
             id: 97531,
-            full_name: "paperclipai/paperclip",
-            name: "paperclip",
-            owner: { id: 1357, login: "paperclipai" },
+            full_name: "bionicai/bionic",
+            name: "bionic",
+            owner: { id: 1357, login: "bionicai" },
           },
           issue: { number: 91 },
           comment: { id: 9191, body: bodyMarker },
@@ -9308,7 +9308,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         status: "received",
         summary: "GitHub webhook received after recovery request",
         detail:
-          "Paperclip received this callback. Its normal access checks and processing still apply.",
+          "Bionic received this callback. Its normal access checks and processing still apply.",
         replayable: false,
         resolutionActions: [],
       });
@@ -9923,9 +9923,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         installation: { id: 2468 },
         repository: {
           id: 97531,
-          full_name: "paperclipai/paperclip",
-          name: "paperclip",
-          owner: { id: 1357, login: "paperclipai" },
+          full_name: "bionicai/bionic",
+          name: "bionic",
+          owner: { id: 1357, login: "bionicai" },
         },
         issue: { number: 91 },
         comment: { id: 9191, body: marker },
@@ -9990,9 +9990,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           installation: { id: 2468 },
           repository: {
             id: 97531,
-            full_name: "paperclipai/paperclip",
-            name: "paperclip",
-            owner: { id: 1357, login: "paperclipai" },
+            full_name: "bionicai/bionic",
+            name: "bionic",
+            owner: { id: 1357, login: "bionicai" },
           },
           issue: { number: 91, body: marker },
           comment: { id: 9191, body: marker },
@@ -10031,7 +10031,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       eventKind: "message",
       conversationId: null,
       principalId: null,
-      redactedError: "Destination is not enabled in Paperclip",
+      redactedError: "Destination is not enabled in Bionic",
       normalizedEvent: {
         kind: "message",
         filtering: {
@@ -10056,7 +10056,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         id: rows[0]!.id,
         status: "filtered",
         summary: "message ignored",
-        detail: "Destination is not enabled in Paperclip",
+        detail: "Destination is not enabled in Bionic",
         replayable: false,
       }),
     );
@@ -10495,9 +10495,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       endpointId: endpoint.id,
       provider: "github",
       thread: makeThread({
-        channelId: "PaperclipAI/Paperclip",
-        id: "github:PaperclipAI/Paperclip:issue:77",
-        name: "PaperclipAI/Paperclip",
+        channelId: "PaperclipAI/Bionic",
+        id: "github:PaperclipAI/Bionic:issue:77",
+        name: "PaperclipAI/Bionic",
       }).thread,
       message: makeMessage({
         id: "github-rename-root",
@@ -10514,9 +10514,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     const renamedRepository = {
       id: 97531,
-      full_name: "paperclipai/paperclip-renamed",
-      html_url: "https://github.com/paperclipai/paperclip-renamed",
-      owner: { id: 1357, login: "paperclipai" },
+      full_name: "bionicai/bionic-renamed",
+      html_url: "https://github.com/bionicai/bionic-renamed",
+      owner: { id: 1357, login: "bionicai" },
       private: false,
     };
     context.setRepositories([renamedRepository]);
@@ -10538,7 +10538,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await expect(service.listResources(endpoint.id)).resolves.toEqual([
       expect.objectContaining({
         id: originalResource.id,
-        providerResourceId: "paperclipai/paperclip-renamed",
+        providerResourceId: "bionicai/bionic-renamed",
         enabled: true,
         metadata: expect.objectContaining({ providerRepositoryId: "97531" }),
       }),
@@ -10546,8 +10546,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     const transferredRepository = {
       ...renamedRepository,
-      full_name: "new-owner/paperclip-renamed",
-      html_url: "https://github.com/new-owner/paperclip-renamed",
+      full_name: "new-owner/bionic-renamed",
+      html_url: "https://github.com/new-owner/bionic-renamed",
       owner: { id: 24680, login: "new-owner" },
     };
     // installation_repositories is a canonical inventory-refresh signal. Keep
@@ -10576,10 +10576,10 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       id: originalConversation.id,
       issueId: originalConversation.issueId,
       resourceId: originalResource.id,
-      externalConversationId: "new-owner/paperclip-renamed",
-      externalThreadId: "github:new-owner/paperclip-renamed:issue:77",
+      externalConversationId: "new-owner/bionic-renamed",
+      externalThreadId: "github:new-owner/bionic-renamed:issue:77",
       providerUrl:
-        "https://github.com/new-owner/paperclip-renamed/issues/77#issuecomment-github-rename-root",
+        "https://github.com/new-owner/bionic-renamed/issues/77#issuecomment-github-rename-root",
     });
 
     await deliverMessage({
@@ -10587,9 +10587,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       endpointId: endpoint.id,
       provider: "github",
       thread: makeThread({
-        channelId: "new-owner/paperclip-renamed",
-        id: "github:new-owner/paperclip-renamed:issue:77",
-        name: "new-owner/paperclip-renamed",
+        channelId: "new-owner/bionic-renamed",
+        id: "github:new-owner/bionic-renamed:issue:77",
+        name: "new-owner/bionic-renamed",
       }).thread,
       message: makeMessage({
         id: "github-transfer-followup",
@@ -11877,7 +11877,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             providerThreadCreated: false,
           },
         }),
-        redactedError: "Destination is not enabled in Paperclip",
+        redactedError: "Destination is not enabled in Bionic",
         state: "filtered",
       },
     ]);
@@ -11961,7 +11961,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       {
         action: "reconnect",
         // Rotation accepts the one changed secret and merges the immutable
-        // Application/Server identity from Paperclip's existing vault refs.
+        // Application/Server identity from Bionic's existing vault refs.
         credentials: { botToken: "discord-secret-rotated" },
       },
       "owner-user",
@@ -12611,7 +12611,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(failure).toMatchObject({
       status: 422,
       message:
-        "Telegram webhooks require PAPERCLIP_CHAT_WEBHOOK_PUBLIC_URL to use HTTPS on port 443, 80, 88, or 8443",
+        "Telegram webhooks require BIONIC_CHAT_WEBHOOK_PUBLIC_URL to use HTTPS on port 443, 80, 88, or 8443",
       details: {
         code: "chat_telegram_webhook_url_unsupported",
         provider: "telegram",
@@ -12755,7 +12755,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 ok: true,
                 result: {
                   id: botId,
-                  username: "maya_paperclip_bot",
+                  username: "maya_bionic_bot",
                   first_name: "Maya",
                 },
               }),
@@ -12857,11 +12857,11 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         status: "verifying",
         providerAccountId: String(botId),
         botExternalId: String(botId),
-        botUsername: "maya_paperclip_bot",
+        botUsername: "maya_bionic_bot",
         capabilities: { messageEdits: true, messageDeletes: false },
         setup: {
           step: "test",
-          providerUrl: "https://t.me/maya_paperclip_bot",
+          providerUrl: "https://t.me/maya_bionic_bot",
         },
       });
       const providerConfig = runtime.configurations.get(
@@ -12874,7 +12874,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       if (providerConfig?.provider !== "telegram")
         throw new Error("Telegram runtime configuration was not created");
       expect(observedWebhook).toEqual({
-        url: `${webhookPublicBaseUrl ?? "https://paperclip.example"}/api/chat-webhooks/${endpoint.publicId}/telegram`,
+        url: `${webhookPublicBaseUrl ?? "https://bionic.example"}/api/chat-webhooks/${endpoint.publicId}/telegram`,
         secret_token: providerConfig.credentials.secretToken,
         allowed_updates: [
           "message",
@@ -12890,9 +12890,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         commands: [
           {
             command: "task",
-            description: "Start or continue a Paperclip task",
+            description: "Start or continue a Bionic task",
           },
-          { command: "status", description: "Show the active Paperclip task" },
+          { command: "status", description: "Show the active Bionic task" },
           {
             command: "new",
             description: "Start a new task after the current one",
@@ -12939,7 +12939,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         `https://api.telegram.org/bot${encodeURIComponent(botToken)}/setMyCommands`,
       ]);
       expect(observedWebhook).toMatchObject({
-        url: `${webhookPublicBaseUrl ?? "https://paperclip.example"}/api/chat-webhooks/${endpoint.publicId}/telegram`,
+        url: `${webhookPublicBaseUrl ?? "https://bionic.example"}/api/chat-webhooks/${endpoint.publicId}/telegram`,
         // Repointing an existing bot must retain updates Telegram queued while
         // the old callback URL was unavailable.
         drop_pending_updates: false,
@@ -12975,8 +12975,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             ok: true,
             result: {
               id: botId,
-              username: "paperclip_maintenance_bot",
-              first_name: "Paperclip Maintenance",
+              username: "bionic_maintenance_bot",
+              first_name: "Bionic Maintenance",
             },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
@@ -13213,8 +13213,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             ok: true,
             result: {
               id: botId,
-              username: "paperclip_maintenance_race_bot",
-              first_name: "Paperclip Maintenance Race",
+              username: "bionic_maintenance_race_bot",
+              first_name: "Bionic Maintenance Race",
             },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
@@ -13546,7 +13546,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         service.handleWebhook(
           endpoint.publicId,
           "slack",
-          new Request("https://paperclip.example/slack", {
+          new Request("https://bionic.example/slack", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -13606,7 +13606,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         service.handleWebhook(
           endpoint.publicId,
           "slack",
-          new Request("https://paperclip.example/slack", {
+          new Request("https://bionic.example/slack", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -13663,7 +13663,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "slack",
-        new Request("https://paperclip.example/slack", {
+        new Request("https://bionic.example/slack", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
@@ -13852,7 +13852,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   it("orders Slack private-channel archive, unarchive, and rename lifecycle", async () => {
     const fixture = await seedCompany();
     const { endpoint, service } = await configuredSlackEndpoint(fixture);
-    const webhookUrl = `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`;
+    const webhookUrl = `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`;
     const send = async (
       eventId: string,
       type: string,
@@ -13964,7 +13964,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       },
       channelData: {
         tenant: { id: teamsTenantId },
-        team: { id: "team-1", name: "Paperclip" },
+        team: { id: "team-1", name: "Bionic" },
         channel: { id: "channel-1", name: "Engineering" },
       },
     });
@@ -13972,7 +13972,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       teams.service.handleWebhook(
         teamsEndpoint.publicId,
         "microsoft-teams",
-        new Request("https://paperclip.example/teams", {
+        new Request("https://bionic.example/teams", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
@@ -14240,7 +14240,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       telegram.service.handleWebhook(
         telegramEndpoint.publicId,
         "telegram",
-        new Request("https://paperclip.example/telegram", {
+        new Request("https://bionic.example/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -14277,7 +14277,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       }).thread,
       message: makeMessage({
         id: "telegram-root-77",
-        text: "@paperclip investigate the alert",
+        text: "@bionic investigate the alert",
         mentioned: true,
       }),
       trigger: "mention",
@@ -14333,7 +14333,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "slack",
-        new Request("https://paperclip.example/slack", {
+        new Request("https://bionic.example/slack", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -14361,7 +14361,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "slack",
-        new Request("https://paperclip.example/slack", {
+        new Request("https://bionic.example/slack", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -14606,8 +14606,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   it.each([undefined, "https://ingress.example"])(
     "uses a live Cloud claim after chat service startup (ingress: %s)",
     async (webhookPublicBaseUrl) => {
-      const poolOrigin = "https://pool-fixture.staging.paperclip.app";
-      const claimedOrigin = "https://claimed-fixture.staging.paperclip.app";
+      const poolOrigin = "https://pool-fixture.staging.bionic.app";
+      const claimedOrigin = "https://claimed-fixture.staging.bionic.app";
       const canonicalOrigin = vi.spyOn(cloudRuntimeIdentity, "runtimeCanonicalOrigin").mockReturnValue(null);
       let context: ReturnType<typeof createService> | undefined;
       try {
@@ -14647,7 +14647,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           }).returning();
           const intent = await service.createLinkIntent(endpoint.id, principal.id, 1800);
           expect(intent.confirmationUrl).toMatch(
-            /^https:\/\/claimed-fixture\.staging\.paperclip\.app\/chat-identity\/confirm\?token=/,
+            /^https:\/\/claimed-fixture\.staging\.bionic\.app\/chat-identity\/confirm\?token=/,
           );
         }
         const fresh = await service.create(fixture.companyId, {
@@ -14670,8 +14670,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   it.each([undefined, "https://ingress.example"])(
     "registers provider callbacks after a live Cloud claim (ingress: %s)",
     async (webhookPublicBaseUrl) => {
-      const poolOrigin = "https://pool-fixture.staging.paperclip.app";
-      const claimedOrigin = "https://claimed-fixture.staging.paperclip.app";
+      const poolOrigin = "https://pool-fixture.staging.bionic.app";
+      const claimedOrigin = "https://claimed-fixture.staging.bionic.app";
       const canonicalOrigin = vi.spyOn(cloudRuntimeIdentity, "runtimeCanonicalOrigin").mockReturnValue(null);
       let telegram: ReturnType<typeof createService> | undefined;
       let github: Awaited<ReturnType<typeof configuredGitHubEndpoint>> | undefined;
@@ -14820,15 +14820,15 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { endpoint, service } = await configuredSlackEndpoint(fixture);
     const path = `/api/chat-webhooks/${endpoint.publicId}/slack`;
     const body = JSON.stringify({ type: "url_verification", challenge: "proxy-check" });
-    const request = signedSlackWebhookRequest({ url: `http://paperclip.example${path}`, contentType: "application/json", body });
+    const request = signedSlackWebhookRequest({ url: `http://bionic.example${path}`, contentType: "application/json", body });
     request.headers.set("x-forwarded-host", "untrusted.example");
-    request.headers.set("x-paperclip-cloud-forwarded-host", "untrusted.example");
-    request.headers.set("x-paperclip-cloud-forwarded-proto", "https");
+    request.headers.set("x-bionic-cloud-forwarded-host", "untrusted.example");
+    request.headers.set("x-bionic-cloud-forwarded-proto", "https");
     request.headers.set("x-forwarded-proto", "https");
     await service.handleWebhook(endpoint.publicId, "slack", request);
     await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: false, callbackSurfaces: { events: { status: "current" } } } });
     // A different public host or port is still drift, even with TLS termination.
-    for (const publicBaseUrl of ["https://moved.example", "https://paperclip.example:8443"]) {
+    for (const publicBaseUrl of ["https://moved.example", "https://bionic.example:8443"]) {
       const moved = createService(new FakeChatSdkRuntime(), fakeSlackFetch(), { publicBaseUrl });
       await expect(moved.service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: true, callbackSurfaces: { events: { status: "stale" } } } });
       await moved.service.shutdown();
@@ -14838,19 +14838,19 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   it("records the public Cloud proxy host for authenticated Slack callback health", async () => {
     const fixture = await seedCompany();
     const { endpoint, service } = await configuredSlackEndpoint(fixture);
-    const canonicalOrigin = vi.spyOn(cloudRuntimeIdentity, "runtimeCanonicalOrigin").mockReturnValue("https://paperclip.example");
+    const canonicalOrigin = vi.spyOn(cloudRuntimeIdentity, "runtimeCanonicalOrigin").mockReturnValue("https://bionic.example");
     const path = `/api/chat-webhooks/${endpoint.publicId}/slack`;
     const cases = [
       ["events", "application/json", JSON.stringify({ type: "url_verification", challenge: "cloud-proxy-check" })],
       ["interactivity", "application/x-www-form-urlencoded", new URLSearchParams({ payload: JSON.stringify({ type: "block_actions", team: { id: "T-PAPERCLIP" } }) }).toString()],
-      ["slashCommands", "application/x-www-form-urlencoded", new URLSearchParams({ command: "/maya-paperclip", team_id: "T-PAPERCLIP" }).toString()],
+      ["slashCommands", "application/x-www-form-urlencoded", new URLSearchParams({ command: "/maya-bionic", team_id: "T-PAPERCLIP" }).toString()],
     ] as const;
     try {
-      for (const prefix of ["x-forwarded", "x-paperclip-cloud-forwarded"]) {
+      for (const prefix of ["x-forwarded", "x-bionic-cloud-forwarded"]) {
         for (const [surface, contentType, body] of cases) {
           const request = signedSlackWebhookRequest({ url: `http://tenant.internal:3100${path}`, contentType, body });
           request.headers.set("x-forwarded-host", "tenant.up.railway.app");
-          request.headers.set(`${prefix}-host`, "paperclip.example");
+          request.headers.set(`${prefix}-host`, "bionic.example");
           request.headers.set(`${prefix}-proto`, "https");
           expect((await service.handleWebhook(endpoint.publicId, "slack", request)).ok).toBe(true);
           await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: {
@@ -14874,13 +14874,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const fixture = await seedCompany();
     const { endpoint, runtime, service } = await configuredSlackEndpoint(fixture);
     const providerRuntime = runtime.endpoints.get(endpoint.id)!;
-    const canonicalOrigin = vi.spyOn(cloudRuntimeIdentity, "runtimeCanonicalOrigin").mockReturnValue("https://paperclip.example");
+    const canonicalOrigin = vi.spyOn(cloudRuntimeIdentity, "runtimeCanonicalOrigin").mockReturnValue("https://bionic.example");
     const path = `/api/chat-webhooks/${endpoint.publicId}/slack`;
     const body = JSON.stringify({ type: "url_verification", challenge: "proxy-hint-check" });
     const send = async (host: string, protocol = "https", signed = true) => {
       const request = signedSlackWebhookRequest({ url: `http://tenant.internal:3100${path}`, contentType: "application/json", body });
-      request.headers.set("x-paperclip-cloud-forwarded-host", host);
-      request.headers.set("x-paperclip-cloud-forwarded-proto", protocol);
+      request.headers.set("x-bionic-cloud-forwarded-host", host);
+      request.headers.set("x-bionic-cloud-forwarded-proto", protocol);
       if (!signed) request.headers.delete("x-slack-signature");
       // The fake provider runtime supplies the adapter's authentication result.
       providerRuntime.webhookResponse = new Response(signed ? "accepted" : "rejected", { status: signed ? 202 : 401 });
@@ -14890,17 +14890,17 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       // A real callback on an old public hostname must still warn.
       await send("old.example");
       await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: true } });
-      expect((await send("paperclip.example", "https", false)).status).toBe(401);
+      expect((await send("bionic.example", "https", false)).status).toBe(401);
       await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: true } });
-      for (const host of ["paperclip.example, proxy.example", "paperclip.example/path", "user@paperclip.example", "paperclip.example?query=1", "paperclip.example#fragment", "paperclip.example:8443"]) {
+      for (const host of ["bionic.example, proxy.example", "bionic.example/path", "user@bionic.example", "bionic.example?query=1", "bionic.example#fragment", "bionic.example:8443"]) {
         await send(host);
         await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: true } });
       }
-      await send("paperclip.example", "javascript");
+      await send("bionic.example", "javascript");
       await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: true } });
-      await send("paperclip.example");
+      await send("bionic.example");
       await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: false } });
-      for (const host of ["paperclip.example:443", "PAPERCLIP.EXAMPLE:443", "paperclip.example.", "paperclip.example.:443"]) {
+      for (const host of ["bionic.example:443", "PAPERCLIP.EXAMPLE:443", "bionic.example.", "bionic.example.:443"]) {
         await send(host);
         await expect(service.get(endpoint.id)).resolves.toMatchObject({ setup: { callbacksNeedUpdate: false } });
       }
@@ -14914,7 +14914,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const fixture = await seedCompany();
     const { endpoint, runtime, service } =
       await configuredSlackEndpoint(fixture);
-    const webhookUrl = `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`;
+    const webhookUrl = `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`;
 
     await expect(service.get(endpoint.id)).resolves.toMatchObject({
       setup: {
@@ -14963,7 +14963,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
 
     const slashBody = new URLSearchParams({
-      command: "/maya-paperclip",
+      command: "/maya-bionic",
       team_id: "T-PAPERCLIP",
     }).toString();
     await service.handleWebhook(
@@ -14995,7 +14995,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       fakeSlackFetch(),
       {
         publicBaseUrl: "https://board-moved.example",
-        webhookPublicBaseUrl: "https://paperclip.example",
+        webhookPublicBaseUrl: "https://bionic.example",
       },
     );
     await expect(boardOnlyMove.service.get(endpoint.id)).resolves.toMatchObject(
@@ -15051,7 +15051,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const oldVerification = service.handleWebhook(
       endpoint.publicId,
       "slack",
-      new Request("https://paperclip.example/slack", {
+      new Request("https://bionic.example/slack", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -15408,7 +15408,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         user: externalUserId,
       },
     });
-    const webhookUrl = `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`;
+    const webhookUrl = `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`;
     const first = await service.handleWebhook(
       endpoint.publicId,
       "slack",
@@ -15592,7 +15592,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     if (!conversation || !principal) {
       throw new Error("Expected Slack governance conversation and principal");
     }
-    const webhookUrl = `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`;
+    const webhookUrl = `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`;
     const workspaceId = (await service.get(endpoint.id)).providerAccountId;
     const sendStop = (input: { eventId: string; eventSecond: number }) => {
       const body = JSON.stringify({
@@ -16004,7 +16004,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       deferWebhookProcessing: true,
       fetch: fakeSlackFetch() as typeof globalThis.fetch,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       runtime: runtime as unknown as ChatSdkRuntime,
       scheduleDeferredWork: (task) => deferred.push(task),
     });
@@ -16122,7 +16122,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const competingService = chatChannelService(db, {
       fetch: fakeSlackFetch() as typeof globalThis.fetch,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       runtime: new FakeChatSdkRuntime() as unknown as ChatSdkRuntime,
     });
     deferred.shift()?.();
@@ -17273,7 +17273,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       deferWebhookProcessing: true,
       fetch: fakeTelegramFetch() as typeof globalThis.fetch,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       runtime: runtime as unknown as ChatSdkRuntime,
       scheduleDeferredWork: (task) => deferred.push(task),
     });
@@ -17408,7 +17408,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       deferWebhookProcessing: true,
       fetch: fakeTelegramFetch() as typeof globalThis.fetch,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       runtime: runtime as unknown as ChatSdkRuntime,
       scheduleDeferredWork: (task) => deferred.push(task),
     });
@@ -17525,7 +17525,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect.objectContaining({ state: "active", sessionGeneration: 1 }),
     ]);
     expect(runtime.endpoints.get(endpoint.id)?.posts[0]?.text).toBe(
-      "Send your request to start a new Paperclip task.",
+      "Send your request to start a new Bionic task.",
     );
     // Command-only acknowledgements have no run whose final reply can retire
     // a processing reaction. The subsequent task message has its own receipt.
@@ -17708,7 +17708,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       state: "filtered",
       attempts: 0,
       principalId: null,
-      redactedError: "Destination is not enabled in Paperclip",
+      redactedError: "Destination is not enabled in Bionic",
       normalizedEvent: {
         filtering: { contentRetained: false },
         message: { providerMessageId: "teams-setup-group-disabled" },
@@ -18056,7 +18056,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           contextSnapshot: {
             ...context,
             endpointId: f.endpoint.id,
-            paperclipHarnessCheckedOut: true,
+            bionicHarnessCheckedOut: true,
           },
         });
       await db
@@ -18109,7 +18109,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { allowDirectMessages: false },
       "owner-user",
     );
-    await send("teams-direct-disabled", "This must remain outside Paperclip");
+    await send("teams-direct-disabled", "This must remain outside Bionic");
     expect(await service.listConversations(endpoint.id)).toEqual([]);
     expect(wakeup).not.toHaveBeenCalled();
     await expect(
@@ -18125,7 +18125,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ).resolves.toEqual([
       {
         state: "filtered",
-        redactedError: "Destination is not enabled in Paperclip",
+        redactedError: "Destination is not enabled in Bionic",
         normalizedEvent: expect.objectContaining({
           providerEventId: `${directThread.thread.id}:teams-direct-disabled`,
           kind: "direct_message",
@@ -18150,7 +18150,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .where(eq(chatDeliveries.endpointId, endpoint.id))
       .then((rows) => rows[0]);
     expect(JSON.stringify(disabledDelivery)).not.toContain(
-      "This must remain outside Paperclip",
+      "This must remain outside Bionic",
     );
     expect(JSON.stringify(disabledDelivery)).not.toContain(
       "6c4dd0ef-f027-4b75-93d9-04d97424220e",
@@ -18562,7 +18562,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(delivery).toMatchObject({
         state: "filtered",
         principalId: null,
-        redactedError: "Destination is not enabled in Paperclip",
+        redactedError: "Destination is not enabled in Bionic",
         normalizedEvent: {
           filtering: { contentRetained: false },
           message: { providerMessageId: rootMessageId },
@@ -18665,7 +18665,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(delivery).toMatchObject({
       state: "filtered",
       principalId: null,
-      redactedError: "Destination is not enabled in Paperclip",
+      redactedError: "Destination is not enabled in Bionic",
       normalizedEvent: {
         filtering: { contentRetained: false },
         message: { providerMessageId: messageId },
@@ -18731,7 +18731,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: fixture.companyId,
         endpointId: endpoint.id,
         principalId: principal.id,
-        paperclipUserId: "owner-user",
+        bionicUserId: "owner-user",
         status: "linked",
         confirmedAt: new Date(),
       });
@@ -18760,7 +18760,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         await db
           .update(chatIdentityLinks)
           .set({
-            paperclipUserId: null,
+            bionicUserId: null,
             status: "revoked",
             revokedAt: new Date(),
             updatedAt: new Date(),
@@ -18810,8 +18810,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         state: "filtered",
         redactedError:
           authorizationChange === "viewer"
-            ? "Linked Paperclip account is not currently permitted"
-            : "External identity must be linked to a Paperclip account",
+            ? "Linked Bionic account is not currently permitted"
+            : "External identity must be linked to a Bionic account",
         normalizedEvent: {
           filtering: { contentRetained: false },
           message: { providerMessageId: messageId },
@@ -18991,7 +18991,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(delivery).toMatchObject({
       state: "filtered",
       principalId: null,
-      redactedError: "Destination is not enabled in Paperclip",
+      redactedError: "Destination is not enabled in Bionic",
       normalizedEvent: {
         filtering: { contentRetained: false },
         message: { providerMessageId: messageId },
@@ -19604,7 +19604,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const posts = runtime.endpoints.get(endpoint.id)?.posts ?? [];
     const channelAttachmentPost = posts.find((post) =>
       post.text.includes(
-        "File saved on the Paperclip task: channel-report.txt.",
+        "File saved on the Bionic task: channel-report.txt.",
       ),
     );
     expect(channelAttachmentPost?.text).toContain(
@@ -19616,7 +19616,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(channelAttachmentPost?.files).toBeUndefined();
     const personalAttachmentPost = posts.find((post) =>
       post.text.includes(
-        "File saved on the Paperclip task: personal-report.txt.",
+        "File saved on the Bionic task: personal-report.txt.",
       ),
     );
     expect(personalAttachmentPost?.text).toContain(
@@ -20964,13 +20964,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         scheduleDeferredWork: (work) => deferred.push(work),
       });
       const { service, endpoint, callbacks } = context;
-      const sourceThreadId = "github:paperclipai/paperclip:issue:93";
+      const sourceThreadId = "github:bionicai/bionic:issue:93";
       const sourceUrl =
         "https://github.com/user-attachments/files/31917991/public-proof.txt";
       const thread = makeThread({
         id: sourceThreadId,
-        channelId: "github:paperclipai/paperclip",
-        name: "paperclipai/paperclip",
+        channelId: "github:bionicai/bionic",
+        name: "bionicai/bionic",
       });
       const publicBody = Buffer.from("exact current GitHub public file");
       const batch = new AbortController();
@@ -21009,7 +21009,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               type: "issue_comment",
               threadType: "issue",
               prNumber: 93,
-              repository: { full_name: "paperclipai/paperclip" },
+              repository: { full_name: "bionicai/bionic" },
               comment: {
                 id: Number(id),
                 body: urls.map((url) => `[file](${url})`).join("\n"),
@@ -21208,7 +21208,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         scheduleDeferredWork: () => {},
       });
       const { service, endpoint, callbacks } = context;
-      const sourceThreadId = "github:paperclipai/paperclip:issue:93";
+      const sourceThreadId = "github:bionicai/bionic:issue:93";
       const sourceUrl =
         "https://github.com/user-attachments/assets/11111111-2222-3333-4444-555555555555";
       const signedUrl =
@@ -21231,9 +21231,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .spyOn(FakeEndpointRuntime.prototype, "resolveGitHubAttachmentComment")
         .mockResolvedValue({
           id: 93002,
-          url: "https://api.github.com/repos/paperclipai/paperclip/issues/comments/93002",
+          url: "https://api.github.com/repos/bionicai/bionic/issues/comments/93002",
           issue_url:
-            "https://api.github.com/repos/paperclipai/paperclip/issues/93",
+            "https://api.github.com/repos/bionicai/bionic/issues/93",
           body,
           body_html:
             `<a href="${["signed_anchor", "ambiguous_anchor"].includes(revokeAt) ? signedUrl : sourceUrl}"><img src="${signedUrl}"></a>`.repeat(
@@ -21334,8 +21334,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       try {
         const thread = makeThread({
           id: sourceThreadId,
-          channelId: "github:paperclipai/paperclip",
-          name: "paperclipai/paperclip",
+          channelId: "github:bionicai/bionic",
+          name: "bionicai/bionic",
         });
         const message = makeMessage({
           id: "93002",
@@ -21346,7 +21346,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             type: "issue_comment",
             threadType: "issue",
             prNumber: 93,
-            repository: { full_name: "paperclipai/paperclip" },
+            repository: { full_name: "bionicai/bionic" },
             comment: { id: 93002, body, user: { id: 42 } },
           },
         });
@@ -21382,7 +21382,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         if (receiptMutation) expect(await receiptMutation).toBeNull();
         expect(resolve).toHaveBeenCalledExactlyOnceWith(
           {
-            url: "https://api.github.com/repos/paperclipai/paperclip/issues/comments/93002",
+            url: "https://api.github.com/repos/bionicai/bionic/issues/comments/93002",
             accept: "application/vnd.github.full+json",
           },
           expect.any(AbortSignal),
@@ -22056,7 +22056,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const timestamp = String(Math.floor(Date.now() / 1000));
       const signature = `v0=${createHmac("sha256", signingSecret).update(`v0:${timestamp}:${body}`).digest("hex")}`;
       return new Request(
-        `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`,
+        `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`,
         {
           method: "POST",
           headers: {
@@ -22154,7 +22154,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     // Scope inspection is not a substitute for the adapter's signature gate.
     // An invalid request must continue to the SDK so it receives the normal
-    // authentication failure instead of Paperclip acknowledging it as foreign.
+    // authentication failure instead of Bionic acknowledging it as foreign.
     endpointRuntime.webhookRequest = null;
     const forgedForeign = signedRequest(
       cases[0]!.foreignBody,
@@ -22180,7 +22180,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       heartbeat: {
         wakeup: receiptBackedWakeup(vi.fn(async () => ({ accepted: true }))),
       },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
     });
     const endpoint = await service.create(
       fixture.companyId,
@@ -22221,7 +22221,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const signature = `v0=${createHmac("sha256", signingSecret).update(`v0:${timestamp}:${body}`).digest("hex")}`;
     const providerRequest = (retry = false) =>
       new Request(
-        `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`,
+        `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`,
         {
           method: "POST",
           headers: {
@@ -22677,7 +22677,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const initializingWebhook = service.handleWebhook(
       endpoint.publicId,
       "slack",
-      new Request("https://paperclip.example/slack", {
+      new Request("https://bionic.example/slack", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "event_callback", event: {} }),
@@ -22705,7 +22705,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       deferWebhookProcessing: true,
       fetch: fakeSlackFetch("U-BOT-PAUSE") as typeof globalThis.fetch,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       scheduleDeferredWork: (task) => deferred.push(task),
     });
     const endpoint = await service.create(
@@ -22754,7 +22754,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const timestamp = String(Math.floor(Date.now() / 1000));
       const signature = `v0=${createHmac("sha256", signingSecret).update(`v0:${timestamp}:${body}`).digest("hex")}`;
       return new Request(
-        `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/slack`,
+        `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/slack`,
         {
           method: "POST",
           headers: {
@@ -22998,7 +22998,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(deliveries[2]).toMatchObject({
       eventKind: "action",
       state: "filtered",
-      redactedError: "External chat modal submission denied by Paperclip",
+      redactedError: "External chat modal submission denied by Bionic",
       processedAt: expect.any(Date),
     });
     expect(JSON.stringify(await service.get(endpoint.id))).not.toContain(
@@ -23491,8 +23491,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .set({ status: "active" })
         .where(eq(chatEndpoints.id, endpoint.id));
       const thread = makeThread({
-        channelId: "github:paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:5",
+        channelId: "github:bionicai/bionic",
+        id: "github:bionicai/bionic:issue:5",
       });
       await deliverMessage({
         callbacks,
@@ -23723,8 +23723,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const originalRuntime = runtime.endpoints.get(endpoint.id)!;
       attach(originalRuntime);
       const thread = makeThread({
-        channelId: "github:paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:5",
+        channelId: "github:bionicai/bionic",
+        id: "github:bionicai/bionic:issue:5",
       });
       const runId = randomUUID();
       const publish = async () => {
@@ -23994,9 +23994,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const endpointRuntime = runtime.endpoints.get(endpoint.id);
       if (!endpointRuntime) throw new Error("Expected GitHub runtime");
       const github = makeThread({
-        channelId: "github:paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:receipt-reaction",
-        name: "paperclipai/paperclip",
+        channelId: "github:bionicai/bionic",
+        id: "github:bionicai/bionic:issue:receipt-reaction",
+        name: "bionicai/bionic",
       });
       for (const failure of failures) {
         endpointRuntime.reactionErrors.push(failure);
@@ -24785,7 +24785,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     const now = new Date();
     await db.insert(authUsers).values({
-      id: "linked-paperclip-user",
+      id: "linked-bionic-user",
       name: "Linked User",
       email: `linked-${fixture.companyId}@example.com`,
       emailVerified: true,
@@ -24795,7 +24795,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await db.insert(companyMemberships).values({
       companyId: fixture.companyId,
       principalType: "user",
-      principalId: "linked-paperclip-user",
+      principalId: "linked-bionic-user",
       status: "active",
       membershipRole: "viewer",
     });
@@ -24817,7 +24817,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       externalLabel: "Alex External",
     });
     await expect(
-      service.confirmIdentityLink(token, "linked-paperclip-user"),
+      service.confirmIdentityLink(token, "linked-bionic-user"),
     ).resolves.toEqual({
       ok: true,
       endpointId: endpoint.id,
@@ -24853,7 +24853,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await db
       .update(companyMemberships)
       .set({ membershipRole: "operator" })
-      .where(eq(companyMemberships.principalId, "linked-paperclip-user"));
+      .where(eq(companyMemberships.principalId, "linked-bionic-user"));
     await deliverMessage({
       callbacks,
       endpointId: endpoint.id,
@@ -24883,7 +24883,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         ),
       );
     expect(comment.authorType).toBe("user");
-    expect(comment.authorUserId).toBe("linked-paperclip-user");
+    expect(comment.authorUserId).toBe("linked-bionic-user");
     const userCommentCountBeforeSuspend = (
       await db
         .select()
@@ -24894,7 +24894,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await db
       .update(companyMemberships)
       .set({ status: "suspended" })
-      .where(eq(companyMemberships.principalId, "linked-paperclip-user"));
+      .where(eq(companyMemberships.principalId, "linked-bionic-user"));
     await deliverMessage({
       callbacks,
       endpointId: endpoint.id,
@@ -25168,7 +25168,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ).resolves.toEqual([{ state: "filtered" }]);
   });
 
-  it("keeps one Paperclip account mapping for the same provider principal across endpoints", async () => {
+  it("keeps one Bionic account mapping for the same provider principal across endpoints", async () => {
     const fixture = await seedCompany();
     const firstContext = createService(
       new FakeChatSdkRuntime(),
@@ -25241,16 +25241,16 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const now = new Date();
     await db.insert(authUsers).values([
       {
-        id: "paperclip-user-a",
-        name: "Paperclip User A",
+        id: "bionic-user-a",
+        name: "Bionic User A",
         email: `identity-a-${fixture.companyId}@example.com`,
         emailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
       {
-        id: "paperclip-user-b",
-        name: "Paperclip User B",
+        id: "bionic-user-b",
+        name: "Bionic User B",
         email: `identity-b-${fixture.companyId}@example.com`,
         emailVerified: true,
         createdAt: now,
@@ -25261,14 +25261,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       {
         companyId: fixture.companyId,
         principalType: "user",
-        principalId: "paperclip-user-a",
+        principalId: "bionic-user-a",
         status: "active",
         membershipRole: "operator",
       },
       {
         companyId: fixture.companyId,
         principalType: "user",
-        principalId: "paperclip-user-b",
+        principalId: "bionic-user-b",
         status: "active",
         membershipRole: "operator",
       },
@@ -25289,7 +25289,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     if (!firstToken) throw new Error("First identity token was absent");
     await firstContext.service.confirmIdentityLink(
       firstToken,
-      "paperclip-user-a",
+      "bionic-user-a",
     );
 
     const secondIntent = await secondContext.service.createLinkIntent(
@@ -25304,7 +25304,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await expect(
       secondContext.service.confirmIdentityLink(
         secondToken,
-        "paperclip-user-b",
+        "bionic-user-b",
       ),
     ).rejects.toMatchObject({
       status: 409,
@@ -25479,7 +25479,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           providerMessageId,
         })),
         externalChatContinuation: true,
-        paperclipWake: { externalInteractionContinuation: true },
+        bionicWake: { externalInteractionContinuation: true },
       },
     });
 
@@ -25489,7 +25489,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.assignedAgentId, runId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -25642,7 +25642,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.assignedAgentId, runId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -25745,7 +25745,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: fixture.companyId,
         endpointId: endpoint.id,
         principalId: principal!.id,
-        paperclipUserId: "owner-user",
+        bionicUserId: "owner-user",
         status: "linked",
         confirmedAt: new Date(),
       });
@@ -25791,9 +25791,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .then((rows) => rows.find((row) => row.status === "succeeded"));
       expect(firstRun).toBeDefined();
       const firstAdapterInput = execute.mock.calls[0]?.[0] as
-        { context?: { paperclipWake?: unknown } } | undefined;
+        { context?: { bionicWake?: unknown } } | undefined;
       expect(
-        isPaperclipExternalChatTurn(firstAdapterInput?.context?.paperclipWake),
+        isPaperclipExternalChatTurn(firstAdapterInput?.context?.bionicWake),
       ).toBe(true);
       const [firstInboundLink] = await db
         .select({ commentId: chatMessageLinks.commentId })
@@ -25808,7 +25808,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const trustedWakeContext = {
         source: "chat:slack",
         wakeCommentIds: [firstInboundLink!.commentId!],
-        paperclipHarnessCheckedOut: true,
+        bionicHarnessCheckedOut: true,
       };
       await expect(
         resolveExternalChatWakeProvider({
@@ -25890,7 +25890,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           issueId: conversation!.issueId,
           contextSnapshot: {
             ...trustedWakeContext,
-            paperclipHarnessCheckedOut: false,
+            bionicHarnessCheckedOut: false,
           },
         }),
       ).resolves.toBeNull();
@@ -25996,9 +25996,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const secondRun = succeededRuns.find((row) => row.id !== firstRun!.id);
       expect(secondRun).toBeDefined();
       const secondAdapterInput = execute.mock.calls[1]?.[0] as
-        { context?: { paperclipWake?: unknown } } | undefined;
+        { context?: { bionicWake?: unknown } } | undefined;
       expect(
-        isPaperclipExternalChatTurn(secondAdapterInput?.context?.paperclipWake),
+        isPaperclipExternalChatTurn(secondAdapterInput?.context?.bionicWake),
       ).toBe(true);
       const secondFinal = await db
         .select()
@@ -26052,9 +26052,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { callbacks, endpoint, runtime, service } =
       await configuredGitHubEndpoint(fixture);
     const thread = makeThread({
-      channelId: "github:paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:417",
-      name: "paperclipai/paperclip",
+      channelId: "github:bionicai/bionic",
+      id: "github:bionicai/bionic:issue:417",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -26354,7 +26354,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           endpointId: endpoint.id,
           principalId: principal.id,
           status: "linked",
-          paperclipUserId: "owner-user",
+          bionicUserId: "owner-user",
           confirmedAt: new Date(),
         });
       }
@@ -26374,7 +26374,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               id: botId,
               is_bot: true,
               first_name: "Synthetic",
-              username: `paperclip_${botId}_bot`,
+              username: `bionic_${botId}_bot`,
             },
           });
         const body = JSON.parse(String(init?.body ?? "{}")) as Record<
@@ -26463,7 +26463,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         return context.service.handleWebhook(
           endpoint.publicId,
           "telegram",
-          new Request("https://paperclip.example/synthetic-telegram-webhook", {
+          new Request("https://bionic.example/synthetic-telegram-webhook", {
             method: "POST",
             headers: {
               "content-type": "application/json",
@@ -26590,7 +26590,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             method: "sendMessage",
             body: {
               chat_id: "-100123",
-              text: "This Paperclip action is no longer available. Open the linked task or ask an operator to link this account.",
+              text: "This Bionic action is no longer available. Open the linked task or ask an operator to link this account.",
               ephemeral_message_parameters: {
                 receiver_user_id: 456,
                 callback_query_id: "native-private-callback-1",
@@ -26805,7 +26805,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             method: "sendMessage",
             body: {
               chat_id: "456",
-              text: "This Paperclip action is no longer available. Open the linked task or ask an operator to link this account.",
+              text: "This Bionic action is no longer available. Open the linked task or ask an operator to link this account.",
             },
           },
         ]);
@@ -27018,7 +27018,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
 
     // Sample again at send time so a status waiting behind an older provider
-    // operation cannot report a state Paperclip has already left.
+    // operation cannot report a state Bionic has already left.
     await db
       .update(issues)
       .set({ status: "done", completedAt: new Date(), updatedAt: new Date() })
@@ -27178,7 +27178,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       "old-generation-final",
-      "Send your request to start a new Paperclip task.",
+      "Send your request to start a new Bionic task.",
     ]);
     await expect(service.listConversations(endpoint.id)).resolves.toEqual([
       expect.objectContaining({ id: oldConversation.id, state: "completed" }),
@@ -27186,9 +27186,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     const lateOldFinal = await issueService(db).addComment(
       oldConversation.issueId,
-      "late-old-generation-final-stays-in-paperclip",
+      "late-old-generation-final-stays-in-bionic",
       { agentId: fixture.assignedAgentId, runId: oldRunId },
-      { authorType: "agent", authorizationReason: "paperclip_runner_protocol" },
+      { authorType: "agent", authorizationReason: "bionic_runner_protocol" },
     );
     await expect(
       db
@@ -27244,7 +27244,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       "old-generation-final",
-      "Send your request to start a new Paperclip task.",
+      "Send your request to start a new Bionic task.",
       "new-generation-final",
     ]);
     expect(
@@ -27707,7 +27707,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           { agentId: f.assignedAgentId, runId: f.runId },
           {
             authorType: "agent",
-            authorizationReason: "paperclip_runner_protocol",
+            authorizationReason: "bionic_runner_protocol",
           },
         );
         await expect(
@@ -28465,12 +28465,12 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         channelId:
           provider === "slack"
             ? "C-MULTI-FINAL"
-            : "github:paperclipai/paperclip",
+            : "github:bionicai/bionic",
         id:
           provider === "slack"
             ? "slack:C-MULTI-FINAL:4045.1"
-            : "github:paperclipai/paperclip:issue:418",
-        name: provider === "slack" ? "multi-final" : "paperclipai/paperclip",
+            : "github:bionicai/bionic:issue:418",
+        name: provider === "slack" ? "multi-final" : "bionicai/bionic",
       });
       await deliverMessage({
         callbacks,
@@ -28521,7 +28521,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             { agentId: fixture.assignedAgentId, runId },
             {
               authorType: "agent",
-              authorizationReason: "paperclip_runner_protocol",
+              authorizationReason: "bionic_runner_protocol",
             },
           ),
         );
@@ -29745,7 +29745,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ).toMatchObject({
       progressState: "failed",
       text: expect.stringContaining(
-        "Ask a Paperclip admin to create a private identity link for this account or enable isolated guest execution, then start a new task.",
+        "Ask a Bionic admin to create a private identity link for this account or enable isolated guest execution, then start a new task.",
       ),
     });
   });
@@ -30991,8 +30991,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             ok: true,
             result: {
               id: 884422,
-              username: "paperclip_lease_reclaim_bot",
-              first_name: "Paperclip Lease Reclaim",
+              username: "bionic_lease_reclaim_bot",
+              first_name: "Bionic Lease Reclaim",
             },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
@@ -31155,8 +31155,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             ok: true,
             result: {
               id: 884423,
-              username: "paperclip_removal_reclaim_bot",
-              first_name: "Paperclip Removal Reclaim",
+              username: "bionic_removal_reclaim_bot",
+              first_name: "Bionic Removal Reclaim",
             },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
@@ -32823,7 +32823,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         expect.objectContaining({
           state: "filtered",
           attempts: 1,
-          redactedError: "External action denied by Paperclip authorization",
+          redactedError: "External action denied by Bionic authorization",
           normalizedEvent: {
             providerEventId: expect.stringMatching(
               /^action-denied:[a-f0-9]{64}$/,
@@ -32851,7 +32851,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       });
       expect(gatewayInteraction.reply).toHaveBeenLastCalledWith({
         content:
-          "This action is no longer available. Open the linked Paperclip task or ask an operator to link this account.",
+          "This action is no longer available. Open the linked Bionic task or ask an operator to link this account.",
         flags: 64,
       });
     } finally {
@@ -32962,7 +32962,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       });
       await expect(
         enqueueChatRunMilestones(db, {
-          publicBaseUrl: "https://paperclip.example",
+          publicBaseUrl: "https://bionic.example",
         }),
       ).resolves.toBe(1);
       await service.processPendingPublications(1_000);
@@ -33683,7 +33683,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                   allowOther: true,
                   options: [
                     {
-                      id: "__paperclip_text__",
+                      id: "__bionic_text__",
                       label: "Type an answer",
                       freeText: true,
                     },
@@ -33691,7 +33691,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 },
               ],
               questionSet: {
-                schema: "paperclip.question_set.v1",
+                schema: "bionic.question_set.v1",
                 title: "Deployment details",
                 questions: [
                   {
@@ -34024,7 +34024,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           expect(callback.reply.mock.calls[0]![0].content).toBe(
             submittedText === winnerText
               ? "Your response was received."
-              : "This response was not accepted. Open the linked Paperclip task or reopen the question to try again.",
+              : "This response was not accepted. Open the linked Bionic task or reopen the question to try again.",
           );
         }
         expect(answered).toMatchObject({
@@ -34679,7 +34679,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(providerRuntime.posts).toHaveLength(1);
     const delivered = providerRuntime.posts[0]!;
     expect(delivered.text).toBe(
-      "Paperclip attached the complete response because it exceeds Discord’s message limit.",
+      "Bionic attached the complete response because it exceeds Discord’s message limit.",
     );
     expect(delivered.text).not.toContain("...");
     expect(delivered.files).toHaveLength(1);
@@ -34688,10 +34688,10 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       filename: string;
       mimeType: string;
     };
-    expect(uploaded.filename).toBe("paperclip-response.md");
+    expect(uploaded.filename).toBe("bionic-response.md");
     expect(uploaded.mimeType).toBe("text/markdown; charset=utf-8");
     expect(Buffer.isBuffer(uploaded.data)).toBe(true);
-    // The attachment is lossless after Paperclip's mandatory provider-safety
+    // The attachment is lossless after Bionic's mandatory provider-safety
     // projection (which strips URL query strings before any transport work).
     expect(uploaded.data.toString("utf8")).toBe(providerSafeSource);
     expect(uploaded.data.toString("utf8")).not.toContain("?case=discord");
@@ -34833,8 +34833,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       );
     expect(definiteFailureNotices).toHaveLength(1);
     const rejectedAttachmentNotice =
-      "Paperclip could not send the response attachment. The complete response remains on its Paperclip task for an operator to retry." +
-      ` Open task: https://paperclip.example/issues/${conversation.issueId}`;
+      "Bionic could not send the response attachment. The complete response remains on its Bionic task for an operator to retry." +
+      ` Open task: https://bionic.example/issues/${conversation.issueId}`;
     expect(definiteFailureNotices[0]).toMatchObject({
       commentId: null,
       state: "published",
@@ -34894,7 +34894,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       payload: {
         text: source,
         card: {
-          schema: "paperclip.chat.card.v1",
+          schema: "bionic.chat.card.v1",
           kind: "status",
           title: "Long structured card",
         },
@@ -35421,7 +35421,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(completed).toMatchObject({ state: "published", attempts: 2 });
     expect(providerRuntime.posts).toHaveLength(1);
     expect(providerRuntime.posts[0]?.text).toBe(
-      "Paperclip attached the complete response to preserve its Markdown formatting.",
+      "Bionic attached the complete response to preserve its Markdown formatting.",
     );
     const attachment = providerRuntime.posts[0]?.attachments?.[0] as {
       data: Buffer;
@@ -35432,7 +35432,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     };
     expect(attachment).toMatchObject({
       mimeType: "text/markdown; charset=utf-8",
-      name: "paperclip-response.md",
+      name: "bionic-response.md",
       size: Buffer.byteLength(providerSafeSource),
       type: "file",
     });
@@ -35759,7 +35759,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         message: makeMessage({
           id: `${chatId}:1`,
           raw: { message_id: 1 },
-          text: "@paperclip create a Telegram publication failure fixture",
+          text: "@bionic create a Telegram publication failure fixture",
           userId: chatId,
           mentioned: true,
         }),
@@ -35855,7 +35855,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       message: makeMessage({
         id: `${chatId}:1`,
         raw: { message_id: 1 },
-        text: "@paperclip establish a recovery race fixture",
+        text: "@bionic establish a recovery race fixture",
         userId: "91234567",
         mentioned: true,
       }),
@@ -35936,7 +35936,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     recoveryPromise = service.handleWebhook(
       endpoint.publicId,
       "telegram",
-      new Request("https://paperclip.example/telegram", {
+      new Request("https://bionic.example/telegram", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -36012,7 +36012,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       message: makeMessage({
         id: `${chatId}:1`,
         raw: { message_id: 1 },
-        text: "@paperclip establish a reconnect race fixture",
+        text: "@bionic establish a reconnect race fixture",
         userId: "92345678",
         mentioned: true,
       }),
@@ -36314,7 +36314,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         raw: { type: "block_actions" },
         thread: channel.thread,
         // The pinned Slack adapter uses the clicked Block Kit message ts here,
-        // even though the authoritative Paperclip conversation is rooted at
+        // even though the authoritative Bionic conversation is rooted at
         // the original mention (and a DM root has no ts at all).
         threadId:
           overrides.threadId ??
@@ -36341,7 +36341,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
     expect(channel.postEphemeral).toHaveBeenCalledWith(
       unlinkedAction.event.user.userId,
-      "This action is no longer available. Open the linked Paperclip task or ask an operator to link this account.",
+      "This action is no longer available. Open the linked Bionic task or ask an operator to link this account.",
       { fallbackToDM: false },
     );
     const deniedSlackActions = await db
@@ -36359,7 +36359,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         principalId: expect.any(String),
         state: "filtered",
         attempts: 1,
-        redactedError: "External action denied by Paperclip authorization",
+        redactedError: "External action denied by Bionic authorization",
         normalizedEvent: {
           providerEventId: expect.stringMatching(
             /^action-denied:[a-f0-9]{64}$/,
@@ -36380,7 +36380,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           kind: "delivery",
           status: "filtered",
           summary: "action ignored",
-          detail: "External action denied by Paperclip authorization",
+          detail: "External action denied by Bionic authorization",
           replayable: false,
         }),
       ]),
@@ -36395,7 +36395,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     );
     await vi.waitFor(() =>
       expect(channel.post).toHaveBeenCalledWith(
-        "This Paperclip action is no longer available.",
+        "This Bionic action is no longer available.",
       ),
     );
     expect(channel.postEphemeral).toHaveBeenCalledTimes(2);
@@ -36446,7 +36446,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       }),
     );
 
-    // Model the provider accepting the interactive card while Paperclip loses
+    // Model the provider accepting the interactive card while Bionic loses
     // the response before it can persist the provider message binding. The
     // signed callback and opaque issued token must reconcile that ambiguity
     // without requiring a duplicate send or disabling the real button.
@@ -36757,7 +36757,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.assignedAgentId, runId: unrelatedRunId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -36777,7 +36777,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.assignedAgentId, runId: sourceRunId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -36797,7 +36797,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.assignedAgentId, runId: sourceRunId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -36870,7 +36870,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.replacementAgentId, runId: reassignedRunId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -36884,7 +36884,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       ([userId, text]) =>
         userId === externalUserId &&
         text ===
-          "This action is no longer available. Open the linked Paperclip task or ask an operator to link this account.",
+          "This action is no longer available. Open the linked Bionic task or ask an operator to link this account.",
     ).length;
     await callbacks.onAction(actionEvent());
     expect(
@@ -36892,7 +36892,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         ([userId, text]) =>
           userId === externalUserId &&
           text ===
-            "This action is no longer available. Open the linked Paperclip task or ask an operator to link this account.",
+            "This action is no longer available. Open the linked Bionic task or ask an operator to link this account.",
       ),
     ).toHaveLength(staleNoticeCount);
     expect(
@@ -37043,7 +37043,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 allowOther: true,
                 options: [
                   {
-                    id: "__paperclip_text__",
+                    id: "__bionic_text__",
                     label: "Type an answer",
                     freeText: true,
                   },
@@ -37164,7 +37164,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         const signature = createHmac("sha256", credentials.signingSecret!)
           .update(`v0:${timestamp}:${body}`)
           .digest("hex");
-        return new Request("https://paperclip.test/webhooks/slack", {
+        return new Request("https://bionic.test/webhooks/slack", {
           method: "POST",
           headers: {
             "content-type": "application/x-www-form-urlencoded",
@@ -37328,7 +37328,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         response_action: "errors",
         errors: {
           [select.block_id]:
-            "This form is no longer authorized. Close it and open the linked Paperclip task.",
+            "This form is no longer authorized. Close it and open the linked Bionic task.",
         },
       });
       expect(await submissionState()).toEqual(before);
@@ -37594,7 +37594,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .from(chatConversations)
         .where(eq(chatConversations.endpointId, endpoint.id));
 
-      const linkedUserId = `modal-paperclip-user-${randomUUID()}`;
+      const linkedUserId = `modal-bionic-user-${randomUUID()}`;
       const now = new Date();
       await db.insert(authUsers).values({
         id: linkedUserId,
@@ -37663,7 +37663,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 allowOther: true,
                 options: [
                   {
-                    id: "__paperclip_text__",
+                    id: "__bionic_text__",
                     label: "Type an answer",
                     freeText: true,
                   },
@@ -37732,7 +37732,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       await vi.waitFor(() =>
         expect(channel.postEphemeral).toHaveBeenCalledWith(
           modalUser.userId,
-          "This action is no longer available. Open the linked Paperclip task or ask an operator to link this account.",
+          "This action is no longer available. Open the linked Bionic task or ask an operator to link this account.",
           { fallbackToDM: false },
         ),
       );
@@ -37842,7 +37842,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         await vi.waitFor(() =>
           expect(channel.postEphemeral).toHaveBeenCalledWith(
             modalUser.userId,
-            "Paperclip could not open this form. Try the action again or open the linked Paperclip task.",
+            "Bionic could not open this form. Try the action again or open the linked Bionic task.",
             { fallbackToDM: false },
           ),
         );
@@ -38053,7 +38053,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         action: "errors",
         errors: {
           [selectField.id]:
-            "This form is no longer authorized. Close it and open the linked Paperclip task.",
+            "This form is no longer authorized. Close it and open the linked Bionic task.",
         },
       };
       await expect(
@@ -38318,7 +38318,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       });
       await db
         .update(chatIdentityLinks)
-        .set({ paperclipUserId: relinkedUserId })
+        .set({ bionicUserId: relinkedUserId })
         .where(
           and(
             eq(chatIdentityLinks.endpointId, endpoint.id),
@@ -38335,7 +38335,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       ).resolves.toEqual(deniedSubmitResponse);
       await db
         .update(chatIdentityLinks)
-        .set({ paperclipUserId: linkedUserId })
+        .set({ bionicUserId: linkedUserId })
         .where(
           and(
             eq(chatIdentityLinks.endpointId, endpoint.id),
@@ -38356,7 +38356,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           expect.objectContaining({
             kind: "delivery",
             status: "filtered",
-            detail: "External chat modal submission denied by Paperclip",
+            detail: "External chat modal submission denied by Bionic",
             replayable: false,
           }),
         ]),
@@ -38496,7 +38496,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       { agentId: fixture.assignedAgentId, runId: sourceRunId },
       {
         authorType: "agent",
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
     );
     await expect(
@@ -38968,8 +38968,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               ok: true,
               result: {
                 id: botId,
-                username: "paperclip_denial_test_bot",
-                first_name: "Paperclip Denial Test",
+                username: "bionic_denial_test_bot",
+                first_name: "Bionic Denial Test",
               },
             }),
             { status: 200, headers: { "content-type": "application/json" } },
@@ -39018,7 +39018,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                   type: "private",
                   first_name: "Telegram User",
                 },
-                text: "This Paperclip action is no longer available.",
+                text: "This Bionic action is no longer available.",
               },
             }),
             { status: 200, headers: { "content-type": "application/json" } },
@@ -39034,7 +39034,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       heartbeat: {
         wakeup: receiptBackedWakeup(vi.fn(async () => ({ accepted: true }))),
       },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
     });
     try {
       const endpoint = await service.create(
@@ -39061,7 +39061,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         data = callbackData,
       ) =>
         new Request(
-          `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/telegram`,
+          `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/telegram`,
           {
             method: "POST",
             headers: {
@@ -39157,7 +39157,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(notices).toHaveLength(1);
       expect(JSON.parse(notices[0]!.body)).toMatchObject({
         chat_id: "417200359",
-        text: "This Paperclip action is no longer available. Open the linked task or ask an operator to link this account.",
+        text: "This Bionic action is no longer available. Open the linked task or ask an operator to link this account.",
       });
       expect(notices[0]!.body).not.toContain(actionId);
       expect(notices[0]!.body).not.toContain(callbackData);
@@ -39178,7 +39178,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(denials[0]).toMatchObject({
         state: "filtered",
         attempts: 1,
-        redactedError: "External action denied by Paperclip authorization",
+        redactedError: "External action denied by Bionic authorization",
         normalizedEvent: {
           providerEventId: expect.stringMatching(
             /^action-denied:[a-f0-9]{64}$/,
@@ -39443,7 +39443,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         principalId: principal.id,
         state: "filtered",
         attempts: 1,
-        redactedError: "External action denied by Paperclip authorization",
+        redactedError: "External action denied by Bionic authorization",
         normalizedEvent: {
           providerEventId: expect.stringMatching(
             /^action-denied:[a-f0-9]{64}$/,
@@ -39466,7 +39466,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           kind: "delivery",
           status: "filtered",
           summary: "action ignored",
-          detail: "External action denied by Paperclip authorization",
+          detail: "External action denied by Bionic authorization",
           replayable: false,
         }),
       ]),
@@ -40512,7 +40512,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ).toHaveLength(0);
   });
 
-  it("publishes complex question sets as non-executable Paperclip fallbacks", async () => {
+  it("publishes complex question sets as non-executable Bionic fallbacks", async () => {
     const fixture = await seedCompany();
     const { callbacks, endpoint, service } =
       await configuredSlackEndpoint(fixture);
@@ -40594,7 +40594,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       ) ?? [],
     ).toEqual([]);
     expect(publication.payload.text).toContain(
-      "Open the task in Paperclip to respond",
+      "Open the task in Bionic to respond",
     );
     expect(callbacks.onModalSubmit).toBeTypeOf("function");
     expect(callbacks.onModalClose).toBeUndefined();
@@ -40603,15 +40603,15 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
   it("publishes GitHub questions as link-only cards with no executable callback", async () => {
     const fixture = await seedCompany();
-    const previousPublicUrl = process.env.PAPERCLIP_PUBLIC_URL;
-    process.env.PAPERCLIP_PUBLIC_URL = "https://paperclip.example";
+    const previousPublicUrl = process.env.BIONIC_PUBLIC_URL;
+    process.env.BIONIC_PUBLIC_URL = "https://bionic.example";
     try {
       const { callbacks, endpoint, runtime, service } =
         await configuredGitHubEndpoint(fixture);
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:451",
-        name: "paperclipai/paperclip",
+        channelId: "bionicai/bionic",
+        id: "github:bionicai/bionic:issue:451",
+        name: "bionicai/bionic",
       });
       await deliverMessage({
         callbacks,
@@ -40674,8 +40674,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             actions: [
               {
                 type: "link",
-                label: "Open in Paperclip",
-                url: `https://paperclip.example/issues/${conversation!.issueId}`,
+                label: "Open in Bionic",
+                url: `https://bionic.example/issues/${conversation!.issueId}`,
               },
             ],
           },
@@ -40695,18 +40695,18 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       ).toHaveLength(0);
       expect(
         JSON.stringify(runtime.endpoints.get(endpoint.id)?.posts),
-      ).toContain(`https://paperclip.example/issues/${conversation!.issueId}`);
+      ).toContain(`https://bionic.example/issues/${conversation!.issueId}`);
     } finally {
       if (previousPublicUrl === undefined)
-        delete process.env.PAPERCLIP_PUBLIC_URL;
-      else process.env.PAPERCLIP_PUBLIC_URL = previousPublicUrl;
+        delete process.env.BIONIC_PUBLIC_URL;
+      else process.env.BIONIC_PUBLIC_URL = previousPublicUrl;
     }
   });
 
   it("returns a successful GitHub link-question continuation as one exact final reply", async () => {
     const fixture = await seedCompany();
-    const previousPublicUrl = process.env.PAPERCLIP_PUBLIC_URL;
-    process.env.PAPERCLIP_PUBLIC_URL = "https://paperclip.example";
+    const previousPublicUrl = process.env.BIONIC_PUBLIC_URL;
+    process.env.BIONIC_PUBLIC_URL = "https://bionic.example";
     try {
       const continuationRunId = randomUUID();
       const wakeup = vi.fn(async (agentId, options) => {
@@ -40736,9 +40736,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const { callbacks, endpoint, runtime, service } =
         await configuredGitHubEndpoint(fixture, { wakeup });
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:455",
-        name: "paperclipai/paperclip",
+        channelId: "bionicai/bionic",
+        id: "github:bionicai/bionic:issue:455",
+        name: "bionicai/bionic",
       });
       await deliverMessage({
         callbacks,
@@ -40815,7 +40815,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           card: {
             actions: [
               expect.objectContaining({
-                label: "Open in Paperclip",
+                label: "Open in Bionic",
                 type: "link",
               }),
             ],
@@ -40927,8 +40927,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       await service.shutdown();
     } finally {
       if (previousPublicUrl === undefined)
-        delete process.env.PAPERCLIP_PUBLIC_URL;
-      else process.env.PAPERCLIP_PUBLIC_URL = previousPublicUrl;
+        delete process.env.BIONIC_PUBLIC_URL;
+      else process.env.BIONIC_PUBLIC_URL = previousPublicUrl;
     }
   });
 
@@ -40937,9 +40937,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const { callbacks, endpoint, runtime, service, wakeup } =
       await configuredGitHubEndpoint(fixture);
     const thread = makeThread({
-      channelId: "paperclipai/paperclip",
-      id: "github:paperclipai/paperclip:issue:454",
-      name: "paperclipai/paperclip",
+      channelId: "bionicai/bionic",
+      id: "github:bionicai/bionic:issue:454",
+      name: "bionicai/bionic",
     });
     await deliverMessage({
       callbacks,
@@ -41042,7 +41042,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     await expect(
       enqueueChatRunMilestones(db, {
-        publicBaseUrl: "https://paperclip.example",
+        publicBaseUrl: "https://bionic.example",
       }),
     ).resolves.toBe(1);
     await service.processPendingPublications();
@@ -41077,14 +41077,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
   it("publishes truthful GitHub attachment fallbacks without provider file bytes", async () => {
     for (const testCase of [
       {
-        publicBaseUrl: "https://board.paperclip.example",
+        publicBaseUrl: "https://board.bionic.example",
         expectedFallback: (issueId: string) =>
-          `File saved on the Paperclip task: report.txt. This GitHub App connection cannot upload file bytes into comments. Download it: https://board.paperclip.example/issues/${issueId}`,
+          `File saved on the Bionic task: report.txt. This GitHub App connection cannot upload file bytes into comments. Download it: https://board.bionic.example/issues/${issueId}`,
       },
       {
         publicBaseUrl: "http://127.0.0.1:3103",
         expectedFallback: () =>
-          "File saved on the private Paperclip task: report.txt. This GitHub App connection cannot upload file bytes into comments.",
+          "File saved on the private Bionic task: report.txt. This GitHub App connection cannot upload file bytes into comments.",
       },
     ]) {
       const fixture = await seedCompany();
@@ -41095,9 +41095,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           storage: storage.storage,
         });
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:452",
-        name: "paperclipai/paperclip",
+        channelId: "bionicai/bionic",
+        id: "github:bionicai/bionic:issue:452",
+        name: "bionicai/bionic",
       });
       await deliverMessage({
         callbacks,
@@ -41248,8 +41248,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     expect(failed).toMatchObject({ state: "failed" });
     const selectedAttachmentNotice =
-      "Paperclip could not send an attachment. The file remains on its Paperclip task for an operator to retry." +
-      ` Open task: https://paperclip.example/issues/${conversation.issueId}`;
+      "Bionic could not send an attachment. The file remains on its Bionic task for an operator to retry." +
+      ` Open task: https://bionic.example/issues/${conversation.issueId}`;
     const publications = await db
       .select()
       .from(chatPublications)
@@ -41270,7 +41270,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(publications).toEqual([
       expect.objectContaining({
         state: "published",
-        payload: { text: "**Owner User (via Paperclip)**\n\nThe selected PNG should follow." },
+        payload: { text: "**Owner User (via Bionic)**\n\nThe selected PNG should follow." },
       }),
       expect.objectContaining({
         id: failed.id,
@@ -41288,7 +41288,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(providerRuntime.posts).toEqual([
       {
         threadId: channel.thread.id,
-        text: "**Owner User (via Paperclip)**\n\nThe selected PNG should follow.",
+        text: "**Owner User (via Bionic)**\n\nThe selected PNG should follow.",
       },
       {
         threadId: channel.thread.id,
@@ -41440,9 +41440,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const thread =
         provider === "github"
           ? makeThread({
-              channelId: "paperclipai/paperclip",
-              id: "github:paperclipai/paperclip:issue:97",
-              name: "paperclipai/paperclip",
+              channelId: "bionicai/bionic",
+              id: "github:bionicai/bionic:issue:97",
+              name: "bionicai/bionic",
             })
           : makeThread({
               channelId: "teams-personal-cleanup",
@@ -41900,7 +41900,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(publications).toEqual([
       expect.objectContaining({
         state: "published",
-        payload: { text: "**Owner User (via Paperclip)**\n\nVisible board update" },
+        payload: { text: "**Owner User (via Bionic)**\n\nVisible board update" },
       }),
       expect.objectContaining({
         id: first.id,
@@ -41915,7 +41915,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .where(eq(issueAttachments.id, attachment.id)),
     ).resolves.toEqual([{ issueCommentId: comments[0].id }]);
     expect(runtime.endpoints.get(endpoint.id)?.posts).toEqual([
-      { threadId: channel.thread.id, text: "**Owner User (via Paperclip)**\n\nVisible board update" },
+      { threadId: channel.thread.id, text: "**Owner User (via Bionic)**\n\nVisible board update" },
       {
         threadId: channel.thread.id,
         text: "",
@@ -42182,7 +42182,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         ).toEqual([
           {
             threadId: "slack:C-BOARD-REJECTION:4410.1",
-            text: "**Owner User (via Paperclip)**\n\nCorrected separately keyed send",
+            text: "**Owner User (via Bionic)**\n\nCorrected separately keyed send",
           },
         ]);
       } finally {
@@ -42717,7 +42717,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           phase: "delivered",
           privateState: {
             resolution: {
-              schema: "paperclip.teams.file-resolution.v1",
+              schema: "bionic.teams.file-resolution.v1",
               action: "mark_delivered",
               fromPhase: "upload_unknown",
             },
@@ -43213,7 +43213,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         ).toEqual([[], ...attachmentIds.map((id) => [id])]);
         expect(initialBatch[2]!.id).toBe(blocked.id);
         expect(initialRuntime.posts).toEqual([
-          { threadId: channel.thread.id, text: provider === "slack" ? `**Owner User (via Paperclip)**\n\n${text}` : text },
+          { threadId: channel.thread.id, text: provider === "slack" ? `**Owner User (via Bionic)**\n\n${text}` : text },
           {
             threadId: channel.thread.id,
             text: provider === "slack" ? "" : "Shared selected-1.txt.",
@@ -44214,7 +44214,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(providerRuntime.posts).toEqual([
         {
           threadId: damagedChannel.thread.id,
-          text: "**Owner User (via Paperclip)**\n\nDamaged attachment send",
+          text: "**Owner User (via Bionic)**\n\nDamaged attachment send",
         },
       ]);
 
@@ -44233,11 +44233,11 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(providerRuntime.posts).toEqual([
         {
           threadId: damagedChannel.thread.id,
-          text: "**Owner User (via Paperclip)**\n\nDamaged attachment send",
+          text: "**Owner User (via Bionic)**\n\nDamaged attachment send",
         },
         {
           threadId: healthyChannel.thread.id,
-          text: "**Owner User (via Paperclip)**\n\nHealthy attachment send",
+          text: "**Owner User (via Bionic)**\n\nHealthy attachment send",
         },
         {
           threadId: healthyChannel.thread.id,
@@ -44351,7 +44351,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(providerRuntime.posts).toEqual([
         {
           threadId: channel.thread.id,
-          text: "**Owner User (via Paperclip)**\n\nMissing storage attachment send",
+          text: "**Owner User (via Bionic)**\n\nMissing storage attachment send",
         },
       ]);
 
@@ -45371,7 +45371,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       conversation.issueId,
       "Recorded a direct upload before final presentation.",
       { agentId: fixture.assignedAgentId, runId },
-      { authorType: "agent", authorizationReason: "paperclip_runner_protocol" },
+      { authorType: "agent", authorizationReason: "bionic_runner_protocol" },
     );
     const storedDirect = await storage.storage.putFile({
       companyId: fixture.companyId,
@@ -46635,7 +46635,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         ).toString(),
         applicationId,
         commandId: registeredCommandId,
-        commandName: "paperclip",
+        commandName: "bionic",
         commandType: 1,
         type: 2,
         version: 1,
@@ -46722,7 +46722,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           if (legacyCopy) {
             const prior = structuredClone(remoteCommands[0]!);
             (prior.options as Array<{ description: string }>)[2]!.description =
-              "Close the current Paperclip task";
+              "Close the current Bionic task";
             remoteCommands[0] = prior;
             const {
               id: _id,
@@ -46748,7 +46748,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             .set({
               payload: { registration: priorRegistration },
               result: {
-                schema: "paperclip.discord.command-registration-result.v1",
+                schema: "bionic.discord.command-registration-result.v1",
                 outcome: legacyCopy ? "registered" : "unavailable",
                 retryAt: legacyCopy
                   ? new Date(0).toISOString()
@@ -47635,7 +47635,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             contextSnapshot: {
               ...context,
               endpointId: f.endpoint.id,
-              paperclipHarnessCheckedOut: true,
+              bionicHarnessCheckedOut: true,
             },
           });
           if (admitted) {
@@ -47960,7 +47960,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               contextSnapshot: {
                 ...parent.context,
                 endpointId: f.endpoint.id,
-                paperclipHarnessCheckedOut: true,
+                bionicHarnessCheckedOut: true,
               },
             });
             await db
@@ -48006,7 +48006,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               contextSnapshot: {
                 ...f.fresh.context,
                 endpointId: f.endpoint.id,
-                paperclipHarnessCheckedOut: true,
+                bionicHarnessCheckedOut: true,
                 wakeCommentIds: [
                   f.old.context.wakeCommentId,
                   f.fresh.context.wakeCommentId,
@@ -48071,7 +48071,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               contextSnapshot: {
                 ...f.fresh.context,
                 endpointId: f.endpoint.id,
-                paperclipHarnessCheckedOut: true,
+                bionicHarnessCheckedOut: true,
                 wakeCommentIds: [
                   f.fresh.context.wakeCommentId,
                   second.wakeCommentId,
@@ -48432,7 +48432,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await callbacks.onSlashCommand!(event);
     await vi.waitFor(() => expect(postEphemeral).toHaveBeenCalledTimes(1));
     const [identity] = await service.listPrincipals(endpoint.id);
-    expect(identity).toMatchObject({ externalLabel: "Connect Person", status: "pending", paperclipUserId: null, lastConnectAt: expect.any(String) });
+    expect(identity).toMatchObject({ externalLabel: "Connect Person", status: "pending", bionicUserId: null, lastConnectAt: expect.any(String) });
     expect(await service.listConversations(endpoint.id)).toHaveLength(0);
     expect(wakeup).not.toHaveBeenCalled();
     expect(post).not.toHaveBeenCalled();
@@ -48443,7 +48443,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect((await service.listPrincipals(other.id))[0]?.lastConnectAt).toBeNull();
     const notice = String((postEphemeral.mock.calls[0] as unknown[])[1]);
     const token = /token=([A-Za-z0-9_-]+)/.exec(notice)![1];
-    expect(notice).toContain("Connect your Paperclip account");
+    expect(notice).toContain("Connect your Bionic account");
     expect((postEphemeral.mock.calls[0] as unknown[])[2]).toEqual({ fallbackToDM: false });
     expect(await service.previewIdentityLink(token, "owner-user")).toMatchObject({ selfService: true, canConfirm: true, externalLabel: "Connect Person" });
     expect(await service.setupTestStatus(endpoint.id, "owner-user")).toEqual({ messageReceivedAt: null });
@@ -48469,7 +48469,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     providerRuntime.thread = (id: string) => ({ ...originalThread(id), postEphemeral: confirmationNotice });
     await service.confirmIdentityLink(token, "owner-user");
     await vi.waitFor(() => expect(confirmationNotice).toHaveBeenCalledWith("U-CONNECT", expect.stringContaining("account is connected"), { fallbackToDM: false }));
-    expect((await service.listPrincipals(endpoint.id))[0]).toMatchObject({ status: "linked", paperclipUserId: "owner-user" });
+    expect((await service.listPrincipals(endpoint.id))[0]).toMatchObject({ status: "linked", bionicUserId: "owner-user" });
     await expect(service.test(endpoint.id)).rejects.toMatchObject({ details: { code: "chat_test_follow_up_missing" } });
     await expect(service.confirmIdentityLink(token, "owner-user")).rejects.toMatchObject({ status: 422 });
     await request(outsideApp).post("/api/chat-identity-links/request-access").send({ token }).expect(422);
@@ -48501,7 +48501,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(await service.setupTestStatus(endpoint.id, "someone-else")).toEqual({ messageReceivedAt: null });
   });
 
-  it("turns a Slack slash command into a new native thread and one Paperclip task", async () => {
+  it("turns a Slack slash command into a new native thread and one Bionic task", async () => {
     const fixture = await seedCompany();
     const { callbacks, endpoint, runtime, service } =
       await configuredSlackEndpoint(fixture);
@@ -48862,7 +48862,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ]);
     // Provider transport owns only its short authorization snapshot. The
     // resource update completed while Slack was in flight, so the later
-    // Paperclip task mutation must honor the now-disabled destination.
+    // Bionic task mutation must honor the now-disabled destination.
     await expect(service.listConversations(endpoint.id)).resolves.toEqual([]);
     await expect(
       db
@@ -48888,7 +48888,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           }),
         }),
         principalId: null,
-        redactedError: "Destination is not enabled in Paperclip",
+        redactedError: "Destination is not enabled in Bionic",
       },
     ]);
     await expect(
@@ -49135,7 +49135,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .returning();
 
     // This row models the crash window after Slack returned the root timestamp
-    // but before the original callback could durably admit the Paperclip task.
+    // but before the original callback could durably admit the Bionic task.
     await service.processPendingDeliveries(1_000);
     await db
       .update(chatDeliveries)
@@ -49374,7 +49374,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: fixture.companyId,
         endpointId: endpoint.id,
         principalId: principal!.id,
-        paperclipUserId: "owner-user",
+        bionicUserId: "owner-user",
         status: "linked",
         confirmedAt: new Date(),
       });
@@ -49408,7 +49408,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         await db
           .update(chatIdentityLinks)
           .set({
-            paperclipUserId: null,
+            bionicUserId: null,
             status: "revoked",
             revokedAt: new Date(),
             updatedAt: new Date(),
@@ -49471,10 +49471,10 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         principalId: null,
         redactedError:
           authorizationChange === "resource_disabled"
-            ? "Destination is not enabled in Paperclip"
+            ? "Destination is not enabled in Bionic"
             : authorizationChange === "viewer"
-              ? "Linked Paperclip account is not currently permitted"
-              : "External identity must be linked to a Paperclip account",
+              ? "Linked Bionic account is not currently permitted"
+              : "External identity must be linked to a Bionic account",
         state: "filtered",
       });
       expect(JSON.stringify(delivery?.normalizedEvent)).not.toContain(
@@ -49552,7 +49552,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .returning();
 
     // Seed the exact crash boundary deterministically: Slack has confirmed the
-    // starter and Paperclip has durably normalized it, but no delivery drain
+    // starter and Bionic has durably normalized it, but no delivery drain
     // has begun. A global reconciliation sweep intentionally runs action and
     // delivery lanes concurrently, so using it to create this fixture made
     // the pre-shutdown assertion depend on query scheduling under load.
@@ -49648,7 +49648,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await recoveredService.processPendingDeliveries(1_000);
 
     // Slack already accepted the starter, so recovery must never post it again.
-    // Task admission is a distinct Paperclip mutation and must still honor the
+    // Task admission is a distinct Bionic mutation and must still honor the
     // destination and identity policy that is current after restart.
     expect(recoveredRuntime.endpoints.get(endpoint.id)?.posts).toEqual([]);
     expect(recoveredWakeup).not.toHaveBeenCalled();
@@ -49683,7 +49683,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           filtering: { contentRetained: false },
         }),
         principalId: null,
-        redactedError: "Destination is not enabled in Paperclip",
+        redactedError: "Destination is not enabled in Bionic",
         state: "filtered",
       }),
     ]);
@@ -50227,7 +50227,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const scheduledWork: Array<() => void> = [];
     const { callbacks, endpoint, runtime, service, wakeup } =
       await configuredSlackEndpoint(fixture, {
-        // Transport and Paperclip admission are separate durable phases.
+        // Transport and Bionic admission are separate durable phases.
         // Run transport explicitly, then hold the delivery drain until reach
         // revocation has committed instead of racing their query scheduling.
         deferWebhookProcessing: true,
@@ -50396,7 +50396,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ).resolves.toEqual([{ enabled: false }]);
 
     // Expire only this receipt's reorder window, then drain after revocation.
-    // Provider acceptance is not a grant to create a Paperclip task later.
+    // Provider acceptance is not a grant to create a Bionic task later.
     await db
       .update(chatDeliveries)
       .set({ nextAttemptAt: new Date(0) })
@@ -50416,7 +50416,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect.objectContaining({
         state: "filtered",
         principalId: null,
-        redactedError: "Destination is not enabled in Paperclip",
+        redactedError: "Destination is not enabled in Bionic",
         normalizedEvent: expect.objectContaining({
           filtering: { contentRetained: false },
         }),
@@ -50652,7 +50652,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       },
       {
         threadId: dm.thread.id,
-        text: "Send your request to start a new Paperclip task.",
+        text: "Send your request to start a new Bionic task.",
       },
       {
         threadId: dm.thread.id,
@@ -50765,7 +50765,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await vi.waitFor(() => expect(postEphemeral).toHaveBeenCalledTimes(3));
     for (const call of postEphemeral.mock.calls) {
       expect(call[1]).toBe(
-        "Use status, new, and close in a direct message with this agent. In a channel, open the Paperclip task from its Slack thread.",
+        "Use status, new, and close in a direct message with this agent. In a channel, open the Bionic task from its Slack thread.",
       );
       expect(call[2]).toEqual({ fallbackToDM: false });
     }
@@ -50850,10 +50850,10 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       expect.stringMatching(
-        /^Send a direct message to start work with Maya\. In a group, use \/task@paperclip_\d+_bot followed by your request\./,
+        /^Send a direct message to start work with Maya\. In a group, use \/task@bionic_\d+_bot followed by your request\./,
       ),
       expect.stringMatching(
-        /^Available commands: \/task@paperclip_\d+_bot followed by your request, \/status, \/new, and \/close\.$/,
+        /^Available commands: \/task@bionic_\d+_bot followed by your request, \/status, \/new, and \/close\.$/,
       ),
     ]);
     expect(wakeup).not.toHaveBeenCalled();
@@ -51672,7 +51672,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         idempotencyKey: expect.stringMatching(/^control:guidance:/),
         payload: expect.objectContaining({
           text: expect.stringMatching(
-            /^Send a direct message to start work with Maya\. In a group, use \/task@paperclip_\d+_bot followed by your request\./,
+            /^Send a direct message to start work with Maya\. In a group, use \/task@bionic_\d+_bot followed by your request\./,
           ),
         }),
       }),
@@ -51684,7 +51684,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       expect.stringMatching(
-        /^Send a direct message to start work with Maya\. In a group, use \/task@paperclip_\d+_bot followed by your request\./,
+        /^Send a direct message to start work with Maya\. In a group, use \/task@bionic_\d+_bot followed by your request\./,
       ),
     ]);
     expect(wakeup).toHaveBeenCalledTimes(1);
@@ -51721,8 +51721,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               ok: true,
               result: {
                 id: botId,
-                username: "paperclip_guidance_test_bot",
-                first_name: "Paperclip Guidance Test",
+                username: "bionic_guidance_test_bot",
+                first_name: "Bionic Guidance Test",
               },
             }),
             { status: 200, headers: { "content-type": "application/json" } },
@@ -51790,7 +51790,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const service = chatChannelService(db, {
       fetch: telegramFetch,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup) },
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
     });
     try {
       const endpoint = await service.create(
@@ -51815,7 +51815,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         updateId: number;
       }) =>
         new Request(
-          `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/telegram`,
+          `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/telegram`,
           {
             method: "POST",
             headers: {
@@ -51877,8 +51877,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           .filter(({ method }) => method === "sendMessage")
           .map(({ body }) => (JSON.parse(body) as { text?: string }).text),
       ).toEqual([
-        "Send a direct message to start work with Maya. In a group, use /task@paperclip_guidance_test_bot followed by your request. Use /status, /new, or /close to manage the active task in this chat.",
-        "Available commands: /task@paperclip_guidance_test_bot followed by your request, /status, /new, and /close.",
+        "Send a direct message to start work with Maya. In a group, use /task@bionic_guidance_test_bot followed by your request. Use /status, /new, or /close to manage the active task in this chat.",
+        "Available commands: /task@bionic_guidance_test_bot followed by your request, /status, /new, and /close.",
       ]);
 
       await service.update(
@@ -51915,7 +51915,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           state: "filtered",
           attempts: 0,
           conversationId: null,
-          redactedError: "Destination is not enabled in Paperclip",
+          redactedError: "Destination is not enabled in Bionic",
           normalizedEvent: expect.objectContaining({
             deduplication: expect.objectContaining({ duplicateCount: 1 }),
           }),
@@ -52061,13 +52061,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     ).toEqual([
       expect.stringMatching(/— todo$/),
       expect.stringContaining(
-        "Open a new Telegram forum topic to start a new Paperclip task.",
+        "Open a new Telegram forum topic to start a new Bionic task.",
       ),
-      "This chat conversation is closed. A later message here will continue the same Paperclip task.",
+      "This chat conversation is closed. A later message here will continue the same Bionic task.",
     ]);
   });
 
-  it("keeps successive Telegram DM messages on one active Paperclip task", async () => {
+  it("keeps successive Telegram DM messages on one active Bionic task", async () => {
     const fixture = await seedCompany();
     const { callbacks, endpoint, service, wakeup } =
       await configuredTelegramEndpoint(fixture);
@@ -52255,7 +52255,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await vi.waitFor(() =>
       expect(postEphemeral).toHaveBeenCalledWith(
         "U-COMMANDER",
-        "This channel or account is not allowed to start Paperclip work.",
+        "This channel or account is not allowed to start Bionic work.",
         { fallbackToDM: false },
       ),
     );
@@ -52441,8 +52441,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           nativeIssueId: conversation.issueId,
           contextSnapshot: {
             ...contextSnapshot,
-            paperclipHarnessCheckedOut: true,
-            paperclipWake: {
+            bionicHarnessCheckedOut: true,
+            bionicWake: {
               checkedOutByHarness: true,
               externalChatProvider: "discord",
               issue: { id: conversation.issueId, workMode: "standard" },
@@ -52623,7 +52623,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               callId: "edited-source-read",
               arguments: selection,
             }),
-          ).rejects.toThrow("paperclip_runner_chat_attachment_source_denied");
+          ).rejects.toThrow("bionic_runner_chat_attachment_source_denied");
           await expect(
             tools.execute({
               tool: "reuse_chat_attachment",
@@ -52634,7 +52634,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 idempotencyKey: "edited-source-reuse",
               },
             }),
-          ).rejects.toThrow("paperclip_runner_chat_attachment_source_denied");
+          ).rejects.toThrow("bionic_runner_chat_attachment_source_denied");
           expect(storage.putFile).toHaveBeenCalledTimes(1);
           const textEdit = {
             ...original,
@@ -52951,7 +52951,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       companyId: input.companyId,
       endpointId: input.endpointId,
       principalId: principal.id,
-      paperclipUserId: "owner-user",
+      bionicUserId: "owner-user",
       status: "linked",
       confirmedAt: new Date(),
     });
@@ -53071,8 +53071,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             provider: "slack",
             providerMessageId: original.id,
           })),
-          paperclipHarnessCheckedOut: true,
-          paperclipWake: {
+          bionicHarnessCheckedOut: true,
+          bionicWake: {
             reason: "External chat message received",
             externalChatProvider: "slack",
             checkedOutByHarness: true,
@@ -53133,7 +53133,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             .update(chatIdentityLinks)
             .set({
               status: "revoked",
-              paperclipUserId: null,
+              bionicUserId: null,
               revokedAt: new Date(),
               updatedAt: new Date(),
             })
@@ -53216,13 +53216,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               arguments: selection,
             }),
           ).rejects.toThrow(
-            "paperclip_runner_chat_attachment_read_not_authorized",
+            "bionic_runner_chat_attachment_read_not_authorized",
           );
           await db
             .update(chatIdentityLinks)
             .set({
               status: "linked",
-              paperclipUserId: "owner-user",
+              bionicUserId: "owner-user",
               revokedAt: null,
               confirmedAt: new Date(),
               updatedAt: new Date(),
@@ -53250,14 +53250,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               title: "Must remain unavailable",
             },
           }),
-        ).rejects.toThrow("paperclip_runner_chat_attachment_source_denied");
+        ).rejects.toThrow("bionic_runner_chat_attachment_source_denied");
         await expect(
           authority.execute({
             tool: "read_chat_attachment",
             callId: "deleted-source-read",
             arguments: selection,
           }),
-        ).rejects.toThrow("paperclip_runner_chat_attachment_source_denied");
+        ).rejects.toThrow("bionic_runner_chat_attachment_source_denied");
         await expect(
           authority.execute({
             tool: "list_chat_attachments",
@@ -53374,7 +53374,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             .update(chatIdentityLinks)
             .set({
               status: "revoked",
-              paperclipUserId: null,
+              bionicUserId: null,
               revokedAt: new Date(),
               updatedAt: new Date(),
             })
@@ -53423,7 +53423,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             .update(chatIdentityLinks)
             .set({
               status: "linked",
-              paperclipUserId: "owner-user",
+              bionicUserId: "owner-user",
               revokedAt: null,
               confirmedAt: new Date(),
               updatedAt: new Date(),
@@ -53658,9 +53658,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             installation: { id: 2468 },
             repository: {
               id: 97531,
-              full_name: "paperclipai/paperclip",
-              name: "paperclip",
-              owner: { id: 1357, login: "paperclipai" },
+              full_name: "bionicai/bionic",
+              name: "bionic",
+              owner: { id: 1357, login: "bionicai" },
             },
             issue: { number: mode === "wrong_thread" ? 792 : 791 },
             comment: {
@@ -54222,7 +54222,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "telegram",
-        new Request("https://paperclip.example/telegram", {
+        new Request("https://bionic.example/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -54350,7 +54350,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "telegram",
-        new Request("https://paperclip.example/telegram", {
+        new Request("https://bionic.example/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -54478,7 +54478,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "telegram",
-        new Request("https://paperclip.example/telegram", {
+        new Request("https://bionic.example/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -54488,7 +54488,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               edit_date: 1_788_620_390,
               chat: { id: Number(chatId), type: "private" },
               from: { id: Number(chatId), first_name: "Telegram User" },
-              text: "Edit whose original never reached Paperclip",
+              text: "Edit whose original never reached Bionic",
             },
           }),
         }),
@@ -54628,7 +54628,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "microsoft-teams",
-        new Request("https://paperclip.example/microsoft-teams", {
+        new Request("https://bionic.example/microsoft-teams", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
@@ -55079,7 +55079,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       service.handleWebhook(
         endpoint.publicId,
         "telegram",
-        new Request("https://paperclip.example/telegram", {
+        new Request("https://bionic.example/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(editPayload),
@@ -55089,7 +55089,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await service.handleWebhook(
       endpoint.publicId,
       "telegram",
-      new Request("https://paperclip.example/telegram", {
+      new Request("https://bionic.example/telegram", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -55228,7 +55228,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       companyId: fixture.companyId,
       endpointId: endpoint.id,
       principalId: principal.id,
-      paperclipUserId: linkedUserId,
+      bionicUserId: linkedUserId,
       status: "linked",
       confirmedAt: now,
     });
@@ -55240,7 +55240,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await db
       .update(chatIdentityLinks)
       .set({
-        paperclipUserId: null,
+        bionicUserId: null,
         status: "revoked",
         revokedAt: new Date(),
         updatedAt: new Date(),
@@ -55252,12 +55252,12 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .from(issueComments)
       .where(eq(issueComments.issueId, conversation.issueId))
       .then((rows) => rows.length);
-    const secretEdit = "Revoked Telegram edit must not enter Paperclip";
+    const secretEdit = "Revoked Telegram edit must not enter Bionic";
     await expect(
       service.handleWebhook(
         endpoint.publicId,
         "telegram",
-        new Request("https://paperclip.example/telegram", {
+        new Request("https://bionic.example/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -55367,7 +55367,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       {
         threadId: dm.thread.id,
         messageId: "outbound-2",
-        text: "Maya needs a Paperclip admin to safely recover this turn before more work can start. Open the task in Paperclip for details.",
+        text: "Maya needs a Bionic admin to safely recover this turn before more work can start. Open the task in Bionic for details.",
       },
     ]);
     expect(JSON.stringify(providerRuntime?.edits)).not.toContain(
@@ -55435,7 +55435,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           errorCode: terminal
             ? "adapter_failed"
             : "native_execution_ownership_unverified",
-          error: "Private diagnostic must not leave Paperclip",
+          error: "Private diagnostic must not leave Bionic",
           updatedAt: new Date(),
         })
         .where(eq(heartbeatRuns.id, runId));
@@ -55600,7 +55600,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
   it.each([
     {
-      authorizationReason: "paperclip_runner_protocol",
+      authorizationReason: "bionic_runner_protocol",
       chatId: "77112241",
       publishesComment: false,
     },
@@ -56191,17 +56191,17 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             : mode === "malformed_account"
               ? 123
               : providerAccount;
-      const previous = process.env.PAPERCLIP_RUNNER_STATE_DIR;
+      const previous = process.env.BIONIC_RUNNER_STATE_DIR;
       const directory = mkdtempSync(
-        path.join(os.tmpdir(), "paperclip-chat-cleanup-retry-"),
+        path.join(os.tmpdir(), "bionic-chat-cleanup-retry-"),
       );
-      process.env.PAPERCLIP_RUNNER_STATE_DIR = directory;
+      process.env.BIONIC_RUNNER_STATE_DIR = directory;
       try {
         const runId = randomUUID();
         const nativeSessionId = context.binding.normalizedSessionId;
         const runnerInstanceId = context.binding.runnerSourceInstanceId;
         const inputFor = (id: string) => ({
-          schema: "paperclip.native-execution-input.v1",
+          schema: "bionic.native-execution-input.v1",
           provider: { kind: "codex", model: null },
           binding: {
             companyId: context.fixture.companyId,
@@ -56218,7 +56218,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             workMode: "standard",
           },
           workspace: {
-            cwd: "/tmp/paperclip-cleanup-retry",
+            cwd: "/tmp/bionic-cleanup-retry",
             repoUrl: null,
             repoRef: null,
             branchName: null,
@@ -56232,7 +56232,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           completionContract: {
             id: context.binding.completionContractId,
             sha256: context.binding.completionContractSha256,
-            schemaVersion: "paperclip.completion-contract.v1",
+            schemaVersion: "bionic.completion-contract.v1",
             contract: {
               revision: "recovered-response-v1",
               objective: "Exact request",
@@ -56379,7 +56379,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         const key = createHash("sha256")
           .update(
             canonical({
-              schema: "paperclip.native-session-scope.v2",
+              schema: "bionic.native-session-scope.v2",
               companyId: context.fixture.companyId,
               agentId: context.fixture.assignedAgentId,
               workspace: { kind: "transient", ...inputFor(runId).workspace },
@@ -56404,14 +56404,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           [
             "control-plane/control-plane-state.json",
             {
-              schema: "paperclip.runner.durable.control-plane-state.v1",
+              schema: "bionic.runner.durable.control-plane-state.v1",
               identity,
             },
           ],
           [
             "runner/runner-state.json",
             {
-              schema: "paperclip.runner.durable.state.v1",
+              schema: "bionic.runner.durable.state.v1",
               ...identity,
               lifecycle: "suspended",
               outbox: [],
@@ -56420,7 +56420,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           [
             "runner/codex-provider-state.json",
             {
-              schema: "paperclip.runner.codex-provider-state.v1",
+              schema: "bionic.runner.codex-provider-state.v1",
               lifecycle: "prepared",
               threadId: "same-retained-thread",
               providerSessionId: providerAccount,
@@ -56479,7 +56479,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           writeFileSync(
             path.join(root, "cleanup-activation.json"),
             JSON.stringify({
-              schema: "paperclip.native_cleanup_activation.v1",
+              schema: "bionic.native_cleanup_activation.v1",
               companyId: context.fixture.companyId,
               issueId: context.issue.id,
               runId: context.runId,
@@ -56571,8 +56571,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       } finally {
         await context.service.shutdown();
         if (previous === undefined)
-          delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-        else process.env.PAPERCLIP_RUNNER_STATE_DIR = previous;
+          delete process.env.BIONIC_RUNNER_STATE_DIR;
+        else process.env.BIONIC_RUNNER_STATE_DIR = previous;
         rmSync(directory, { recursive: true, force: true });
       }
     },
@@ -56627,13 +56627,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             : kind === "malformed_account"
               ? 123
               : providerAccount;
-      const previousStateDirectory = process.env.PAPERCLIP_RUNNER_STATE_DIR;
+      const previousStateDirectory = process.env.BIONIC_RUNNER_STATE_DIR;
       let stateDirectory: string | null = null;
       try {
         const nativeSessionId = randomUUID();
         const runnerInstanceId = randomUUID();
         const nativeExecutionInput = {
-          schema: "paperclip.native-execution-input.v1",
+          schema: "bionic.native-execution-input.v1",
           provider: { kind: "codex", model: null },
           binding: {
             companyId: context.fixture.companyId,
@@ -56650,7 +56650,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             workMode: "standard",
           },
           workspace: {
-            cwd: "/tmp/paperclip-exact-chat-retry",
+            cwd: "/tmp/bionic-exact-chat-retry",
             repoUrl: null,
             repoRef: null,
             branchName: null,
@@ -56664,7 +56664,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           completionContract: {
             id: randomUUID(),
             sha256: "sha",
-            schemaVersion: "paperclip.completion-contract.v1",
+            schemaVersion: "bionic.completion-contract.v1",
             contract: {
               revision: "1",
               objective: "Exact request",
@@ -56753,9 +56753,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           });
         if (hasCheckpoint) {
           stateDirectory = mkdtempSync(
-            path.join(os.tmpdir(), "paperclip-chat-retry-checkpoint-"),
+            path.join(os.tmpdir(), "bionic-chat-retry-checkpoint-"),
           );
-          process.env.PAPERCLIP_RUNNER_STATE_DIR = stateDirectory;
+          process.env.BIONIC_RUNNER_STATE_DIR = stateDirectory;
           const canonical = (value: unknown): string =>
             value && typeof value === "object" && !Array.isArray(value)
               ? `{${Object.entries(value)
@@ -56767,7 +56767,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                   .join(",")}}`
               : JSON.stringify(value);
           const scope = {
-            schema: "paperclip.native-session-scope.v2",
+            schema: "bionic.native-session-scope.v2",
             companyId: context.fixture.companyId,
             agentId: context.fixture.assignedAgentId,
             workspace: { kind: "transient", ...nativeExecutionInput.workspace },
@@ -56792,14 +56792,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           writeFileSync(
             path.join(root, "control-plane", "control-plane-state.json"),
             JSON.stringify({
-              schema: "paperclip.runner.durable.control-plane-state.v1",
+              schema: "bionic.runner.durable.control-plane-state.v1",
               identity,
             }),
           );
           writeFileSync(
             path.join(root, "runner", "runner-state.json"),
             JSON.stringify({
-              schema: "paperclip.runner.durable.state.v1",
+              schema: "bionic.runner.durable.state.v1",
               ...identity,
               lifecycle: "suspended",
               outbox: [],
@@ -56808,7 +56808,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           writeFileSync(
             path.join(root, "runner", "codex-provider-state.json"),
             JSON.stringify({
-              schema: "paperclip.runner.codex-provider-state.v1",
+              schema: "bionic.runner.codex-provider-state.v1",
               lifecycle: "prepared",
               threadId: "exact-retry-thread",
               providerSessionId: providerAccount,
@@ -56858,8 +56858,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         await context.service.shutdown();
         if (stateDirectory) {
           if (previousStateDirectory === undefined)
-            delete process.env.PAPERCLIP_RUNNER_STATE_DIR;
-          else process.env.PAPERCLIP_RUNNER_STATE_DIR = previousStateDirectory;
+            delete process.env.BIONIC_RUNNER_STATE_DIR;
+          else process.env.BIONIC_RUNNER_STATE_DIR = previousStateDirectory;
           rmSync(stateDirectory, { recursive: true, force: true });
         }
       }
@@ -57040,14 +57040,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               endpointId: context.endpoint.id,
               principalId: context.action.principalId!,
               status: "linked",
-              paperclipUserId: "owner-user",
+              bionicUserId: "owner-user",
             })
             .onConflictDoUpdate({
               target: [
                 chatIdentityLinks.endpointId,
                 chatIdentityLinks.principalId,
               ],
-              set: { status: "linked", paperclipUserId: "owner-user" },
+              set: { status: "linked", bionicUserId: "owner-user" },
             });
         if (change === "reassigned")
           await db
@@ -58195,9 +58195,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           })
         : provider === "github"
           ? makeThread({
-              channelId: "github:paperclipai/paperclip",
-              id: `github:paperclipai/paperclip:issue:${700 + Number(suffix)}`,
-              name: "paperclipai/paperclip",
+              channelId: "github:bionicai/bionic",
+              id: `github:bionicai/bionic:issue:${700 + Number(suffix)}`,
+              name: "bionicai/bionic",
             })
           : provider === "discord"
             ? makeThread({
@@ -58267,7 +58267,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         type: "issue_comment",
         threadType: "issue",
         prNumber: 700 + Number(suffix),
-        repository: { full_name: "paperclipai/paperclip" },
+        repository: { full_name: "bionicai/bionic" },
         comment: {
           id: Number(messageId),
           body: sourceMessage.text,
@@ -58343,7 +58343,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         agentId: fixture.assignedAgentId,
         seq,
         eventType,
-        message: "PRIVATE native event prose must stay in Paperclip",
+        message: "PRIVATE native event prose must stay in Bionic",
         payload: {
           toolName: "secret_internal_tool",
           arguments: { token: "PRIVATE-NATIVE-TOKEN" },
@@ -58692,7 +58692,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         {
           threadId: context.thread.thread.id,
           messageId: originalWorking!.providerMessageId,
-          text: "Maya stopped before completing this turn. Open the task in Paperclip for details.",
+          text: "Maya stopped before completing this turn. Open the task in Bionic for details.",
         },
       ]);
 
@@ -58748,7 +58748,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           providerMessageId: originalWorking!.providerMessageId,
           payload: {
             progressState: "failed",
-            text: "Maya stopped before completing this turn. Open the task in Paperclip for details.",
+            text: "Maya stopped before completing this turn. Open the task in Bionic for details.",
           },
         }),
       ]);
@@ -59071,7 +59071,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             payload: {
               code: "provider_startup_ownership",
               startup: {
-                schema: "paperclip.provider_startup.v1",
+                schema: "bionic.provider_startup.v1",
                 phase,
                 launchId: "PRIVATE-STARTUP-LAUNCH",
                 requestedThreadId: "PRIVATE-REQUESTED-THREAD",
@@ -61579,12 +61579,12 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const fixtureWakeups = () =>
         wakeup.mock.calls.filter((call) => call[0] === fixture.assignedAgentId);
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
+        channelId: "bionicai/bionic",
         id:
           mode === "outbound_review_link"
-            ? "github:paperclipai/paperclip:84:rc:99080"
-            : "github:paperclipai/paperclip:issue:84",
-        name: "paperclipai/paperclip",
+            ? "github:bionicai/bionic:84:rc:99080"
+            : "github:bionicai/bionic:issue:84",
+        name: "bionicai/bionic",
       });
       try {
         await deliverMessage({
@@ -61619,7 +61619,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                     .values({
                       ...conversation!,
                       id: randomUUID(),
-                      externalThreadId: "github:paperclipai/paperclip:issue:85",
+                      externalThreadId: "github:bionicai/bionic:issue:85",
                     })
                     .returning()
                 )[0]!
@@ -61647,7 +61647,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                   ? "pull_request_review_comment"
                   : "issue_comment",
               webhookSecret: signingSecret,
-              url: `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/github`,
+              url: `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/github`,
               payload: {
                 action: "edited",
                 comment: {
@@ -61670,9 +61670,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 pull_request: { number: 84 },
                 repository: {
                   id: 97531,
-                  full_name: "paperclipai/paperclip",
-                  name: "paperclip",
-                  owner: { id: 1357, login: "paperclipai" },
+                  full_name: "bionicai/bionic",
+                  name: "bionic",
+                  owner: { id: 1357, login: "bionicai" },
                 },
                 sender: {
                   id: 9001,
@@ -61784,16 +61784,16 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       }
     };
     const thread = makeThread({
-      channelId: "paperclipai/chat-lifecycle-order",
-      id: "github:paperclipai/chat-lifecycle-order:issue:84",
-      name: "paperclipai/chat-lifecycle-order",
+      channelId: "bionicai/chat-lifecycle-order",
+      id: "github:bionicai/chat-lifecycle-order:issue:84",
+      name: "bionicai/chat-lifecycle-order",
     });
     await db.insert(chatEndpointResources).values({
       companyId: fixture.companyId,
       endpointId: endpoint.id,
       type: "repository",
-      providerResourceId: "paperclipai/chat-lifecycle-order",
-      label: "paperclipai/chat-lifecycle-order",
+      providerResourceId: "bionicai/chat-lifecycle-order",
+      label: "bionicai/chat-lifecycle-order",
       availability: "available",
       enabled: true,
     });
@@ -61840,14 +61840,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             issue: { number: 84 },
             repository: {
               id: 98400,
-              full_name: "paperclipai/chat-lifecycle-order",
+              full_name: "bionicai/chat-lifecycle-order",
               name: "chat-lifecycle-order",
-              owner: { id: 1357, login: "paperclipai" },
+              owner: { id: 1357, login: "bionicai" },
             },
             sender: { id: 7001, login: "alex-e2e" },
           },
           webhookSecret,
-          url: `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/github`,
+          url: `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/github`,
         }),
       );
 
@@ -61962,9 +61962,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         return new Response(
           JSON.stringify({
             id: 790,
-            slug: "maya-paperclip-lifecycle",
-            name: "Maya Paperclip",
-            owner: { login: "paperclipai" },
+            slug: "maya-bionic-lifecycle",
+            name: "Maya Bionic",
+            owner: { login: "bionicai" },
             permissions: {
               issues: "write",
               metadata: "read",
@@ -61986,7 +61986,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           JSON.stringify([
             {
               id: 8642,
-              account: { id: 1, login: "paperclipai" },
+              account: { id: 1, login: "bionicai" },
               permissions: {
                 issues: "write",
                 metadata: "read",
@@ -62045,9 +62045,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const callbacks = runtime.configurations.get(endpoint.id)?.callbacks;
     if (!callbacks) throw new Error("Expected GitHub callbacks");
     const thread = makeThread({
-      channelId: "paperclipai/chat-e2e",
-      id: "github:paperclipai/chat-e2e:issue:42",
-      name: "paperclipai/chat-e2e",
+      channelId: "bionicai/chat-e2e",
+      id: "github:bionicai/chat-e2e:issue:42",
+      name: "bionicai/chat-e2e",
     });
     await deliverMessage({
       callbacks,
@@ -62064,18 +62064,18 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     });
     for (const item of [
       {
-        id: "github:paperclipai/chat-e2e:43",
+        id: "github:bionicai/chat-e2e:43",
         messageId: "77002",
       },
       {
-        id: "github:paperclipai/chat-e2e:43:rc:88001",
+        id: "github:bionicai/chat-e2e:43:rc:88001",
         messageId: "88001",
       },
     ]) {
       const nativeThread = makeThread({
-        channelId: "paperclipai/chat-e2e",
+        channelId: "bionicai/chat-e2e",
         id: item.id,
-        name: "paperclipai/chat-e2e",
+        name: "bionicai/chat-e2e",
       });
       await deliverMessage({
         callbacks,
@@ -62130,14 +62130,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             pull_request: { number: input.number },
             repository: {
               id: 97531,
-              full_name: "paperclipai/chat-e2e",
+              full_name: "bionicai/chat-e2e",
               name: "chat-e2e",
-              owner: { id: 1357, login: "paperclipai" },
+              owner: { id: 1357, login: "bionicai" },
             },
             sender: { id: 7001, login: "alex-e2e" },
           },
           webhookSecret,
-          url: `https://paperclip.example/api/chat-webhooks/${endpoint.publicId}/github`,
+          url: `https://bionic.example/api/chat-webhooks/${endpoint.publicId}/github`,
         }),
       );
     };
@@ -62211,9 +62211,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       await configuredGitHubEndpoint(fixture);
     try {
       const thread = makeThread({
-        channelId: "paperclipai/paperclip",
-        id: "github:paperclipai/paperclip:issue:91",
-        name: "paperclipai/paperclip",
+        channelId: "bionicai/bionic",
+        id: "github:bionicai/bionic:issue:91",
+        name: "bionicai/bionic",
       });
       await deliverMessage({
         callbacks,
@@ -62329,9 +62329,9 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             issue: { number: 91 },
             repository: {
               id: 97531,
-              full_name: "paperclipai/paperclip",
-              name: "paperclip",
-              owner: { id: 1357, login: "paperclipai" },
+              full_name: "bionicai/bionic",
+              name: "bionic",
+              owner: { id: 1357, login: "bionicai" },
             },
             sender: { id: 7001, login: "alex-e2e" },
           },
@@ -62467,7 +62467,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     const response = await service.handleWebhook(
       endpoint.publicId,
       "telegram",
-      new Request("https://paperclip.example/telegram", {
+      new Request("https://bionic.example/telegram", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -62605,7 +62605,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             name: "Telegram production group",
             isDM: false,
           } as never,
-          command: "/task@paperclip_test_bot",
+          command: "/task@bionic_test_bot",
           text: input.prompt,
           user: {
             userId: "telegram-group-user",
@@ -62627,11 +62627,11 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               title: "Telegram production group",
             },
             from: { id: 77112233, is_bot: false },
-            text: `/task@paperclip_test_bot${input.prompt ? ` ${input.prompt}` : ""}`,
+            text: `/task@bionic_test_bot${input.prompt ? ` ${input.prompt}` : ""}`,
             entities: [
               {
                 offset: 0,
-                length: "/task@paperclip_test_bot".length,
+                length: "/task@bionic_test_bot".length,
                 type: "bot_command",
               },
             ],
@@ -62675,7 +62675,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       state: "filtered",
       attempts: 0,
       principalId: null,
-      redactedError: "Destination is not enabled in Paperclip",
+      redactedError: "Destination is not enabled in Bionic",
       normalizedEvent: {
         filtering: { contentRetained: false },
         message: { providerMessageId: `${chatId}:10` },
@@ -62711,7 +62711,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       expect.stringMatching(
-        /^Please include a request after \/task@paperclip_\d+_bot\.$/,
+        /^Please include a request after \/task@bionic_\d+_bot\.$/,
       ),
     ]);
     runtime.endpoints.get(endpoint.id)!.posts.length = 0;
@@ -63395,7 +63395,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       const [conversation] = await service.listConversations(endpoint.id);
       if (!conversation)
         throw new Error("Expected Telegram attachment failure conversation");
-      const visibleFailure = `Paperclip could not safely import the attached Telegram file. Please resend it as a supported file under ${formatAttachmentSize(MAX_ATTACHMENT_BYTES)} or include text describing the request.`;
+      const visibleFailure = `Bionic could not safely import the attached Telegram file. Please resend it as a supported file under ${formatAttachmentSize(MAX_ATTACHMENT_BYTES)} or include text describing the request.`;
       await expect(
         db
           .select({ body: issueComments.body })
@@ -64169,7 +64169,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       companyId: context.fixture.companyId,
       issueId: context.issue.id,
       revision: 1,
-      schemaVersion: "paperclip.completion-contract.v1",
+      schemaVersion: "bionic.completion-contract.v1",
       policyVersion: "phase6-v3",
       risk: "low",
       completionAuthority: "agent_claim_policy",
@@ -64209,7 +64209,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .set({ status: "in_review", executionRunId: null })
       .where(eq(issues.id, context.issue.id));
     const result: PrpStructuredRunResult = {
-      schema: "paperclip.run_result.v1",
+      schema: "bionic.run_result.v1",
       reportedWorkDisposition: "yielded",
       summary:
         summary?.(context.issue.id) ??
@@ -64233,7 +64233,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       },
     };
     const terminal: PrpTerminalState = {
-      schema: "paperclip.prp.terminal.v1",
+      schema: "bionic.prp.terminal.v1",
       turnTerminalState: "completed",
       runTerminalState: "succeeded",
       reportedWorkDisposition: "yielded",
@@ -64655,8 +64655,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(context.egress).toHaveBeenCalledTimes(1);
       await expect(context.repair()).resolves.toBe(true);
       await context.service.processPendingPublications(100);
-      const taskUrl = `https://paperclip.example/issues/${context.issue.id}`;
-      const expected = `${context.result.summary}\n\n[Open this Paperclip task](${taskUrl})`;
+      const taskUrl = `https://bionic.example/issues/${context.issue.id}`;
+      const expected = `${context.result.summary}\n\n[Open this Bionic task](${taskUrl})`;
       expect(context.providerRuntime.posts.map((post) => post.text)).toEqual([
         expected,
       ]);
@@ -64717,7 +64717,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           .posts[0]!.text;
         expect(text).toBe(
           expected
-            ? `${context.result.summary}\n\n[Open this Paperclip task](${expected}/issues/${context.issue.id})`
+            ? `${context.result.summary}\n\n[Open this Bionic task](${expected}/issues/${context.issue.id})`
             : context.result.summary,
         );
         for (const secret of [
@@ -64744,7 +64744,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         undefined,
         mode === "existing_link"
           ? (issueId) =>
-              `Attach directly: [Open this Paperclip task](https://paperclip.example/issues/${issueId})`
+              `Attach directly: [Open this Bionic task](https://bionic.example/issues/${issueId})`
           : undefined,
       );
       let restarted: ReturnType<typeof createService> | undefined;
@@ -64766,7 +64766,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           );
         expect(before).toMatchObject({ state: "retry", attempts: 1 });
         expect(
-          before.payload.text.match(/Open this Paperclip task/g),
+          before.payload.text.match(/Open this Bionic task/g),
         ).toHaveLength(1);
         const [preparation] = await db
           .select()
@@ -65042,7 +65042,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             ? []
             : [
                 mode === "complete_batch"
-                  ? `${context.result.summary}\n\n[Open this Paperclip task](https://paperclip.example/issues/${context.issue.id})`
+                  ? `${context.result.summary}\n\n[Open this Bionic task](https://bionic.example/issues/${context.issue.id})`
                   : context.result.summary,
               ],
         );
@@ -65092,7 +65092,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             ),
           );
         expect(publication).toMatchObject({ state: "retry", attempts: 1 });
-        expect(publication.payload.text).toContain("Open this Paperclip task");
+        expect(publication.payload.text).toContain("Open this Bionic task");
         const payload = { ...publication.payload };
         if (mode === "text") payload.text += "\nChanged after preparation";
         if (mode === "progress") payload.progressState = "completed";
@@ -65807,14 +65807,14 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: fixture.companyId,
         endpointId: endpoint.id,
         principalId: inbound.principalId,
-        paperclipUserId: "owner-user",
+        bionicUserId: "owner-user",
         status: "linked",
         confirmedAt: new Date(),
       })
       .onConflictDoUpdate({
         target: [chatIdentityLinks.endpointId, chatIdentityLinks.principalId],
         set: {
-          paperclipUserId: "owner-user",
+          bionicUserId: "owner-user",
           status: "linked",
           confirmedAt: new Date(),
           revokedAt: null,
@@ -65833,8 +65833,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       source: "chat:slack",
       wakeCommentId: inbound.commentId,
       wakeCommentIds: [inbound.commentId],
-      paperclipHarnessCheckedOut: true,
-      paperclipWake: {
+      bionicHarnessCheckedOut: true,
+      bionicWake: {
         reason: "External chat message received",
         externalChatProvider: "slack",
         checkedOutByHarness: true,
@@ -65847,7 +65847,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       companyId: fixture.companyId,
       issueId,
       revision: 1,
-      schemaVersion: "paperclip.completion-contract.v1",
+      schemaVersion: "bionic.completion-contract.v1",
       policyVersion: "phase6-v3",
       risk: "low",
       completionAuthority: "agent_claim_policy",
@@ -65905,7 +65905,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       sourceInstanceId: runnerInstanceId,
     });
     const responseResult: PrpStructuredRunResult = {
-      schema: "paperclip.run_result.v1",
+      schema: "bionic.run_result.v1",
       reportedWorkDisposition: "yielded",
       summary: "The exact response and files are prepared. I will wait.",
       completionClaim: {
@@ -65931,7 +65931,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       },
     };
     const terminal: PrpTerminalState = {
-      schema: "paperclip.prp.terminal.v1",
+      schema: "bionic.prp.terminal.v1",
       turnTerminalState: "completed",
       runTerminalState: "succeeded",
       reportedWorkDisposition: "yielded",
@@ -66044,7 +66044,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       issueId,
       "Prepared the exact requested files for this response.",
       { agentId: fixture.assignedAgentId, runId },
-      { authorizationReason: "paperclip_runner_protocol" },
+      { authorizationReason: "bionic_runner_protocol" },
     );
     const attachments = [];
     for (const [originalFilename, contentType, body] of [
@@ -66330,7 +66330,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
                 .from(agentWakeupRequests)
                 .where(eq(agentWakeupRequests.id, ownerId))
             : [];
-          const existingContext = owner?.payload?._paperclipWakeContext as
+          const existingContext = owner?.payload?._bionicWakeContext as
             Record<string, unknown> | undefined;
           const commentIds = [
             ...(Array.isArray(existingContext?.wakeCommentIds)
@@ -66340,7 +66340,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           ];
           const payload = {
             ...opts.payload,
-            _paperclipWakeContext: {
+            _bionicWakeContext: {
               ...opts.contextSnapshot,
               wakeCommentIds: commentIds,
             },
@@ -66406,7 +66406,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .from(agentWakeupRequests)
         .where(eq(agentWakeupRequests.id, ownerId!));
       const runId = randomUUID();
-      const contextSnapshot = owner.payload!._paperclipWakeContext as Record<
+      const contextSnapshot = owner.payload!._bionicWakeContext as Record<
         string,
         unknown
       >;
@@ -66740,7 +66740,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           issueId: context.conversation.issueId,
           idempotencyKey: `run:${runId}:failed:${context.endpoint.id}`,
           payload: {
-            text: "Maya stopped before completing this turn. Open the task in Paperclip for details.",
+            text: "Maya stopped before completing this turn. Open the task in Bionic for details.",
             progressState: "failed",
           },
         });
@@ -66754,7 +66754,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           {
             threadId: context.thread.thread.id,
             messageId: queued.providerMessageId,
-            text: "Maya stopped before completing this turn. Open the task in Paperclip for details.",
+            text: "Maya stopped before completing this turn. Open the task in Bionic for details.",
           },
         ]);
         expect(JSON.stringify(runtime.edits)).not.toContain("was not started");
@@ -66856,7 +66856,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         {
           threadId: context.thread.thread.id,
           messageId: queued.providerMessageId,
-          text: "This follow-up was not started. Open the task in Paperclip for details.",
+          text: "This follow-up was not started. Open the task in Bionic for details.",
         },
       ]);
       expect(JSON.stringify(runtime.edits)).not.toMatch(
@@ -66916,7 +66916,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .from(agentWakeupRequests)
         .where(eq(agentWakeupRequests.id, context.action.id));
       const remainingContext = {
-        ...(owner.payload!._paperclipWakeContext as Record<string, unknown>),
+        ...(owner.payload!._bionicWakeContext as Record<string, unknown>),
         wakeCommentId: second.payload.commentId,
         commentId: second.payload.commentId,
         wakeCommentIds: [second.payload.commentId],
@@ -66935,7 +66935,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               ...owner.payload,
               wakeCommentId: second.payload.commentId,
               commentId: second.payload.commentId,
-              _paperclipWakeContext: remainingContext,
+              _bionicWakeContext: remainingContext,
             },
           })
           .where(eq(agentWakeupRequests.id, owner.id));
@@ -67133,7 +67133,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         status: "running",
         wakeupRequestId: action!.id,
         startedAt: new Date(),
-        contextSnapshot: { ...snapshot, paperclipHarnessCheckedOut: true },
+        contextSnapshot: { ...snapshot, bionicHarnessCheckedOut: true },
       });
       await db
         .update(agentWakeupRequests)
@@ -67404,7 +67404,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
               });
             } else {
               const response = await pinned.handleWebhook(
-                new Request("https://paperclip.example/timestamp-fixture", {
+                new Request("https://bionic.example/timestamp-fixture", {
                   method: "POST",
                   headers: {
                     "content-type": "application/json",
@@ -67565,7 +67565,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         };
         const proof = received!.normalizedEvent.teamsPersonalRecipient;
         expect(proof).toEqual({
-          schema: "paperclip.teams.personal-recipient.v1",
+          schema: "bionic.teams.personal-recipient.v1",
           companyId: context.fixture.companyId,
           endpointId: context.endpoint.id,
           runtimeGeneration: origin.generation,
@@ -67875,7 +67875,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime: runtime as unknown as ChatSdkRuntime,
       heartbeat: { wakeup: receiptBackedWakeup(wakeup), cancelRun },
       storage: storage.storage,
-      publicBaseUrl: "https://paperclip.example",
+      publicBaseUrl: "https://bionic.example",
       teamsFileUploadRequest: uploadRequest,
       scheduleDeferredWork: () => undefined,
     });
@@ -67949,7 +67949,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: fixture.companyId,
         endpointId: endpoint.id,
         principalId: principal!.id,
-        paperclipUserId: recipientUserId,
+        bionicUserId: recipientUserId,
         status: "linked",
         confirmedAt: new Date(),
       });
@@ -68325,7 +68325,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         const configuration = context.runtime.configurations.get(endpoint.id)!;
         if (configuration.providerConfig.provider !== "telegram")
           throw new Error("Expected Telegram");
-        const request = new Request("https://paperclip.example/fixture", {
+        const request = new Request("https://bionic.example/fixture", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -68457,7 +68457,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           await context.service.handleWebhook(
             endpoint.publicId,
             "telegram",
-            new Request("https://paperclip.example/fixture", {
+            new Request("https://bionic.example/fixture", {
               method: "POST",
               headers: {
                 "content-type": "application/json",
@@ -68735,7 +68735,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             );
             const webhookUrlSha256 = createHash("sha256")
               .update(
-                `https://paperclip.example/api/chat-webhooks/${publicId}/telegram`,
+                `https://bionic.example/api/chat-webhooks/${publicId}/telegram`,
               )
               .digest("hex");
             await db.transaction(async (tx) => {
@@ -69436,7 +69436,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         companyId: context.fixture.companyId,
         issueId: context.issue.id,
         revision: 1,
-        schemaVersion: "paperclip.completion-contract.v1",
+        schemaVersion: "bionic.completion-contract.v1",
         policyVersion: "phase6-v3",
         risk: "low",
         completionAuthority: "agent_claim_policy",
@@ -69512,7 +69512,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         .set({ status: "in_review", executionRunId: null })
         .where(eq(issues.id, context.issue.id));
       const result: PrpStructuredRunResult = {
-        schema: "paperclip.run_result.v1",
+        schema: "bionic.run_result.v1",
         reportedWorkDisposition: "yielded",
         summary:
           "Here is the exact requested file. I will wait for your next message.",
@@ -69535,7 +69535,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         },
       };
       const terminal: PrpTerminalState = {
-        schema: "paperclip.prp.terminal.v1",
+        schema: "bionic.prp.terminal.v1",
         turnTerminalState: "completed",
         runTerminalState: "succeeded",
         reportedWorkDisposition: "yielded",
@@ -69572,7 +69572,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         status: "succeeded",
         resultJson: {
           nativeCommittedChatResponse: {
-            schema: "paperclip.native_committed_chat_response.v1",
+            schema: "bionic.native_committed_chat_response.v1",
           },
         },
       });
@@ -69962,7 +69962,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             cancelRun: vi.fn(async () => ({ status: "cancelled" })),
           },
           storage: context.storage.storage,
-          publicBaseUrl: "https://paperclip.example",
+          publicBaseUrl: "https://bionic.example",
           teamsFileUploadRequest: context.uploadRequest,
           scheduleDeferredWork: () => undefined,
         });
@@ -70557,7 +70557,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       try {
         if (provider === "slack") {
           const [principal] = await db.insert(chatExternalPrincipals).values({ companyId: fixture.companyId, provider: "slack", providerAccountId: "T-PAPERCLIP", externalId: "UBOARD" }).returning();
-          await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: context.endpoint.id, principalId: principal.id, paperclipUserId: "owner-user", status: "linked", confirmedAt: new Date() });
+          await db.insert(chatIdentityLinks).values({ companyId: fixture.companyId, endpointId: context.endpoint.id, principalId: principal.id, bionicUserId: "owner-user", status: "linked", confirmedAt: new Date() });
         }
         const teamsChannel = `teams:${Buffer.from("19:long-publication@thread.tacv2").toString("base64url")}:${Buffer.from("https://smba.trafficmanager.net/amer/").toString("base64url")}`;
         if (provider === "microsoft-teams") {
@@ -70576,13 +70576,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             provider === "slack"
               ? "C-LONG-BOARD"
               : provider === "github"
-                ? "paperclipai/paperclip"
+                ? "bionicai/bionic"
                 : teamsChannel,
           id:
             provider === "slack"
               ? "slack:C-LONG-BOARD:9900.1"
               : provider === "github"
-                ? "github:paperclipai/paperclip:issue:9900"
+                ? "github:bionicai/bionic:issue:9900"
                 : `teams:${Buffer.from("19:long-publication@thread.tacv2;messageid=99001").toString("base64url")}:${Buffer.from("https://smba.trafficmanager.net/amer/").toString("base64url")}`,
           name: "long-board",
         });
@@ -70660,7 +70660,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           for (let drain = 0; drain < 20; drain++)
             await service.processPendingPublications();
           expect(publication?.commentId).toBeTruthy();
-          const expectedText = provider === "slack" && source === "new" ? `**Owner User (via Paperclip)**\n\n${body}` : body;
+          const expectedText = provider === "slack" && source === "new" ? `**Owner User (via Bionic)**\n\n${body}` : body;
           const rows = await orderedBatch(publication!.commentId!);
           expect(rows.every((row) => row.state === "published")).toBe(true);
           expect(rows.map((row) => row.payload.text).join("") === expectedText).toBe(
@@ -70710,7 +70710,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             "@here ".repeat(1_000) +
             "END-OF-RICH-BOARD";
           expect(body.length).toBeLessThanOrEqual(100_000);
-          const safe = projectSafeChatPublicationText(provider === "slack" ? `**Owner User (via Paperclip)**\n\n${body}` : body);
+          const safe = projectSafeChatPublicationText(provider === "slack" ? `**Owner User (via Bionic)**\n\n${body}` : body);
           const publication = await service.publishBoardMessage(
             endpoint.id,
             conversation.id,
@@ -70801,7 +70801,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         let restarted: ChatChannelService | undefined;
         try {
           const body = "a".repeat(99_990) + "FINAL-TAIL";
-          const expectedText = provider === "slack" ? `**Owner User (via Paperclip)**\n\n${body}` : body;
+          const expectedText = provider === "slack" ? `**Owner User (via Bionic)**\n\n${body}` : body;
           let attempts = 0;
           transport.postHook = async () => {
             if (++attempts === 2)

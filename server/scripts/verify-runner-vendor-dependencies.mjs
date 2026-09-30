@@ -1,9 +1,9 @@
-// Verify every npm package the vendored paperclip-runner actually imports
+// Verify every npm package the vendored bionic-runner actually imports
 // at runtime is also declared as a direct dependency of server/package.json.
 //
-// packages/paperclip-runner is private and never published, so the server
+// packages/bionic-runner is private and never published, so the server
 // build vendors its compiled dist/ tree wholesale with `cp -R` (see the
-// `build` script's `... dist/vendor/paperclip-runner/` step) -- code only,
+// `build` script's `... dist/vendor/bionic-runner/` step) -- code only,
 // no node_modules alongside it. Every npm package the vendored code
 // actually imports is therefore also a runtime dependency of server once
 // vendored, and has to be declared there too (see acpx, ajv). That mirror
@@ -15,7 +15,7 @@
 // of the two entry points server actually imports (index.js, testing.js),
 // with `write: false` so nothing is written to disk and `packages:
 // "external"` so npm imports are reported, not inlined. That is precise:
-// paperclip-runner declares dependencies (react-markdown, the codex/opencode
+// bionic-runner declares dependencies (react-markdown, the codex/opencode
 // CLI packages, ...) that only its unrelated ./react and ./browser export
 // subpaths use, which server never imports, so requiring *every* declared
 // dependency to be mirrored would be over-broad and demand dependencies
@@ -39,11 +39,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const runnerRoot = resolve(serverRoot, "../packages/paperclip-runner");
+const runnerRoot = resolve(serverRoot, "../packages/bionic-runner");
 const runnerDist = resolve(runnerRoot, "dist");
 
 // The only entry points server/src actually imports from the vendored
-// runner (server/src/**/*.ts import "../vendor/paperclip-runner/index.js"
+// runner (server/src/**/*.ts import "../vendor/bionic-runner/index.js"
 // or ".../testing.js").
 const ENTRY_POINT_NAMES = ["index.js", "testing.js"];
 
@@ -68,8 +68,8 @@ export async function findRunnerExternalPackages(entryPoints) {
   for (const entryPoint of entryPoints) {
     if (!existsSync(entryPoint)) {
       throw new Error(
-        `paperclip-runner vendor check: expected build output at ${entryPoint}. ` +
-          `Run "pnpm --filter @paperclipai/paperclip-runner build" first.`,
+        `bionic-runner vendor check: expected build output at ${entryPoint}. ` +
+          `Run "pnpm --filter @bionicai/bionic-runner build" first.`,
       );
     }
   }
@@ -110,14 +110,14 @@ function explainMissingDependencies(missing, runnerDependencyNames) {
   const lines = missing.map((name) => {
     const range = runnerDependencyNames.get(name);
     return range
-      ? `  "${name}": "${range}"  (matches packages/paperclip-runner/package.json)`
-      : `  "${name}"  (not declared as a paperclip-runner dependency either -- check for a missing or mistyped dependency there first)`;
+      ? `  "${name}": "${range}"  (matches packages/bionic-runner/package.json)`
+      : `  "${name}"  (not declared as a bionic-runner dependency either -- check for a missing or mistyped dependency there first)`;
   });
   return (
-    `paperclip-runner vendor check: server/package.json is missing the runtime ` +
+    `bionic-runner vendor check: server/package.json is missing the runtime ` +
     `${missing.length === 1 ? "dependency" : "dependencies"} the vendored runner ` +
     `imports at runtime:\n${lines.join("\n")}\n\n` +
-    `packages/paperclip-runner/dist is copied into server's own published package ` +
+    `packages/bionic-runner/dist is copied into server's own published package ` +
     `without its node_modules, so every npm package the runner imports must also be ` +
     `a direct dependency of server so it resolves once vendored. Add ` +
     `${missing.length === 1 ? "it" : "them"} to server/package.json's "dependencies".`

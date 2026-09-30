@@ -14,8 +14,8 @@ import type {
   IssueTreeControlPreview,
   IssueTreeHold,
   IssueWorkProduct,
-} from "@paperclipai/shared";
-import { ONBOARDING_FIRST_TASK_ORIGIN_KIND } from "@paperclipai/shared";
+} from "@bionicai/shared";
+import { ONBOARDING_FIRST_TASK_ORIGIN_KIND } from "@bionicai/shared";
 import type {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
@@ -243,7 +243,7 @@ vi.mock("../context/CompanyContext", () => ({
     companies: [
       {
         id: "company-1",
-        name: "Paperclip",
+        name: "Bionic",
         issuePrefix: "PAP",
         status: "active",
       },
@@ -251,7 +251,7 @@ vi.mock("../context/CompanyContext", () => ({
     selectedCompanyId: "company-1",
     selectedCompany: {
       id: "company-1",
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: "PAP",
       status: "active",
     },
@@ -837,7 +837,7 @@ function createQueuedCommentQueue(
     state: "deferred",
     targetRunId: "run-active-1",
     revision: "queue-revision-1",
-    protocol: "paperclip_runner_v1",
+    protocol: "bionic_runner_v1",
     steeringDisposition: "available",
     entries: [{ comment, position: 0, canEdit: true, canDiscard: true }],
     ...overrides,
@@ -896,7 +896,7 @@ function createArtifactWorkProduct(
     executionWorkspaceId: null,
     runtimeServiceId: null,
     type: "artifact",
-    provider: "paperclip",
+    provider: "bionic",
     externalId: null,
     title: overrides.title ?? originalFilename,
     url: null,
@@ -3275,7 +3275,7 @@ describe("IssueDetail", () => {
           runId: "run-private-board",
           agentId: "agent-1",
           agentName: "Runner",
-          adapterType: "paperclip_runner",
+          adapterType: "bionic_runner",
           runtimeMode: "native",
           status: "succeeded",
           createdAt: "2026-04-21T00:00:00.000Z",
@@ -3284,7 +3284,7 @@ describe("IssueDetail", () => {
           contextIssueId: "issue-1",
           resultJson: {
             presentationDecision: {
-              schema: "paperclip.run_presentation_decision.v1",
+              schema: "bionic.run_presentation_decision.v1",
               chosenSource: "existing_issue_comment",
               commentId: "private-board-answer",
             },
@@ -3353,7 +3353,7 @@ describe("IssueDetail", () => {
         runId: "run-original",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:00:00.000Z",
         startedAt: "2026-04-21T00:00:00.000Z",
@@ -3365,7 +3365,7 @@ describe("IssueDetail", () => {
         runId: "run-successor",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:01:01.000Z",
         startedAt: "2026-04-21T00:01:01.000Z",
@@ -3417,7 +3417,7 @@ describe("IssueDetail", () => {
         runId: "run-unrelated",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:00:00.000Z",
         startedAt: "2026-04-21T00:00:00.000Z",
@@ -3429,7 +3429,7 @@ describe("IssueDetail", () => {
         runId: "run-ordinary",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:01:01.000Z",
         startedAt: "2026-04-21T00:01:01.000Z",
@@ -3484,7 +3484,7 @@ describe("IssueDetail", () => {
         runId: "run-source",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:00:00.000Z",
         startedAt: "2026-04-21T00:00:00.000Z",
@@ -3496,7 +3496,7 @@ describe("IssueDetail", () => {
         runId: "run-intervening",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:00:40.000Z",
         startedAt: "2026-04-21T00:00:40.000Z",
@@ -3508,7 +3508,7 @@ describe("IssueDetail", () => {
         runId: "run-successor",
         agentId: "agent-1",
         agentName: "Runner",
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "succeeded",
         createdAt: "2026-04-21T00:01:11.000Z",
         startedAt: "2026-04-21T00:01:11.000Z",
@@ -3583,7 +3583,7 @@ describe("IssueDetail", () => {
             },
           ],
           questionSet: {
-            schema: "paperclip.question_set.v1",
+            schema: "bionic.question_set.v1",
             questions: [
               {
                 id: "runtime",
@@ -3922,7 +3922,7 @@ describe("IssueDetail", () => {
       createdAt: "2026-04-21T00:00:01.000Z",
       agentId: "agent-1",
       agentName: "Runner",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       issueId: "issue-1",
     };
     mockIssuesApi.get.mockResolvedValue(
@@ -3933,7 +3933,7 @@ describe("IssueDetail", () => {
       }),
     );
     mockAgentsApi.list.mockResolvedValue([
-      createAgent({ adapterType: "paperclip_runner" }),
+      createAgent({ adapterType: "bionic_runner" }),
     ]);
     mockHeartbeatsApi.activeRunForIssue.mockResolvedValue(activeRun);
     mockHeartbeatsApi.liveRunsForIssue.mockResolvedValue([activeRun]);
@@ -3973,7 +3973,7 @@ describe("IssueDetail", () => {
     expect(pendingProps.queuedCommentQueue).toMatchObject({
       queueId: null,
       targetRunId: "run-native",
-      protocol: "paperclip_runner_v1",
+      protocol: "bionic_runner_v1",
       entries: [
         expect.objectContaining({
           comment: expect.objectContaining({
@@ -5355,7 +5355,7 @@ describe("IssueDetail", () => {
       },
     ]);
     localStorage.setItem(
-      "paperclip:issue-comment-draft:issue-1",
+      "bionic:issue-comment-draft:issue-1",
       "Draft follow-up message",
     );
     mockIssuesApi.update.mockResolvedValue(
@@ -5385,10 +5385,10 @@ describe("IssueDetail", () => {
     expect(mockIssuesApi.update).toHaveBeenCalledWith(issue.identifier, {
       workMode: "ask",
     });
-    expect(localStorage.getItem("paperclip:issue-comment-draft:issue-1")).toBe(
+    expect(localStorage.getItem("bionic:issue-comment-draft:issue-1")).toBe(
       "Draft follow-up message",
     );
-    localStorage.removeItem("paperclip:issue-comment-draft:issue-1");
+    localStorage.removeItem("bionic:issue-comment-draft:issue-1");
   });
 
   describe.each([false, true])("composer tree control (mobile=%s)", (isMobile) => {
@@ -5761,7 +5761,7 @@ describe("IssueDetail", () => {
     });
   });
 
-  it("keeps the authoritative Paperclip queue mounted after handoff promotion", async () => {
+  it("keeps the authoritative Bionic queue mounted after handoff promotion", async () => {
     mockIssuesApi.get.mockResolvedValue(
       createIssue({
         status: "in_progress",
@@ -5770,7 +5770,7 @@ describe("IssueDetail", () => {
       }),
     );
     mockAgentsApi.list.mockResolvedValue([
-      createAgent({ adapterType: "paperclip_runner" }),
+      createAgent({ adapterType: "bionic_runner" }),
     ]);
     mockIssuesApi.getQueuedComments.mockResolvedValue(
       createQueuedCommentQueue({
@@ -5812,7 +5812,7 @@ describe("IssueDetail", () => {
         }),
       );
       mockAgentsApi.list.mockResolvedValue([
-        createAgent({ adapterType: "paperclip_runner" }),
+        createAgent({ adapterType: "bionic_runner" }),
       ]);
       const directRun = {
         id: "run-direct-1",
@@ -5860,14 +5860,14 @@ describe("IssueDetail", () => {
   it("keeps the last queued message mounted until steering is acknowledged so rejection stays visible", async () => {
     const queue = createQueuedCommentQueue();
     mockIssuesApi.get.mockResolvedValue(createIssue({ status: "in_progress", assigneeAgentId: "agent-1", executionRunId: "run-active-1" }));
-    mockAgentsApi.list.mockResolvedValue([createAgent({ adapterType: "paperclip_runner" })]);
+    mockAgentsApi.list.mockResolvedValue([createAgent({ adapterType: "bionic_runner" })]);
     mockIssuesApi.listComments.mockResolvedValue([queue.entries[0].comment]);
     mockIssuesApi.getQueuedComments.mockResolvedValue(queue);
     mockHeartbeatsApi.activeRunForIssue.mockResolvedValue({
       id: "run-active-1", runtimeMode: "native", status: "running", invocationSource: "issue",
       triggerDetail: null, contextCommentId: null, contextWakeCommentId: null,
       startedAt: "2026-04-21T00:00:00.000Z", finishedAt: null, createdAt: "2026-04-21T00:00:00.000Z",
-      agentId: "agent-1", agentName: "Runner", adapterType: "paperclip_runner", issueId: "issue-1",
+      agentId: "agent-1", agentName: "Runner", adapterType: "bionic_runner", issueId: "issue-1",
     });
     let rejectSteer!: (error: Error) => void;
     mockIssuesApi.steerQueuedComment.mockReturnValue(new Promise((_, reject) => { rejectSteer = reject; }));
@@ -5908,7 +5908,7 @@ describe("IssueDetail", () => {
       }),
     );
     mockAgentsApi.list.mockResolvedValue([
-      createAgent({ adapterType: "paperclip_runner" }),
+      createAgent({ adapterType: "bionic_runner" }),
     ]);
     mockIssuesApi.listComments.mockResolvedValue([queue.entries[0].comment]);
     mockIssuesApi.getQueuedComments.mockResolvedValue(queue);
@@ -5925,7 +5925,7 @@ describe("IssueDetail", () => {
       createdAt: "2026-04-21T00:00:00.000Z",
       agentId: "agent-1",
       agentName: "Runner",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       issueId: "issue-1",
     });
     mockIssuesApi.steerQueuedComment.mockResolvedValue(steeredQueue);
@@ -6035,7 +6035,7 @@ describe("IssueDetail", () => {
       }),
     );
     mockAgentsApi.list.mockResolvedValue([
-      createAgent({ adapterType: "paperclip_runner" }),
+      createAgent({ adapterType: "bionic_runner" }),
     ]);
     mockIssuesApi.getQueuedComments.mockResolvedValue(
       createQueuedCommentQueue({
@@ -6086,7 +6086,7 @@ describe("IssueDetail", () => {
       }),
     );
     mockAgentsApi.list.mockResolvedValue([
-      createAgent({ adapterType: "paperclip_runner" }),
+      createAgent({ adapterType: "bionic_runner" }),
     ]);
     // Keep returning the pre-discard page to exercise the local projection
     // across the queueId -> null transition, as can happen during refetch.
@@ -6106,7 +6106,7 @@ describe("IssueDetail", () => {
       createdAt: "2026-04-21T00:00:00.000Z",
       agentId: "agent-1",
       agentName: "Runner",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       issueId: "issue-1",
     });
 
@@ -6159,7 +6159,7 @@ describe("IssueDetail", () => {
       }),
     );
     mockAgentsApi.list.mockResolvedValue([
-      createAgent({ adapterType: "paperclip_runner" }),
+      createAgent({ adapterType: "bionic_runner" }),
     ]);
     mockIssuesApi.getQueuedComments.mockResolvedValue(queue);
     mockIssuesApi.discardQueuedComment.mockRejectedValue(

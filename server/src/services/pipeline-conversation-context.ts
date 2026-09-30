@@ -1,12 +1,12 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   documentAnnotationComments,
   documentAnnotationThreads,
   documents,
   pipelineCaseDocuments,
-} from "@paperclipai/db";
-import { PIPELINE_CASE_BODY_DOCUMENT_KEY, type SourceTrustMetadata } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { PIPELINE_CASE_BODY_DOCUMENT_KEY, type SourceTrustMetadata } from "@bionicai/shared";
 import {
   LOW_TRUST_QUARANTINED_BODY,
   isLowTrustQuarantined,

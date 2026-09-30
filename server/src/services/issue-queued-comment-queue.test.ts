@@ -19,11 +19,11 @@ describe("decideQueuedCommentQueueSteering", () => {
       state: "queued",
       queueRunRuntimeMode: "native",
       activeRun: null,
-      assignedAgentAdapterType: "paperclip_runner",
+      assignedAgentAdapterType: "bionic_runner",
       queuedCommentCount: 1,
     });
 
-    expect(decision).toEqual({ protocol: "paperclip_runner_v1", kind: "temporarily_unavailable" });
+    expect(decision).toEqual({ protocol: "bionic_runner_v1", kind: "temporarily_unavailable" });
   });
 
   it("answers temporarily_unavailable when the queue holds no live comments", () => {
@@ -31,11 +31,11 @@ describe("decideQueuedCommentQueueSteering", () => {
       state: "deferred",
       queueRunRuntimeMode: null,
       activeRun: { id: "run-1", runtimeMode: "native" },
-      assignedAgentAdapterType: "paperclip_runner",
+      assignedAgentAdapterType: "bionic_runner",
       queuedCommentCount: 0,
     });
 
-    expect(decision).toEqual({ protocol: "paperclip_runner_v1", kind: "temporarily_unavailable" });
+    expect(decision).toEqual({ protocol: "bionic_runner_v1", kind: "temporarily_unavailable" });
   });
 
   it("tells the caller it may probe a running deferred turn on the native protocol", () => {
@@ -43,17 +43,17 @@ describe("decideQueuedCommentQueueSteering", () => {
       state: "deferred",
       queueRunRuntimeMode: null,
       activeRun: { id: "run-1", runtimeMode: "native" },
-      assignedAgentAdapterType: "paperclip_runner",
+      assignedAgentAdapterType: "bionic_runner",
       queuedCommentCount: 1,
     });
 
-    expect(decision).toEqual({ protocol: "paperclip_runner_v1", kind: "probe", steeringRunId: "run-1" });
+    expect(decision).toEqual({ protocol: "bionic_runner_v1", kind: "probe", steeringRunId: "run-1" });
   });
 
   // Acceptance-criterion fact pattern: a deferred queue whose active run
   // has not resolved a runtime mode yet, for an agent on the
-  // `paperclip_runner` adapter. The protocol resolves to
-  // `paperclip_runner_v1` through the adapter-type fallback, and the
+  // `bionic_runner` adapter. The protocol resolves to
+  // `bionic_runner_v1` through the adapter-type fallback, and the
   // decision hands the run to the caller to probe live — it never answers
   // the flat "unsupported" value a duplicated, unshared rule can drift to.
   it("resolves the protocol through the adapter-type fallback and asks the caller to probe", () => {
@@ -61,11 +61,11 @@ describe("decideQueuedCommentQueueSteering", () => {
       state: "deferred",
       queueRunRuntimeMode: null,
       activeRun: { id: "run-1", runtimeMode: null },
-      assignedAgentAdapterType: "paperclip_runner",
+      assignedAgentAdapterType: "bionic_runner",
       queuedCommentCount: 1,
     });
 
-    expect(decision).toEqual({ protocol: "paperclip_runner_v1", kind: "probe", steeringRunId: "run-1" });
+    expect(decision).toEqual({ protocol: "bionic_runner_v1", kind: "probe", steeringRunId: "run-1" });
   });
 });
 
@@ -121,13 +121,13 @@ describe("withQueuedCommentIdsInRunContext", () => {
     const result = withQueuedCommentIdsInRunContext({
       issueId: "issue-1",
       preserved: "keep",
-      paperclipWake: { comments: [{ id: "comment-1" }] },
-      paperclipWakeComment: { id: "comment-1" },
-      paperclipTaskMarkdown: "historical",
-      paperclipTaskMarkdownCompact: "historical compact",
-      paperclipTaskMarkdownAssignment: "assignment",
-      paperclipTaskMarkdownAssignmentCompact: "assignment compact",
-      paperclipTurnContext: { version: 1, events: { owner: "wake_prompt" } },
+      bionicWake: { comments: [{ id: "comment-1" }] },
+      bionicWakeComment: { id: "comment-1" },
+      bionicTaskMarkdown: "historical",
+      bionicTaskMarkdownCompact: "historical compact",
+      bionicTaskMarkdownAssignment: "assignment",
+      bionicTaskMarkdownAssignmentCompact: "assignment compact",
+      bionicTurnContext: { version: 1, events: { owner: "wake_prompt" } },
     }, ["comment-2"]);
 
     expect(result).toMatchObject({
@@ -137,12 +137,12 @@ describe("withQueuedCommentIdsInRunContext", () => {
       wakeCommentId: "comment-2",
       commentId: "comment-2",
     });
-    expect(result).not.toHaveProperty("paperclipWake");
-    expect(result).not.toHaveProperty("paperclipWakeComment");
-    expect(result).not.toHaveProperty("paperclipTaskMarkdown");
-    expect(result).not.toHaveProperty("paperclipTaskMarkdownCompact");
-    expect(result).not.toHaveProperty("paperclipTaskMarkdownAssignment");
-    expect(result).not.toHaveProperty("paperclipTaskMarkdownAssignmentCompact");
-    expect(result).not.toHaveProperty("paperclipTurnContext");
+    expect(result).not.toHaveProperty("bionicWake");
+    expect(result).not.toHaveProperty("bionicWakeComment");
+    expect(result).not.toHaveProperty("bionicTaskMarkdown");
+    expect(result).not.toHaveProperty("bionicTaskMarkdownCompact");
+    expect(result).not.toHaveProperty("bionicTaskMarkdownAssignment");
+    expect(result).not.toHaveProperty("bionicTaskMarkdownAssignmentCompact");
+    expect(result).not.toHaveProperty("bionicTurnContext");
   });
 });

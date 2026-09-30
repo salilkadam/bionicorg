@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultRuntimeCommandPath = "/run/paperclip/runtime-command.json"
+	defaultRuntimeCommandPath = "/run/bionic/runtime-command.json"
 )
 
 func main() {

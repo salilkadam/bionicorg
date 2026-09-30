@@ -86,11 +86,11 @@ export async function configure(opts: {
   section?: string;
 }): Promise<void> {
   printPaperclipCliBanner();
-  p.intro(pc.bgCyan(pc.black(" paperclip configure ")));
+  p.intro(pc.bgCyan(pc.black(" bionic configure ")));
   const configPath = resolveConfigPath(opts.config);
 
   if (!configExists(opts.config)) {
-    p.log.error("No config file found. Run `paperclipai onboard` first.");
+    p.log.error("No config file found. Run `bionicai onboard` first.");
     p.outro("");
     process.exitCode = 1;
     return;
@@ -203,7 +203,7 @@ export async function configure(opts: {
           } else if (keyResult.status === "skipped_provider") {
             p.log.message(pc.dim("Skipping local key file management for non-local provider"));
           } else {
-            p.log.message(pc.dim("Skipping local key file management because PAPERCLIP_SECRETS_MASTER_KEY is set"));
+            p.log.message(pc.dim("Skipping local key file management because BIONIC_SECRETS_MASTER_KEY is set"));
           }
         }
         break;

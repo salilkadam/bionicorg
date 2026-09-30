@@ -1,8 +1,8 @@
-import { createProviderStoppedBoundary } from "@paperclipai/adapter-utils/provider-stopped-boundary";
+import { createProviderStoppedBoundary } from "@bionicai/adapter-utils/provider-stopped-boundary";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { inferOpenAiCompatibleBiller, type AdapterExecutionContext, type AdapterExecutionResult } from "@paperclipai/adapter-utils";
+import { inferOpenAiCompatibleBiller, type AdapterExecutionContext, type AdapterExecutionResult } from "@bionicai/adapter-utils";
 import { buildCodexAuthInboundProvision } from "./codex-auth-merge-scripts.js";
 import { copyBackCodexAuth } from "./codex-auth-copyback.js";
 import {
@@ -30,7 +30,7 @@ import {
   runAdapterExecutionTargetProcess,
   runAdapterExecutionTargetShellCommand,
   startAdapterExecutionTargetPaperclipBridge,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import {
   asString,
   asNumber,
@@ -47,17 +47,17 @@ import {
   renderTemplate,
   selectPaperclipPromptSections,
   isPaperclipRecoveryWakePayload,
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
-  DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE,
   joinPromptSections,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 import {
   parseLocalProcessFilesystemScope,
   parseLocalProcessSandboxExtraPaths,
   parseLocalProcessNetworkAllowlist,
   parseLocalProcessNetworkScope,
   type LocalProcessSandboxOptions,
-} from "@paperclipai/adapter-utils/local-process-sandbox";
+} from "@bionicai/adapter-utils/local-process-sandbox";
 import {
   parseCodexJsonl,
   classifyCodexAuthRefreshFailure,
@@ -139,12 +139,12 @@ function firstNonEmptyLine(text: string): string {
 // Benign stderr lines that never explain a nonzero exit and must not be
 // surfaced as the run error: Codex always prints the YOLO approvals warning
 // because this adapter passes the approvals-bypass flag itself, and
-// "[paperclip] ..." lines are diagnostics the adapter injected (e.g. ACP
+// "[bionic] ..." lines are diagnostics the adapter injected (e.g. ACP
 // fallback notes). Keep this list conservative so real errors are never
 // skipped.
 const BENIGN_CODEX_STDERR_LINE_RES: readonly RegExp[] = [
   /^YOLO mode is enabled\b/i,
-  /^\[paperclip\]/,
+  /^\[bionic\]/,
 ];
 
 function isBenignCodexStderrLine(line: string): boolean {
@@ -260,7 +260,7 @@ async function pruneBrokenUnavailablePaperclipSkillSymlinks(
     await fs.unlink(target).catch(() => {});
     await onLog(
       "stdout",
-      `[paperclip] Removed stale Codex skill "${entry.name}" from ${skillsHome}\n`,
+      `[bionic] Removed stale Codex skill "${entry.name}" from ${skillsHome}\n`,
     );
   }
 }
@@ -304,7 +304,7 @@ function fallbackModeUsesFreshSession(mode: CodexTransientFallbackMode | null): 
 }
 
 function managedMcpGatewaysFromContext(context: Record<string, unknown>): ManagedCodexMcpGateway[] {
-  const managedMcp = parseObject(context.paperclipManagedMcp);
+  const managedMcp = parseObject(context.bionicManagedMcp);
   if (managedMcp.managedMcpOnly !== true) return [];
   const gateways = Array.isArray(managedMcp.gateways) ? managedMcp.gateways : [];
   return gateways
@@ -485,7 +485,7 @@ function buildCodexTransientHandoffNote(input: {
   continuationSummaryBody: string | null;
 }): string {
   return [
-    "Paperclip session handoff:",
+    "Bionic session handoff:",
     input.previousSessionId ? `- Previous session: ${input.previousSessionId}` : "",
     "- Rotation reason: repeated Codex transient remote-compaction failures",
     `- Fallback mode: ${input.fallbackMode}`,
@@ -538,7 +538,7 @@ export async function ensureCodexSkillsInjected(
           }
           await onLog(
             "stdout",
-            `[paperclip] Repaired Codex skill "${entry.runtimeName}" into ${skillsHome}\n`,
+            `[bionic] Repaired Codex skill "${entry.runtimeName}" into ${skillsHome}\n`,
           );
           continue;
         }
@@ -549,12 +549,12 @@ export async function ensureCodexSkillsInjected(
 
       await onLog(
         "stdout",
-        `[paperclip] ${result === "repaired" ? "Repaired" : "Injected"} Codex skill "${entry.runtimeName}" into ${skillsHome}\n`,
+        `[bionic] ${result === "repaired" ? "Repaired" : "Injected"} Codex skill "${entry.runtimeName}" into ${skillsHome}\n`,
       );
     } catch (err) {
       await onLog(
         "stderr",
-        `[paperclip] Failed to inject Codex skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
+        `[bionic] Failed to inject Codex skill "${entry.key}" into ${skillsHome}: ${err instanceof Error ? err.message : String(err)}\n`,
       );
     }
   }
@@ -590,13 +590,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const promptTemplate = asString(
     config.promptTemplate,
     context.conversationMode === true
-      ? DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE
-      : DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+      ? DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE
+      : DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
   );
   const command = asString(config.command, "codex");
   const model = asString(config.model, "");
 
-  const workspaceContext = parseObject(context.paperclipWorkspace);
+  const workspaceContext = parseObject(context.bionicWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
   const workspaceStrategy = asString(workspaceContext.strategy, "");
@@ -606,22 +606,22 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const workspaceBranch = asString(workspaceContext.branchName, "");
   const workspaceWorktreePath = asString(workspaceContext.worktreePath, "");
   const agentHome = asString(workspaceContext.agentHome, "");
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.bionicWorkspaces)
+    ? context.bionicWorkspaces.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
-  const runtimeServiceIntents = Array.isArray(context.paperclipRuntimeServiceIntents)
-    ? context.paperclipRuntimeServiceIntents.filter(
+  const runtimeServiceIntents = Array.isArray(context.bionicRuntimeServiceIntents)
+    ? context.bionicRuntimeServiceIntents.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
-  const runtimeServices = Array.isArray(context.paperclipRuntimeServices)
-    ? context.paperclipRuntimeServices.filter(
+  const runtimeServices = Array.isArray(context.bionicRuntimeServices)
+    ? context.bionicRuntimeServices.filter(
         (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
-  const runtimePrimaryUrl = asString(context.paperclipRuntimePrimaryUrl, "");
+  const runtimePrimaryUrl = asString(context.bionicRuntimePrimaryUrl, "");
   const executionTarget = readAdapterExecutionTarget({
     executionTarget: ctx.executionTarget,
     legacyRemoteExecution: ctx.executionTransport?.remoteExecution,
@@ -640,8 +640,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       ? path.resolve(envConfig.CODEX_HOME.trim())
       : null;
   const connectorSourceHome = configuredCodexHome;
-  const connectorSkillDigest = typeof config.paperclipConnectorSkillDigest === "string"
-    && /^[a-f0-9]{64}$/.test(config.paperclipConnectorSkillDigest) ? config.paperclipConnectorSkillDigest : null;
+  const connectorSkillDigest = typeof config.bionicConnectorSkillDigest === "string"
+    && /^[a-f0-9]{64}$/.test(config.bionicConnectorSkillDigest) ? config.bionicConnectorSkillDigest : null;
   if (connectorSkillDigest) {
     // Never mount assignment-specific skills into the shared company/user home.
     // A different skill revision gets a new home, so revoked/changed resources
@@ -660,7 +660,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     typeof envConfig.OPENAI_API_KEY === "string" && envConfig.OPENAI_API_KEY.trim().length > 0
       ? envConfig.OPENAI_API_KEY.trim()
       : null;
-  // A configured CODEX_HOME that lives under the Paperclip-managed company tree
+  // A configured CODEX_HOME that lives under the Bionic-managed company tree
   // (the per-agent home set by the server isolation guard) still needs auth
   // seeded — it ships with no credentials and OPENAI_API_KEY="" by default.
   // Only a genuine external/user-supplied override is treated as self-managed
@@ -689,7 +689,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       // run: log and fall through to seed from the unrefreshed shared credential.
       await onLog(
         "stderr",
-        `[paperclip] Codex auth cache: vend skipped after an error; using the shared credential as-is.\n`,
+        `[bionic] Codex auth cache: vend skipped after an error; using the shared credential as-is.\n`,
       );
       void error;
     });
@@ -731,7 +731,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     cwd,
     onLog,
   });
-  // Merge custom model providers (PAPERCLIP_CODEX_PROVIDERS) into the managed
+  // Merge custom model providers (BIONIC_CODEX_PROVIDERS) into the managed
   // CODEX_HOME's config.toml BEFORE the home is shipped to a remote execution
   // target, so both local and sandboxed Codex processes pick up the routing.
   // An explicit env.CODEX_HOME override is treated as user-managed and skipped.
@@ -750,9 +750,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   let stagedCodexHomeDir: string | null = null;
   try {
     for (const note of preparedRuntimeConfig.notes) {
-      await onLog("stdout", `[paperclip] ${note}\n`);
+      await onLog("stdout", `[bionic] ${note}\n`);
     }
-    const paperclipBaseEnv = buildPaperclipEnv(agent);
+    const bionicBaseEnv = buildPaperclipEnv(agent);
     const runtimeMcpGateways = (ctx.runtimeMcp?.getServers() ?? []).map((server) => ({
       name: server.name,
       endpointPath: server.url,
@@ -764,17 +764,17 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     );
     const managedMcp = await writeManagedCodexMcpConfig({
       codexHome: effectiveCodexHome,
-      apiBaseUrl: paperclipBaseEnv.PAPERCLIP_API_URL,
+      apiBaseUrl: bionicBaseEnv.BIONIC_API_URL,
       gateways: managedMcpGateways,
     });
     if (managedMcpGateways.length > 0) {
       await onLog(
         "stdout",
-        `[paperclip] Wrote ${managedMcpGateways.length} managed MCP gateway(s) into Codex config "${managedMcp.configPath}".\n`,
+        `[bionic] Wrote ${managedMcpGateways.length} managed MCP gateway(s) into Codex config "${managedMcp.configPath}".\n`,
       );
     }
     for (const warning of managedMcp.warnings) {
-      await onLog("stderr", `[paperclip] ${warning}\n`);
+      await onLog("stderr", `[bionic] ${warning}\n`);
     }
     // Inject skills into the same CODEX_HOME that Codex will actually run with
     // (managed home in the default case, or an explicit override from adapter config).
@@ -799,7 +799,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       ? await (async () => {
           await onLog(
             "stdout",
-            `[paperclip] Syncing ${targetWorkspaceRealization?.mode === "in_place" ? "CODEX_HOME" : "workspace and CODEX_HOME"} to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
+            `[bionic] Syncing ${targetWorkspaceRealization?.mode === "in_place" ? "CODEX_HOME" : "workspace and CODEX_HOME"} to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
           );
           // Stage only the files Codex actually needs into a curated temp dir and
           // ship THAT as the `home` asset, instead of the whole managed
@@ -876,10 +876,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const restoreRemoteWorkspace = preparedExecutionTargetRuntime
       ? () => preparedExecutionTargetRuntime.restoreWorkspace((line) => onLog("stdout", line))
       : null;
-    let paperclipBridge: Awaited<ReturnType<typeof startAdapterExecutionTargetPaperclipBridge>> = null;
+    let bionicBridge: Awaited<ReturnType<typeof startAdapterExecutionTargetPaperclipBridge>> = null;
     const remoteCodexHome = executionTargetIsRemote
       ? preparedExecutionTargetRuntime?.assetDirs.home ??
-        path.posix.join(effectiveExecutionCwd, ".paperclip-runtime", "codex", "home")
+        path.posix.join(effectiveExecutionCwd, ".bionic-runtime", "codex", "home")
       : null;
     await emitSandboxAuthPrecedenceWarningIfNeeded({
       runId,
@@ -890,8 +890,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       onLog,
       onEvent,
     });
-    const env: Record<string, string> = { ...paperclipBaseEnv };
-    env.PAPERCLIP_RUN_ID = runId;
+    const env: Record<string, string> = { ...bionicBaseEnv };
+    env.BIONIC_RUN_ID = runId;
     const wakeTaskId =
       (typeof context.taskId === "string" && context.taskId.trim().length > 0 && context.taskId.trim()) ||
       (typeof context.issueId === "string" && context.issueId.trim().length > 0 && context.issueId.trim()) ||
@@ -917,25 +917,25 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       : [];
     const issueWorkMode = readPaperclipIssueWorkModeFromContext(context);
     if (wakeTaskId) {
-      env.PAPERCLIP_TASK_ID = wakeTaskId;
+      env.BIONIC_TASK_ID = wakeTaskId;
     }
     if (issueWorkMode) {
-      env.PAPERCLIP_ISSUE_WORK_MODE = issueWorkMode;
+      env.BIONIC_ISSUE_WORK_MODE = issueWorkMode;
     }
     if (wakeReason) {
-      env.PAPERCLIP_WAKE_REASON = wakeReason;
+      env.BIONIC_WAKE_REASON = wakeReason;
     }
     if (wakeCommentId) {
-      env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
+      env.BIONIC_WAKE_COMMENT_ID = wakeCommentId;
     }
     if (approvalId) {
-      env.PAPERCLIP_APPROVAL_ID = approvalId;
+      env.BIONIC_APPROVAL_ID = approvalId;
     }
     if (approvalStatus) {
-      env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
+      env.BIONIC_APPROVAL_STATUS = approvalStatus;
     }
     if (linkedIssueIds.length > 0) {
-      env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
+      env.BIONIC_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
     }
     refreshPaperclipWorkspaceEnvForExecution({
       env,
@@ -954,24 +954,24 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       executionCwd: effectiveExecutionCwd,
     });
     if (targetWorkspaceRealization) {
-      env.PAPERCLIP_WORKSPACE_REALIZATION_MODE = targetWorkspaceRealization.mode;
-      env.PAPERCLIP_WORKSPACE_AUTHORITATIVE_ROOT = targetWorkspaceRealization.authoritativeRoot;
+      env.BIONIC_WORKSPACE_REALIZATION_MODE = targetWorkspaceRealization.mode;
+      env.BIONIC_WORKSPACE_AUTHORITATIVE_ROOT = targetWorkspaceRealization.authoritativeRoot;
     }
     if (runtimeServiceIntents.length > 0) {
-      env.PAPERCLIP_RUNTIME_SERVICE_INTENTS_JSON = JSON.stringify(runtimeServiceIntents);
+      env.BIONIC_RUNTIME_SERVICE_INTENTS_JSON = JSON.stringify(runtimeServiceIntents);
     }
     if (runtimeServices.length > 0) {
-      env.PAPERCLIP_RUNTIME_SERVICES_JSON = JSON.stringify(runtimeServices);
+      env.BIONIC_RUNTIME_SERVICES_JSON = JSON.stringify(runtimeServices);
     }
     if (runtimePrimaryUrl) {
-      env.PAPERCLIP_RUNTIME_PRIMARY_URL = runtimePrimaryUrl;
+      env.BIONIC_RUNTIME_PRIMARY_URL = runtimePrimaryUrl;
     }
     env.CODEX_HOME = remoteCodexHome ?? effectiveCodexHome;
     if (authToken) {
-      env.PAPERCLIP_API_KEY = authToken;
+      env.BIONIC_API_KEY = authToken;
     }
     if (executionTargetIsRemote && adapterExecutionTargetUsesPaperclipBridge(runtimeExecutionTarget)) {
-      paperclipBridge = await startAdapterExecutionTargetPaperclipBridge({
+      bionicBridge = await startAdapterExecutionTargetPaperclipBridge({
         runId,
         target: runtimeExecutionTarget,
         enableSandboxDuplexBridge: adapterExecutionTargetEnablesSandboxDuplexBridge(runtimeExecutionTarget),
@@ -979,11 +979,11 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         runtimeRootDir: preparedExecutionTargetRuntime?.runtimeRootDir,
         adapterKey: "codex",
         timeoutSec,
-        hostApiToken: env.PAPERCLIP_API_KEY,
+        hostApiToken: env.BIONIC_API_KEY,
         onLog,
       });
-      if (paperclipBridge) {
-        Object.assign(env, paperclipBridge.env);
+      if (bionicBridge) {
+        Object.assign(env, bionicBridge.env);
       }
     }
     const effectiveEnv = Object.fromEntries(
@@ -1009,7 +1009,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
             networkScope,
             networkAllowlist: parseLocalProcessNetworkAllowlist(config.networkAllowlist),
             networkTrustedUrls: [
-              paperclipBaseEnv.PAPERCLIP_API_URL,
+              bionicBaseEnv.BIONIC_API_URL,
               ...runtimeMcpGateways.map((gateway) => gateway.endpointPath),
             ],
             command: asString(config.filesystemSandboxCommand, "bwrap"),
@@ -1021,7 +1021,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         .join(" and ");
       await onLog(
         "stdout",
-        `[paperclip] Confining Codex with ${scopes} scope.\n`,
+        `[bionic] Confining Codex with ${scopes} scope.\n`,
       );
     }
     const runtimeEnv = Object.fromEntries(
@@ -1052,12 +1052,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (monitorResolution.mode === "disabled") {
       await onLog(
         "stdout",
-        `[paperclip] Codex output inactivity monitor is DISABLED via adapterConfig.outputInactivityTimeoutMs=null. Hung codex runs will only be detected by the platform-level silent-run safety net.\n`,
+        `[bionic] Codex output inactivity monitor is DISABLED via adapterConfig.outputInactivityTimeoutMs=null. Hung codex runs will only be detected by the platform-level silent-run safety net.\n`,
       );
     } else if (monitorResolution.mode === "default" && "reason" in monitorResolution) {
       await onLog(
         "stdout",
-        `[paperclip] Ignoring non-positive adapterConfig.outputInactivityTimeoutMs; falling back to default ${monitorResolution.timeoutMs}ms.\n`,
+        `[bionic] Ignoring non-positive adapterConfig.outputInactivityTimeoutMs; falling back to default ${monitorResolution.timeoutMs}ms.\n`,
       );
     }
     const runtimeSessionParams = parseObject(runtime.sessionParams);
@@ -1075,12 +1075,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (executionTargetIsRemote && runtimeSessionId && !canResumeSession) {
       await onLog(
         "stdout",
-        `[paperclip] Codex session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
+        `[bionic] Codex session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
       );
     } else if (runtimeSessionId && !canResumeSession) {
       await onLog(
         "stdout",
-        `[paperclip] Codex session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
+        `[bionic] Codex session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
       );
     }
     const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
@@ -1097,12 +1097,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         const reason = err instanceof Error ? err.message : String(err);
         await onLog(
           "stdout",
-          `[paperclip] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
+          `[bionic] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
         );
       }
     }
     const repoAgentsNote =
-      "Codex exec automatically applies repo-scoped AGENTS.md instructions from the current workspace; Paperclip does not currently suppress that discovery.";
+      "Codex exec automatically applies repo-scoped AGENTS.md instructions from the current workspace; Bionic does not currently suppress that discovery.";
     const bootstrapPromptTemplate = asString(config.bootstrapPromptTemplate, "");
     const templateData = {
       agentId: agent.id,
@@ -1113,7 +1113,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       run: { id: runId, source: "on_demand" },
       context,
     };
-    const continuationSummary = parseObject(context.paperclipContinuationSummary);
+    const continuationSummary = parseObject(context.bionicContinuationSummary);
     const continuationSummaryBody = asString(continuationSummary.body, "").trim() || null;
     const codexFallbackHandoffNote =
       forceFreshSession
@@ -1192,10 +1192,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       if (preparedRuntimeConfig.notes.length > 0) {
         commandNotes.unshift(...preparedRuntimeConfig.notes);
       }
-      const renderedPrompt = shouldUseResumeDeltaPrompt || isPaperclipRecoveryWakePayload(context.paperclipWake)
+      const renderedPrompt = shouldUseResumeDeltaPrompt || isPaperclipRecoveryWakePayload(context.bionicWake)
         ? ""
         : renderTemplate(promptTemplate, templateData);
-      const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
+      const sessionHandoffNote = asString(context.bionicSessionHandoffMarkdown, "").trim();
       const prompt = joinPromptSections([
         promptInstructionsPrefix,
         renderedBootstrapPrompt,
@@ -1219,7 +1219,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         {
           resumeSessionId,
           skipGitRepoCheck: executionTargetIsSandbox,
-          networkAccess: env.PAPERCLIP_RUNNER_NETWORK_ACCESS !== "disabled",
+          networkAccess: env.BIONIC_RUNNER_NETWORK_ACCESS !== "disabled",
         },
       );
       const args = execArgs.args;
@@ -1267,7 +1267,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
                 const elapsedSec = Math.round(monitorElapsedMs / 1000);
                 const timeoutSecLabel = Math.round(monitorResolution.timeoutMs / 1000);
                 const logLine =
-                  `[paperclip] adapter.invoke ${message}; ` +
+                  `[bionic] adapter.invoke ${message}; ` +
                   `timeoutMs=${monitorResolution.timeoutMs} elapsedSinceLastEventMs=${monitorElapsedMs} ` +
                   `outputChunkCount=${state.outputChunkCount} outputBytes=${state.outputBytes} ` +
                   `parsedEvents=${state.parsedEventCount} processActivityCount=${state.processActivityCount} ` +
@@ -1333,8 +1333,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
             if (!cleaned.trim()) return;
             await onLog(stream, cleaned);
           },
-          runLogTail: paperclipBridge?.runLogTail,
-          settleRunDisposition: paperclipBridge?.settleRunDisposition,
+          runLogTail: bionicBridge?.runLogTail,
+          settleRunDisposition: bionicBridge?.settleRunDisposition,
           localProcessSandbox,
         });
         const cleanedStderr = stripCodexRolloutNoise(proc.stderr);
@@ -1556,7 +1556,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       ) {
         await onLog(
           "stdout",
-          `[paperclip] Codex resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
+          `[bionic] Codex resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
         );
         const retry = await runAttempt(null);
         const retryResult = toResult(retry, true, true);
@@ -1578,21 +1578,21 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       try {
         await providerStop.collectBeforeRestore();
       } finally {
-        if (paperclipBridge) {
-          await paperclipBridge.stop();
+        if (bionicBridge) {
+          await bionicBridge.stop();
         }
         if (restoreRemoteWorkspace) {
           try {
             await onLog(
               "stdout",
-              `[paperclip] Restoring workspace changes from ${describeAdapterExecutionTarget(executionTarget)}.\n`,
+              `[bionic] Restoring workspace changes from ${describeAdapterExecutionTarget(executionTarget)}.\n`,
             );
             await restoreRemoteWorkspace();
           } catch (error) {
             await Promise.resolve(
               onLog(
                 "stderr",
-                `[paperclip] Failed to restore workspace changes from ${describeAdapterExecutionTarget(
+                `[bionic] Failed to restore workspace changes from ${describeAdapterExecutionTarget(
                   executionTarget,
                 )}: ${error instanceof Error ? error.message : String(error)}\n`,
               ),
@@ -1613,13 +1613,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       await fs.rm(stagedCodexHomeDir, { recursive: true, force: true }).catch(async (error) => {
         await onLog(
           "stderr",
-          `[paperclip] Failed to remove staged Codex home "${stagedCodexHomeDir}": ${
+          `[bionic] Failed to remove staged Codex home "${stagedCodexHomeDir}": ${
             error instanceof Error ? error.message : String(error)
           }\n`,
         );
       });
     }
-    // Restore the managed config.toml so PAPERCLIP_CODEX_PROVIDERS changes
+    // Restore the managed config.toml so BIONIC_CODEX_PROVIDERS changes
     // (or removal) between runs never leave stale provider routing behind. This
     // finally starts the moment prepareCodexRuntimeConfig returns, so a throw
     // anywhere in the remaining setup (skill injection, remote runtime

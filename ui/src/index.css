@@ -144,16 +144,16 @@
   --chip-match-identifier-bg: var(--muted);
   --chip-match-identifier-fg: var(--muted-foreground);
   --chip-match-identifier-border: var(--border);
-  --paperclip-doc-annotation-highlight-source: oklch(0.78 0.16 89);
-  --paperclip-doc-annotation-highlight-open: color-mix(in srgb, var(--paperclip-doc-annotation-highlight-source) 58%, var(--background));
-  --paperclip-doc-annotation-highlight-focused: color-mix(in srgb, var(--paperclip-doc-annotation-highlight-source) 60%, var(--background));
-  --paperclip-doc-annotation-highlight-stale: color-mix(in srgb, var(--paperclip-doc-annotation-highlight-source) 48%, var(--background));
-  --paperclip-doc-annotation-highlight-resolved: color-mix(in srgb, var(--paperclip-doc-annotation-highlight-source) 28%, var(--background));
-  --paperclip-doc-annotation-highlight-x-outset: 0.25rem;
-  --paperclip-doc-annotation-highlight-y-outset: 0.125rem;
-  --paperclip-doc-annotation-highlight-radius: 0.1875rem;
+  --bionic-doc-annotation-highlight-source: oklch(0.78 0.16 89);
+  --bionic-doc-annotation-highlight-open: color-mix(in srgb, var(--bionic-doc-annotation-highlight-source) 58%, var(--background));
+  --bionic-doc-annotation-highlight-focused: color-mix(in srgb, var(--bionic-doc-annotation-highlight-source) 60%, var(--background));
+  --bionic-doc-annotation-highlight-stale: color-mix(in srgb, var(--bionic-doc-annotation-highlight-source) 48%, var(--background));
+  --bionic-doc-annotation-highlight-resolved: color-mix(in srgb, var(--bionic-doc-annotation-highlight-source) 28%, var(--background));
+  --bionic-doc-annotation-highlight-x-outset: 0.25rem;
+  --bionic-doc-annotation-highlight-y-outset: 0.125rem;
+  --bionic-doc-annotation-highlight-radius: 0.1875rem;
 
-  /* Brand agent-capsule gradient stops (paperclip.ing/brand/).
+  /* Brand agent-capsule gradient stops (bionic.ing/brand/).
      "The capsule is the agent" — each agent gets a 2-stop gradient,
      --agent-Na (top) → --agent-Nb (bottom). Brand-fixed hex, identical
      across themes. Indices 1–10; consumed by AgentCapsule. */
@@ -453,50 +453,50 @@
   background-color: var(--streamlined-task-detail-bg);
 }
 
-::highlight(paperclip-doc-annotation-open) {
+::highlight(bionic-doc-annotation-open) {
   background-color: transparent;
   color: inherit;
 }
 
-::highlight(paperclip-doc-annotation-focused) {
+::highlight(bionic-doc-annotation-focused) {
   background-color: transparent;
   color: inherit;
 }
 
-::highlight(paperclip-doc-annotation-stale) {
+::highlight(bionic-doc-annotation-stale) {
   background-color: transparent;
   color: inherit;
 }
 
-::highlight(paperclip-doc-annotation-resolved) {
+::highlight(bionic-doc-annotation-resolved) {
   background-color: transparent;
   color: inherit;
 }
 
-.paperclip-doc-annotation-highlight::before {
+.bionic-doc-annotation-highlight::before {
   position: absolute;
   inset:
-    calc(-1 * var(--paperclip-doc-annotation-highlight-y-outset))
-    calc(-1 * var(--paperclip-doc-annotation-highlight-x-outset));
-  border-radius: var(--paperclip-doc-annotation-highlight-radius);
-  background-color: var(--paperclip-doc-annotation-highlight-open);
+    calc(-1 * var(--bionic-doc-annotation-highlight-y-outset))
+    calc(-1 * var(--bionic-doc-annotation-highlight-x-outset));
+  border-radius: var(--bionic-doc-annotation-highlight-radius);
+  background-color: var(--bionic-doc-annotation-highlight-open);
   content: "";
   transition-property: background-color;
   transition-duration: var(--motion-duration-fast);
   transition-timing-function: var(--motion-ease-standard);
 }
 
-.paperclip-doc-annotation-highlight[data-focused="true"]:not([data-anchor-state="stale"]):not([data-status="resolved"])::before,
-.paperclip-doc-annotation-highlight[data-hovered="true"]:not([data-anchor-state="stale"]):not([data-status="resolved"])::before {
-  background-color: var(--paperclip-doc-annotation-highlight-focused);
+.bionic-doc-annotation-highlight[data-focused="true"]:not([data-anchor-state="stale"]):not([data-status="resolved"])::before,
+.bionic-doc-annotation-highlight[data-hovered="true"]:not([data-anchor-state="stale"]):not([data-status="resolved"])::before {
+  background-color: var(--bionic-doc-annotation-highlight-focused);
 }
 
-.paperclip-doc-annotation-highlight[data-anchor-state="stale"]:not([data-status="resolved"])::before {
-  background-color: var(--paperclip-doc-annotation-highlight-stale);
+.bionic-doc-annotation-highlight[data-anchor-state="stale"]:not([data-status="resolved"])::before {
+  background-color: var(--bionic-doc-annotation-highlight-stale);
 }
 
-.paperclip-doc-annotation-highlight[data-status="resolved"]::before {
-  background-color: var(--paperclip-doc-annotation-highlight-resolved);
+.bionic-doc-annotation-highlight[data-status="resolved"]::before {
+  background-color: var(--bionic-doc-annotation-highlight-resolved);
 }
 
 @layer base {
@@ -556,8 +556,8 @@
     touch-action: manipulation;
   }
   /* Let font-mono (utilities layer) override for monospace editors */
-  .paperclip-mdxeditor [class*="_placeholder_"],
-  .paperclip-mdxeditor-content {
+  .bionic-mdxeditor [class*="_placeholder_"],
+  .bionic-mdxeditor-content {
     font-family: inherit;
   }
 }
@@ -609,27 +609,27 @@
     flex-shrink: 0;
   }
 
-  .paperclip-task-list-toolbar > :first-child {
+  .bionic-task-list-toolbar > :first-child {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .paperclip-task-list-toolbar [data-slot="collection-toolbar-search"] {
+  .bionic-task-list-toolbar [data-slot="collection-toolbar-search"] {
     grid-column: 1;
     grid-row: 1;
   }
 
-  .paperclip-task-list-toolbar [data-slot="collection-toolbar-search"] input {
+  .bionic-task-list-toolbar [data-slot="collection-toolbar-search"] input {
     height: var(--sz-44px);
   }
 
-  .paperclip-task-list-toolbar [data-slot="collection-toolbar-context"] {
+  .bionic-task-list-toolbar [data-slot="collection-toolbar-context"] {
     grid-column: 2;
     grid-row: 1;
   }
 
-  .paperclip-task-list-toolbar [data-slot="collection-toolbar-context"] button,
-  .paperclip-task-list-toolbar [data-slot="collection-toolbar-controls"] button {
+  .bionic-task-list-toolbar [data-slot="collection-toolbar-context"] button,
+  .bionic-task-list-toolbar [data-slot="collection-toolbar-controls"] button {
     width: var(--sz-44px);
     height: var(--sz-44px);
     min-height: var(--sz-44px);
@@ -637,7 +637,7 @@
     flex-shrink: 0;
   }
 
-  .paperclip-task-list-toolbar > :first-child > :last-child {
+  .bionic-task-list-toolbar > :first-child > :last-child {
     grid-column: 1 / -1;
     grid-row: 2;
   }
@@ -1313,8 +1313,8 @@
   animation: tc-live-ping var(--motion-approval-pulse) var(--motion-ease-standard) infinite;
 }
 
-.paperclip-markdown.task-chat-reasoning-markdown,
-.paperclip-markdown.task-chat-reasoning-markdown :is(h1, h2, h3, h4, h5, h6, strong) {
+.bionic-markdown.task-chat-reasoning-markdown,
+.bionic-markdown.task-chat-reasoning-markdown :is(h1, h2, h3, h4, h5, h6, strong) {
   font-size: inherit;
   font-weight: inherit;
   line-height: inherit;
@@ -1342,8 +1342,8 @@
 }
 
 .task-chat-expanded-line-wrap,
-.paperclip-markdown.task-chat-reasoning-markdown,
-.paperclip-markdown.task-chat-reasoning-markdown :is(p, strong, em, a, code) {
+.bionic-markdown.task-chat-reasoning-markdown,
+.bionic-markdown.task-chat-reasoning-markdown :is(p, strong, em, a, code) {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -1380,11 +1380,11 @@
   animation: shimmer-text-slide 2.5s linear infinite;
 }
 
-.paperclip-thinking-icon {
+.bionic-thinking-icon {
   transform-origin: 50% 50%;
 }
 
-@keyframes paperclip-thinking-draw {
+@keyframes bionic-thinking-draw {
   0% {
     stroke-dasharray: 0 85.717;
     stroke-dashoffset: -85.717;
@@ -1412,8 +1412,8 @@
   }
 }
 
-.paperclip-thinking-icon-path {
-  animation: paperclip-thinking-draw 1s linear infinite;
+.bionic-thinking-icon-path {
+  animation: bionic-thinking-draw 1s linear infinite;
 }
 
 /* Muted variant (task-chat v7 activity rows): the sweep runs over the
@@ -1469,7 +1469,7 @@
     background: none;
   }
 
-  .paperclip-thinking-icon-path {
+  .bionic-thinking-icon-path {
     animation: none;
     opacity: 1;
     stroke-dasharray: 85.717 85.717;
@@ -1585,8 +1585,8 @@
 }
 
 /* MDXEditor theme integration */
-.paperclip-mdxeditor-scope,
-.paperclip-mdxeditor {
+.bionic-mdxeditor-scope,
+.bionic-mdxeditor {
   --baseBase: var(--background);
   --baseBg: transparent;
   --baseBgSubtle: color-mix(in oklab, var(--accent) 35%, transparent);
@@ -1618,37 +1618,37 @@
 }
 
 @media (min-width: 768px) {
-  .paperclip-mdxeditor-scope,
-  .paperclip-mdxeditor {
+  .bionic-mdxeditor-scope,
+  .bionic-mdxeditor {
     font-size: 0.875rem;
   }
 }
 
-.paperclip-mdxeditor-scope [class*="_iconButton_"],
-.paperclip-mdxeditor [class*="_iconButton_"] {
+.bionic-mdxeditor-scope [class*="_iconButton_"],
+.bionic-mdxeditor [class*="_iconButton_"] {
   color: var(--baseText);
 }
 
-.paperclip-mdxeditor-scope [class*="_iconButton_"]:hover,
-.paperclip-mdxeditor [class*="_iconButton_"]:hover {
+.bionic-mdxeditor-scope [class*="_iconButton_"]:hover,
+.bionic-mdxeditor [class*="_iconButton_"]:hover {
   color: var(--baseTextContrast);
 }
 
-.paperclip-mdxeditor .mdxeditor-root-contenteditable {
+.bionic-mdxeditor .mdxeditor-root-contenteditable {
   min-height: 2.5rem;
   padding: 0;
   line-height: 1.5;
 }
 
-.paperclip-mdxeditor [class*="_contentEditable_"] {
+.bionic-mdxeditor [class*="_contentEditable_"] {
   padding: 0.375rem 0.625rem !important;
 }
 
-.paperclip-mdxeditor--borderless [class*="_contentEditable_"] {
+.bionic-mdxeditor--borderless [class*="_contentEditable_"] {
   padding: 0 !important;
 }
 
-.paperclip-mdxeditor [class*="_placeholder_"] {
+.bionic-mdxeditor [class*="_placeholder_"] {
   font-size: inherit;
   line-height: 1.5;
   color: var(--muted-foreground);
@@ -1657,54 +1657,54 @@
 /* MDXEditor defaults placeholders to a single clipped line. The task-chat
    composer uses longer, assignee-aware copy, so keep it inside the editor by
    giving the absolutely positioned placeholder a wrapping inline size. */
-.paperclip-task-chat-composer .paperclip-mdxeditor [class*="_placeholder_"] {
+.bionic-task-chat-composer .bionic-mdxeditor [class*="_placeholder_"] {
   display: block;
   width: 100%;
   overflow-wrap: anywhere;
   white-space: normal;
 }
 
-.paperclip-mdxeditor-content {
+.bionic-mdxeditor-content {
   font-size: inherit;
   line-height: inherit;
   color: inherit;
 }
 
-.paperclip-edit-in-place-content {
+.bionic-edit-in-place-content {
   font-size: 0.9375rem;
   line-height: 1.75rem;
 }
 
-.paperclip-mdxeditor-content > *:first-child {
+.bionic-mdxeditor-content > *:first-child {
   margin-top: 0;
 }
 
-.paperclip-mdxeditor-content > *:last-child {
+.bionic-mdxeditor-content > *:last-child {
   margin-bottom: 0;
 }
 
-.paperclip-mdxeditor-content p {
+.bionic-mdxeditor-content p {
   margin: 0;
   line-height: inherit;
 }
 
-.paperclip-mdxeditor-content p + p {
+.bionic-mdxeditor-content p + p {
   margin-top: 1.1em;
 }
 
-.paperclip-mdxeditor-content a:not(.paperclip-mention-chip):not(.paperclip-project-mention-chip) {
+.bionic-mdxeditor-content a:not(.bionic-mention-chip):not(.bionic-project-mention-chip) {
   color: color-mix(in oklab, var(--foreground) 76%, #0969da 24%);
   text-decoration: underline;
   text-underline-offset: 0.15em;
   cursor: pointer;
 }
 
-.dark .paperclip-mdxeditor-content a:not(.paperclip-mention-chip):not(.paperclip-project-mention-chip) {
+.dark .bionic-mdxeditor-content a:not(.bionic-mention-chip):not(.bionic-project-mention-chip) {
   color: color-mix(in oklab, var(--foreground) 80%, #58a6ff 20%);
 }
 
-.paperclip-mdxeditor-content a.paperclip-mention-chip,
-.paperclip-mdxeditor-content a.paperclip-project-mention-chip {
+.bionic-mdxeditor-content a.bionic-mention-chip,
+.bionic-mdxeditor-content a.bionic-project-mention-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -1724,35 +1724,35 @@
 
 /* Strip the MDXEditor's default inline-code styling from the text inside chips
    (the link label otherwise picks up a monospace font + gray tint). */
-.paperclip-mdxeditor-content a.paperclip-mention-chip code,
-.paperclip-mdxeditor-content a.paperclip-project-mention-chip code {
+.bionic-mdxeditor-content a.bionic-mention-chip code,
+.bionic-mdxeditor-content a.bionic-project-mention-chip code {
   font-family: inherit;
   background: none;
   color: inherit;
   padding: 0;
 }
 
-.paperclip-mdxeditor-content a.paperclip-mention-chip::before,
-a.paperclip-mention-chip::before {
+.bionic-mdxeditor-content a.bionic-mention-chip::before,
+a.bionic-mention-chip::before {
   content: "";
   flex: none;
 }
 
-.paperclip-mdxeditor-content a.paperclip-mention-chip[data-mention-kind="project"]::before,
-a.paperclip-mention-chip[data-mention-kind="project"]::before {
+.bionic-mdxeditor-content a.bionic-mention-chip[data-mention-kind="project"]::before,
+a.bionic-mention-chip[data-mention-kind="project"]::before {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 999px;
-  background-color: var(--paperclip-mention-project-color, currentColor);
+  background-color: var(--bionic-mention-project-color, currentColor);
 }
 
-.paperclip-mdxeditor-content a.paperclip-mention-chip[data-mention-kind="agent"]::before,
-a.paperclip-mention-chip[data-mention-kind="agent"]::before {
+.bionic-mdxeditor-content a.bionic-mention-chip[data-mention-kind="agent"]::before,
+a.bionic-mention-chip[data-mention-kind="agent"]::before {
   width: 0.75rem;
   height: 0.75rem;
   background-color: currentColor;
-  -webkit-mask-image: var(--paperclip-mention-icon-mask);
-  mask-image: var(--paperclip-mention-icon-mask);
+  -webkit-mask-image: var(--bionic-mention-icon-mask);
+  mask-image: var(--bionic-mention-icon-mask);
   -webkit-mask-position: center;
   mask-position: center;
   -webkit-mask-repeat: no-repeat;
@@ -1761,57 +1761,57 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   mask-size: contain;
 }
 
-.paperclip-mdxeditor-content ul,
-.paperclip-mdxeditor-content ol {
+.bionic-mdxeditor-content ul,
+.bionic-mdxeditor-content ol {
   margin: 1.1em 0;
   padding-left: 1.6em;
 }
 
-.paperclip-mdxeditor-content ul {
+.bionic-mdxeditor-content ul {
   list-style: disc;
 }
 
-.paperclip-mdxeditor-content ol {
+.bionic-mdxeditor-content ol {
   list-style: decimal;
 }
 
-.paperclip-mdxeditor-content li {
+.bionic-mdxeditor-content li {
   display: list-item;
   margin: 0.3em 0;
   line-height: inherit;
 }
 
-.paperclip-mdxeditor-content li::marker {
+.bionic-mdxeditor-content li::marker {
   color: var(--muted-foreground);
 }
 
-.paperclip-mdxeditor-content h1 {
+.bionic-mdxeditor-content h1 {
   margin: 1.4em 0 0.9em;
   font-size: 1.75em;
   font-weight: 700;
   line-height: 1.2;
 }
 
-.paperclip-mdxeditor-content h2 {
+.bionic-mdxeditor-content h2 {
   margin: 1.3em 0 0.85em;
   font-size: 1.35em;
   font-weight: 700;
   line-height: 1.3;
 }
 
-.paperclip-mdxeditor-content h3 {
+.bionic-mdxeditor-content h3 {
   margin: 1.2em 0 0.8em;
   font-size: 1.15em;
   font-weight: 600;
   line-height: 1.35;
 }
 
-.paperclip-mdxeditor-content img {
+.bionic-mdxeditor-content img {
   max-height: 18rem;
   border-radius: calc(var(--radius) - 2px);
 }
 
-.paperclip-mdxeditor-content blockquote {
+.bionic-mdxeditor-content blockquote {
   margin: 1.2em 0;
   padding-left: 1em;
   border-left: 3px solid var(--border);
@@ -1819,12 +1819,12 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   line-height: inherit;
 }
 
-.paperclip-mdxeditor-content code {
+.bionic-mdxeditor-content code {
   font-family: var(--font-mono);
   font-size: 1em;
 }
 
-.paperclip-mdxeditor-content pre {
+.bionic-mdxeditor-content pre {
   margin: 0.4rem 0;
   padding: 0;
   border: 1px solid var(--border);
@@ -1836,50 +1836,50 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
 
 /* Dark theme for CodeMirror code blocks inside the MDXEditor.
    Overrides the default cm6-theme-basic-light that MDXEditor bundles. */
-.paperclip-mdxeditor .cm-editor {
+.bionic-mdxeditor .cm-editor {
   background-color: #1e1e2e !important;
   color: #cdd6f4 !important;
   font-size: 1em;
 }
 
-.paperclip-mdxeditor .cm-gutters {
+.bionic-mdxeditor .cm-gutters {
   background-color: #181825 !important;
   color: #585b70 !important;
   border-right: 1px solid #313244 !important;
 }
 
-.paperclip-mdxeditor .cm-activeLineGutter {
+.bionic-mdxeditor .cm-activeLineGutter {
   background-color: #1e1e2e !important;
 }
 
-.paperclip-mdxeditor .cm-activeLine {
+.bionic-mdxeditor .cm-activeLine {
   background-color: color-mix(in oklab, #cdd6f4 5%, transparent) !important;
 }
 
-.paperclip-mdxeditor .cm-cursor,
-.paperclip-mdxeditor .cm-dropCursor {
+.bionic-mdxeditor .cm-cursor,
+.bionic-mdxeditor .cm-dropCursor {
   border-left-color: #cdd6f4 !important;
 }
 
-.paperclip-mdxeditor .cm-selectionBackground {
+.bionic-mdxeditor .cm-selectionBackground {
   background-color: color-mix(in oklab, #89b4fa 25%, transparent) !important;
 }
 
-.paperclip-mdxeditor .cm-focused .cm-selectionBackground {
+.bionic-mdxeditor .cm-focused .cm-selectionBackground {
   background-color: color-mix(in oklab, #89b4fa 30%, transparent) !important;
 }
 
-.paperclip-mdxeditor .cm-content {
+.bionic-mdxeditor .cm-content {
   caret-color: #cdd6f4;
 }
 
 /* MDXEditor code block language selector – show on hover only */
-.paperclip-mdxeditor-content [class*="_codeMirrorWrapper_"] {
+.bionic-mdxeditor-content [class*="_codeMirrorWrapper_"] {
   position: relative;
 }
 
-.paperclip-mdxeditor-content [class*="_codeMirrorToolbar_"],
-.paperclip-mdxeditor-content [class*="_codeBlockToolbar_"] {
+.bionic-mdxeditor-content [class*="_codeMirrorToolbar_"],
+.bionic-mdxeditor-content [class*="_codeBlockToolbar_"] {
   position: absolute;
   top: 0.25rem;
   right: 0.25rem;
@@ -1888,17 +1888,17 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   transition: opacity 150ms ease;
 }
 
-.paperclip-mdxeditor-content [class*="_codeMirrorToolbar_"] select,
-.paperclip-mdxeditor-content [class*="_codeBlockToolbar_"] select {
+.bionic-mdxeditor-content [class*="_codeMirrorToolbar_"] select,
+.bionic-mdxeditor-content [class*="_codeBlockToolbar_"] select {
   background-color: #313244;
   color: #cdd6f4;
   border-color: #45475a;
 }
 
-.paperclip-mdxeditor-content [class*="_codeMirrorWrapper_"]:hover [class*="_codeMirrorToolbar_"],
-.paperclip-mdxeditor-content [class*="_codeMirrorWrapper_"]:hover [class*="_codeBlockToolbar_"],
-.paperclip-mdxeditor-content [class*="_codeMirrorWrapper_"]:focus-within [class*="_codeMirrorToolbar_"],
-.paperclip-mdxeditor-content [class*="_codeMirrorWrapper_"]:focus-within [class*="_codeBlockToolbar_"] {
+.bionic-mdxeditor-content [class*="_codeMirrorWrapper_"]:hover [class*="_codeMirrorToolbar_"],
+.bionic-mdxeditor-content [class*="_codeMirrorWrapper_"]:hover [class*="_codeBlockToolbar_"],
+.bionic-mdxeditor-content [class*="_codeMirrorWrapper_"]:focus-within [class*="_codeMirrorToolbar_"],
+.bionic-mdxeditor-content [class*="_codeMirrorWrapper_"]:focus-within [class*="_codeBlockToolbar_"] {
   opacity: 1;
 }
 
@@ -1907,7 +1907,7 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
    light and dark instead of pinning the old Catppuccin #1e1e2e/#cdd6f4 in
    both modes. Override prose CSS variables so prose-invert can't revert to
    defaults. */
-.paperclip-markdown {
+.bionic-markdown {
   --tw-prose-pre-bg: var(--muted);
   --tw-prose-pre-code: var(--foreground);
   --tw-prose-code: var(--foreground);
@@ -1916,7 +1916,7 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   --tw-prose-invert-code: var(--foreground);
 }
 
-.paperclip-markdown pre {
+.bionic-markdown pre {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
   background-color: var(--muted) !important;
@@ -1928,23 +1928,23 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   white-space: pre;
 }
 
-.paperclip-markdown code {
+.bionic-markdown code {
   font-family: var(--font-mono);
   font-size: 1em;
 }
 
-.paperclip-markdown pre code {
+.bionic-markdown pre code {
   font-size: inherit;
   color: inherit;
   background: none;
 }
 
 /* Actions for fenced and indented preformatted markdown blocks */
-.paperclip-markdown-codeblock {
+.bionic-markdown-codeblock {
   position: relative;
 }
 
-.paperclip-markdown-codeblock-actions {
+.bionic-markdown-codeblock-actions {
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
@@ -1955,7 +1955,7 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   transition: opacity 0.12s ease;
 }
 
-.paperclip-markdown-codeblock-action {
+.bionic-markdown-codeblock-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1972,28 +1972,28 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-.paperclip-markdown-codeblock:hover .paperclip-markdown-codeblock-actions,
-.paperclip-markdown-codeblock-actions:focus-within,
-.paperclip-markdown-codeblock-actions[data-active] {
+.bionic-markdown-codeblock:hover .bionic-markdown-codeblock-actions,
+.bionic-markdown-codeblock-actions:focus-within,
+.bionic-markdown-codeblock-actions[data-active] {
   opacity: 1;
 }
 
-.paperclip-markdown-codeblock-action:hover {
+.bionic-markdown-codeblock-action:hover {
   background-color: var(--accent);
   color: var(--accent-foreground);
 }
 
-.paperclip-markdown-codeblock-action[data-active],
-.paperclip-markdown-codeblock-action[data-copied] {
+.bionic-markdown-codeblock-action[data-active],
+.bionic-markdown-codeblock-action[data-copied] {
   border-color: color-mix(in oklab, var(--primary) 38%, transparent);
   color: var(--primary);
 }
 
-.paperclip-markdown-codeblock-action[data-failed] {
+.bionic-markdown-codeblock-action[data-failed] {
   color: var(--destructive);
 }
 
-.paperclip-markdown-codeblock-action-label {
+.bionic-markdown-codeblock-action-label {
   font-weight: 500;
 }
 
@@ -2015,18 +2015,18 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   background-color: #ffffff0f;
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent :not(pre) > code {
+.bionic-markdown.bionic-markdown-on-accent :not(pre) > code {
   background-color: color-mix(in oklab, currentColor 24%, transparent);
   color: currentColor;
 }
 
-.paperclip-markdown {
+.bionic-markdown {
   color: var(--foreground);
   font-size: 0.9375rem;
   line-height: 1.6;
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent {
+.bionic-markdown.bionic-markdown-on-accent {
   color: inherit;
   --tw-prose-body: currentColor;
   --tw-prose-headings: currentColor;
@@ -2058,62 +2058,62 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   --tw-prose-invert-td-borders: color-mix(in oklab, currentColor 22%, transparent);
 }
 
-.paperclip-markdown > :first-child {
+.bionic-markdown > :first-child {
   margin-top: 0;
 }
 
-.paperclip-markdown > :last-child {
+.bionic-markdown > :last-child {
   margin-bottom: 0;
 }
 
-.paperclip-markdown :where(p, ul, ol, blockquote, pre, .paperclip-markdown-table-scroll) {
+.bionic-markdown :where(p, ul, ol, blockquote, pre, .bionic-markdown-table-scroll) {
   margin-top: 0.7rem;
   margin-bottom: 0.7rem;
 }
 
-.paperclip-markdown :where(ul, ol) {
+.bionic-markdown :where(ul, ol) {
   padding-left: 1.5rem;
 }
 
-.paperclip-markdown ul {
+.bionic-markdown ul {
   list-style-type: disc;
 }
 
-.paperclip-markdown ol {
+.bionic-markdown ol {
   /* Enough inline start room to hold outside markers without clipped digits
      when markdown lists sit flush against an overflow-constrained container. */
   list-style-type: decimal;
   padding-left: 2.5rem;
 }
 
-.paperclip-markdown li {
+.bionic-markdown li {
   margin: 0.14rem 0;
   padding-left: 0.2rem;
 }
 
 @media (width < 48rem) {
-  .paperclip-mobile-thread .paperclip-markdown :where(ul, ol) {
+  .bionic-mobile-thread .bionic-markdown :where(ul, ol) {
     padding-left: calc(var(--spacing) * 5);
   }
 }
 
-.paperclip-markdown li > :where(p, ul, ol) {
+.bionic-markdown li > :where(p, ul, ol) {
   margin-top: 0.3rem;
   margin-bottom: 0.3rem;
 }
 
-.paperclip-markdown li::marker {
+.bionic-markdown li::marker {
   color: var(--muted-foreground);
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent li::marker {
+.bionic-markdown.bionic-markdown-on-accent li::marker {
   color: currentColor;
 }
 
-.paperclip-markdown h1,
-.paperclip-markdown h2,
-.paperclip-markdown h3,
-.paperclip-markdown h4 {
+.bionic-markdown h1,
+.bionic-markdown h2,
+.bionic-markdown h3,
+.bionic-markdown h4 {
   margin-top: 1.75rem;
   margin-bottom: 0.45rem;
   color: var(--foreground);
@@ -2122,147 +2122,147 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   line-height: 1.3;
 }
 
-.paperclip-markdown h1 {
+.bionic-markdown h1 {
   font-size: 1.5rem;
 }
 
-.paperclip-markdown h2 {
+.bionic-markdown h2 {
   font-size: 1.25rem;
 }
 
-.paperclip-markdown h3 {
+.bionic-markdown h3 {
   font-size: 1.05rem;
 }
 
-.paperclip-markdown h4 {
+.bionic-markdown h4 {
   font-size: 0.95rem;
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent :where(h1, h2, h3, h4, strong, b) {
+.bionic-markdown.bionic-markdown-on-accent :where(h1, h2, h3, h4, strong, b) {
   color: currentColor;
 }
 
-.paperclip-markdown :where(strong, b) {
+.bionic-markdown :where(strong, b) {
   color: var(--foreground);
   font-weight: 600;
 }
 
-.paperclip-markdown a {
+.bionic-markdown a {
   color: color-mix(in oklab, var(--foreground) 76%, #0969da 24%);
   text-decoration: underline;
   text-underline-offset: 0.15em;
   cursor: pointer;
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent :where(a, a:visited) {
+.bionic-markdown.bionic-markdown-on-accent :where(a, a:visited) {
   color: currentColor;
   text-decoration-color: color-mix(in oklab, currentColor 72%, transparent);
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent :where(a:hover, a:focus-visible) {
+.bionic-markdown.bionic-markdown-on-accent :where(a:hover, a:focus-visible) {
   color: currentColor;
   text-decoration-color: currentColor;
 }
 
-.paperclip-markdown a.paperclip-mention-chip {
+.bionic-markdown a.bionic-mention-chip {
   text-decoration: none;
 }
 
-.paperclip-markdown a.paperclip-mention-chip[data-mention-kind="issue"] {
+.bionic-markdown a.bionic-mention-chip[data-mention-kind="issue"] {
   border-color: color-mix(in oklab, var(--foreground) 14%, var(--border) 86%);
   background: color-mix(in oklab, var(--accent) 42%, transparent);
 }
 
 /* Inline issue references in markdown: no pill chrome, just a status icon
    beside the link label — keeps the pair from splitting across lines. */
-.paperclip-markdown-issue-ref {
+.bionic-markdown-issue-ref {
   display: inline;
   white-space: nowrap;
 }
 
 /* External object URL decorations follow the same pattern: the host renders
    the icon prefix, the link text is left untouched (Postel's Law). */
-.paperclip-markdown-external-ref {
+.bionic-markdown-external-ref {
   display: inline;
   white-space: nowrap;
 }
 
-.dark .paperclip-markdown a {
+.dark .bionic-markdown a {
   color: color-mix(in oklab, var(--foreground) 80%, #58a6ff 20%);
 }
 
-.dark .paperclip-markdown.paperclip-markdown-on-accent :where(a, a:visited) {
+.dark .bionic-markdown.bionic-markdown-on-accent :where(a, a:visited) {
   color: currentColor;
 }
 
-.paperclip-markdown blockquote {
+.bionic-markdown blockquote {
   margin-left: 0;
   padding-left: 0.95rem;
   border-left: 0.24rem solid color-mix(in oklab, var(--border) 84%, var(--muted-foreground) 16%);
   color: var(--muted-foreground);
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent blockquote {
+.bionic-markdown.bionic-markdown-on-accent blockquote {
   border-left-color: color-mix(in oklab, currentColor 56%, transparent);
   color: color-mix(in oklab, currentColor 88%, transparent);
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent .paperclip-workspace-file-link {
+.bionic-markdown.bionic-markdown-on-accent .bionic-workspace-file-link {
   border-color: color-mix(in oklab, currentColor 34%, transparent);
   background-color: color-mix(in oklab, currentColor 16%, transparent);
   color: currentColor;
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent .paperclip-workspace-file-link:hover {
+.bionic-markdown.bionic-markdown-on-accent .bionic-workspace-file-link:hover {
   background-color: color-mix(in oklab, currentColor 24%, transparent);
 }
 
-.paperclip-markdown.paperclip-markdown-on-accent :where(a.paperclip-mention-chip, a.paperclip-project-mention-chip) {
+.bionic-markdown.bionic-markdown-on-accent :where(a.bionic-mention-chip, a.bionic-project-mention-chip) {
   border-color: color-mix(in oklab, currentColor 34%, transparent) !important;
   background: color-mix(in oklab, currentColor 16%, transparent) !important;
   color: currentColor !important;
 }
 
-.paperclip-markdown hr {
+.bionic-markdown hr {
   margin: 1.25rem 0;
   border-color: var(--border);
 }
 
-.paperclip-markdown img {
+.bionic-markdown img {
   border-radius: calc(var(--radius) + 2px);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent);
 }
 
-.paperclip-markdown-table-scroll {
+.bionic-markdown-table-scroll {
   max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
 
-.paperclip-markdown-table-scroll:focus-visible {
+.bionic-markdown-table-scroll:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-.paperclip-markdown-table-scroll table {
+.bionic-markdown-table-scroll table {
   width: max-content;
   min-width: 100%;
   margin: 0;
 }
 
-.paperclip-markdown-table-scroll :where(th, td) {
+.bionic-markdown-table-scroll :where(th, td) {
   min-width: 8rem;
   max-width: 18rem;
   vertical-align: top;
 }
 
-.paperclip-markdown th {
+.bionic-markdown th {
   font-weight: 600;
   text-align: left;
 }
 
-.paperclip-mermaid {
+.bionic-mermaid {
   margin: 0.5rem 0;
   padding: 0.45rem 0.55rem;
   border: 1px solid var(--border);
@@ -2271,7 +2271,7 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   overflow-x: auto;
 }
 
-.paperclip-mermaid svg {
+.bionic-mermaid svg {
   display: block;
   width: max-content;
   max-width: none;
@@ -2279,17 +2279,17 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
   height: auto;
 }
 
-.paperclip-mermaid-status {
+.bionic-mermaid-status {
   margin: 0 0 0.45rem;
   font-size: 0.75rem;
   color: var(--muted-foreground);
 }
 
-.paperclip-mermaid-status-error {
+.bionic-mermaid-status-error {
   color: var(--destructive);
 }
 
-.paperclip-mermaid-source {
+.bionic-mermaid-source {
   margin: 0;
   padding: 0;
   border: 0;
@@ -2297,10 +2297,10 @@ a.paperclip-mention-chip[data-mention-kind="agent"]::before {
 }
 
 /* Mention chips rendered inline in prose (MarkdownBody or inline anchors) */
-a.paperclip-mention-chip,
-a.paperclip-project-mention-chip,
-span.paperclip-mention-chip,
-span.paperclip-project-mention-chip {
+a.bionic-mention-chip,
+a.bionic-project-mention-chip,
+span.bionic-mention-chip,
+span.bionic-project-mention-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -2324,28 +2324,28 @@ span.paperclip-project-mention-chip {
 /* Touch target floor: WCAG 2.5.5 expects ≥24px on coarse pointers. The base
    chip is 22px; bump it on touch viewports without disturbing inline metrics. */
 @media (pointer: coarse) {
-  a.paperclip-mention-chip,
-  a.paperclip-project-mention-chip,
-  span.paperclip-mention-chip,
-  span.paperclip-project-mention-chip {
+  a.bionic-mention-chip,
+  a.bionic-project-mention-chip,
+  span.bionic-mention-chip,
+  span.bionic-project-mention-chip {
     min-height: 24px;
   }
 }
 
 /* External object pills: variant marker the host renders for known-resolved
    external URLs. Inline status icon is rendered by ExternalObjectStatusIcon. */
-a.paperclip-mention-chip[data-mention-kind="external-object"],
-span.paperclip-mention-chip[data-mention-kind="external-object"] {
+a.bionic-mention-chip[data-mention-kind="external-object"],
+span.bionic-mention-chip[data-mention-kind="external-object"] {
   /* Inherit base chip styling; status colour comes from inline classes so the
      host can vary tone per category without defining a CSS variant per state. */
 }
 
 /* When the identifier inside a chip is backtick-wrapped in markdown, strip the
    inline-code monospace/gray styling so the pill label reads cleanly. */
-.paperclip-markdown a.paperclip-mention-chip code,
-.paperclip-markdown a.paperclip-project-mention-chip code,
-.paperclip-markdown span.paperclip-mention-chip code,
-.paperclip-markdown span.paperclip-project-mention-chip code {
+.bionic-markdown a.bionic-mention-chip code,
+.bionic-markdown a.bionic-project-mention-chip code,
+.bionic-markdown span.bionic-mention-chip code,
+.bionic-markdown span.bionic-project-mention-chip code {
   font-family: inherit;
   background: none;
   color: inherit;
@@ -2408,7 +2408,7 @@ span.paperclip-mention-chip[data-mention-kind="external-object"] {
    - components/IssueColumns.tsx (accentColor fallback) — also feeds pickTextColorForPillBg() contrast math.
    - components/CompanyPatternIcon.tsx — canvas fillStyle computed at runtime from numeric props, not a static literal.
    - pages/InviteUxLab.tsx (brandColor prop, x2) — demo/showcase-only prop feeding CompanyPatternIcon's hexToHue() color math, not a rendered CSS value. REMOVED: the brandColor prop was deleted, so the props no longer exist.
-   - components/FileViewerSheet.tsx — half-migrated var(--paperclip-code-highlight-*, fallback) pattern at the time of Batch 1; RESOLVED in Batch 4 via *-resolved wrapper tokens (see the Batch 4 MISC token block below) — no longer allowlisted.
+   - components/FileViewerSheet.tsx — half-migrated var(--bionic-code-highlight-*, fallback) pattern at the time of Batch 1; RESOLVED in Batch 4 via *-resolved wrapper tokens (see the Batch 4 MISC token block below) — no longer allowlisted.
 */
 :root {
   --hex-959596: #959596; /* Muted feed actor/verb/title text (ActivityFeed.tsx, FeedCard.tsx) — PRIOR-ART-flagged gap cluster, no existing token match. */
@@ -2847,12 +2847,12 @@ span.paperclip-mention-chip[data-mention-kind="external-object"] {
   --blur-1px: 1px; /* Extracted from ui/src/components/ChatComposer.tsx (backdrop-blur-[1px]). */
   --blur-2px: 2px; /* Extracted from ui/src/components/IssueChatThread.tsx (backdrop-blur-[2px]). */
   --drop-shadow-extract-1: 0 1px 2px rgba(0,0,0,0.65); /* Extracted from ui/src/components/CompanyPatternIcon.tsx (drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]). */
-  --code-bg-resolved: var(--paperclip-code-bg, var(--muted)); /* Extracted from ui/src/components/FileViewerSheet.tsx (bg-[var(--paperclip-code-bg,theme(colors.muted.DEFAULT))]). */
-  --paperclip-code-highlight-bg: rgba(250,204,21,0.12); /* DECISION-SHEET.md A5: FileViewerSheet.tsx referenced this var without it ever being defined, relying on the var() fallback; minted here at exactly the former fallback value (zero pixels). */
-  --paperclip-code-highlight-border: rgb(234,179,8); /* DECISION-SHEET.md A5: same as --paperclip-code-highlight-bg — minted at the former fallback value. */
-  --code-highlight-bg-resolved: var(--paperclip-code-highlight-bg); /* Extracted from ui/src/components/FileViewerSheet.tsx; fallback dropped in A5 now that --paperclip-code-highlight-bg is a real token (was var(--paperclip-code-highlight-bg, rgba(250,204,21,0.12))). */
-  --code-gutter-fg-resolved: var(--paperclip-code-gutter-fg, var(--muted-foreground)); /* Extracted from ui/src/components/FileViewerSheet.tsx (text-[var(--paperclip-code-gutter-fg,theme(colors.muted.foreground))]). */
-  --code-highlight-border-resolved: var(--paperclip-code-highlight-border); /* Extracted from ui/src/components/FileViewerSheet.tsx; fallback dropped in A5 now that --paperclip-code-highlight-border is a real token (was var(--paperclip-code-highlight-border, rgb(234,179,8))). */
+  --code-bg-resolved: var(--bionic-code-bg, var(--muted)); /* Extracted from ui/src/components/FileViewerSheet.tsx (bg-[var(--bionic-code-bg,theme(colors.muted.DEFAULT))]). */
+  --bionic-code-highlight-bg: rgba(250,204,21,0.12); /* DECISION-SHEET.md A5: FileViewerSheet.tsx referenced this var without it ever being defined, relying on the var() fallback; minted here at exactly the former fallback value (zero pixels). */
+  --bionic-code-highlight-border: rgb(234,179,8); /* DECISION-SHEET.md A5: same as --bionic-code-highlight-bg — minted at the former fallback value. */
+  --code-highlight-bg-resolved: var(--bionic-code-highlight-bg); /* Extracted from ui/src/components/FileViewerSheet.tsx; fallback dropped in A5 now that --bionic-code-highlight-bg is a real token (was var(--bionic-code-highlight-bg, rgba(250,204,21,0.12))). */
+  --code-gutter-fg-resolved: var(--bionic-code-gutter-fg, var(--muted-foreground)); /* Extracted from ui/src/components/FileViewerSheet.tsx (text-[var(--bionic-code-gutter-fg,theme(colors.muted.foreground))]). */
+  --code-highlight-border-resolved: var(--bionic-code-highlight-border); /* Extracted from ui/src/components/FileViewerSheet.tsx; fallback dropped in A5 now that --bionic-code-highlight-border is a real token (was var(--bionic-code-highlight-border, rgb(234,179,8))). */
   --gradient-extract-25: linear-gradient(135deg,var(--primary) 0%,var(--accent) 55%,var(--muted) 100%); /* Extracted from ui/src/components/SidebarAccountMenu.tsx; corrected for full-color semantic tokens. */
   --gradient-extract-26: linear-gradient(135deg,var(--primary) 0%,var(--accent) 58%,color-mix(in oklab,var(--background) 76%,white 24%) 100%); /* Extracted from ui/src/pages/ProfileSettings.tsx; corrected for full-color semantic tokens. */
 }
@@ -3181,7 +3181,7 @@ span.paperclip-mention-chip[data-mention-kind="external-object"] {
 
 :root {
   /* Browser Use live viewer chrome: 30px tab strip + 40px navigation bar.
-     Provider integration measurement (2026-09-29), not Paperclip spacing.
+     Provider integration measurement (2026-09-29), not Bionic spacing.
      Keep navigation visible; the cross-origin viewer exposes no sizing message. */
   --browser-use-viewer-chrome-height: 70px;
 }

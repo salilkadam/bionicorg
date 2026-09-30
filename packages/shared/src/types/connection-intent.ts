@@ -41,7 +41,7 @@ export interface ConnectionsSearchResult {
   version: 1;
   query: string;
   results: ConnectionSearchResultItem[];
-  /** Paperclip-authored next step; provider content must never supply this field. */
+  /** Bionic-authored next step; provider content must never supply this field. */
   instruction?: string;
   providerQuestion?: AskUserQuestionsQuestion;
   selectionInteractionId?: string;

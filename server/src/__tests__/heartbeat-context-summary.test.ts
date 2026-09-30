@@ -5,7 +5,7 @@ import {
   summarizeHeartbeatRunContextSnapshot,
   summarizeHeartbeatRunListResultJson,
 } from "../services/heartbeat.js";
-import { renderPaperclipWakePrompt } from "@paperclipai/adapter-utils/server-utils";
+import { renderPaperclipWakePrompt } from "@bionicai/adapter-utils/server-utils";
 
 describe("buildPaperclipTaskMarkdown", () => {
   it("carries current confirmation IDs and proposal data in every fresh or resumed chat assignment", () => {
@@ -235,8 +235,8 @@ describe("buildPaperclipTaskMarkdown", () => {
     expect(markdown).toContain(
       '"contentPath":"/api/attachments/attachment-text/content"',
     );
-    expect(markdown).toContain("PAPERCLIP_API_URL");
-    expect(markdown).toContain("PAPERCLIP_API_KEY");
+    expect(markdown).toContain("BIONIC_API_URL");
+    expect(markdown).toContain("BIONIC_API_KEY");
     expect(markdown).toContain("never invoke `npx`");
     expect(markdown).toContain(
       "Do not infer file contents from filenames or metadata",
@@ -256,7 +256,7 @@ describe("buildPaperclipTaskMarkdown", () => {
         externalChatProvider,
       });
       expect(markdown).toContain("External chat file delivery:");
-      expect(markdown).toContain("paperclip-upload-artifact.sh --chat-comment");
+      expect(markdown).toContain("bionic-upload-artifact.sh --chat-comment");
       expect(markdown).toContain("installed skill location, not the task workspace");
       expect(markdown).toContain("Do not search for a separate provider tool connection");
       expect(markdown).toContain("do not claim provider delivery merely because binding succeeded");
@@ -329,8 +329,8 @@ describe("buildPaperclipTaskMarkdown", () => {
       expect(markdown).toContain("Keep useful wait, blocker, permission, and failure updates");
       expect(markdown).toContain("do not suppress transport-managed progress");
       expect(markdown).toContain('"id":"native-attachment"');
-      expect(markdown).not.toContain("paperclip-upload-artifact.sh");
-      expect(markdown).not.toContain("PAPERCLIP_API_KEY");
+      expect(markdown).not.toContain("bionic-upload-artifact.sh");
+      expect(markdown).not.toContain("BIONIC_API_KEY");
       expect(markdown).not.toContain("/api/attachments/");
     },
   );
@@ -373,7 +373,7 @@ describe("buildPaperclipTaskMarkdown", () => {
       "do not ask for another chat connection",
     );
     expect(markdown).toContain(
-      "attach the file directly to this Paperclip task or paste the needed text",
+      "attach the file directly to this Bionic task or paste the needed text",
     );
     expect(markdown).toContain(
       "Never borrow browser cookies or forward credentials to an attachment URL",
@@ -687,7 +687,7 @@ describe("summarizeHeartbeatRunContextSnapshot", () => {
       wakeReason: "retry_failed_run",
       wakeSource: "on_demand",
       wakeTriggerDetail: "manual",
-      paperclipWake: {
+      bionicWake: {
         comments: [
           {
             body: "x".repeat(50_000),
@@ -714,7 +714,7 @@ describe("summarizeHeartbeatRunContextSnapshot", () => {
   it("returns null when no allowed fields are present", () => {
     expect(
       summarizeHeartbeatRunContextSnapshot({
-        paperclipWake: { comments: [{ body: "hello" }] },
+        bionicWake: { comments: [{ body: "hello" }] },
       }),
     ).toBeNull();
   });

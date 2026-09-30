@@ -50,7 +50,7 @@ describe("runtime exposure port policy", () => {
     expect(() => deriveViteHmrPort(52000)).toThrow(RangeError);
   });
 
-  it("shares the generic Paperclip HMR derivation with high-port overflow fallback", () => {
+  it("shares the generic Bionic HMR derivation with high-port overflow fallback", () => {
     expect(derivePaperclipViteHmrPort(3_100)).toBe(13_100);
     expect(derivePaperclipViteHmrPort(55_535)).toBe(65_535);
     expect(derivePaperclipViteHmrPort(55_536)).toBe(45_536);
@@ -58,11 +58,11 @@ describe("runtime exposure port policy", () => {
   });
 
   it("builds https URLs on the non-standard port", () => {
-    expect(buildRuntimeExposureUrl("paperclip-dev.tail29c1aa.ts.net", 42010)).toBe(
-      "https://paperclip-dev.tail29c1aa.ts.net:42010",
+    expect(buildRuntimeExposureUrl("bionic-dev.tail29c1aa.ts.net", 42010)).toBe(
+      "https://bionic-dev.tail29c1aa.ts.net:42010",
     );
-    expect(buildRuntimeExposureHealthUrl("paperclip-dev.tail29c1aa.ts.net", 42010)).toBe(
-      "https://paperclip-dev.tail29c1aa.ts.net:42010/api/health",
+    expect(buildRuntimeExposureHealthUrl("bionic-dev.tail29c1aa.ts.net", 42010)).toBe(
+      "https://bionic-dev.tail29c1aa.ts.net:42010/api/health",
     );
   });
 

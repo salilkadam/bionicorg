@@ -1,7 +1,7 @@
 import { lstat, mkdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { and, eq, sql } from "drizzle-orm";
-import { chatConversations, issues, type Db } from "@paperclipai/db";
+import { chatConversations, issues, type Db } from "@bionicai/db";
 import { resolvePaperclipInstanceRoot } from "../../home-paths.js";
 
 export type NativeChatWorkspaceScope = {
@@ -33,7 +33,7 @@ export async function findNativeChatWorkspaceScope(
   },
 ): Promise<NativeChatWorkspaceScope | null> {
   if (
-    input.adapterType !== "paperclip_runner" ||
+    input.adapterType !== "bionic_runner" ||
     input.environmentDriver !== "local" ||
     !input.issueId
   )

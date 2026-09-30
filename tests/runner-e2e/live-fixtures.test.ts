@@ -106,7 +106,7 @@ describe("live runner fixtures", () => {
           );
           return {
             id: "plugin-daytona",
-            pluginKey: "paperclip.daytona-sandbox-provider",
+            pluginKey: "bionic.daytona-sandbox-provider",
             status: "ready",
           };
         }
@@ -147,7 +147,7 @@ describe("live runner fixtures", () => {
         DAYTONA_API_KEY: "daytona-test-value",
       },
       daytonaImage:
-        "ghcr.io/paperclip/image@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ghcr.io/bionic/image@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     });
 
     expect(calls.indexOf("POST /api/plugins/install")).toBeLessThan(
@@ -167,7 +167,7 @@ describe("live runner fixtures", () => {
         if (path === "/api/plugins/install") {
           return {
             id: "plugin-daytona",
-            pluginKey: "paperclip.daytona-sandbox-provider",
+            pluginKey: "bionic.daytona-sandbox-provider",
             status: "ready",
           };
         }
@@ -225,7 +225,7 @@ describe("live runner fixtures", () => {
         DAYTONA_API_KEY: "daytona-test-value",
       },
       daytonaImage:
-        "ghcr.io/paperclip/image@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ghcr.io/bionic/image@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     });
 
     expect(fixtures.project?.primaryWorkspace?.id).toBe("project-workspace-1");

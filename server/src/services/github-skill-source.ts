@@ -1,6 +1,6 @@
 import path from 'node:path';
-import type { CompanySkillVersionFileInventoryEntry, SkillSourceCandidate, SkillSourceDiscovery, SkillSourcePreviewRequest, SkillSourceFilePreview, SkillSourceScanUpdate, SkillSourceScanProgress } from '@paperclipai/shared';
-import { parseFrontmatterMarkdown, parseGitHubSkillRepositoryUrl } from '@paperclipai/shared';
+import type { CompanySkillVersionFileInventoryEntry, SkillSourceCandidate, SkillSourceDiscovery, SkillSourcePreviewRequest, SkillSourceFilePreview, SkillSourceScanUpdate, SkillSourceScanProgress } from '@bionicai/shared';
+import { parseFrontmatterMarkdown, parseGitHubSkillRepositoryUrl } from '@bionicai/shared';
 import { notFound, unprocessable } from '../errors.js';
 import { assertSkillSnapshotPath, snapshotFile, skillFileBytes } from './skill-snapshot.js';
 import { indexSkillPackagePaths, inspectSkillPackage } from './skill-package-inspection.js';

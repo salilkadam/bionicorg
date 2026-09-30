@@ -5,9 +5,9 @@ import { errorHandler } from "../middleware/index.js";
 import { cloudRoutes } from "../routes/cloud.js";
 
 const cloudEnv = {
-  PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN: "tenant-secret",
-  PAPERCLIP_CLOUD_STACK_ID: "stack-current",
-  PAPERCLIP_CLOUD_API_ORIGIN: "https://cloud.example.test/control-plane",
+  BIONIC_CLOUD_TENANT_SERVER_TOKEN: "tenant-secret",
+  BIONIC_CLOUD_STACK_ID: "stack-current",
+  BIONIC_CLOUD_API_ORIGIN: "https://cloud.example.test/control-plane",
 };
 
 function cloudActor(userId: string) {
@@ -58,7 +58,7 @@ describe("GET /api/cloud/stacks", () => {
 
     const res = await request(app)
       .get("/api/cloud/stacks?userId=client-supplied-user")
-      .set("x-paperclip-cloud-user-id", "spoofed-header-user")
+      .set("x-bionic-cloud-user-id", "spoofed-header-user")
       .set("authorization", "Bearer client-token");
 
     expect(res.status).toBe(200);
@@ -72,8 +72,8 @@ describe("GET /api/cloud/stacks", () => {
     expect(init?.headers).toEqual({
       accept: "application/json",
       authorization: "Bearer tenant-secret",
-      "x-paperclip-cloud-user-id": "actor-user",
-      "x-paperclip-cloud-stack-id": "stack-current",
+      "x-bionic-cloud-user-id": "actor-user",
+      "x-bionic-cloud-stack-id": "stack-current",
     });
     expect(JSON.stringify(init)).not.toContain("client-supplied-user");
     expect(JSON.stringify(init)).not.toContain("spoofed-header-user");
@@ -102,7 +102,7 @@ describe("GET /api/cloud/stacks", () => {
   it("keeps cache entries isolated by the server-derived actor user id", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
       const headers = new Headers(init?.headers);
-      return jsonResponse({ userId: headers.get("x-paperclip-cloud-user-id") });
+      return jsonResponse({ userId: headers.get("x-bionic-cloud-user-id") });
     });
     const app = express();
     app.use((req, _res, next) => {

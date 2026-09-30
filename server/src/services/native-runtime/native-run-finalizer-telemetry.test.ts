@@ -16,7 +16,7 @@ import {
   agentWakeupRequests,
   workspaceOperations,
   activityLog,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -24,7 +24,7 @@ import {
 import {
   CONTROL_PLANE_CONFORMANCE_RESULT,
   CONTROL_PLANE_CONFORMANCE_TERMINAL,
-} from "../../vendor/paperclip-runner/testing.js";
+} from "../../vendor/bionic-runner/testing.js";
 
 const mockTelemetryClient = vi.hoisted(() => ({
   track: vi.fn(),
@@ -51,7 +51,7 @@ function captureRunFailureCallsFrom(fromIndex: number) {
   return mockCaptureRunFailure.mock.calls.slice(fromIndex);
 }
 
-import { PaperclipControlPlanePort } from "./paperclip-control-plane-port.js";
+import { PaperclipControlPlanePort } from "./bionic-control-plane-port.js";
 import { restoreNativeWorkspaceBestEffort } from "./native-workspace-best-effort.js";
 import { reconcileNativeFinalizations } from "./native-finalization-reconciler.js";
 import { recoverLegacyUnsafeWorkspaceExports } from "./native-workspace-export-recovery.js";
@@ -78,7 +78,7 @@ describeEmbeddedPostgres("native run finalizer / status decision committer — a
   let agentId: string;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-native-finalizer-telemetry-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-native-finalizer-telemetry-");
     db = createDb(tempDb.connectionString);
     companyId = randomUUID();
     agentId = randomUUID();
@@ -116,7 +116,7 @@ describeEmbeddedPostgres("native run finalizer / status decision committer — a
       companyId,
       issueId,
       revision: 1,
-      schemaVersion: "paperclip.completion-contract.v1",
+      schemaVersion: "bionic.completion-contract.v1",
       policyVersion: "telemetry-v1",
       risk: "standard",
       completionAuthority: "server_arbiter",
@@ -272,7 +272,7 @@ describeEmbeddedPostgres("native run finalizer / status decision committer — a
       runnerProfileJson: { sessionCheckpoint: { retainedEvidence: "keep" } },
       resultJson: {
         recoveredExecutionFailure: {
-          schema: "paperclip.recovered_execution_failure.v1",
+          schema: "bionic.recovered_execution_failure.v1",
           errorCode: "adapter_failed",
           error: "provider_transport_failed: retained cleanup evidence",
         },
@@ -755,7 +755,7 @@ describeEmbeddedPostgres("native run finalizer / status decision committer — a
     const originalResults = await db.select().from(nativeRunResults).where(eq(nativeRunResults.runId, fixture.runId));
     await db.update(nativeRunFinalizations).set({ phase: "terminal_failure", failureCode: "native_workspace_sync_out_unsafe_archive" }).where(eq(nativeRunFinalizations.runId, fixture.runId));
     await db.update(heartbeatRuns).set({ status: "failed", nativePhase: "terminal_failure", errorCode: "native_workspace_sync_out_unsafe_archive",
-      runnerProfileJson: { nativeWorkspaceSync: { schema: "paperclip.native-workspace-sync/v1", state: "prepared",
+      runnerProfileJson: { nativeWorkspaceSync: { schema: "bionic.native-workspace-sync/v1", state: "prepared",
         descriptorSha256: "a".repeat(64), baselineSha256: "b".repeat(64), finalHostSha256: null,
         workspaceId: randomUUID(), leaseId: randomUUID(), providerLeaseId: "missing-old-sandbox", remoteCwd: "/work", resourceDisposition: "destroy" } },
     }).where(eq(heartbeatRuns.id, fixture.runId));

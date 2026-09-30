@@ -4,7 +4,7 @@ import { act, forwardRef, useImperativeHandle, type ForwardedRef } from "react";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { IssueDocument } from "@paperclipai/shared";
+import type { IssueDocument } from "@bionicai/shared";
 import type {
   IssueThreadInteraction,
   RequestConfirmationInteraction,
@@ -617,7 +617,7 @@ describe("TaskChatInteractionCard", () => {
           required: true,
           options: [
             {
-              id: "__paperclip_text__",
+              id: "__bionic_text__",
               label: "Enter an integer",
               freeText: true,
             },
@@ -625,7 +625,7 @@ describe("TaskChatInteractionCard", () => {
         },
       ],
       questionSet: {
-        schema: "paperclip.question_set.v1",
+        schema: "bionic.question_set.v1",
         title: "Configure deployment",
         description: "The provider disconnected while waiting for this answer.",
         submitLabel: "Continue",

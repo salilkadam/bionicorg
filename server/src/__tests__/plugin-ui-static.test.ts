@@ -25,7 +25,7 @@ let originalNodeEnv: string | undefined;
 function createPluginPackage(source = "export default {};\n") {
   const packageRoot = path.join(
     tmpdir(),
-    `paperclip-plugin-ui-static-${randomUUID()}`,
+    `bionic-plugin-ui-static-${randomUUID()}`,
   );
   const uiDir = path.join(packageRoot, "dist", "ui");
   mkdirSync(uiDir, { recursive: true });
@@ -37,13 +37,13 @@ function createPluginPackage(source = "export default {};\n") {
 function readyPlugin(packageRoot: string) {
   mockRegistry.getById.mockResolvedValue({
     id: pluginId,
-    pluginKey: "paperclip.example",
-    packageName: "paperclip-plugin-example",
+    pluginKey: "bionic.example",
+    packageName: "bionic-plugin-example",
     packagePath: packageRoot,
     version: "1.0.0",
     status: "ready",
     manifestJson: {
-      id: "paperclip.example",
+      id: "bionic.example",
       entrypoints: {
         ui: "./dist/ui",
       },

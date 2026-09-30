@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { agents, companies, createDb, heartbeatRuns, issues } from "@paperclipai/db";
-import { LOW_TRUST_REVIEW_PRESET } from "@paperclipai/shared";
+import { agents, companies, createDb, heartbeatRuns, issues } from "@bionicai/db";
+import { LOW_TRUST_REVIEW_PRESET } from "@bionicai/shared";
 import {
   LOW_TRUST_QUARANTINED_BODY,
   buildPromotedSourceTrust,
@@ -96,7 +96,7 @@ describeEmbeddedPostgres("resolveActorSourceTrustForIssue", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-source-trust-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-source-trust-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 

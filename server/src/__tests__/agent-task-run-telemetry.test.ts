@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { agents, companies, createDb, heartbeatRuns } from "@paperclipai/db";
+import { agents, companies, createDb, heartbeatRuns } from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -13,9 +13,9 @@ vi.mock("../telemetry.js", () => ({
   getTelemetryClient: () => mockTelemetryClient,
 }));
 
-vi.mock("@paperclipai/shared/telemetry", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/shared/telemetry")>(
-    "@paperclipai/shared/telemetry",
+vi.mock("@bionicai/shared/telemetry", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/shared/telemetry")>(
+    "@bionicai/shared/telemetry",
   );
   return {
     ...actual,
@@ -35,7 +35,7 @@ describeEmbeddedPostgres("emitAgentTaskRun", () => {
   let agentId!: string;
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-agent-task-run-telemetry-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-agent-task-run-telemetry-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
@@ -57,7 +57,7 @@ describeEmbeddedPostgres("emitAgentTaskRun", () => {
     agentId = randomUUID();
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "responsible-user",

@@ -1,4 +1,4 @@
-import { agentAppearanceSchema } from "@paperclipai/shared";
+import { agentAppearanceSchema } from "@bionicai/shared";
 import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { execFile } from "node:child_process";
@@ -10,7 +10,7 @@ import {
   issueRelations,
   principalPermissionGrants,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type {
   CompanyPortabilityAgentManifestEntry,
   CompanyPortabilityBlobManifestEntry,
@@ -44,7 +44,7 @@ import type {
   AgentEnvConfig,
   PermissionKey,
   RoutineVariable,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import {
   AGENT_DEFAULT_MAX_CONCURRENT_RUNS,
   ISSUE_PRIORITIES,
@@ -63,13 +63,13 @@ import {
   issueCommentPresentationSchema,
   normalizeAgentUrlKey,
   PERMISSION_KEYS,
-} from "@paperclipai/shared";
-import { sha256HexOfBytes } from "@paperclipai/shared/portability-hash";
+} from "@bionicai/shared";
+import { sha256HexOfBytes } from "@bionicai/shared/portability-hash";
 import {
   readPaperclipSkillSyncPreference,
   writePaperclipSkillSyncPreference,
-} from "@paperclipai/adapter-utils/server-utils";
-import { requireOpenCodeModelId } from "@paperclipai/adapter-opencode-local/server";
+} from "@bionicai/adapter-utils/server-utils";
+import { requireOpenCodeModelId } from "@bionicai/adapter-opencode-local/server";
 import { findServerAdapter } from "../adapters/index.js";
 import { formatAttachmentSize, MAX_ATTACHMENT_BYTES } from "../attachment-types.js";
 import { forbidden, notFound, unprocessable } from "../errors.js";
@@ -193,7 +193,7 @@ const DEFAULT_INCLUDE: CompanyPortabilityInclude = {
 
 const DEFAULT_COLLISION_STRATEGY: CompanyPortabilityCollisionStrategy = "rename";
 // The bundle shape this build reads and writes. Bundles began declaring
-// their schemaVersion in the .paperclip.yaml extension at 6; undeclared
+// their schemaVersion in the .bionic.yaml extension at 6; undeclared
 // bundles are read as 5, the last unstamped shape. 7 adds preserved task
 // timestamps and parent links; 5/6 bundles still import, with those fields
 // falling back to import-time defaults.
@@ -303,7 +303,7 @@ function collectAgentSafeImportPolicyErrors(
 function classifyPortableFileKind(pathValue: string): CompanyPortabilityExportPreviewResult["fileInventory"][number]["kind"] {
   const normalized = normalizePortablePath(pathValue);
   if (normalized === "COMPANY.md") return "company";
-  if (normalized === ".paperclip.yaml" || normalized === ".paperclip.yml") return "extension";
+  if (normalized === ".bionic.yaml" || normalized === ".bionic.yml") return "extension";
   if (normalized === "README.md") return "readme";
   if (normalized.startsWith("agents/")) return "agent";
   if (normalized.startsWith("skills/")) return "skill";
@@ -327,15 +327,15 @@ function normalizeSkillKey(value: string | null | undefined) {
 
 function readSkillKey(frontmatter: Record<string, unknown>) {
   const metadata = isPlainRecord(frontmatter.metadata) ? frontmatter.metadata : null;
-  const paperclip = isPlainRecord(metadata?.paperclip) ? metadata?.paperclip as Record<string, unknown> : null;
+  const bionic = isPlainRecord(metadata?.bionic) ? metadata?.bionic as Record<string, unknown> : null;
   return normalizeSkillKey(
     asString(frontmatter.key)
     ?? asString(frontmatter.skillKey)
     ?? asString(metadata?.skillKey)
     ?? asString(metadata?.canonicalKey)
-    ?? asString(metadata?.paperclipSkillKey)
-    ?? asString(paperclip?.skillKey)
-    ?? asString(paperclip?.key),
+    ?? asString(metadata?.bionicSkillKey)
+    ?? asString(bionic?.skillKey)
+    ?? asString(bionic?.key),
   );
 }
 
@@ -355,8 +355,8 @@ function deriveManifestSkillKey(
   if ((sourceType === "github" || sourceType === "skills_sh" || sourceKind === "github" || sourceKind === "skills_sh") && owner && repo) {
     return `${owner}/${repo}/${slug}`;
   }
-  if (sourceKind === "paperclip_bundled") {
-    return `paperclipai/paperclip/${slug}`;
+  if (sourceKind === "bionic_bundled") {
+    return `bionicai/bionic/${slug}`;
   }
   if (sourceType === "url" || sourceKind === "url") {
     try {
@@ -497,8 +497,8 @@ function deriveSkillExportDirCandidates(
     }
   };
 
-  if (sourceKind === "paperclip_bundled") {
-    pushSuffix("paperclip");
+  if (sourceKind === "bionic_bundled") {
+    pushSuffix("bionic");
   }
 
   if (skill.sourceType === "github" || skill.sourceType === "skills_sh") {
@@ -703,7 +703,7 @@ type ProjectLike = {
   targetDate: string | null;
   color: string | null;
   icon: string | null;
-  appearance?: import("@paperclipai/shared").AgentAppearance | null;
+  appearance?: import("@bionicai/shared").AgentAppearance | null;
   status: string;
   env: Record<string, unknown> | null;
   executionWorkspacePolicy: Record<string, unknown> | null;
@@ -822,7 +822,7 @@ const ADAPTER_DEFAULT_RULES_BY_TYPE: Record<string, Array<{ path: string[]; valu
     { path: ["timeoutSec"], value: 120 },
     { path: ["waitTimeoutMs"], value: 120000 },
     { path: ["sessionKeyStrategy"], value: "fixed" },
-    { path: ["sessionKey"], value: "paperclip" },
+    { path: ["sessionKey"], value: "bionic" },
     { path: ["role"], value: "operator" },
     { path: ["scopes"], value: ["operator.admin"] },
   ],
@@ -1648,11 +1648,11 @@ function buildLegacyRoutineTriggerFromRecurrence(
   const frequency = asString(issue.legacyRecurrence.frequency);
   const interval = asInteger(issue.legacyRecurrence.interval) ?? 1;
   if (!frequency) {
-    errors.push(`Recurring task ${issue.slug} uses legacy recurrence without frequency; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+    errors.push(`Recurring task ${issue.slug} uses legacy recurrence without frequency; add .bionic.yaml routines.${issue.slug}.triggers.`);
     return { trigger: null, warnings, errors };
   }
   if (interval < 1) {
-    errors.push(`Recurring task ${issue.slug} uses legacy recurrence with an invalid interval; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+    errors.push(`Recurring task ${issue.slug} uses legacy recurrence with an invalid interval; add .bionic.yaml routines.${issue.slug}.triggers.`);
     return { trigger: null, warnings, errors };
   }
 
@@ -1660,7 +1660,7 @@ function buildLegacyRoutineTriggerFromRecurrence(
   const startsAt = asString(schedule?.startsAt);
   const zonedStartsAt = startsAt ? readZonedDateParts(startsAt, timezone) : null;
   if (startsAt && !zonedStartsAt) {
-    errors.push(`Recurring task ${issue.slug} has an invalid legacy startsAt/timezone combination; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+    errors.push(`Recurring task ${issue.slug} has an invalid legacy startsAt/timezone combination; add .bionic.yaml routines.${issue.slug}.triggers.`);
     return { trigger: null, warnings, errors };
   }
 
@@ -1668,12 +1668,12 @@ function buildLegacyRoutineTriggerFromRecurrence(
   const hour = asInteger(time?.hour) ?? zonedStartsAt?.hour ?? 0;
   const minute = asInteger(time?.minute) ?? zonedStartsAt?.minute ?? 0;
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-    errors.push(`Recurring task ${issue.slug} uses legacy recurrence with an invalid time; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+    errors.push(`Recurring task ${issue.slug} uses legacy recurrence with an invalid time; add .bionic.yaml routines.${issue.slug}.triggers.`);
     return { trigger: null, warnings, errors };
   }
 
   if (issue.legacyRecurrence.until != null || issue.legacyRecurrence.count != null) {
-    warnings.push(`Recurring task ${issue.slug} uses legacy recurrence end bounds; Paperclip will import the routine trigger without those limits.`);
+    warnings.push(`Recurring task ${issue.slug} uses legacy recurrence end bounds; Bionic will import the routine trigger without those limits.`);
   }
 
   let cronExpression: string | null = null;
@@ -1687,14 +1687,14 @@ function buildLegacyRoutineTriggerFromRecurrence(
     cronExpression = `${minute} ${hourField} * * *`;
   } else if (frequency === "daily") {
     if (Array.isArray(issue.legacyRecurrence.weekdays) || Array.isArray(issue.legacyRecurrence.monthDays) || Array.isArray(issue.legacyRecurrence.months)) {
-      errors.push(`Recurring task ${issue.slug} uses unsupported legacy daily recurrence constraints; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses unsupported legacy daily recurrence constraints; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     const dayField = interval === 1 ? "*" : `*/${interval}`;
     cronExpression = `${minute} ${hour} ${dayField} * *`;
   } else if (frequency === "weekly") {
     if (interval !== 1) {
-      errors.push(`Recurring task ${issue.slug} uses legacy weekly recurrence with interval > 1; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy weekly recurrence with interval > 1; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     const weekdays = Array.isArray(issue.legacyRecurrence.weekdays)
@@ -1709,17 +1709,17 @@ function buildLegacyRoutineTriggerFromRecurrence(
       cronWeekdays.push(zonedStartsAt.weekday);
     }
     if (cronWeekdays.length === 0) {
-      errors.push(`Recurring task ${issue.slug} uses legacy weekly recurrence without weekdays; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy weekly recurrence without weekdays; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     cronExpression = `${minute} ${hour} * * ${normalizeCronList(cronWeekdays)}`;
   } else if (frequency === "monthly") {
     if (interval !== 1) {
-      errors.push(`Recurring task ${issue.slug} uses legacy monthly recurrence with interval > 1; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy monthly recurrence with interval > 1; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     if (Array.isArray(issue.legacyRecurrence.ordinalWeekdays) && issue.legacyRecurrence.ordinalWeekdays.length > 0) {
-      errors.push(`Recurring task ${issue.slug} uses legacy ordinal monthly recurrence; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy ordinal monthly recurrence; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     const monthDays = Array.isArray(issue.legacyRecurrence.monthDays)
@@ -1731,7 +1731,7 @@ function buildLegacyRoutineTriggerFromRecurrence(
       monthDays.push(zonedStartsAt.day);
     }
     if (monthDays.length === 0) {
-      errors.push(`Recurring task ${issue.slug} uses legacy monthly recurrence without monthDays; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy monthly recurrence without monthDays; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     const months = Array.isArray(issue.legacyRecurrence.months)
@@ -1743,7 +1743,7 @@ function buildLegacyRoutineTriggerFromRecurrence(
     cronExpression = `${minute} ${hour} ${normalizeCronList(monthDays.map(String))} ${monthField} *`;
   } else if (frequency === "yearly") {
     if (interval !== 1) {
-      errors.push(`Recurring task ${issue.slug} uses legacy yearly recurrence with interval > 1; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy yearly recurrence with interval > 1; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     const months = Array.isArray(issue.legacyRecurrence.months)
@@ -1763,12 +1763,12 @@ function buildLegacyRoutineTriggerFromRecurrence(
       monthDays.push(zonedStartsAt.day);
     }
     if (months.length === 0 || monthDays.length === 0) {
-      errors.push(`Recurring task ${issue.slug} uses legacy yearly recurrence without month/monthDay anchors; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+      errors.push(`Recurring task ${issue.slug} uses legacy yearly recurrence without month/monthDay anchors; add .bionic.yaml routines.${issue.slug}.triggers.`);
       return { trigger: null, warnings, errors };
     }
     cronExpression = `${minute} ${hour} ${normalizeCronList(monthDays.map(String))} ${normalizeCronList(months.map(String))} *`;
   } else {
-    errors.push(`Recurring task ${issue.slug} uses unsupported legacy recurrence frequency "${frequency}"; add .paperclip.yaml routines.${issue.slug}.triggers.`);
+    errors.push(`Recurring task ${issue.slug} uses unsupported legacy recurrence frequency "${frequency}"; add .bionic.yaml routines.${issue.slug}.triggers.`);
     return { trigger: null, warnings, errors };
   }
 
@@ -2208,7 +2208,7 @@ function filterPortableExtensionYaml(
 function filterExportFiles(
   files: Record<string, CompanyPortabilityFileEntry>,
   selectedFilesInput: string[] | undefined,
-  paperclipExtensionPath: string,
+  bionicExtensionPath: string,
 ) {
   if (!selectedFilesInput || selectedFilesInput.length === 0) {
     return files;
@@ -2225,13 +2225,13 @@ function filterExportFiles(
     filtered[filePath] = content;
   }
 
-  const extensionEntry = filtered[paperclipExtensionPath];
-  if (selectedFiles.has(paperclipExtensionPath) && typeof extensionEntry === "string") {
-    filtered[paperclipExtensionPath] = filterPortableExtensionYaml(
+  const extensionEntry = filtered[bionicExtensionPath];
+  if (selectedFiles.has(bionicExtensionPath) && typeof extensionEntry === "string") {
+    filtered[bionicExtensionPath] = filterPortableExtensionYaml(
       extensionEntry,
       selectedFiles,
       filtered,
-      paperclipExtensionPath,
+      bionicExtensionPath,
     );
   }
 
@@ -2239,9 +2239,9 @@ function filterExportFiles(
 }
 
 function findPaperclipExtensionPath(files: Record<string, CompanyPortabilityFileEntry>) {
-  if (typeof files[".paperclip.yaml"] === "string") return ".paperclip.yaml";
-  if (typeof files[".paperclip.yml"] === "string") return ".paperclip.yml";
-  return Object.keys(files).find((entry) => entry.endsWith("/.paperclip.yaml") || entry.endsWith("/.paperclip.yml")) ?? null;
+  if (typeof files[".bionic.yaml"] === "string") return ".bionic.yaml";
+  if (typeof files[".bionic.yml"] === "string") return ".bionic.yml";
+  return Object.keys(files).find((entry) => entry.endsWith("/.bionic.yaml") || entry.endsWith("/.bionic.yml")) ?? null;
 }
 
 function ensureMarkdownPath(pathValue: string) {
@@ -2268,7 +2268,7 @@ function normalizePortableConfig(
       key === "instructionsEntryFile" ||
       key === "promptTemplate" ||
       key === "bootstrapPromptTemplate" || // deprecated — kept for backward compat
-      key === "paperclipSkillSync"
+      key === "bionicSkillSync"
     ) continue;
     if (key === "env") continue;
     next[key] = entry;
@@ -2639,15 +2639,15 @@ async function resolveBundledSkillsCommit() {
 
 async function buildSkillSourceEntry(skill: CompanySkill) {
   const metadata = isPlainRecord(skill.metadata) ? skill.metadata : null;
-  if (asString(metadata?.sourceKind) === "paperclip_bundled") {
+  if (asString(metadata?.sourceKind) === "bionic_bundled") {
     const commit = await resolveBundledSkillsCommit();
     return {
       kind: "github-dir",
-      repo: "paperclipai/paperclip",
+      repo: "bionicai/bionic",
       path: `skills/${skill.slug}`,
       commit,
       trackingRef: "master",
-      url: `https://github.com/paperclipai/paperclip/tree/master/skills/${skill.slug}`,
+      url: `https://github.com/bionicai/bionic/tree/master/skills/${skill.slug}`,
     };
   }
 
@@ -2678,10 +2678,10 @@ async function buildSkillSourceEntry(skill: CompanySkill) {
 
 function shouldReferenceSkillOnExport(skill: CompanySkill, expandReferencedSkills: boolean) {
   const metadata = isPlainRecord(skill.metadata) ? skill.metadata : null;
-  // Bundled Paperclip skills ship with every build and may contain executable
+  // Bundled Bionic skills ship with every build and may contain executable
   // scripts that import policy rejects when expanded; the target re-resolves
   // them from its own catalog via the pinned reference stub instead.
-  if (asString(metadata?.sourceKind) === "paperclip_bundled") return true;
+  if (asString(metadata?.sourceKind) === "bionic_bundled") return true;
   if (expandReferencedSkills) return false;
   return skill.sourceType === "github" || skill.sourceType === "skills_sh" || skill.sourceType === "url";
 }
@@ -2716,9 +2716,9 @@ async function withSkillSourceMetadata(skill: CompanySkill, markdown: string) {
   }
   const catalogProvenance = buildPortableCatalogProvenance(skill);
   metadata.skillKey = skill.key;
-  metadata.paperclipSkillKey = skill.key;
-  metadata.paperclip = {
-    ...(isPlainRecord(metadata.paperclip) ? metadata.paperclip : {}),
+  metadata.bionicSkillKey = skill.key;
+  metadata.bionic = {
+    ...(isPlainRecord(metadata.bionic) ? metadata.bionic : {}),
     skillKey: skill.key,
     slug: skill.slug,
     ...(catalogProvenance ? { catalog: catalogProvenance } : {}),
@@ -3103,26 +3103,26 @@ function buildManifestFromPackageFiles(
   }
   const companyDoc = parseFrontmatterMarkdown(companyMarkdown);
   const companyFrontmatter = companyDoc.frontmatter;
-  const paperclipExtensionPath = findPaperclipExtensionPath(normalizedFiles);
-  const paperclipExtension = paperclipExtensionPath
-    ? parseYamlFile(readPortableTextFile(normalizedFiles, paperclipExtensionPath) ?? "")
+  const bionicExtensionPath = findPaperclipExtensionPath(normalizedFiles);
+  const bionicExtension = bionicExtensionPath
+    ? parseYamlFile(readPortableTextFile(normalizedFiles, bionicExtensionPath) ?? "")
     : {};
-  const declaredSchemaVersion = asInteger(paperclipExtension.schemaVersion);
+  const declaredSchemaVersion = asInteger(bionicExtension.schemaVersion);
   const bundleSchemaVersion = declaredSchemaVersion !== null && declaredSchemaVersion > 0
     ? declaredSchemaVersion
     : UNSTAMPED_BUNDLE_SCHEMA_VERSION;
   if (bundleSchemaVersion > BUNDLE_SCHEMA_VERSION) {
-    throw unprocessable(`Company package declares schemaVersion ${bundleSchemaVersion}, which was produced by a newer Paperclip; this board reads up to schemaVersion ${BUNDLE_SCHEMA_VERSION}.`);
+    throw unprocessable(`Company package declares schemaVersion ${bundleSchemaVersion}, which was produced by a newer Bionic; this board reads up to schemaVersion ${BUNDLE_SCHEMA_VERSION}.`);
   }
-  const paperclipCompany = isPlainRecord(paperclipExtension.company) ? paperclipExtension.company : {};
-  const paperclipSidebar = normalizePortableSidebarOrder(paperclipExtension.sidebar);
-  const paperclipLabels = normalizePortableLabelDefinitions(paperclipExtension.labels);
-  const paperclipBlobs = normalizePortableBlobIndex(paperclipExtension.blobs);
-  const paperclipEmbeddedAssets = normalizePortableEmbeddedAssets(paperclipExtension.embeddedAssets);
-  const paperclipAgents = isPlainRecord(paperclipExtension.agents) ? paperclipExtension.agents : {};
-  const paperclipProjects = isPlainRecord(paperclipExtension.projects) ? paperclipExtension.projects : {};
-  const paperclipTasks = isPlainRecord(paperclipExtension.tasks) ? paperclipExtension.tasks : {};
-  const paperclipRoutines = isPlainRecord(paperclipExtension.routines) ? paperclipExtension.routines : {};
+  const bionicCompany = isPlainRecord(bionicExtension.company) ? bionicExtension.company : {};
+  const bionicSidebar = normalizePortableSidebarOrder(bionicExtension.sidebar);
+  const bionicLabels = normalizePortableLabelDefinitions(bionicExtension.labels);
+  const bionicBlobs = normalizePortableBlobIndex(bionicExtension.blobs);
+  const bionicEmbeddedAssets = normalizePortableEmbeddedAssets(bionicExtension.embeddedAssets);
+  const bionicAgents = isPlainRecord(bionicExtension.agents) ? bionicExtension.agents : {};
+  const bionicProjects = isPlainRecord(bionicExtension.projects) ? bionicExtension.projects : {};
+  const bionicTasks = isPlainRecord(bionicExtension.tasks) ? bionicExtension.tasks : {};
+  const bionicRoutines = isPlainRecord(bionicExtension.routines) ? bionicExtension.routines : {};
   const companyName =
     asString(companyFrontmatter.name)
     ?? opts?.sourceLabel?.companyName
@@ -3177,28 +3177,28 @@ function buildManifestFromPackageFiles(
       path: resolvedCompanyPath,
       name: companyName,
       description: asString(companyFrontmatter.description),
-      logoPath: asString(paperclipCompany.logoPath) ?? asString(paperclipCompany.logo),
+      logoPath: asString(bionicCompany.logoPath) ?? asString(bionicCompany.logo),
       requireBoardApprovalForNewAgents:
-        typeof paperclipCompany.requireBoardApprovalForNewAgents === "boolean"
-          ? paperclipCompany.requireBoardApprovalForNewAgents
+        typeof bionicCompany.requireBoardApprovalForNewAgents === "boolean"
+          ? bionicCompany.requireBoardApprovalForNewAgents
           : readCompanyApprovalDefault(companyFrontmatter),
       feedbackDataSharingEnabled:
-        typeof paperclipCompany.feedbackDataSharingEnabled === "boolean"
-          ? paperclipCompany.feedbackDataSharingEnabled
+        typeof bionicCompany.feedbackDataSharingEnabled === "boolean"
+          ? bionicCompany.feedbackDataSharingEnabled
           : false,
       feedbackDataSharingConsentAt:
-        typeof paperclipCompany.feedbackDataSharingConsentAt === "string"
-          ? paperclipCompany.feedbackDataSharingConsentAt
+        typeof bionicCompany.feedbackDataSharingConsentAt === "string"
+          ? bionicCompany.feedbackDataSharingConsentAt
           : null,
       feedbackDataSharingConsentByUserId:
-        asString(paperclipCompany.feedbackDataSharingConsentByUserId),
+        asString(bionicCompany.feedbackDataSharingConsentByUserId),
       feedbackDataSharingTermsVersion:
-        asString(paperclipCompany.feedbackDataSharingTermsVersion),
+        asString(bionicCompany.feedbackDataSharingTermsVersion),
     },
-    sidebar: paperclipSidebar,
-    labels: paperclipLabels,
-    blobs: paperclipBlobs,
-    embeddedAssets: paperclipEmbeddedAssets,
+    sidebar: bionicSidebar,
+    labels: bionicLabels,
+    blobs: bionicBlobs,
+    embeddedAssets: bionicEmbeddedAssets,
     agents: [],
     skills: [],
     projects: [],
@@ -3220,7 +3220,7 @@ function buildManifestFromPackageFiles(
     const frontmatter = agentDoc.frontmatter;
     const fallbackSlug = normalizeAgentUrlKey(path.posix.basename(path.posix.dirname(agentPath))) ?? "agent";
     const slug = asString(frontmatter.slug) ?? fallbackSlug;
-    const extension = isPlainRecord(paperclipAgents[slug]) ? paperclipAgents[slug] : {};
+    const extension = isPlainRecord(bionicAgents[slug]) ? bionicAgents[slug] : {};
     const extensionAdapter = isPlainRecord(extension.adapter) ? extension.adapter : null;
     const extensionRuntime = isPlainRecord(extension.runtime) ? extension.runtime : null;
     const extensionPermissions = isPlainRecord(extension.permissions) ? extension.permissions : null;
@@ -3308,10 +3308,10 @@ function buildManifestFromPackageFiles(
       const sourceHostname = asString(primarySource?.hostname) || "github.com";
       const [owner, repoName] = (repo ?? "").split("/");
       const canonicalKey = readSkillKey(frontmatter);
-      const normalizedSourceKind = owner === "paperclipai"
-        && repoName === "paperclip"
-        && canonicalKey?.startsWith("paperclipai/paperclip/")
-        ? "paperclip_bundled"
+      const normalizedSourceKind = owner === "bionicai"
+        && repoName === "bionic"
+        && canonicalKey?.startsWith("bionicai/bionic/")
+        ? "bionic_bundled"
         : "github";
       sourceType = "github";
       sourceLocator = asString(primarySource?.url)
@@ -3377,7 +3377,7 @@ function buildManifestFromPackageFiles(
       projectPath,
     );
     const slug = asString(frontmatter.slug) ?? fallbackSlug;
-    const extension = isPlainRecord(paperclipProjects[slug]) ? paperclipProjects[slug] : {};
+    const extension = isPlainRecord(bionicProjects[slug]) ? bionicProjects[slug] : {};
     const workspaceExtensions = isPlainRecord(extension.workspaces) ? extension.workspaces : {};
     const workspaces = Object.entries(workspaceExtensions)
       .map(([workspaceKey, entry]) => normalizePortableProjectWorkspaceExtension(workspaceKey, entry))
@@ -3416,9 +3416,9 @@ function buildManifestFromPackageFiles(
     const frontmatter = taskDoc.frontmatter;
     const fallbackSlug = normalizeAgentUrlKey(path.posix.basename(path.posix.dirname(taskPath))) ?? "task";
     const slug = asString(frontmatter.slug) ?? fallbackSlug;
-    const extension = isPlainRecord(paperclipTasks[slug]) ? paperclipTasks[slug] : {};
-    const routineExtension = normalizeRoutineExtension(paperclipRoutines[slug]);
-    const routineExtensionRaw = isPlainRecord(paperclipRoutines[slug]) ? paperclipRoutines[slug] : {};
+    const extension = isPlainRecord(bionicTasks[slug]) ? bionicTasks[slug] : {};
+    const routineExtension = normalizeRoutineExtension(bionicRoutines[slug]);
+    const routineExtensionRaw = isPlainRecord(bionicRoutines[slug]) ? bionicRoutines[slug] : {};
     const schedule = isPlainRecord(frontmatter.schedule) ? frontmatter.schedule : null;
     const legacyRecurrence = schedule && isPlainRecord(schedule.recurrence)
       ? schedule.recurrence
@@ -3557,7 +3557,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
   const secrets = secretService(db);
   const documentsSvc = documentService(db);
   const workProductsSvc = workProductService(db);
-  const strictSecretsMode = process.env.PAPERCLIP_SECRETS_STRICT_MODE === "true";
+  const strictSecretsMode = process.env.BIONIC_SECRETS_STRICT_MODE === "true";
   const defaultSecretProvider = getConfiguredSecretProvider();
 
   async function applyImportedAgentPermissionGrants(
@@ -3597,7 +3597,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
     adapterType: string,
     adapterConfig: Record<string, unknown>,
   ) {
-    if (adapterType === "paperclip_runner") {
+    if (adapterType === "bionic_runner") {
       let profile;
       try {
         profile = resolvePaperclipRunnerProviderProfile(adapterConfig);
@@ -3797,8 +3797,8 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
         return (
           relative.endsWith(".md") ||
           relative.startsWith("skills/") ||
-          relative === ".paperclip.yaml" ||
-          relative === ".paperclip.yml"
+          relative === ".bionic.yaml" ||
+          relative === ".bionic.yml"
         );
       });
     for (const repoPath of candidatePaths) {
@@ -4112,11 +4112,11 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
       }
     }
 
-    const paperclipAgentsOut: Record<string, Record<string, unknown>> = {};
-    const paperclipProjectsOut: Record<string, Record<string, unknown>> = {};
-    const paperclipTasksOut: Record<string, Record<string, unknown>> = {};
+    const bionicAgentsOut: Record<string, Record<string, unknown>> = {};
+    const bionicProjectsOut: Record<string, Record<string, unknown>> = {};
+    const bionicTasksOut: Record<string, Record<string, unknown>> = {};
     const unportableTaskWorkspaceRefs = new Map<string, { workspaceId: string; taskSlugs: string[] }>();
-    const paperclipRoutinesOut: Record<string, Record<string, unknown>> = {};
+    const bionicRoutinesOut: Record<string, Record<string, unknown>> = {};
 
     const skillByReference = new Map<string, typeof companySkillRows[number]>();
     for (const skill of companySkillRows) {
@@ -4274,7 +4274,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
             env: buildEnvInputMap(agentEnvInputs),
           };
         }
-        paperclipAgentsOut[slug] = isPlainRecord(extension) ? extension : {};
+        bionicAgentsOut[slug] = isPlainRecord(extension) ? extension : {};
       }
     }
 
@@ -4318,7 +4318,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
           env: buildEnvInputMap(projectEnvInputs),
         };
       }
-      paperclipProjectsOut[slug] = isPlainRecord(extension) ? extension : {};
+      bionicProjectsOut[slug] = isPlainRecord(extension) ? extension : {};
     }
 
     const referencedLabelIds = new Set<string>();
@@ -4540,7 +4540,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
           hadSchedule: issue.monitorNextCheckAt != null ? true : undefined,
         },
       });
-      paperclipTasksOut[taskSlug] = isPlainRecord(extension) ? extension : {};
+      bionicTasksOut[taskSlug] = isPlainRecord(extension) ? extension : {};
     }
 
     if (unexportedBlockerEdgeCount > 0) {
@@ -4591,7 +4591,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
             : undefined,
         })),
       });
-      paperclipRoutinesOut[taskSlug] = isPlainRecord(extension) ? extension : {};
+      bionicRoutinesOut[taskSlug] = isPlainRecord(extension) ? extension : {};
     }
 
     // Exported markdown can embed company asset images as
@@ -4624,7 +4624,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
     }
     // Comment bodies travel in the extension yaml rather than TASK.md, so
     // scan the assembled task extension entries for their references too.
-    for (const extension of Object.values(paperclipTasksOut)) {
+    for (const extension of Object.values(bionicTasksOut)) {
       for (const assetId of collectEmbeddedAssetIds(JSON.stringify(extension.comments ?? []))) {
         noteEmbeddedAssetReference(assetId, "tasks");
       }
@@ -4677,24 +4677,24 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
         : `${unownedEmbeddedAssetRefCount} embedded image references point at assets that do not belong to this company or no longer exist; their images were not exported.`);
     }
 
-    const paperclipExtensionPath = ".paperclip.yaml";
+    const bionicExtensionPath = ".bionic.yaml";
     const exportedBlobIndex = Array.from(exportedBlobs.values())
       .sort((left, right) => left.sha256.localeCompare(right.sha256));
-    const paperclipAgents = Object.fromEntries(
-      Object.entries(paperclipAgentsOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
+    const bionicAgents = Object.fromEntries(
+      Object.entries(bionicAgentsOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
     );
-    const paperclipProjects = Object.fromEntries(
-      Object.entries(paperclipProjectsOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
+    const bionicProjects = Object.fromEntries(
+      Object.entries(bionicProjectsOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
     );
-    const paperclipTasks = Object.fromEntries(
-      Object.entries(paperclipTasksOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
+    const bionicTasks = Object.fromEntries(
+      Object.entries(bionicTasksOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
     );
-    const paperclipRoutines = Object.fromEntries(
-      Object.entries(paperclipRoutinesOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
+    const bionicRoutines = Object.fromEntries(
+      Object.entries(bionicRoutinesOut).filter(([, value]) => isPlainRecord(value) && Object.keys(value).length > 0),
     );
-    files[paperclipExtensionPath] = buildYamlFile(
+    files[bionicExtensionPath] = buildYamlFile(
       {
-        schema: "paperclip/v1",
+        schema: "bionic/v1",
         schemaVersion: BUNDLE_SCHEMA_VERSION,
         company: stripEmptyValues({
           logoPath: companyLogoPath,
@@ -4708,15 +4708,15 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
         labels: exportedLabels.length > 0 ? exportedLabels : undefined,
         blobs: exportedBlobIndex.length > 0 ? exportedBlobIndex : undefined,
         embeddedAssets: embeddedAssetIndex.length > 0 ? embeddedAssetIndex : undefined,
-        agents: Object.keys(paperclipAgents).length > 0 ? paperclipAgents : undefined,
-        projects: Object.keys(paperclipProjects).length > 0 ? paperclipProjects : undefined,
-        tasks: Object.keys(paperclipTasks).length > 0 ? paperclipTasks : undefined,
-        routines: Object.keys(paperclipRoutines).length > 0 ? paperclipRoutines : undefined,
+        agents: Object.keys(bionicAgents).length > 0 ? bionicAgents : undefined,
+        projects: Object.keys(bionicProjects).length > 0 ? bionicProjects : undefined,
+        tasks: Object.keys(bionicTasks).length > 0 ? bionicTasks : undefined,
+        routines: Object.keys(bionicRoutines).length > 0 ? bionicRoutines : undefined,
       },
       { preserveEmptyStrings: true },
     );
 
-    let finalFiles = filterExportFiles(files, input.selectedFiles, paperclipExtensionPath);
+    let finalFiles = filterExportFiles(files, input.selectedFiles, bionicExtensionPath);
     let resolved = buildManifestFromPackageFiles(finalFiles, {
       sourceLabel: {
         companyId: company.id,
@@ -4772,7 +4772,7 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
       manifest: resolved.manifest,
       files: finalFiles,
       warnings: resolved.warnings,
-      paperclipExtensionPath,
+      bionicExtensionPath,
     };
   }
 
@@ -5251,15 +5251,15 @@ export function companyPortabilityService(db: Db, storage?: StorageService) {
       const selectsNativeRunner = sourceManifest.agents.some((agent) =>
         importedAgentSlugs.has(agent.slug)
         && (input.adapterOverrides?.[agent.slug]?.adapterType ?? agent.adapterType)
-          === "paperclip_runner",
+          === "bionic_runner",
       );
       if (
         selectsNativeRunner
         && (await instanceSettingsService(db).getExperimental()).enableNativeRunner !== true
       ) {
         throw unprocessable(
-          "Paperclip Runner is experimental and disabled on this instance.",
-          { code: "paperclip_runner_rollout_disabled" },
+          "Bionic Runner is experimental and disabled on this instance.",
+          { code: "bionic_runner_rollout_disabled" },
         );
       }
     }

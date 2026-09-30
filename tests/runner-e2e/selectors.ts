@@ -44,7 +44,7 @@ export function parseRunnerSelectors(
     headed: false,
     ui: false,
     debug: false,
-    maxParallel: Number(process.env.PAPERCLIP_E2E_MAX_PARALLEL ?? "1"),
+    maxParallel: Number(process.env.BIONIC_E2E_MAX_PARALLEL ?? "1"),
     maxAutomaticRetries: 1,
   };
   for (let index = 0; index < args.length; index += 1) {

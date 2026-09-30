@@ -25,7 +25,7 @@ function mockJsonResponse(body: unknown, status = 200) {
   });
 }
 
-describe("paperclip MCP tools", () => {
+describe("bionic MCP tools", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -36,7 +36,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipUpdateIssue");
+    const tool = getTool("bionicUpdateIssue");
     await tool.execute({
       issueId: "PAP-1135",
       status: "done",
@@ -47,18 +47,18 @@ describe("paperclip MCP tools", () => {
     expect(String(url)).toBe("http://localhost:3100/api/issues/PAP-1135");
     expect(init.method).toBe("PATCH");
     expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer token-123");
-    expect((init.headers as Record<string, string>)["X-Paperclip-Run-Id"]).toBe(
+    expect((init.headers as Record<string, string>)["X-Bionic-Run-Id"]).toBe(
       "33333333-3333-3333-3333-333333333333",
     );
   });
 
   it("lists the company skill library with the default company id", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      mockJsonResponse([{ key: "paperclipai/bundled/product/wireframe", name: "wireframe" }]),
+      mockJsonResponse([{ key: "bionicai/bundled/product/wireframe", name: "wireframe" }]),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipListSkills");
+    const tool = getTool("bionicListSkills");
     const response = await tool.execute({});
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -75,7 +75,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipListIssues");
+    const tool = getTool("bionicListIssues");
     const response = await tool.execute({});
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -92,7 +92,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipCheckoutIssue");
+    const tool = getTool("bionicCheckoutIssue");
     await tool.execute({
       issueId: "PAP-1135",
     });
@@ -110,7 +110,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipCreateIssue");
+    const tool = getTool("bionicCreateIssue");
     await tool.execute({
       title: "Assigned follow-up",
       assigneeAgentId: "22222222-2222-2222-2222-222222222222",
@@ -136,7 +136,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipUpsertIssueDocument");
+    const tool = getTool("bionicUpsertIssueDocument");
     await tool.execute({
       issueId: "PAP-1135",
       key: "plan",
@@ -174,7 +174,7 @@ describe("paperclip MCP tools", () => {
       }));
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipControlIssueWorkspaceServices");
+    const tool = getTool("bionicControlIssueWorkspaceServices");
     await tool.execute({
       issueId: "PAP-1135",
       action: "restart",
@@ -214,7 +214,7 @@ describe("paperclip MCP tools", () => {
       }));
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipWaitForIssueWorkspaceService");
+    const tool = getTool("bionicWaitForIssueWorkspaceService");
     const response = await tool.execute({
       issueId: "PAP-1135",
       serviceName: "web",
@@ -231,7 +231,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipSuggestTasks");
+    const tool = getTool("bionicSuggestTasks");
     await tool.execute({
       issueId: "PAP-1135",
       idempotencyKey: "run-1:suggest",
@@ -261,7 +261,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipRequestConfirmation");
+    const tool = getTool("bionicRequestConfirmation");
     await tool.execute({
       issueId: "PAP-1135",
       idempotencyKey: "confirmation:PAP-1135:plan:33333333-3333-4333-8333-333333333333",
@@ -315,7 +315,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipRequestCheckboxConfirmation");
+    const tool = getTool("bionicRequestCheckboxConfirmation");
     await tool.execute({
       issueId: "PAP-1135",
       idempotencyKey: "confirmation:PAP-1135:files",
@@ -371,7 +371,7 @@ describe("paperclip MCP tools", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const tool = getTool("paperclipCreateApproval");
+    const tool = getTool("bionicCreateApproval");
     await tool.execute({
       type: "hire_agent",
       payload: { branch: "pap-1167" },
@@ -394,7 +394,7 @@ describe("paperclip MCP tools", () => {
   it("rejects invalid generic request paths", async () => {
     vi.stubGlobal("fetch", vi.fn());
 
-    const tool = getTool("paperclipApiRequest");
+    const tool = getTool("bionicApiRequest");
     const response = await tool.execute({
       method: "GET",
       path: "issues",
@@ -406,7 +406,7 @@ describe("paperclip MCP tools", () => {
   it("rejects generic request paths that escape /api", async () => {
     vi.stubGlobal("fetch", vi.fn());
 
-    const tool = getTool("paperclipApiRequest");
+    const tool = getTool("bionicApiRequest");
     const response = await tool.execute({
       method: "GET",
       path: "/../../secret",

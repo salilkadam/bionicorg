@@ -10,7 +10,7 @@ import {
   heartbeatRuns,
   issueComments,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 
 import {
   assertCurrentWakeCommentsRead,
@@ -46,7 +46,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
 
   beforeAll(async () => {
     const started = await startEmbeddedPostgresTestDatabase(
-      "paperclip-current-wake-comments-",
+      "bionic-current-wake-comments-",
     );
     db = createDb(started.connectionString);
     tempDb = started;
@@ -69,7 +69,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
     const issuePrefix = `W${companyId.replaceAll("-", "").slice(0, 6)}`;
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "local-board",
@@ -80,7 +80,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
       name: "Chat agent",
       role: "engineer",
       status: "running",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: {},
       runtimeConfig: {},
       permissions: {},
@@ -121,7 +121,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
       contextSnapshot: {
         issueId,
         taskId: issueId,
-        paperclipWake: {
+        bionicWake: {
           reason: "External chat message received",
           externalChatProvider: "slack",
           checkedOutByHarness: true,
@@ -197,7 +197,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
 
     await expect(
       readCurrentWakeComments(db, binding, { cursor: "forged" }),
-    ).rejects.toThrow("paperclip_current_wake_comments_cursor_out_of_order");
+    ).rejects.toThrow("bionic_current_wake_comments_cursor_out_of_order");
 
     let cursor: string | null = null;
     const reconstructed = new Map<string, string>();
@@ -258,7 +258,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
       .where(eq(issueComments.id, seeded.commentIds[0]!));
     await expect(
       readCurrentWakeComments(db, binding, { cursor: first.nextCursor }),
-    ).rejects.toThrow("paperclip_current_wake_comments_snapshot_changed");
+    ).rejects.toThrow("bionic_current_wake_comments_snapshot_changed");
 
     const restarted = await readCurrentWakeComments(db, binding, {});
     expect(restarted.snapshotDigest).not.toBe(first.snapshotDigest);
@@ -302,7 +302,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
     const page = await readCurrentWakeComments(db, binding, {});
     expect(page.complete).toBe(true);
     expect(page.comments[0]?.attachmentImportNotice).toBe(
-      "Paperclip could not import every attachment from this exact external message: 2 attachments were omitted (unsupported type: 1, processing failed: 1). Treat omitted attachments as unavailable; do not infer their contents or substitute an older workspace file.",
+      "Bionic could not import every attachment from this exact external message: 2 attachments were omitted (unsupported type: 1, processing failed: 1). Treat omitted attachments as unavailable; do not infer their contents or substitute an older workspace file.",
     );
     expect(JSON.stringify(page)).not.toContain("credential_token");
     expect(
@@ -341,7 +341,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
     const contextSnapshot = structuredClone(
       run!.contextSnapshot as Record<string, unknown>,
     );
-    const wake = contextSnapshot.paperclipWake as Record<string, unknown>;
+    const wake = contextSnapshot.bionicWake as Record<string, unknown>;
     wake.attachmentOmissions = [
       {
         commentId: seeded.commentIds[0],
@@ -389,7 +389,7 @@ describeEmbeddedPostgres("current external-chat wake comment reader", () => {
               contextSnapshot: {
                 issueId: seeded.issueId,
                 taskId: seeded.issueId,
-                paperclipWake: {
+                bionicWake: {
                   reason: "External chat message received",
                   externalChatProvider: "slack",
                   checkedOutByHarness: true,

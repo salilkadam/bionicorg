@@ -2,7 +2,7 @@ import { hasConversationContinuationPolicy } from "../../../services/conversatio
 import { getExecutionBlocker } from "../../../services/execution-blocker.js";
 import { getNativeReviewAssignment } from "../../../services/native-runtime/native-review-participant.js";
 import { and, asc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   agentWakeupRequests,
   agents,
@@ -13,8 +13,8 @@ import {
   issueRecoveryActions,
   issueComments,
   issues,
-} from "@paperclipai/db";
-import { ISSUE_DISPOSITION_REPAIR_RETRY_REASON } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { ISSUE_DISPOSITION_REPAIR_RETRY_REASON } from "@bionicai/shared";
 import { parseObject } from "../../../adapters/utils.js";
 import { evaluateAgentInvokabilityFromDb } from "../../../services/agent-invokability.js";
 import { budgetService } from "../../../services/budgets.js";
@@ -551,9 +551,9 @@ export function createPostgresRunDispatchAdapter(
     let continuationSummaryBody: string | null = null;
     let continuationParksExecutor = false;
     if (continuationParkApplies) {
-      const queuedWake = parseObject(context.paperclipWake);
+      const queuedWake = parseObject(context.bionicWake);
       const queuedContinuationSummary =
-        readNonEmptyString(parseObject(context.paperclipContinuationSummary).body) ??
+        readNonEmptyString(parseObject(context.bionicContinuationSummary).body) ??
         readNonEmptyString(parseObject(queuedWake.continuationSummary).body);
       const currentContinuationSummary = queuedContinuationSummary
         ? null

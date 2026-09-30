@@ -1,6 +1,6 @@
 import { and, inArray } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { adapterAuthSessions } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { adapterAuthSessions } from "@bionicai/db";
 import {
   ADAPTER_AUTH_ACTIVE_STATUSES,
   DISPLAYED_CODE_ADAPTER_TYPES,

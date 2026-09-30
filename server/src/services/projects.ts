@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   projects,
   projectGoals,
@@ -10,7 +10,7 @@ import {
   plugins,
   projectWorkspaces,
   workspaceRuntimeServices,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   deriveProjectUrlKey,
   hasNonAsciiContent,
@@ -27,7 +27,7 @@ import {
   type WorkspaceRuntimeService,
   type PluginManagedProjectDeclaration,
   type PluginManagedProjectResolution,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { unprocessable } from "../errors.js";
 import { listCurrentRuntimeServicesForProjectWorkspaces } from "./workspace-runtime-read-model.js";
 import { parseProjectExecutionWorkspacePolicy } from "./execution-workspace-policy.js";
@@ -37,7 +37,7 @@ import { resolveManagedProjectWorkspaceDir } from "../home-paths.js";
 type ProjectRow = typeof projects.$inferSelect;
 type ProjectWorkspaceRow = typeof projectWorkspaces.$inferSelect;
 type WorkspaceRuntimeServiceRow = typeof workspaceRuntimeServices.$inferSelect;
-const REPO_ONLY_CWD_SENTINEL = "/__paperclip_repo_only__";
+const REPO_ONLY_CWD_SENTINEL = "/__bionic_repo_only__";
 type CreateWorkspaceInput = {
   name?: string | null;
   sourceType?: string | null;
@@ -733,7 +733,7 @@ export function projectService(db: Db) {
             resourceKey: input.projectKey,
             companyId: input.companyId,
             projectId: project?.id ?? existingBinding.resourceId,
-            project: project as import("@paperclipai/shared").Project | null,
+            project: project as import("@bionicai/shared").Project | null,
             status: input.reset ? "reset" : "resolved",
           };
         }
@@ -767,7 +767,7 @@ export function projectService(db: Db) {
           resourceKey: input.projectKey,
           companyId: input.companyId,
           projectId: hydrated?.id ?? project.id,
-          project: hydrated as import("@paperclipai/shared").Project | null,
+          project: hydrated as import("@bionicai/shared").Project | null,
           status: "relinked",
         };
       }
@@ -806,12 +806,12 @@ export function projectService(db: Db) {
         resourceKey: input.projectKey,
         companyId: input.companyId,
         projectId: hydrated?.id ?? project.id,
-        project: hydrated as import("@paperclipai/shared").Project | null,
+        project: hydrated as import("@bionicai/shared").Project | null,
         status: "created",
       };
     },
 
-    createWithRepositories: async (companyId: string, data: Parameters<typeof createProject>[1], repositories: import("@paperclipai/shared").ProjectRepository[]): Promise<ProjectWithGoals> => {
+    createWithRepositories: async (companyId: string, data: Parameters<typeof createProject>[1], repositories: import("@bionicai/shared").ProjectRepository[]): Promise<ProjectWithGoals> => {
       return db.transaction(async (tx) => {
         const service = projectService(tx as unknown as Db);
         const project = await service.create(companyId, data);
@@ -822,7 +822,7 @@ export function projectService(db: Db) {
       });
     },
 
-    replaceRepositories: async (projectId: string, repositories: import("@paperclipai/shared").ProjectRepository[]): Promise<ProjectWithGoals | null> => {
+    replaceRepositories: async (projectId: string, repositories: import("@bionicai/shared").ProjectRepository[]): Promise<ProjectWithGoals | null> => {
       return db.transaction(async (tx) => {
         const [project] = await tx.select().from(projects).where(eq(projects.id, projectId)).for("update");
         if (!project) return null;

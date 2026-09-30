@@ -57,7 +57,7 @@ function recording(caseId = "task-reply-accept"): FirstTaskEvidence {
     tasks: [task],
     agents: [{ id: "agent" }],
     comments: [
-      { id: "greeting", authorAgentId: "agent", body: "Welcome to Paperclip" },
+      { id: "greeting", authorAgentId: "agent", body: "Welcome to Bionic" },
     ],
     interactions: [
       {
@@ -173,7 +173,7 @@ function rejectionRecording(): FirstTaskEvidence {
 
 function result(e = recording()): RunnerE2EResult {
   return {
-    schema: "paperclip.runner-e2e.result/v2",
+    schema: "bionic.runner-e2e.result/v2",
     suiteId: "first-task",
     executionId: `first-task.legacy-codex.local.${e.caseId}`,
     attempt: 1,
@@ -243,7 +243,7 @@ describe("first-task question presentation grading", () => {
   it("documents an API-valid text card that renders without a one-option choice", async () => {
     const reference = await readFile(
       new URL(
-        "../../skills/paperclip/references/api-reference.md",
+        "../../skills/bionic/references/api-reference.md",
         import.meta.url,
       ),
       "utf8",
@@ -754,7 +754,7 @@ Accept the card above and I write it. This task stays in review until then.`;
       const original = {
         adapterConfig: {
           instructionsFilePath: "/managed/AGENTS.md",
-          paperclipSkillSync: { desiredSkills: ["first-task"] },
+          bionicSkillSync: { desiredSkills: ["first-task"] },
           model: null,
         },
         permissions: { canCreateAgents: true },
@@ -764,30 +764,30 @@ Accept the card above and I write it. This task stays in review until then.`;
         "adapterConfig",
         "adapterType",
       ]);
-      expect(patch.adapterType).toBe("paperclip_runner");
+      expect(patch.adapterType).toBe("bionic_runner");
       expect(patch.adapterConfig).toMatchObject({
         instructionsFilePath: "/managed/AGENTS.md",
-        paperclipSkillSync: original.adapterConfig.paperclipSkillSync,
+        bionicSkillSync: original.adapterConfig.bionicSkillSync,
         provider: execution.profile.provider,
       });
       expect(patch.adapterConfig).not.toHaveProperty("model");
       const withOperational = firstTaskNativeRuntimePatch(execution, fixtures, {
         adapterConfig: {
-          paperclipSkillSync: {
+          bionicSkillSync: {
             desiredSkills: [
-              "paperclipai/paperclip/paperclip",
-              "paperclipai/paperclip/first-task",
+              "bionicai/bionic/bionic",
+              "bionicai/bionic/first-task",
             ],
           },
         },
       });
       expect(
         (
-          withOperational.adapterConfig.paperclipSkillSync as {
+          withOperational.adapterConfig.bionicSkillSync as {
             desiredSkills: string[];
           }
         ).desiredSkills,
-      ).toEqual(["paperclipai/paperclip/first-task"]);
+      ).toEqual(["bionicai/bionic/first-task"]);
       expect(patch).not.toHaveProperty("instructionsBundle");
       expect(
         (patch.adapterConfig.env as Record<string, unknown>)[
@@ -956,7 +956,7 @@ Accept the card above and I write it. This task stays in review until then.`;
   });
   it("keeps source and display hashes distinct when instruction examples are redacted", () => {
     const content = 'curl -H "Authorization: Bearer some-example-token"';
-    const snapshot = snapshotInstruction("paperclip/SKILL.md", content);
+    const snapshot = snapshotInstruction("bionic/SKILL.md", content);
     expect(snapshot.redacted).toBe(true);
     expect(snapshot.sha256).toBe(digestText(content));
     expect(snapshot.contentSha256).toBe(digestText(snapshot.content));

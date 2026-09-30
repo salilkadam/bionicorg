@@ -2,7 +2,7 @@ import { instanceSettingsService } from "../../../services/instance-settings.js"
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   activityLog,
   agentWakeupRequests,
@@ -13,7 +13,7 @@ import {
   issueComments,
   issueRecoveryActions,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -52,7 +52,7 @@ describeEmbeddedPostgres("wake-queue postgres adapter", () => {
   };
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-wake-queue-postgres-adapter-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-wake-queue-postgres-adapter-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
@@ -77,7 +77,7 @@ describeEmbeddedPostgres("wake-queue postgres adapter", () => {
     const companyId = randomUUID();
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "responsible-user",
@@ -252,7 +252,7 @@ describeEmbeddedPostgres("wake-queue postgres adapter", () => {
       companyId, issueId, authorUserId: "responsible-user", body: "Pending input",
     }).returning();
     const wakeId = await seedDeferredWake({ companyId, agentId, issueId, requestedByActorId: "responsible-user",
-      payload: { commentId: comment.id, _paperclipWakeContext: { issueId, wakeReason: "issue_commented", wakeCommentIds: [comment.id] } },
+      payload: { commentId: comment.id, _bionicWakeContext: { issueId, wakeReason: "issue_commented", wakeCommentIds: [comment.id] } },
     });
     await db.update(heartbeatRuns).set({ runtimeMode: "legacy", resultJson: {
       queuedCommentInterruptQueueId: wakeId, executionCancellation: { state: "acknowledged" },
@@ -325,7 +325,7 @@ describeEmbeddedPostgres("wake-queue postgres adapter", () => {
     const runId = await seedRun({ companyId, agentId, status: "cancelled", contextSnapshot: { issueId } });
     await db.update(heartbeatRuns).set({ runtimeMode: "native", nativeIssueId: issueId, resultJson: {
       reassignmentStopRequested: true,
-      nativeCancellation: { schema: "paperclip.native-cancellation.v1", runId, companyId, issueId,
+      nativeCancellation: { schema: "bionic.native-cancellation.v1", runId, companyId, issueId,
         scope: "run", reasonCode: "cancellation_run_only", dispatchState: "acknowledged", dispatched: true,
         intentAuditId: randomUUID(), acknowledgementAuditId: randomUUID() },
     } }).where(eq(heartbeatRuns.id, runId));

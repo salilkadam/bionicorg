@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import type { CreateIssueThreadInteraction } from "@paperclipai/shared";
+import type { Db } from "@bionicai/db";
+import type { CreateIssueThreadInteraction } from "@bionicai/shared";
 import {
   agentWakeupRequests,
   agents,
@@ -17,7 +17,7 @@ import {
   statusDecisions,
   workAssessments,
   workspaceOperations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   NATIVE_STATUS_ARBITER_POLICY_VERSION,
   type NativeStatusDecision,
@@ -437,7 +437,7 @@ async function enqueueWake(input: {
         issueId: input.issueId,
         taskId: input.issueId,
         ...input.payload,
-        _paperclipWakeContext: {
+        _bionicWakeContext: {
           issueId: input.issueId,
           taskId: input.issueId,
           ...(input.contextSnapshot ?? {}),
@@ -990,8 +990,8 @@ async function materializeDecisionEffect(input: {
           sql`coalesce(
           ${agentWakeupRequests.payload} ->> 'issueId',
           ${agentWakeupRequests.payload} ->> 'taskId',
-          ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'issueId',
-          ${agentWakeupRequests.payload} -> '_paperclipWakeContext' ->> 'taskId'
+          ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'issueId',
+          ${agentWakeupRequests.payload} -> '_bionicWakeContext' ->> 'taskId'
         ) = ${input.issue.id}`,
         ),
       );

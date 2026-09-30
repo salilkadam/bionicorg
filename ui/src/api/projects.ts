@@ -4,7 +4,7 @@ import type {
   ProjectWorkspace,
   WorkspaceOperation,
   WorkspaceRuntimeControlTarget,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { api } from "./client";
 import { sanitizeWorkspaceRuntimeControlTarget } from "./workspace-runtime-control";
 

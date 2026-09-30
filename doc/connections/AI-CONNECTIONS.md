@@ -138,7 +138,7 @@ establish quota exhaustion.
 
 `prepareManagedAiRuntime` is shared by runs, environment tests, and adoption.
 Claude ACP validates working directories on the selected execution target. A
-sandbox directory does not need to exist on the Paperclip server. When the agent
+sandbox directory does not need to exist on the Bionic server. When the agent
 has no configured directory, the test uses the remote target's working directory.
 It checks responsible identity, membership, compatibility, connection health,
 human audience and agent installation before reading credentials.
@@ -180,7 +180,7 @@ they must not be replaced by a fresh execution with a pre-provider receipt.
 
 Session reuse includes grant identity, responsible user, and credential
 generation. A changed identity starts a fresh provider session. Native Codex
-(`paperclip_runner`) honors the configured warm lifecycle. It copies refreshed
+(`bionic_runner`) honors the configured warm lifecycle. It copies refreshed
 credentials back to the current invocation before deleting that invocation's
 private home. The session-owned credential stays private until idle timeout or
 explicit closure. Each follow-up rechecks current authorization and account
@@ -335,7 +335,7 @@ provider key with `AI_REPAIR_TEST_KEY`. The test verifies these boundaries befor
 revoking credentials or submitting work. Delete the disposable instance and revoke
 its provider key after the test; failed tests may leave a paused task for inspection.
 
-Authenticated public deployments must configure a trusted runtime host (`PAPERCLIP_TRUSTED_MCP_RUNTIME_HOST` or `PAPERCLIP_TOOL_RUNTIME_TRUSTED_HOST`) before offering server-host subscription login, matching the local stdio runtime boundary. Health reports this capability so setup can offer a supported environment or API key instead of an unusable terminal command. Private authenticated self-hosted instances support isolated local login without that extra setting. Isolated Claude credential files must be private, owned by the server user, bounded, and free of symlinks.
+Authenticated public deployments must configure a trusted runtime host (`BIONIC_TRUSTED_MCP_RUNTIME_HOST` or `BIONIC_TOOL_RUNTIME_TRUSTED_HOST`) before offering server-host subscription login, matching the local stdio runtime boundary. Health reports this capability so setup can offer a supported environment or API key instead of an unusable terminal command. Private authenticated self-hosted instances support isolated local login without that extra setting. Isolated Claude credential files must be private, owned by the server user, bounded, and free of symlinks.
 
 ### Hiring and delegated work
 

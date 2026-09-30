@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="doc/assets/banner.jpg" alt="Paperclip is the app people use to manage AI agents for work." width="720" />
+  <img src="doc/assets/banner.jpg" alt="Bionic is the app people use to manage AI agents for work." width="720" />
 </p>
 
 <p align="center">
   <a href="#quickstart"><strong>Quickstart</strong></a> &middot;
-  <a href="https://docs.paperclip.ing"><strong>Docs</strong></a> &middot;
-  <a href="https://github.com/paperclipai/paperclip"><strong>GitHub</strong></a> &middot;
+  <a href="https://docs.bionic.ing"><strong>Docs</strong></a> &middot;
+  <a href="https://github.com/bionicai/bionic"><strong>GitHub</strong></a> &middot;
   <a href="https://discord.gg/m4HZY7xNG3"><strong>Discord</strong></a> &middot;
-  <a href="https://x.com/papercliping"><strong>Twitter</strong></a> &middot;
-  <a href="https://paperclip.ing"><strong>Website</strong></a>
+  <a href="https://x.com/bionicing"><strong>Twitter</strong></a> &middot;
+  <a href="https://bionic.ing"><strong>Website</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/paperclipai/paperclip/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" /></a>
-  <a href="https://github.com/paperclipai/paperclip/stargazers"><img src="https://img.shields.io/github/stars/paperclipai/paperclip?style=flat" alt="Stars" /></a>
-  <a href="https://www.star-history.com/paperclipai/paperclip"><img src="https://api.star-history.com/badge?repo=paperclipai/paperclip" alt="Star History Rank" /></a>
+  <a href="https://github.com/bionicai/bionic/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" /></a>
+  <a href="https://github.com/bionicai/bionic/stargazers"><img src="https://img.shields.io/github/stars/bionicai/bionic?style=flat" alt="Stars" /></a>
+  <a href="https://www.star-history.com/bionicai/bionic"><img src="https://api.star-history.com/badge?repo=bionicai/bionic" alt="Star History Rank" /></a>
   <a href="https://discord.gg/m4HZY7xNG3"><img src="https://img.shields.io/badge/discord-join-7289da" alt="Discord" /></a>
 </p>
 
@@ -25,18 +25,18 @@
 </div>
 
 <p align="center">
-  <a href="https://paperclip.ing/waitlist/"><strong>Sign up for the Paperclip Cloud waitlist →</strong></a>
+  <a href="https://bionic.ing/waitlist/"><strong>Sign up for the Bionic Cloud waitlist →</strong></a>
 </p>
 
 <br/>
 
-# Paperclip is the app people use to manage AI agents for work.
+# Bionic is the app people use to manage AI agents for work.
 
 Open-source orchestration for teams of AI agents.
 
-**If OpenClaw is an _employee_, Paperclip is the _company_.**
+**If OpenClaw is an _employee_, Bionic is the _company_.**
 
-Paperclip is a Node.js server and React UI that orchestrates a team of AI agents to run a business. Bring your own agents, assign goals, and track work and costs from one dashboard. Choose models and harnesses per agent while keeping your team's tasks, skills, permissions, and history in one place.
+Bionic is a Node.js server and React UI that orchestrates a team of AI agents to run a business. Bring your own agents, assign goals, and track work and costs from one dashboard. Choose models and harnesses per agent while keeping your team's tasks, skills, permissions, and history in one place.
 
 It looks like a task manager. Under the hood: org charts, budgets, governance, goal alignment, and agent coordination.
 
@@ -73,11 +73,11 @@ It looks like a task manager. Under the hood: org charts, budgets, governance, g
 
 </div>
 
-Custom processes, HTTP endpoints, and external adapter packages extend the roster. See the [adapter overview](https://docs.paperclip.ing/reference/adapters/overview/) for setup and capabilities.
+Custom processes, HTTP endpoints, and external adapter packages extend the roster. See the [adapter overview](https://docs.bionic.ing/reference/adapters/overview/) for setup and capabilities.
 
 <br/>
 
-## Paperclip is right for you if
+## Bionic is right for you if
 
 - ✅ You want to build **autonomous AI organizations**
 - ✅ You **coordinate many different agents** (OpenClaw, Codex, Claude, Cursor) toward a common goal
@@ -91,12 +91,12 @@ Custom processes, HTTP endpoints, and external adapter packages extend the roste
 
 ## The four pillars
 
-Four things have to work for an organization of AI agents to actually produce: the tasks, the org, the training, and the infrastructure. Paperclip is built around exactly those four pillars.
+Four things have to work for an organization of AI agents to actually produce: the tasks, the org, the training, and the infrastructure. Bionic is built around exactly those four pillars.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/paperclipai/paperclip/1ec33ffd8b597f7e36aac3e2fbb4665b8c42dc3c/doc/assets/four-pillars-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/paperclipai/paperclip/1ec33ffd8b597f7e36aac3e2fbb4665b8c42dc3c/doc/assets/four-pillars-light.png">
-  <img src="https://raw.githubusercontent.com/paperclipai/paperclip/1ec33ffd8b597f7e36aac3e2fbb4665b8c42dc3c/doc/assets/four-pillars-light.png" alt="The four pillars of Paperclip">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bionicai/bionic/1ec33ffd8b597f7e36aac3e2fbb4665b8c42dc3c/doc/assets/four-pillars-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/bionicai/bionic/1ec33ffd8b597f7e36aac3e2fbb4665b8c42dc3c/doc/assets/four-pillars-light.png">
+  <img src="https://raw.githubusercontent.com/bionicai/bionic/1ec33ffd8b597f7e36aac3e2fbb4665b8c42dc3c/doc/assets/four-pillars-light.png" alt="The four pillars of Bionic">
 </picture>
 
 | Pillar | Built for | What it covers |
@@ -128,7 +128,7 @@ Agents wake for assigned work, follow-up messages, or configured schedules. Dele
 <tr>
 <td align="center">
 <h3>💰 Cost Control</h3>
-Company, agent, and project <a href="https://docs.paperclip.ing/guides/day-to-day/costs/">budgets</a>. Track reported spend, get threshold alerts, and pause work at configured limits.
+Company, agent, and project <a href="https://docs.bionic.ing/guides/day-to-day/costs/">budgets</a>. Track reported spend, get threshold alerts, and pause work at configured limits.
 </td>
 <td align="center">
 <h3>🏢 Multi-Organization</h3>
@@ -142,7 +142,7 @@ Keep conversations, plans, blockers, files, and run history attached to the work
 <tr>
 <td align="center">
 <h3>🛡️ Governance</h3>
-Configure <a href="https://docs.paperclip.ing/guides/day-to-day/approvals/">review and approval stages</a>, approve hires, and pause, reassign, or stop work when needed.
+Configure <a href="https://docs.bionic.ing/guides/day-to-day/approvals/">review and approval stages</a>, approve hires, and pause, reassign, or stop work when needed.
 </td>
 <td align="center">
 <h3>📊 Org Chart</h3>
@@ -156,59 +156,59 @@ Monitor and manage your autonomous businesses from anywhere.
 <tr>
 <td align="center">
 <h3>🔗 Apps & Connections</h3>
-<a href="https://docs.paperclip.ing/connectors/">Connect services</a> such as GitHub, Notion, and Railway, or your own MCP server. Set gateway actions to Allowed, Ask first, or Off.
+<a href="https://docs.bionic.ing/connectors/">Connect services</a> such as GitHub, Notion, and Railway, or your own MCP server. Set gateway actions to Allowed, Ask first, or Off.
 </td>
 <td align="center">
 <h3>👥 Shared Agents, Personal Accounts</h3>
-Choose <a href="https://docs.paperclip.ing/connectors/access-model/">who can use a connection and which agents can access it</a>. Managed GitHub operations can use the account of the person directing the work.
+Choose <a href="https://docs.bionic.ing/connectors/access-model/">who can use a connection and which agents can access it</a>. Managed GitHub operations can use the account of the person directing the work.
 </td>
 <td align="center">
 <h3>🧠 Skills & Skill Studio</h3>
-Install or write <a href="https://docs.paperclip.ing/guides/org/skills/">shared skills</a>, test them with saved inputs, inspect results, and restore earlier versions.
+Install or write <a href="https://docs.bionic.ing/guides/org/skills/">shared skills</a>, test them with saved inputs, inspect results, and restore earlier versions.
 </td>
 </tr>
 <tr>
 <td align="center">
 <h3>📅 Scheduled Routines</h3>
-Run <a href="https://docs.paperclip.ing/guides/projects-workflow/routines/">recurring work</a> on a schedule or trigger it through an API or webhook. Each run has a task, an owner, and a history.
+Run <a href="https://docs.bionic.ing/guides/projects-workflow/routines/">recurring work</a> on a schedule or trigger it through an API or webhook. Each run has a task, an owner, and a history.
 </td>
 <td align="center">
 <h3>📎 Artifacts & Feedback</h3>
-Find the <a href="https://docs.paperclip.ing/guides/day-to-day/artifacts/">files and documents agents produce</a>. Preview supported formats and leave comments on specific passages in documents.
+Find the <a href="https://docs.bionic.ing/guides/day-to-day/artifacts/">files and documents agents produce</a>. Preview supported formats and leave comments on specific passages in documents.
 </td>
 <td align="center">
 <h3>📦 Ready-Made Teams</h3>
-Preview and install <a href="https://docs.paperclip.ing/guides/org/team-catalog/">teams</a> with roles, skills, projects, and routines. Choose their runtimes and make the setup your own.
+Preview and install <a href="https://docs.bionic.ing/guides/org/team-catalog/">teams</a> with roles, skills, projects, and routines. Choose their runtimes and make the setup your own.
 </td>
 </tr>
 </table>
 
-Experimental **Agent Chat** and **chat/email connectors** add conversations with agents in Paperclip and through configured services such as Slack, Discord, Telegram, and AgentMail. Enable the relevant instance settings to try them.
+Experimental **Agent Chat** and **chat/email connectors** add conversations with agents in Bionic and through configured services such as Slack, Discord, Telegram, and AgentMail. Enable the relevant instance settings to try them.
 
 <br/>
 
-## Problems Paperclip solves
+## Problems Bionic solves
 
-| Without Paperclip                                                                                                                     | With Paperclip                                                                                                                         |
+| Without Bionic                                                                                                                     | With Bionic                                                                                                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | ❌ You have 20 Claude Code tabs open and can't track which one does what. On reboot you lose everything.                              | ✅ Tasks are ticket-based, conversations are threaded, sessions persist across reboots.                                                |
 | ❌ You manually gather context from several places to remind your bot what you're actually doing.                                     | ✅ Context flows from the task up through the project and company goals — your agent always knows what to do and why.                  |
-| ❌ Folders of agent configs are disorganized and you're re-inventing task management, communication, and coordination between agents. | ✅ Paperclip gives you org charts, ticketing, delegation, and governance out of the box — so you run a company, not a pile of scripts. |
+| ❌ Folders of agent configs are disorganized and you're re-inventing task management, communication, and coordination between agents. | ✅ Bionic gives you org charts, ticketing, delegation, and governance out of the box — so you run a company, not a pile of scripts. |
 | ❌ Runaway loops waste hundreds of dollars of tokens and max your quota before you even know what happened.                           | ✅ Spend tracking, budget alerts, and automatic pauses help you control the cost of ongoing work.                                       |
 | ❌ You have recurring jobs (customer support, social, reports) and have to remember to manually kick them off.                        | ✅ Routines create assigned tasks on a schedule, with outputs and run history you can inspect.                                         |
-| ❌ You have an idea, you have to find your repo, fire up Claude Code, keep a tab open, and babysit it.                                | ✅ Add a task in Paperclip. Your coding agent works on it until it's done. Management reviews their work.                              |
+| ❌ You have an idea, you have to find your repo, fire up Claude Code, keep a tab open, and babysit it.                                | ✅ Add a task in Bionic. Your coding agent works on it until it's done. Management reviews their work.                              |
 
 <br/>
 
-## Why Paperclip is special
+## Why Bionic is special
 
-Paperclip handles the hard orchestration details correctly.
+Bionic handles the hard orchestration details correctly.
 
 |                                   |                                                                                                               |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | **Atomic task checkout.**         | A single assignee and execution locks prevent competing runs from claiming the same task.                    |
-| **Persistent work context.**      | Tasks, comments, and documents stay in Paperclip. Supporting adapters resume saved sessions across runs.       |
-| **Runtime skill injection.**      | Agents can learn Paperclip workflows and project context at runtime, without retraining.                      |
+| **Persistent work context.**      | Tasks, comments, and documents stay in Bionic. Supporting adapters resume saved sessions across runs.       |
+| **Runtime skill injection.**      | Agents can learn Bionic workflows and project context at runtime, without retraining.                      |
 | **Governance with rollback.**     | Approval gates are enforced, config changes are revisioned, and bad changes can be rolled back safely.        |
 | **Accountable connections.**      | Human access, agent eligibility, and gateway action permissions are separate controls. Approve a call once or save a revocable rule. |
 | **Goal-aware execution.**         | Linked tasks and projects carry goal ancestry so agents see the "why," not just a title.                      |
@@ -219,11 +219,11 @@ Paperclip handles the hard orchestration details correctly.
 
 ## What's Under the Hood
 
-Paperclip is a full control plane, not a wrapper. Before you build any of this yourself, know that it already exists:
+Bionic is a full control plane, not a wrapper. Before you build any of this yourself, know that it already exists:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                       PAPERCLIP SERVER                       │
+│                       bionic SERVER                       │
 │                                                              │
 │  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  │
 │  │Identity & │  │  Work &   │  │ Heartbeat │  │Governance │  │
@@ -301,7 +301,7 @@ Paperclip is a full control plane, not a wrapper. Before you build any of this y
 <tr>
 <td>
 
-**[Plugins](https://docs.paperclip.ing/administration/plugins/)** — Instance-wide plugin system with out-of-process workers, capability-gated host services, job scheduling, tool exposure, and UI contributions. Extend Paperclip without forking it.
+**[Plugins](https://docs.bionic.ing/administration/plugins/)** — Instance-wide plugin system with out-of-process workers, capability-gated host services, job scheduling, tool exposure, and UI contributions. Extend Bionic without forking it.
 
 </td>
 <td>
@@ -318,7 +318,7 @@ Paperclip is a full control plane, not a wrapper. Before you build any of this y
 </td>
 <td>
 
-**[Company Portability](https://docs.paperclip.ing/guides/power/export-import/)** — Preview, export, and import organization packages with agents, skills, and optional projects, routines, tasks, and attachments. Referenced secret values are omitted; review packages before sharing because plain environment values and local paths can remain. Packages share an operating setup; full-instance recovery uses backups.
+**[Company Portability](https://docs.bionic.ing/guides/power/export-import/)** — Preview, export, and import organization packages with agents, skills, and optional projects, routines, tasks, and attachments. Referenced secret values are omitted; review packages before sharing because plain environment values and local paths can remain. Packages share an operating setup; full-instance recovery uses backups.
 
 </td>
 </tr>
@@ -326,14 +326,14 @@ Paperclip is a full control plane, not a wrapper. Before you build any of this y
 
 <br/>
 
-## What Paperclip is not
+## What Bionic is not
 
 |                              |                                                                                                                      |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Not just a chatbot.**      | Conversations stay attached to tasks, plans, decisions, and outputs. Experimental Agent Chat can hand work off to assigned tasks.    |
 | **Not an agent framework.**  | We don't tell you how to build agents. We tell you how to run a company made of them.                                |
 | **Not just a workflow builder.** | Routines and experimental pipelines operate within an organization, with roles, goals, budgets, and governance.                  |
-| **Not a prompt manager.**    | Agents bring their own prompts, models, and runtimes. Paperclip manages the organization they work in.               |
+| **Not a prompt manager.**    | Agents bring their own prompts, models, and runtimes. Bionic manages the organization they work in.               |
 | **Not limited to one agent.** | Start with one agent and grow into a team with shared skills, delegation, and review.                                              |
 | **Not only for code review.** | Coding and PR review fit alongside research, operations, content, and other work.                                                  |
 
@@ -341,32 +341,32 @@ Paperclip is a full control plane, not a wrapper. Before you build any of this y
 
 ## Quickstart
 
-Open source. Self-hosted. No Paperclip account required. Follow the [guided quickstart](https://docs.paperclip.ing/guides/getting-started/five-minute-path/) to set up your first agent.
+Open source. Self-hosted. No Bionic account required. Follow the [guided quickstart](https://docs.bionic.ing/guides/getting-started/five-minute-path/) to set up your first agent.
 
-### Just ask your agent to install Paperclip
+### Just ask your agent to install Bionic
 
-Share the [installation guide](https://docs.paperclip.ing/reference/cli/installation/) with your agent.
+Share the [installation guide](https://docs.bionic.ing/reference/cli/installation/) with your agent.
 
 ### Or install it yourself
 
 With **Node.js 24.11 or newer** installed:
 
 ```bash
-npx paperclipai@latest onboard --yes
+npx bionicai@latest onboard --yes
 ```
 
 The CLI runs from npm's cache; your instance configuration and data persist locally.
 
-See the [installation guide](https://docs.paperclip.ing/reference/cli/installation/) for managed installs, pinned versions, canary and git-ref installs, updates, rollback, service management, and uninstalling.
+See the [installation guide](https://docs.bionic.ing/reference/cli/installation/) for managed installs, pinned versions, canary and git-ref installs, updates, rollback, service management, and uninstalling.
 
 For an isolated manual test instance that is already initialized with a CEO
 agent, use `test-drive`. It stays in the foreground, never installs a service
 or creates a first task, and opens the browser only after setup succeeds:
 
 ```bash
-ANTHROPIC_API_KEY=... npx paperclipai test-drive
-OPENAI_API_KEY=... npx paperclipai test-drive --harness codex
-OPENROUTER_API_KEY=... npx paperclipai test-drive \
+ANTHROPIC_API_KEY=... npx bionicai test-drive
+OPENAI_API_KEY=... npx bionicai test-drive --harness codex
+OPENROUTER_API_KEY=... npx bionicai test-drive \
   --harness opencode \
   --model openrouter/anthropic/claude-sonnet-4.5
 ```
@@ -375,12 +375,12 @@ Each run without `--data-dir` gets a unique, retained temporary directory; its
 absolute path is printed at startup. Pass `--data-dir` to reuse one, or
 `--no-browser` to leave the initialized instance unopened. When invoked from a
 linked Git worktree, `test-drive` also enables task execution in that worktree.
-See the [test-drive guide](https://docs.paperclip.ing/reference/cli/test-drive/) for credential and
+See the [test-drive guide](https://docs.bionic.ing/reference/cli/test-drive/) for credential and
 reuse behavior.
 
 > **Troubleshooting: private npm registry `.npmrc`**
 >
-> If this fails with an `E404` for `paperclipai` (or similar) and you use a private npm registry (for example GitHub Packages) via a global `~/.npmrc`, `npx` may be resolving `paperclipai` against that private registry instead of the public npm registry.
+> If this fails with an `E404` for `bionicai` (or similar) and you use a private npm registry (for example GitHub Packages) via a global `~/.npmrc`, `npx` may be resolving `bionicai` against that private registry instead of the public npm registry.
 >
 > Diagnostic:
 >
@@ -391,24 +391,24 @@ reuse behavior.
 > Workaround (cross-platform; force the public npm registry for this command):
 >
 > ```bash
-> npx --registry https://registry.npmjs.org paperclipai@latest onboard --yes
+> npx --registry https://registry.npmjs.org bionicai@latest onboard --yes
 > ```
 
 That quickstart path now defaults to trusted local loopback mode for the fastest first run. To start in authenticated/private mode instead, choose a bind preset explicitly:
 
 ```bash
-npx paperclipai@latest onboard --yes --bind lan
+npx bionicai@latest onboard --yes --bind lan
 # or:
-npx paperclipai@latest onboard --yes --bind tailnet
+npx bionicai@latest onboard --yes --bind tailnet
 ```
 
-If you already have Paperclip configured, rerunning `onboard` keeps the existing config in place. Use `npx paperclipai configure` to edit settings.
+If you already have Bionic configured, rerunning `onboard` keeps the existing config in place. Use `npx bionicai configure` to edit settings.
 
 Or manually:
 
 ```bash
-git clone https://github.com/paperclipai/paperclip.git
-cd paperclip
+git clone https://github.com/bionicai/bionic.git
+cd bionic
 pnpm install
 pnpm dev
 ```
@@ -417,7 +417,7 @@ This starts the UI and API at `http://localhost:3100`. An embedded PostgreSQL da
 
 > **Requirements:** Node.js 24.11+, pnpm 9.15+
 
-Source development also builds the native Paperclip Runner when enabled (the self-hosted default). Install a Rust toolchain, or set `PAPERCLIP_RUNNER_BINARY` to a compatible prebuilt runner.
+Source development also builds the native Bionic Runner when enabled (the self-hosted default). Install a Rust toolchain, or set `BIONIC_RUNNER_BINARY` to a compatible prebuilt runner.
 
 <br/>
 
@@ -425,7 +425,7 @@ Source development also builds the native Paperclip Runner when enabled (the sel
 
 **Q: Is this project maintained or just slop?**
 
-**A:** Paperclip is maintained by the [Paperclip team](https://paperclip.ing). We've merged [over 2,700 pull requests](https://github.com/paperclipai/paperclip/pulls?q=is%3Apr+is%3Amerged).
+**A:** Bionic is maintained by the [Bionic team](https://bionic.ing). We've merged [over 2,700 pull requests](https://github.com/bionicai/bionic/pulls?q=is%3Apr+is%3Amerged).
 
 <br/>
 
@@ -433,7 +433,7 @@ Source development also builds the native Paperclip Runner when enabled (the sel
 
 **A:** Locally, a single Node.js process manages an embedded Postgres and local file storage. For production, point it at your own Postgres and deploy however you like. Configure projects, agents, and goals — the agents take care of the rest.
 
-For remote access, use authenticated mode with a private-network bind such as Tailscale, or deploy the persistent server with Docker. See [deployment modes](https://docs.paperclip.ing/reference/deploy/deployment-modes/) and the [Docker guide](https://docs.paperclip.ing/reference/deploy/docker/).
+For remote access, use authenticated mode with a private-network bind such as Tailscale, or deploy the persistent server with Docker. See [deployment modes](https://docs.bionic.ing/reference/deploy/deployment-modes/) and the [Docker guide](https://docs.bionic.ing/reference/deploy/docker/).
 
 <br/>
 
@@ -443,15 +443,15 @@ For remote access, use authenticated mode with a private-network bind such as Ta
 
 <br/>
 
-**Q: How is Paperclip different from agents like OpenClaw or Claude Code?**
+**Q: How is Bionic different from agents like OpenClaw or Claude Code?**
 
-**A:** Paperclip _uses_ those agents. It orchestrates them into a company — with org charts, budgets, goals, governance, and accountability.
+**A:** Bionic _uses_ those agents. It orchestrates them into a company — with org charts, budgets, goals, governance, and accountability.
 
 <br/>
 
-**Q: Why should I use Paperclip instead of just pointing my OpenClaw to Asana or Trello?**
+**Q: Why should I use Bionic instead of just pointing my OpenClaw to Asana or Trello?**
 
-**A:** Agent orchestration has subtleties in how you coordinate who has work checked out, how to maintain sessions, monitoring costs, establishing governance - Paperclip does this for you.
+**A:** Agent orchestration has subtleties in how you coordinate who has work checked out, how to maintain sessions, monitoring costs, establishing governance - Bionic does this for you.
 
 (Bring-your-own-ticket-system is on the Roadmap)
 
@@ -529,17 +529,17 @@ This is the short roadmap preview. See the full roadmap in [ROADMAP.md](ROADMAP.
 
 ## Community & Plugins
 
-Find Plugins and more at [awesome-paperclip](https://github.com/gsxdsm/awesome-paperclip)
+Find Plugins and more at [awesome-bionic](https://github.com/gsxdsm/awesome-bionic)
 
 ## Observability
 
-Paperclip ships with opt-in OpenTelemetry auto-instrumentation for the server (traces only). It activates when `OTEL_EXPORTER_OTLP_ENDPOINT` is set and supports `grpc`, `http/protobuf`, and `http/json` via the standard `OTEL_EXPORTER_OTLP_PROTOCOL` env var. `@opentelemetry/api` is a normal server dependency; the SDK, auto-instrumentation, and exporter packages are optional peer dependencies — install them only if you want tracing. See [doc/observability.md](doc/observability.md) for install commands and the full env-var reference.
+Bionic ships with opt-in OpenTelemetry auto-instrumentation for the server (traces only). It activates when `OTEL_EXPORTER_OTLP_ENDPOINT` is set and supports `grpc`, `http/protobuf`, and `http/json` via the standard `OTEL_EXPORTER_OTLP_PROTOCOL` env var. `@opentelemetry/api` is a normal server dependency; the SDK, auto-instrumentation, and exporter packages are optional peer dependencies — install them only if you want tracing. See [doc/observability.md](doc/observability.md) for install commands and the full env-var reference.
 
-Paperclip also ships with opt-in Sentry error monitoring for the server and the browser. Set `SENTRY_DSN_FRONTEND` to activate it for the browser and `SENTRY_DSN_BACKEND` to activate it for the server — each variable is optional, and the legacy `SENTRY_DSN` variable still works as a fallback for either component. The supported server SDK version is `@sentry/node@10.71.0`; it is an optional peer dependency for the server, so install it only if you want error monitoring. The browser SDK, `@sentry/browser`, is pinned to the same exact version. See [doc/observability.md](doc/observability.md#sentry-error-monitoring) for the install command, the privacy settings, and the full default capture set.
+Bionic also ships with opt-in Sentry error monitoring for the server and the browser. Set `SENTRY_DSN_FRONTEND` to activate it for the browser and `SENTRY_DSN_BACKEND` to activate it for the server — each variable is optional, and the legacy `SENTRY_DSN` variable still works as a fallback for either component. The supported server SDK version is `@sentry/node@10.71.0`; it is an optional peer dependency for the server, so install it only if you want error monitoring. The browser SDK, `@sentry/browser`, is pinned to the same exact version. See [doc/observability.md](doc/observability.md#sentry-error-monitoring) for the install command, the privacy settings, and the full default capture set.
 
 ## Telemetry
 
-Paperclip collects anonymous usage telemetry to help us understand how the product is used and improve it. No personal information, issue content, prompts, file paths, or secrets are ever collected. Private repository references are hashed with a per-install salt before being sent.
+Bionic collects anonymous usage telemetry to help us understand how the product is used and improve it. No personal information, issue content, prompts, file paths, or secrets are ever collected. Private repository references are hashed with a per-install salt before being sent.
 
 Contributors changing emitted telemetry events should follow the [Telemetry Data Contract](packages/shared/src/telemetry/README.md).
 For proposed first-party events that are not in the generated contract yet, follow [Telemetry Workflow](doc/TELEMETRY_WORKFLOW.md).
@@ -548,39 +548,39 @@ Telemetry is **enabled by default** and can be disabled with any of the followin
 
 | Method               | How                                                     |
 | -------------------- | ------------------------------------------------------- |
-| Environment variable | `PAPERCLIP_TELEMETRY_DISABLED=1`                        |
+| Environment variable | `BIONIC_TELEMETRY_DISABLED=1`                        |
 | Standard convention  | `DO_NOT_TRACK=1`                                        |
 | CI environments      | Automatically disabled when `CI=true`                   |
-| Config file          | Set `telemetry.enabled: false` in your Paperclip config |
+| Config file          | Set `telemetry.enabled: false` in your Bionic config |
 
 ## Contributing
 
 We welcome contributions. See the [contributing guide](CONTRIBUTING.md) for details.
 
-**[We're hiring](https://paperclip.ing/about/#careers)**
+**[We're hiring](https://bionic.ing/about/#careers)**
 
 <br/>
 
 ## Community
 
 - [Discord](https://discord.gg/m4HZY7xNG3) — Join the community
-- [Twitter / X](https://x.com/papercliping) — Follow updates and announcements
-- [GitHub Issues](https://github.com/paperclipai/paperclip/issues) — bugs and feature requests
-- [GitHub Discussions](https://github.com/paperclipai/paperclip/discussions) — ideas and RFC
+- [Twitter / X](https://x.com/bionicing) — Follow updates and announcements
+- [GitHub Issues](https://github.com/bionicai/bionic/issues) — bugs and feature requests
+- [GitHub Discussions](https://github.com/bionicai/bionic/discussions) — ideas and RFC
 
 <br/>
 
 ## License
 
-MIT &copy; 2026 [Paperclip Labs, Inc](https://paperclip.ing)
+MIT &copy; 2026 [Bionic Labs, Inc](https://bionic.ing)
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=paperclipai%2Fpaperclip&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=bionicai%2Fbionic&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=paperclipai/paperclip&type=date&theme=dark&legend=top-left&sealed_token=hFjuwFq41bQD5cevvXVv5cTru2swWRZujwJYKlHhtBh6n0H5-VvJZW2SAlcQKB8u4KxhyEB9JqFg1yccJ8WLv9wPBcoWpWcak4gx0MYTWu_pOs2jKOaDluH7KsLeTKt6DHGkHiN3LsqV9s--MTDQcC6Xl7zV51W0-YezQXo-pVPgoFDFAGf2CY5fiP5Q" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=paperclipai/paperclip&type=date&legend=top-left&sealed_token=hFjuwFq41bQD5cevvXVv5cTru2swWRZujwJYKlHhtBh6n0H5-VvJZW2SAlcQKB8u4KxhyEB9JqFg1yccJ8WLv9wPBcoWpWcak4gx0MYTWu_pOs2jKOaDluH7KsLeTKt6DHGkHiN3LsqV9s--MTDQcC6Xl7zV51W0-YezQXo-pVPgoFDFAGf2CY5fiP5Q" />
-    <img src="https://api.star-history.com/chart?repos=paperclipai/paperclip&type=date&legend=top-left&sealed_token=hFjuwFq41bQD5cevvXVv5cTru2swWRZujwJYKlHhtBh6n0H5-VvJZW2SAlcQKB8u4KxhyEB9JqFg1yccJ8WLv9wPBcoWpWcak4gx0MYTWu_pOs2jKOaDluH7KsLeTKt6DHGkHiN3LsqV9s--MTDQcC6Xl7zV51W0-YezQXo-pVPgoFDFAGf2CY5fiP5Q" alt="Star History Chart" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=bionicai/bionic&type=date&theme=dark&legend=top-left&sealed_token=hFjuwFq41bQD5cevvXVv5cTru2swWRZujwJYKlHhtBh6n0H5-VvJZW2SAlcQKB8u4KxhyEB9JqFg1yccJ8WLv9wPBcoWpWcak4gx0MYTWu_pOs2jKOaDluH7KsLeTKt6DHGkHiN3LsqV9s--MTDQcC6Xl7zV51W0-YezQXo-pVPgoFDFAGf2CY5fiP5Q" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=bionicai/bionic&type=date&legend=top-left&sealed_token=hFjuwFq41bQD5cevvXVv5cTru2swWRZujwJYKlHhtBh6n0H5-VvJZW2SAlcQKB8u4KxhyEB9JqFg1yccJ8WLv9wPBcoWpWcak4gx0MYTWu_pOs2jKOaDluH7KsLeTKt6DHGkHiN3LsqV9s--MTDQcC6Xl7zV51W0-YezQXo-pVPgoFDFAGf2CY5fiP5Q" />
+    <img src="https://api.star-history.com/chart?repos=bionicai/bionic&type=date&legend=top-left&sealed_token=hFjuwFq41bQD5cevvXVv5cTru2swWRZujwJYKlHhtBh6n0H5-VvJZW2SAlcQKB8u4KxhyEB9JqFg1yccJ8WLv9wPBcoWpWcak4gx0MYTWu_pOs2jKOaDluH7KsLeTKt6DHGkHiN3LsqV9s--MTDQcC6Xl7zV51W0-YezQXo-pVPgoFDFAGf2CY5fiP5Q" alt="Star History Chart" />
   </picture>
 </a>
 

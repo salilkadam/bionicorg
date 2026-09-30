@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import {
   findPaperclipConfigKeyWarnings,
-  paperclipConfigSchema,
+  bionicConfigSchema,
   type PaperclipConfig,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { ZodError } from "zod";
 import { resolvePaperclipConfigPath } from "./paths.js";
 
@@ -26,11 +26,11 @@ export function readConfigFile(): PaperclipConfig | null {
     raw = JSON.parse(fs.readFileSync(configPath, "utf-8"));
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid Paperclip config at ${configPath}: failed to read or parse JSON: ${reason}`);
+    throw new Error(`Invalid Bionic config at ${configPath}: failed to read or parse JSON: ${reason}`);
   }
 
   try {
-    const config = paperclipConfigSchema.parse(raw);
+    const config = bionicConfigSchema.parse(raw);
     for (const warning of findPaperclipConfigKeyWarnings(config)) {
       console.warn(
         `Unknown config key ${warning.path}; did you mean ${warning.suggestion}? It will be preserved.`,
@@ -39,7 +39,7 @@ export function readConfigFile(): PaperclipConfig | null {
     return config;
   } catch (error) {
     if (error instanceof ZodError) {
-      throw new Error(`Invalid Paperclip config at ${configPath}: ${formatConfigValidationError(error)}`);
+      throw new Error(`Invalid Bionic config at ${configPath}: ${formatConfigValidationError(error)}`);
     }
 
     throw error;

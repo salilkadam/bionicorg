@@ -5,7 +5,7 @@ vi.mock("../api/agents", () => ({ agentsApi: { testEnvironment } }));
 const input = {
   companyId: "company-1",
   agentId: "agent-1",
-  adapterType: "paperclip_runner",
+  adapterType: "bionic_runner",
   providerAdapter: "claude_local",
   environmentId: "sandbox-1",
   adapterConfig: {
@@ -21,7 +21,7 @@ const input = {
   },
 };
 const ready = {
-  adapterType: "paperclip_runner",
+  adapterType: "bionic_runner",
   status: "pass",
   testedAt: "now",
   checks: [{ code: "runtime", level: "info", message: "Ready" }],
@@ -44,7 +44,7 @@ it("does not report a connection when runtime readiness passes but provider auth
     });
   const result = await testAgentSetup(input);
   expect(result.status).toBe("fail");
-  expect(result.adapterType).toBe("paperclip_runner");
+  expect(result.adapterType).toBe("bionic_runner");
   expect(testEnvironment).toHaveBeenLastCalledWith(
     "company-1",
     "claude_local",
@@ -68,7 +68,7 @@ it("probes native Grok credentials with the pinned prerequisite in the selected 
   });
   expect(testEnvironment).toHaveBeenLastCalledWith("company-1", "grok_local", {
     agentId: "agent-1", environmentId: "sandbox-1",
-    adapterConfig: { provider: "acpx", acpxAgent: "grok", model: "grok-4.7", engine: "cli", command: "/opt/paperclip/providers/grok/1.0.13/grok" },
+    adapterConfig: { provider: "acpx", acpxAgent: "grok", model: "grok-4.7", engine: "cli", command: "/opt/bionic/providers/grok/1.0.13/grok" },
   });
   expect(result.checks.some((check) => check.code === "grok_hello_probe_passed")).toBe(true);
 });

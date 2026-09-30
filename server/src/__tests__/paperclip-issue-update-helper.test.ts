@@ -4,12 +4,12 @@ import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-// End-to-end coverage for scripts/paperclip-issue-update.sh: the helper must
+// End-to-end coverage for scripts/bionic-issue-update.sh: the helper must
 // only exit 0 when the server confirms the write by echoing the update, must
 // classify failures (retry connection-level faults and 5xx, never retry a
 // definitive 4xx), and must stop at two attempts total to honor the shared
 // bounded-write-retry rule.
-const HELPER_PATH = path.resolve("scripts/paperclip-issue-update.sh");
+const HELPER_PATH = path.resolve("scripts/bionic-issue-update.sh");
 
 interface HelperResult {
   code: number | null;
@@ -23,7 +23,7 @@ interface RecordedRequest {
   body: string;
 }
 
-describe("paperclip issue update helper", () => {
+describe("bionic issue update helper", () => {
   const cleanupFns: Array<() => Promise<void>> = [];
 
   afterEach(async () => {
@@ -71,9 +71,9 @@ describe("paperclip issue update helper", () => {
       const child = spawn("bash", [HELPER_PATH, ...args], {
         env: {
           ...process.env,
-          PAPERCLIP_API_URL: apiUrl,
-          PAPERCLIP_API_KEY: "test-key",
-          PAPERCLIP_RUN_ID: "test-run",
+          BIONIC_API_URL: apiUrl,
+          BIONIC_API_KEY: "test-key",
+          BIONIC_RUN_ID: "test-run",
         },
         stdio: ["ignore", "pipe", "pipe"],
       });

@@ -9,7 +9,7 @@ const meta = {
     layout: "fullscreen",
     docs: { description: { component: "Proposed optional step after verifying Slack, before linking your account. Downloads a real 512px Cliptoon PNG. Upload is manual in Slack; confirmation is user-reported. Navigation and Save & exit are local preview state, not production persistence." } },
   },
-  args: { agentName: "CEO", appName: "ceo-paperclip" },
+  args: { agentName: "CEO", appName: "ceo-bionic" },
   render: (args) => <SlackAvatarStep key={JSON.stringify(args)} {...args} />,
 } satisfies Meta<typeof SlackAvatarStep>;
 export default meta;
@@ -20,7 +20,7 @@ export const Mobile: Story = { globals: { viewport: { value: "mobile1", isRotate
 export const ConfirmAndReturn: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("link", { name: "Download avatar" })).toHaveAttribute("download", "ceo-paperclip-avatar.png");
+    await expect(canvas.getByRole("link", { name: "Download avatar" })).toHaveAttribute("download", "ceo-bionic-avatar.png");
     await userEvent.click(canvas.getByRole("button", { name: "I’ve uploaded the avatar" }));
     await expect(canvas.getByRole("heading", { name: "Connect your Slack account" })).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Back to avatar step" }));

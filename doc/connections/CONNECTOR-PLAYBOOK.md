@@ -1,11 +1,11 @@
 # Connection Authoring Runbook
 
 Audience: agents and engineers researching, implementing, testing, reviewing,
-and shipping Paperclip app connections.
+and shipping Bionic app connections.
 
 Status: canonical end-to-end authoring guide for Apps v2 catalog connections.
 
-For connector artwork, follow [Connector icons](./CONNECTOR-ICONS.md): fixed gray Paperclip frames, authentic vendor artwork, explicit theme variants, optical fit and exact provenance. Brand-library additions do not activate connectors. Use the shared registry/resolver and branding generator; do not introduce per-screen logos or outer-surface overrides.
+For connector artwork, follow [Connector icons](./CONNECTOR-ICONS.md): fixed gray Bionic frames, authentic vendor artwork, explicit theme variants, optical fit and exact provenance. Brand-library additions do not activate connectors. Use the shared registry/resolver and branding generator; do not introduce per-screen logos or outer-surface overrides.
 
 This runbook is the repeatable, agent-executable procedure for adding a vendor
 to the Apps catalog as data, not as a plugin. The architecture, reuse-path
@@ -26,31 +26,31 @@ For chat and email setup, account linking, and ongoing configuration, also follo
 layout, credential instructions, provider handoffs, identity linking, optional
 message tests, and management pages, with examples for other providers.
 
-Use it when Paperclip acts on an external system through a governed connection: a stored credential, a capability catalog, access profiles and policy rules, and audit. Inbound integrations, such as an external client acting on Paperclip, use gateway or webhook guidance instead.
+Use it when Bionic acts on an external system through a governed connection: a stored credential, a capability catalog, access profiles and policy rules, and audit. Inbound integrations, such as an external client acting on Bionic, use gateway or webhook guidance instead.
 
 **A catalog entry is a convenience layer, not a prerequisite.** An operator can connect any
 standards-compliant remote HTTP MCP server from **Connect your own MCP server**
-or **Paste a config** with no Paperclip code change at all — including servers
+or **Paste a config** with no Bionic code change at all — including servers
 that need browser sign-in. Those two routes are the documented baseline; see
 [Connecting any remote MCP server](./GENERIC-REMOTE-MCP.md).
 
-Write a catalog entry when Paperclip should *promote* a vendor: branding, tailored
+Write a catalog entry when Bionic should *promote* a vendor: branding, tailored
 fields, field validation, scoped defaults, and support copy. A definition adds
 those conveniences and nothing else. It must not create a second connection,
 change ownership, or be necessary for health, catalog, or governance — a curated
 route and the generic route converge on the same connection and review pipeline.
 
 Every connector built with this playbook is a **plane P2** connection — a
-resource credential governed by the Paperclip instance, never a sign-in
+resource credential governed by the Bionic instance, never a sign-in
 authenticator. The default durable authority is the instance vault. Reviewed
 remote MCP methods may opt in to [Vercel Connect](./VERCEL-CONNECT.md), where
 durable provider credentials remain in the operator's Vercel account and
-Paperclip resolves short-lived tokens at invocation time. Before writing a
+Bionic resolves short-lived tokens at invocation time. Before writing a
 connector, read [Identity vs. connections](./README.md#identity-vs-connections)
 for background. The boundary is mandatory: sign-in authenticates a person;
-a resource connection authorizes external work; Login with Paperclip issues
+a resource connection authorizes external work; Login with Bionic issues
 first-party identity tokens to registered clients. Sign-in tokens are never
-reused as resource tokens, and `id.paperclip.ing` never stores resource tokens
+reused as resource tokens, and `id.bionic.ing` never stores resource tokens
 or hosts a connections hub. Keep company-scoped connection credentials and
 agent access under the instance's connection governance.
 
@@ -132,23 +132,23 @@ chooses all five axes below.
 
 | Axis | Current values | Question |
 | --- | --- | --- |
-| Transport | `mcp_remote`, `local_stdio`, `rest_api` | How does Paperclip reach actions? |
+| Transport | `mcp_remote`, `local_stdio`, `rest_api` | How does Bionic reach actions? |
 | Authentication | `oauth`, `api_key`, `none` | How does the provider authorize requests? |
 | OAuth client ownership | `dcr`, `customer`, `platform_shared`, `platform_provisioned` | Who supplies and controls the OAuth client registration? |
-| Credential source | `paperclip_vault`, reviewed `vercel_connect` | Where does durable provider credential material live? |
+| Credential source | `bionic_vault`, reviewed `vercel_connect` | Where does durable provider credential material live? |
 | Grant identity | `organization`, `user`, `agent` | Does the credential act for the company, one person, or one dedicated agent? |
 
 These axes produce combinations such as:
 
-- Remote MCP + DCR OAuth + Paperclip vault + organization identity: Jira.
-- Remote MCP + customer OAuth app + Paperclip vault: Asana.
+- Remote MCP + DCR OAuth + Bionic vault + organization identity: Jira.
+- Remote MCP + customer OAuth app + Bionic vault: Asana.
 - Remote MCP + DCR or customer OAuth app: Notion and PostHog.
 - Remote MCP + API key in an HTTP header: Mem0 and PagerDuty.
 - Remote MCP + secret-bearing provider-generated URL: Zapier.
 - Remote MCP + no auth + required tenant field: Shopify.
-- Remote MCP + Paperclip-managed OAuth client + per-user grant: Google
+- Remote MCP + Bionic-managed OAuth client + per-user grant: Google
   Workspace MCP previews.
-- Remote MCP + Paperclip-managed OAuth client + personal or dedicated-agent
+- Remote MCP + Bionic-managed OAuth client + personal or dedicated-agent
   grant: GitHub. See [GitHub managed connection](./GITHUB.md).
 - Local stdio MCP + approved command template: the Google Sheets robot flow and
   development fixtures.
@@ -184,19 +184,19 @@ fixture. `env` belongs primarily to approved local stdio templates.
 
 ### Authentication support matrix
 
-| Pattern | Definition shape | What the user sees | What Paperclip stores |
+| Pattern | Definition shape | What the user sees | What Bionic stores |
 | --- | --- | --- | --- |
 | Automatic OAuth | `auth: "oauth"`, `ownershipModes: ["dcr"]` | Browser sign-in | DCR/CIMD client binding plus token secret refs. |
 | Automatic OAuth with own-app escape hatch | `ownershipModes: ["customer", "dcr"]` | Recommended browser sign-in; own client under **Advanced** | Same as automatic, or supplied client ID plus encrypted client secret. |
 | Customer OAuth only | `ownershipModes: ["customer"]` | Required client ID and optional/required client secret, then browser sign-in | Client ID in redacted config; client secret and provider tokens as secret refs. |
-| Paperclip-managed OAuth | `oauthStrategy: "paperclip_cloud_connector"`, `connectorProfile`, `platform_shared` | Browser sign-in through Paperclip Cloud | Provider tokens still land in the instance vault on a user grant. Cloud handles the fixed provider callback but does not persist plaintext credentials; Paperclip ID remains identity-only. |
+| Bionic-managed OAuth | `oauthStrategy: "bionic_cloud_connector"`, `connectorProfile`, `platform_shared` | Browser sign-in through Bionic Cloud | Provider tokens still land in the instance vault on a user grant. Cloud handles the fixed provider callback but does not persist plaintext credentials; Bionic ID remains identity-only. |
 | API key/PAT | `auth: "api_key"`, `credentialFields`, `keyPlacement` | Write-only credential field | Encrypted secret version plus placement-only refs. |
 | Generated URL | `auth: "none"`, no fixed URL/default template | Paste provider-generated MCP URL | Public URL shape in config; full secret-bearing URL in the vault. |
 | No auth | `auth: "none"`, fixed `serverUrl` or validated `serverUrlTemplate` | Zero fields or only required tenant/resource fields | No provider credential. |
 
 ### OAuth client resolution order
 
-For standard OAuth methods, Paperclip resolves a client in this order:
+For standard OAuth methods, Bionic resolves a client in this order:
 
 1. Deployment-preconfigured provider client.
 2. Client ID Metadata Document (CIMD), when advertised and the instance has a
@@ -214,11 +214,11 @@ credentials still take precedence when present.
 
 `ownershipModes` says who owns the OAuth client registration. It does not say
 where provider access tokens live. By default, access tokens, refresh tokens,
-client secrets, and API keys live in the Paperclip instance vault.
+client secrets, and API keys live in the Bionic instance vault.
 
 `credentialSource: "vercel_connect"` is a separately reviewed exception for
 specific methods. Such a connection stores a Vercel connector reference and no
-Paperclip provider secret refs. Never make a method accept both sources in the
+Bionic provider secret refs. Never make a method accept both sources in the
 same connection, and never infer Vercel eligibility from a provider name.
 
 ## Architecture From Setup To Agent Call
@@ -241,7 +241,7 @@ flowchart LR
 ```
 
 The agent never receives a durable provider credential. A run receives a
-Paperclip gateway capability. At invocation time the gateway rechecks company,
+Bionic gateway capability. At invocation time the gateway rechecks company,
 connection, grant, catalog, profile, policy, and run state; resolves the needed
 secret version; projects only the reviewed headers/arguments; calls the
 provider; and writes redacted audit evidence.
@@ -268,7 +268,7 @@ The durable pieces are:
   HTTP header name and prefix.
 
 On the default local provider, values are encrypted with the instance master
-key under `~/.paperclip/instances/<instance>/secrets/master.key`. A usable
+key under `~/.bionic/instances/<instance>/secrets/master.key`. A usable
 backup requires both the database and this key. Hosted provider-vault behavior
 is configured under Company Settings; the connection contract remains refs,
 not raw values.
@@ -282,7 +282,7 @@ Credential handling by pattern:
   servers do not replay a rotating refresh token.
 - Customer OAuth client secrets use an encrypted `oauth.client_secret` ref.
   Client IDs are identifiers and may remain in redacted connection config.
-- A generated URL containing credentials is split. Paperclip stores a safe URL
+- A generated URL containing credentials is split. Bionic stores a safe URL
   for display/routing and vaults the complete URL. The gateway verifies that
   the secret URL still matches the public URL before use.
 - Personal credentials live on a `user` grant and user-scoped secret rows.
@@ -373,21 +373,21 @@ Record this evidence:
   or reviewed-client requirements.
 - Normal prerequisites: account, paid plan, tenant feature flag, administrator
   consent, preview enrollment, region, project/site identifier.
-- Whether Paperclip itself needs provider approval. Customer-admin approval is
-  self-serve; provider approval of Paperclip is not.
+- Whether Bionic itself needs provider approval. Customer-admin approval is
+  self-serve; provider approval of Bionic is not.
 - Tool/action inventory, provider annotations, known destructive actions, and
   resource boundaries.
 - Revocation procedure and whether a provider endpoint exists.
 
 Safe research may fetch public metadata, but it must not perform dynamic client
-registration. Paperclip's catalog preflight is intentionally non-registering:
+registration. Bionic's catalog preflight is intentionally non-registering:
 
 ```text
 GET /api/companies/:companyId/tools/apps/:galleryKey/preflight?methodKey=<method-key>
 ```
 
 Registration and consent happen only after an explicit Connect action. If the
-provider requires Paperclip approval or redirect allowlisting that a customer
+provider requires Bionic approval or redirect allowlisting that a customer
 cannot complete, retain the research entry with an unavailable reason and do
 not expose a connect action.
 
@@ -424,7 +424,7 @@ audit.
 ### Phase 3: Design methods and the setup experience
 
 For every real user choice, create a separate method. Do not create methods for
-choices Paperclip can infer.
+choices Bionic can infer.
 
 Good separate methods:
 
@@ -436,7 +436,7 @@ Good separate methods:
 
 Avoid separate methods for:
 
-- DCR versus CIMD. Paperclip chooses automatically.
+- DCR versus CIMD. Bionic chooses automatically.
 - DCR versus a customer-owned OAuth app when both reach the same endpoint.
   Keep browser sign-in recommended and fold "use your own OAuth app" under
   **Advanced**.
@@ -446,7 +446,7 @@ Avoid separate methods for:
 The default setup screen should ask only for information required to make the
 connection work or enforce a real tenant boundary. Follow these rules:
 
-- Do not ask for a Paperclip **Connection name** during setup. Derive the display
+- Do not ask for a Bionic **Connection name** during setup. Derive the display
   name from the provider and observed account/workspace identity. A provider-required
   app/bot name is a separate configuration requirement, not a connection label.
 - Use the traditional Gmail/Google Docs setup structure: a compact horizontal
@@ -465,7 +465,7 @@ connection work or enforce a real tenant boundary. Follow these rules:
   retain existing restrictions; new tools are Allowed under the existing access rules.
 - Show browser sign-in/pending/return only for a real OAuth handoff supported by
   the chosen authentication. Zapier's pasted MCP URL or bearer token requires no
-  Paperclip sign-in window. Advanced token/header setups need no invented OAuth step.
+  Bionic sign-in window. Advanced token/header setups need no invented OAuth step.
 - On an OAuth failure or cancellation, explain the outcome on the return screen
   and offer a retry of the same saved connection. Do not silently return to a blank
   setup form or display untrusted provider error text from the callback URL.
@@ -491,7 +491,7 @@ connection work or enforce a real tenant boundary. Follow these rules:
 #### Connector-provided skills and tools
 
 Connectors may contribute bundled skills with optional native tools. Keep provider-specific
-instructions out of the universal Paperclip skill and provider-specific tools
+instructions out of the universal Bionic skill and provider-specific tools
 out of the universal runner catalog. Use the trusted connector contribution
 registry in `server/src/services/connector-runtime.ts`; AgentMail is the first
 consumer. This registry describes bundled server implementations, not executable
@@ -593,9 +593,9 @@ headings, redundant access summaries, implementation details, and reassurance
 that does not help the user decide or act. Keep necessary warnings, meaningful
 consequences, and actionable errors. Put optional expert settings under a
 collapsed Advanced disclosure. Link to provider-owned administration, such as
-AgentMail allowlists, rather than rebuilding it in Paperclip.
+AgentMail allowlists, rather than rebuilding it in Bionic.
 
-**Keep ongoing interactions in Paperclip tasks.** Connections are where users
+**Keep ongoing interactions in Bionic tasks.** Connections are where users
 set up access and configuration; tasks are where they work with agents. Design
 what happens after setup: how an agent invokes the connection, where incoming
 work lands, how follow-ups stay associated with that work, and how users see
@@ -658,11 +658,11 @@ pnpm connections:ingest-app-definitions
 ```
 
 The default ingestion corpus is the Vercel research checkout at
-`../../paperclip-content/research/connections/vercel/templates`. Override it
+`../../bionic-content/research/connections/vercel/templates`. Override it
 when necessary:
 
 ```sh
-PAPERCLIP_CONTENT_TEMPLATES=/absolute/path/to/templates \
+BIONIC_CONTENT_TEMPLATES=/absolute/path/to/templates \
   pnpm connections:ingest-app-definitions
 ```
 
@@ -706,7 +706,7 @@ Minimal customer OAuth example:
   "defaults": {
     "serverUrl": "https://mcp.example.com/mcp"
   },
-  "guidanceMd": "Register Paperclip's callback URI in the provider console.",
+  "guidanceMd": "Register Bionic's callback URI in the provider console.",
   "consoleLinks": {
     "register": "https://example.com/developers/apps",
     "docs": "https://docs.example.com/mcp/oauth"
@@ -796,7 +796,7 @@ No-auth tenant-template example:
 ```
 
 Use `defaults.toolArgumentDefaults` only for required, provider-documented
-protocol metadata that Paperclip owns, not to force a user's business input.
+protocol metadata that Bionic owns, not to force a user's business input.
 Managed arguments are deep-merged after caller input and win on collisions; the
 same fields are removed from the agent-visible and Test-tab input schema.
 
@@ -909,9 +909,9 @@ without a test-name filter before handoff.
 Targeted type checks:
 
 ```sh
-pnpm --filter @paperclipai/shared typecheck
-pnpm --filter @paperclipai/server typecheck
-pnpm --filter @paperclipai/ui typecheck
+pnpm --filter @bionicai/shared typecheck
+pnpm --filter @bionicai/server typecheck
+pnpm --filter @bionicai/ui typecheck
 ```
 
 If UI code changed, also run:
@@ -926,7 +926,7 @@ Use a worktree-local instance; never point two worktrees at the same embedded
 database.
 
 ```sh
-paperclipai worktree init
+bionicai worktree init
 pnpm dev
 ```
 
@@ -953,10 +953,10 @@ Walk the user path:
 
 For OAuth, the instance callback must be browser-reachable and must match the
 provider registration. Loopback HTTP is acceptable only when provider and
-Paperclip redirect policies permit it. Browser-started setup on an authenticated
+Bionic redirect policies permit it. Browser-started setup on an authenticated
 private instance automatically uses the same-origin HTTPS address that served
 the setup page, including a Tailscale Serve address; the request must pass the
-hostname and board-mutation guards. An explicit `PAPERCLIP_PUBLIC_URL` remains
+hostname and board-mutation guards. An explicit `BIONIC_PUBLIC_URL` remains
 available for non-browser starts and unusual proxy topologies. Internal service
 hostnames are not valid browser callback origins.
 
@@ -965,7 +965,7 @@ Do not inspect cookies, storage, saved passwords, or unrelated account data.
 
 ### Phase 9: Perform the real-provider proof
 
-Deterministic fixtures prove Paperclip logic. A store-ready provider also needs
+Deterministic fixtures prove Bionic logic. A store-ready provider also needs
 one account-bound proof for every method being exposed.
 
 Run this exact lifecycle:
@@ -980,7 +980,7 @@ Run this exact lifecycle:
    not only the board Test helper, when the connection changes gateway logic.
 7. **Refresh/reconnect** — refresh the catalog, reconnect or force a safe token
    refresh, and repeat the safe read.
-8. **Revoke/remove** — revoke at the provider or remove in Paperclip. Confirm
+8. **Revoke/remove** — revoke at the provider or remove in Bionic. Confirm
    tools disappear or calls fail closed immediately.
 9. **Reconnect after removal** — when supported, confirm the retained identity
    and history are reused rather than duplicated.
@@ -1141,7 +1141,7 @@ Suggested PR verification block:
 | `transport` | `mcp_remote`, `local_stdio`, or specialized `rest_api`. |
 | `auth` | `oauth`, `api_key`, or `none`. |
 | `ownershipModes` | Allowed OAuth client ownership modes; also present for non-OAuth customer configuration. |
-| `oauthStrategy` | Managed broker strategy. New definitions use `paperclip_cloud_connector`; `paperclip_id_connector` is recognized only to require migration when an old grant expires. The protocols and provider clients are not interchangeable. Only valid for OAuth. |
+| `oauthStrategy` | Managed broker strategy. New definitions use `bionic_cloud_connector`; `bionic_id_connector` is recognized only to require migration when an old grant expires. The protocols and provider clients are not interchangeable. Only valid for OAuth. |
 | `connectorProfile` | Managed connector capability/scope profile, required with `oauthStrategy`. |
 | `capabilityProfile` | User-facing read/write/mode grouping used for method selection. |
 | `grantKinds` | Restricts identity to `organization` and/or `user`; omit for flexible methods. |
@@ -1195,7 +1195,7 @@ Suggested PR verification block:
 | Direct source link shows generic connection chooser | UI route state | `AppsConnect`, `ConnectionSetupFlow`, source slug lookup, availability. |
 | Finish setup opens Edit config and cannot continue | Draft identity/resume | `resumeConnectionId`, stored `sourceTemplateKey`, `connectionMethodKey`, exact draft status. |
 | OAuth never redirects | Method capability/client resolution | ownership modes, metadata discovery, callback origin, manual-client requirement. |
-| Provider rejects redirect URI | Deployment/provider rule | actual browser origin, `PAPERCLIP_PUBLIC_URL`, `redirectConstraints`, provider app registration. |
+| Provider rejects redirect URI | Deployment/provider rule | actual browser origin, `BIONIC_PUBLIC_URL`, `redirectConstraints`, provider app registration. |
 | OAuth succeeds then connection needs reconnect | Grant/secret sync or refresh | organization versus user grant, token refs, default grant sync, expiry/refresh lease, `invalid_grant`. |
 | Tools list but calls return 401 | Token audience/scope/placement | RFC 8707 resource, `scopesHint`, header prefix/name, provider endpoint path. |
 | Health works but Test call fails | Gateway projection/policy | selected grant, managed headers/arguments, effective profile/policy, catalog entry risk/status. |
@@ -1265,8 +1265,8 @@ examples are starting points; confirm current provider capabilities in Phase 1.
 
 | Reuse path | Use when | Typical transport | Examples |
 | --- | --- | --- | --- |
-| MCP-direct | The vendor exposes an official or stable MCP server whose tools map cleanly to Paperclip grants. | `mcp_remote`; `local_stdio` only for approved trusted templates. | Linear, Notion, Sentry, Vercel, Exa, Apify, Context7. |
-| OpenAPI-shim | The vendor has a documented REST/OpenAPI surface but no stable MCP server, and a generated/thin shim can expose safe actions. | Shim service or approved template that presents an MCP-compatible catalog to Paperclip. | Datadog, Apollo, QuickBooks, Ramp/Brex, Zendesk. |
+| MCP-direct | The vendor exposes an official or stable MCP server whose tools map cleanly to Bionic grants. | `mcp_remote`; `local_stdio` only for approved trusted templates. | Linear, Notion, Sentry, Vercel, Exa, Apify, Context7. |
+| OpenAPI-shim | The vendor has a documented REST/OpenAPI surface but no stable MCP server, and a generated/thin shim can expose safe actions. | Shim service or approved template that presents an MCP-compatible catalog to Bionic. | Datadog, Apollo, QuickBooks, Ramp/Brex, Zendesk. |
 | Vendor-deep-wrapper | The vendor boundary depends on app-installation tokens, event validation, rich domain semantics, resource grants, or high-risk writes. | Vendor-specific wrapper behind the same connection model. | GitHub, Slack, Google Workspace writes, Atlassian, Microsoft 365, Cloudflare, Figma, Stripe, Salesforce, HubSpot, Intercom, PagerDuty. |
 
 Record the classification in the proposal along with the transport and the
@@ -1290,7 +1290,7 @@ Choose one method auth mode:
 
 - OAuth: delegated user or workspace authorization. The OAuth client may come
   from DCR/CIMD, a customer-created client, a deployment-preconfigured client,
-  or a reviewed Paperclip Cloud connector profile. Do not assume Paperclip owns a
+  or a reviewed Bionic Cloud connector profile. Do not assume Bionic owns a
   shared client registration.
 - API key: operator-supplied token or key. Use only when the provider supports
   a suitably restricted key and the value is stored as a `company_secrets`
@@ -1329,15 +1329,15 @@ secret value:
 }
 ```
 
-Do not add durable vendor credentials to agent env, project env, runtime env, adapter config, issue comments, screenshots, logs, fixture JSON, or plugin config. Agents receive a run-scoped gateway token; Paperclip resolves the vendor credential server-side and audits the call.
+Do not add durable vendor credentials to agent env, project env, runtime env, adapter config, issue comments, screenshots, logs, fixture JSON, or plugin config. Agents receive a run-scoped gateway token; Bionic resolves the vendor credential server-side and audits the call.
 
 For a Vercel-eligible method, add reviewed `credentialSources.vercelConnect`
 metadata: allowed Vercel service identifiers, the `app` or `user` principal
 mode, exact token scopes, and the header placement. This is an allowlist, not a
 copy of Vercel's connector form. Only authenticated `mcp_remote` methods qualify.
-Do not infer Paperclip ownership from Vercel's “Managed” label. A Vercel-backed
-connection remains `customer`/`dcr` according to the existing Paperclip model.
-The resulting connection has an external connector ref and zero Paperclip
+Do not infer Bionic ownership from Vercel's “Managed” label. A Vercel-backed
+connection remains `customer`/`dcr` according to the existing Bionic model.
+The resulting connection has an external connector ref and zero Bionic
 credential secret refs; its grants likewise use external metadata or secret
 refs, never both.
 
@@ -1393,7 +1393,7 @@ The connection health and catalog discovery steps should fail or warn when requi
 
 ### Step 6: Define The Action Catalog
 
-List each initial action before implementation. Do not rely on vendor tool names alone; Paperclip needs normalized metadata for review, policy, and audit.
+List each initial action before implementation. Do not rely on vendor tool names alone; Bionic needs normalized metadata for review, policy, and audit.
 
 For each action, capture:
 
@@ -1417,7 +1417,7 @@ Risk classes:
 
 Changed-action quarantine is available when a connection sets
 `quarantineNewEntries: true`. Use it for providers whose catalog can change
-without a Paperclip release. This is runtime setup behavior, not currently an
+without a Bionic release. This is runtime setup behavior, not currently an
 `AppDefinition` field, so adding it to a new curated class requires a shared
 implementation and tests. Do not claim quarantine in provider copy unless the
 connection actually enables it.
@@ -1449,7 +1449,7 @@ adopt every scope returned by discovery. Operators should not have to predict
 every future tool during setup. Keep the default view to the minimum inputs
 needed for a working connection, fold optional expert controls under one
 collapsed **Advanced** disclosure, and enforce execution afterward through
-Paperclip's resource boundaries, risk classification, tier defaults, optional
+Bionic's resource boundaries, risk classification, tier defaults, optional
 quarantine, and audit.
 
 ### Step 8: Apply Governance Defaults
@@ -1471,7 +1471,7 @@ Recommended defaults for a new catalog entry:
 - Classify a method S4 when its normal catalog includes payments, external
   sends, refunds, production deployment, deletion, tenant-wide administration,
   or comparable high-impact mutations.
-- Add an explicit block only for a tool Paperclip must never expose, and prove
+- Add an explicit block only for a tool Bionic must never expose, and prove
   it with a provider-specific negative test.
 - Enable changed-tool quarantine for catalogs that can drift independently,
   and add a rate limit for quota-sensitive or paid APIs.
@@ -1480,7 +1480,7 @@ Recommended defaults for a new catalog entry:
 
 Validate every exposed provider/method combination against a real account in
 an isolated, production-like instance. Deterministic tests and Storybook cover
-Paperclip behavior; they do not prove provider consent, credential scope, live
+Bionic behavior; they do not prove provider consent, credential scope, live
 delivery, or revocation. Use the following evidence matrix directly in the
 connector proposal or PR. No separate private validation issue is required.
 
@@ -1590,7 +1590,7 @@ supports public clients (`token_endpoint_auth_method: "none"` plus PKCE S256)
 need **no pre-provisioned OAuth app at all**. At first connect the broker
 registers a client on the fly and stores it on the connection:
 
-- Registration request: `client_name` `Paperclip (<instance host>)`,
+- Registration request: `client_name` `Bionic (<instance host>)`,
   `redirect_uris` = the instance's own callback, `grant_types`
   `["authorization_code", "refresh_token"]`, `response_types` `["code"]`,
   `token_endpoint_auth_method` `"none"`.
@@ -1600,7 +1600,7 @@ registers a client on the fly and stores it on the connection:
   re-registering orphans prior grants on providers that bind grants to the
   client.
 - Env-registered clients always win: when
-  `PAPERCLIP_TOOL_OAUTH_<PROVIDER>_CLIENT_ID/_SECRET` are configured, the
+  `BIONIC_TOOL_OAUTH_<PROVIDER>_CLIENT_ID/_SECRET` are configured, the
   broker uses them (`customer` ownership) and skips registration. List both
   `customer` and `dcr` in the method's `ownershipModes` when the vendor
   supports both.
@@ -1608,28 +1608,28 @@ registers a client on the fly and stores it on the connection:
 DCR is **one of four** registration tiers, and `ownershipModes` gates only the *curated* path. The broker resolves a
 client in this order: a deployment-preconfigured client, then a Client ID
 Metadata Document when the authorization server advertises one (requires a public
-HTTPS `PAPERCLIP_PUBLIC_URL`), then DCR, then client credentials the operator
+HTTPS `BIONIC_PUBLIC_URL`), then DCR, then client credentials the operator
 preregistered and pasted in. A URL-only connection with no `AppDefinition` may
 use the CIMD and DCR tiers too, but only after validated protected-resource and
 authorization-server discovery produced a metadata document. Registered client
 material is bound to the issuer, MCP resource URL, callback URI, and company;
-when a binding moves, a Paperclip-minted client re-registers and an
+when a binding moves, a Bionic-minted client re-registers and an
 operator-supplied one asks the operator to re-enter it. Full detail in
 [Connecting any remote MCP server](./GENERIC-REMOTE-MCP.md#how-sign-in-gets-a-client).
 
-For a curated entry, `ownershipModes` still decides whether Paperclip may
+For a curated entry, `ownershipModes` still decides whether Bionic may
 dynamically register on that vendor's behalf: omit `dcr` for a vendor that must
 not be auto-registered, and the broker will not fall through to the generic
 registration path for it.
 
-**DCR needs neither Paperclip ID nor Paperclip Connect.** DCR is always
+**DCR needs neither Bionic ID nor Bionic Connect.** DCR is always
 instance-local: the hosted connector service does not register DCR clients
 or hold their credentials.
 Each instance registers its own public client with the vendor and uses its own
 `/api/tools/oauth/callback` redirect. **Cloud-hosted and self-hosted instances
 use the SAME path** — the only per-instance difference is the hostname inside
-the redirect URI. `id.paperclip.ing` authenticates operators only and never
-holds resource tokens; `connect.paperclip.ing` is a fallback only for
+the redirect URI. `id.bionic.ing` authenticates operators only and never
+holds resource tokens; `connect.bionic.ing` is a fallback only for
 providers that genuinely require a pre-registered public redirect, which a DCR
 provider by definition does not.
 
@@ -1653,13 +1653,13 @@ axes; a private HTTPS host can be fine even when plain HTTP is not.
 Every connection doc — playbook appendix, proposal, or user-facing doc —
 must include all of the following (they are part of the template below):
 
-1. **Service involvement statement.** Say explicitly whether Paperclip ID or
-   Paperclip Connect participates in the flow. For RFC 7591 DCR providers the
+1. **Service involvement statement.** Say explicitly whether Bionic ID or
+   Bionic Connect participates in the flow. For RFC 7591 DCR providers the
    answer is always: neither — DCR is instance-local and cloud vs self-hosted
    use the same path.
 2. **Sequence diagram + exact endpoints.** A sequence diagram of how the
    connection works, and the exact paths/endpoints used for auth: authorize,
-   token, registration (if DCR), and the Paperclip callback. Keep mermaid
+   token, registration (if DCR), and the Bionic callback. Keep mermaid
    sources next to the doc; do not put semicolons inside mermaid message text
    (they parse as statement separators).
 3. **Administrator setup instructions.** Step-by-step: what (if anything) an
@@ -1670,7 +1670,7 @@ must include all of the following (they are part of the template below):
    received a real pointer or keyboard interaction and any documented delay has
    elapsed. For example, Sentry intentionally enables its upstream `Approve`
    button one second after the first interaction. Record this separately from
-   Paperclip callback, token-exchange, and MCP health failures.
+   Bionic callback, token-exchange, and MCP health failures.
 
 ## Template
 
@@ -1705,9 +1705,9 @@ Copy this section into a connector proposal or implementation issue.
   - Token:
   - Registration (if DCR):
   - Discovery (.well-known), if any:
-  - Paperclip callback: `/api/tools/oauth/callback` (or n/a)
+  - Bionic callback: `/api/tools/oauth/callback` (or n/a)
 - Redirect constraints (probed): none / https-or-loopback-http / requires-public-redirect
-- Paperclip ID / Paperclip Connect involvement: <"none — DCR is instance-local; cloud and self-hosted use the same path" for RFC 7591 providers; otherwise name the role>
+- Bionic ID / Bionic Connect involvement: <"none — DCR is instance-local; cloud and self-hosted use the same path" for RFC 7591 providers; otherwise name the role>
 
 ## Administrator Setup (mandatory)
 
@@ -1844,7 +1844,7 @@ connection with scoped business-data reads and narrow issue writes.
         "tokenEndpoint": "https://api.linear.app/oauth/token",
         "scopesHint": ["read", "write"]
       },
-      "guidanceMd": "Register a Linear OAuth app and add Paperclip's redirect URI before connecting.",
+      "guidanceMd": "Register a Linear OAuth app and add Bionic's redirect URI before connecting.",
       "riskTier": "S2",
       "requiredResourceFilters": ["workspace", "team", "project"]
     }
@@ -1870,10 +1870,10 @@ before accepting it as an S2 Allowed action.
 
 1. Operator opens Apps and selects Linear.
 2. Operator clicks Connect and completes Linear OAuth.
-3. Paperclip stores OAuth material in `company_secrets` and shows redacted workspace/account metadata.
+3. Bionic stores OAuth material in `company_secrets` and shows redacted workspace/account metadata.
 4. Operator selects workspace/team/project filters and reviews the S2 Allowed
    action defaults.
-5. Paperclip runs health check and catalog refresh.
+5. Bionic runs health check and catalog refresh.
 6. Operator binds the Linear read profile to a company, project, agent, routine, or issue scope.
 7. Write actions are Allowed by the current S2 default unless the operator
    narrows them with profiles or policies.
@@ -1920,7 +1920,7 @@ a new implementation.
 - App key: `notion`
 - App name: Notion
 - Reuse classification: MCP-direct. Notion ships an official hosted MCP
-  server; its ~20 `notion-*` tools map directly to Paperclip grants.
+  server; its ~20 `notion-*` tools map directly to Bionic grants.
 - Reason for classification: no shim or wrapper needed — the hosted server
   speaks Streamable HTTP, which `server/src/services/mcp-http.ts` already
   handles. A separate block/database-policy wrapper is deferred; v1
@@ -1942,7 +1942,7 @@ a new implementation.
   precedence and be used verbatim (see "MCP-Direct Connections" above).
 - Ownership modes: `dcr` (default, zero setup) and `customer`
   (env-registered classic integration via
-  `PAPERCLIP_TOOL_OAUTH_NOTION_CLIENT_ID/_SECRET`, which always wins when set).
+  `BIONIC_TOOL_OAUTH_NOTION_CLIENT_ID/_SECRET`, which always wins when set).
 - Token behavior: access tokens last ~8 h (`expires_in` authoritative).
   Refresh tokens **rotate on every refresh** — the old token is invalidated
   (at most 2 valid per grant) and replaying a stale one can revoke the whole
@@ -1960,10 +1960,10 @@ a new implementation.
 ### Connection Flow (mandatory)
 
 The UI examples use `ACME` as a sample company prefix. Replace it and any
-`paperclip.example.com` origin with your own company prefix and instance origin.
+`bionic.example.com` origin with your own company prefix and instance origin.
 These are example addresses, not a shared test deployment.
 
-Paperclip ID / Paperclip Connect involvement: **none — DCR is instance-local**.
+Bionic ID / Bionic Connect involvement: **none — DCR is instance-local**.
 The instance registers the client, exchanges and refreshes tokens, and stores
 credential references in its own vault. **Cloud-hosted and self-hosted use the
 same path**. The only per-instance difference is the hostname in the redirect
@@ -1979,9 +1979,9 @@ Auth endpoints (exact paths, from the live discovery chain):
 | Authorize | `https://mcp.notion.com/authorize` |
 | Token (exchange + refresh) | `https://mcp.notion.com/token` |
 | Registration (RFC 7591 DCR) | `https://mcp.notion.com/register` |
-| Paperclip connect (wizard) | `POST /api/companies/:companyId/tools/apps/connect` |
-| Paperclip OAuth start | `POST /api/tools/oauth/:connectionId/start` |
-| Paperclip callback | `GET /api/tools/oauth/callback` |
+| Bionic connect (wizard) | `POST /api/companies/:companyId/tools/apps/connect` |
+| Bionic OAuth start | `POST /api/tools/oauth/:connectionId/start` |
+| Bionic callback | `GET /api/tools/oauth/callback` |
 
 Redirect constraints (probed): `https-or-loopback-http`.
 
@@ -1989,8 +1989,8 @@ Redirect constraints (probed): `https-or-loopback-http`.
 sequenceDiagram
     autonumber
     actor U as User's browser
-    participant UI as Paperclip UI<br/>/ACME/apps/connect?source=notion
-    participant S as Paperclip instance server<br/>(cloud or self-hosted — same path)
+    participant UI as Bionic UI<br/>/ACME/apps/connect?source=notion
+    participant S as Bionic instance server<br/>(cloud or self-hosted — same path)
     participant M as mcp.notion.com<br/>(MCP server + OAuth AS)
     participant N as Notion web<br/>(app.notion.com, notion.com)
 
@@ -2041,8 +2041,8 @@ Redirect-URI probes against `/register`:
 
 | Probed `redirect_uris` value | Result |
 | --- | --- |
-| `http://paperclip-dev:3100/api/tools/oauth/callback` | 400 `invalid_redirect_uri` — "Redirect URI must use HTTPS unless it is a loopback HTTP URI" |
-| `https://paperclip-dev:3100/api/tools/oauth/callback` | Accepted — private host is fine over HTTPS |
+| `http://bionic-dev:3100/api/tools/oauth/callback` | 400 `invalid_redirect_uri` — "Redirect URI must use HTTPS unless it is a loopback HTTP URI" |
+| `https://bionic-dev:3100/api/tools/oauth/callback` | Accepted — private host is fine over HTTPS |
 | `http://localhost:3100/api/tools/oauth/callback` | Accepted |
 | `http://127.0.0.1:3100/api/tools/oauth/callback` | Accepted |
 
@@ -2055,10 +2055,10 @@ plain-HTTP non-loopback origins.
 - What the admin must register: **nothing**. Notion's authorization server
   supports RFC 7591 DCR, so the instance registers its own public client on
   first connect. No Notion integration, no client credentials, no callback
-  registration, no Paperclip ID or Paperclip Connect involvement.
+  registration, no Bionic ID or Bionic Connect involvement.
 - Optional escape hatch: to use a pre-registered classic Notion integration
-  instead, set `PAPERCLIP_TOOL_OAUTH_NOTION_CLIENT_ID` and
-  `PAPERCLIP_TOOL_OAUTH_NOTION_CLIENT_SECRET`; the env client always takes
+  instead, set `BIONIC_TOOL_OAUTH_NOTION_CLIENT_ID` and
+  `BIONIC_TOOL_OAUTH_NOTION_CLIENT_SECRET`; the env client always takes
   precedence (`customer` ownership).
 - Instance prerequisites: the instance base URL must be HTTPS on any host or
   loopback HTTP (Notion's redirect-URI rule). A plain-HTTP non-loopback origin
@@ -2158,11 +2158,11 @@ method S4 or add a reviewed narrow policy and tests before enabling it.
    browser to `auth.startUrl`.
 2. Operator completes Notion consent (workspace picker → approve).
 3. Notion redirects to the instance's own `GET /api/tools/oauth/callback`;
-   Paperclip exchanges the code, stores token material in `company_secrets`,
+   Bionic exchanges the code, stores token material in `company_secrets`,
    and returns the operator to the wizard (`?oauth=connected`).
 4. Operator confirms resource filters and reviews the S3 Allowed action
    defaults.
-5. Paperclip runs health check and catalog refresh; `notion-*` tools appear
+5. Bionic runs health check and catalog refresh; `notion-*` tools appear
    on the actions step.
 6. Reviewed write actions are Allowed by the current S3 default unless the
    operator narrows them with profiles or an Ask-first policy.
@@ -2187,7 +2187,7 @@ the TLS guidance error above — the operator never reaches Notion.
 Collect end-to-end evidence using the production validation matrix above:
 
 - Zero-setup OAuth connect succeeds on
-  `https://paperclip.example.com/ACME/apps/connect?source=notion`
+  `https://bionic.example.com/ACME/apps/connect?source=notion`
   with no pre-provisioned OAuth env vars (proves DCR).
 - Catalog discovery lists the expected `notion-*` tools and applies the
   connection's declared changed-tool behavior.
@@ -2218,7 +2218,7 @@ separate from the user-authorized Slack MCP connection.
 ### Agent discovery through MCP aggregators
 
 `connections_search` owns the next-step guidance. Its `instruction` is authored by
-Paperclip, never copied from provider tool descriptions. Core agent guidance only
+Bionic, never copied from provider tool descriptions. Core agent guidance only
 needs to call search, follow that instruction, and respect saved user choices.
 
 Exact built-in matches (including reviewed aliases) take precedence over external

@@ -28,7 +28,7 @@ describe("Slack setup prompt", () => {
     vi.mocked(copyTextToClipboard).mockResolvedValue(undefined);
     await act(async () => container.querySelector("button")!.click());
     expect(copyTextToClipboard).toHaveBeenCalledWith(buildSlackSetupPrompt(window.location.origin));
-    expect(vi.mocked(copyTextToClipboard).mock.calls[0][0]).toContain(`Paperclip instance URL: ${window.location.origin}`);
+    expect(vi.mocked(copyTextToClipboard).mock.calls[0][0]).toContain(`Bionic instance URL: ${window.location.origin}`);
     expect(container.querySelector("button")?.textContent).toBe("Copied setup prompt");
     expect(container.querySelector('[role="status"]')?.textContent).toContain("Paste it into Codex or Claude");
     expect(container.querySelector("textarea")).toBeNull();
@@ -51,20 +51,20 @@ describe("Slack setup prompt", () => {
   });
 
   it("uses the preview's configured instance instead of its Storybook host", async () => {
-    await act(async () => root.render(<SlackSetupPrompt instanceUrl="https://my-company.paperclip.app" />));
+    await act(async () => root.render(<SlackSetupPrompt instanceUrl="https://my-company.bionic.app" />));
     vi.mocked(copyTextToClipboard).mockResolvedValue(undefined);
     await act(async () => container.querySelector("button")!.click());
-    expect(copyTextToClipboard).toHaveBeenCalledWith(buildSlackSetupPrompt("https://my-company.paperclip.app"));
+    expect(copyTextToClipboard).toHaveBeenCalledWith(buildSlackSetupPrompt("https://my-company.bionic.app"));
   });
 
   it("includes only the instance origin, without URL credentials or callback state", () => {
-    const prompt = buildSlackSetupPrompt("https://user:private-password@my-company.paperclip.app/GIT/apps/chat/connect?code=private-code#private-state");
-    expect(prompt).toContain("Paperclip instance URL: https://my-company.paperclip.app\n");
+    const prompt = buildSlackSetupPrompt("https://user:private-password@my-company.bionic.app/GIT/apps/chat/connect?code=private-code#private-state");
+    expect(prompt).toContain("Bionic instance URL: https://my-company.bionic.app\n");
     expect(prompt).not.toMatch(/private-password|private-code|private-state/);
     expect(prompt).toContain(slackSetupPrompt);
   });
 
   it.each(["", "not a URL", "javascript:alert(1)"])("asks for the URL when preview configuration is unavailable: %s", (url) => {
-    expect(buildSlackSetupPrompt(url)).toMatch(/^Paperclip instance URL is unavailable\./);
+    expect(buildSlackSetupPrompt(url)).toMatch(/^Bionic instance URL is unavailable\./);
   });
 });

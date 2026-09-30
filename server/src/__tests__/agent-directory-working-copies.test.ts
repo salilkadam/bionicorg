@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
-import * as executionTargetTools from "@paperclipai/adapter-utils/execution-target";
-import * as ssh from "@paperclipai/adapter-utils/ssh";
+import * as executionTargetTools from "@bionicai/adapter-utils/execution-target";
+import * as ssh from "@bionicai/adapter-utils/ssh";
 const execFile = promisify(execFileCallback);
 import os from "node:os";
 import path from "node:path";
@@ -10,7 +10,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { agentFileStore, fileHash, inspectAgentFile, snapshotAgentFiles, MAX_AGENT_FILE_BYTES, MAX_AGENT_DIRECTORY_BYTES, MAX_AGENT_DIRECTORY_ENTRIES } from "../services/agent-file-store.js";
-import { agents, companies, authUsers, companyMemberships, principalPermissionGrants, heartbeatRuns, environmentLeases, environments, agentInstructionWorkingCopies, agentInstructionRevisions, agentInstructionHeads, createDb } from "@paperclipai/db";
+import { agents, companies, authUsers, companyMemberships, principalPermissionGrants, heartbeatRuns, environmentLeases, environments, agentInstructionWorkingCopies, agentInstructionRevisions, agentInstructionHeads, createDb } from "@bionicai/db";
 import { startEmbeddedPostgresTestDatabase } from "./helpers/embedded-postgres.js";
 import { agentInstructionRevisionService } from "../services/agent-instruction-revisions.js";
 import { agentInstructionWorkingCopyService, instructionWorkingCopyGuidance } from "../services/agent-instruction-working-copies.js";
@@ -25,7 +25,7 @@ describe("persistent agent directories", () => {
   let db: ReturnType<typeof createDb>;
   let copies: ReturnType<typeof agentInstructionWorkingCopyService>;
   let revisions: ReturnType<typeof agentInstructionRevisionService>;
-  const previousHome = process.env.PAPERCLIP_HOME;
+  const previousHome = process.env.BIONIC_HOME;
   let home: string;
   let companyId: string, agentId: string, userId: string, root: string;
   const entryFile = "policy/INSTRUCTIONS.txt";
@@ -39,14 +39,14 @@ describe("persistent agent directories", () => {
   }
   beforeAll(async () => {
     home = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "instruction-working-copies-")));
-    process.env.PAPERCLIP_HOME = home;
+    process.env.BIONIC_HOME = home;
     database = await startEmbeddedPostgresTestDatabase("instruction-copies-db-");
     db = createDb(database.connectionString);
     copies = agentInstructionWorkingCopyService(db);
     revisions = agentInstructionRevisionService(db);
   }, 90_000);
   afterAll(async () => {
-    if (previousHome === undefined) delete process.env.PAPERCLIP_HOME; else process.env.PAPERCLIP_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.BIONIC_HOME; else process.env.BIONIC_HOME = previousHome;
     await database?.cleanup();
     if (home) {
       const writable = async (dir: string) => {
@@ -72,7 +72,7 @@ describe("persistent agent directories", () => {
     await fs.writeFile(path.join(root, entryFile), initial);
   });
 
-  it.each([".paperclip-runtime/state", "notes/.paperclip-runtime/state", "promptTemplate.legacy.md"])("rejects reserved board path %s before mutation", async (reserved) => {
+  it.each([".bionic-runtime/state", "notes/.bionic-runtime/state", "promptTemplate.legacy.md"])("rejects reserved board path %s before mutation", async (reserved) => {
     await expect(agentFileStore(db).write({ ...target(), path: reserved, bytes: Buffer.from("reserved"), baseHash: null }, board())).rejects.toMatchObject({ status: 422 });
     await expect(fs.stat(path.join(root, reserved))).rejects.toMatchObject({ code: "ENOENT" });
     expect(await run()).toBeTruthy();
@@ -80,7 +80,7 @@ describe("persistent agent directories", () => {
 
   it("round trips nested text, empty directories and binary bytes independently of task files", async () => {
     const first = await run();
-    expect(first.localRoot.startsWith(path.join(home, ".paperclip-runtime"))).toBe(false);
+    expect(first.localRoot.startsWith(path.join(home, ".bionic-runtime"))).toBe(false);
     await fs.mkdir(path.join(first.localRoot, "notes", "empty"), { recursive: true });
     await fs.writeFile(path.join(first.localRoot, "notes", "fact.txt"), "remember me");
     const bytes = Buffer.from([0, 255, 17, 128, 9]);
@@ -346,7 +346,7 @@ describe("persistent agent directories", () => {
     copy.mockRestore();
     const active = await run();
     for (const row of [interrupted, active]) {
-      await db.update(agentInstructionWorkingCopies).set({ state: "preparing", baseHash: "preparing", receipt: { schema: "paperclip.agent-files.v1" } }).where(eq(agentInstructionWorkingCopies.runId, row.runId));
+      await db.update(agentInstructionWorkingCopies).set({ state: "preparing", baseHash: "preparing", receipt: { schema: "bionic.agent-files.v1" } }).where(eq(agentInstructionWorkingCopies.runId, row.runId));
     }
     await db.update(heartbeatRuns).set({ status }).where(eq(heartbeatRuns.id, interrupted.runId));
     copies = agentInstructionWorkingCopyService(db);
@@ -359,7 +359,7 @@ describe("persistent agent directories", () => {
   it("retains remote cleanup across restart and failed retries until the original lease is cleaned", async () => {
     const copy = await run();
     const environmentId = randomUUID(), leaseId = randomUUID(), remoteCwd = "/fixture/task";
-    const executionRoot = path.posix.join(remoteCwd, ".paperclip-runtime", "agent-files", agentId, copy.runId);
+    const executionRoot = path.posix.join(remoteCwd, ".bionic-runtime", "agent-files", agentId, copy.runId);
     await db.insert(environments).values({ id: environmentId, name: environmentId, driver: "sandbox" });
     await db.insert(environmentLeases).values({ id: leaseId, companyId, environmentId, heartbeatRunId: copy.runId, provider: "daytona", providerLeaseId: "original-sandbox" });
     await db.update(agentInstructionWorkingCopies).set({ state: "saved", processStoppedAt: new Date(), location: `remote:${environmentId}`, executionRoot,
@@ -395,7 +395,7 @@ describe("persistent agent directories", () => {
     await db.insert(environmentLeases).values({ ...lease, status: "released", releasedAt: new Date(), cleanupStatus: "success",
       metadata: { remoteExecutionTermination: remoteTerminationReceipt(lease, { providerLeaseId: lease.providerLeaseId, state: "destroyed" }) } });
     await db.update(agentInstructionWorkingCopies).set({ state: "saved", processStoppedAt: new Date(), location: `remote:${environmentId}`,
-      executionRoot: path.posix.join(remoteCwd, ".paperclip-runtime", "agent-files", agentId, copy.runId),
+      executionRoot: path.posix.join(remoteCwd, ".bionic-runtime", "agent-files", agentId, copy.runId),
       receipt: { ...copy.receipt, cleanupPending: true, cleanup: { leaseId, remoteCwd } } }).where(eq(agentInstructionWorkingCopies.runId, copy.runId));
     await db.delete(environments).where(eq(environments.id, environmentId));
     copies = agentInstructionWorkingCopyService(db);
@@ -580,7 +580,7 @@ describe("persistent agent directories", () => {
     await db.update(heartbeatRuns).set({ status: "succeeded", runtimeMode: "native" }).where(eq(heartbeatRuns.id, copy.runId));
     const saved = (await copies.get(companyId, copy.runId))!;
     await db.update(agentInstructionWorkingCopies).set({ location: `remote:${environmentId}`,
-      executionRoot: path.posix.join(remoteCwd, ".paperclip-runtime", "agent-files", agentId, copy.runId),
+      executionRoot: path.posix.join(remoteCwd, ".bionic-runtime", "agent-files", agentId, copy.runId),
       receipt: { ...saved.receipt, cleanup: { leaseId, remoteCwd } } }).where(eq(agentInstructionWorkingCopies.runId, copy.runId));
     copies = agentInstructionWorkingCopyService(db);
     await copies.recoverStopped();
@@ -594,14 +594,14 @@ describe("persistent agent directories", () => {
     const remoteCwd = path.join(home, "remote-task");
     await fs.mkdir(remoteCwd, { recursive: true });
     await execFile("git", ["init", remoteCwd]);
-    const runner: import("@paperclipai/adapter-utils/command-managed-runtime").CommandManagedRuntimeRunner = {
+    const runner: import("@bionicai/adapter-utils/command-managed-runtime").CommandManagedRuntimeRunner = {
       execute: async input => {
         const startedAt = new Date().toISOString();
         const env = { ...process.env, ...input.env };
         const args = [...(input.args ?? [])];
         if (input.stdin != null && (args[0] === "-c" || args[0] === "-lc")) {
-          env.PAPERCLIP_TEST_STDIN = input.stdin;
-          args[1] = `printf '%s' "$PAPERCLIP_TEST_STDIN" | (${args[1]})`;
+          env.BIONIC_TEST_STDIN = input.stdin;
+          args[1] = `printf '%s' "$BIONIC_TEST_STDIN" | (${args[1]})`;
         }
         try {
           const result = await execFile(input.command, args, { cwd: input.cwd, env, timeout: input.timeoutMs, maxBuffer: 32 * 1024 * 1024 });
@@ -646,14 +646,14 @@ describe("persistent agent directories", () => {
   it("checkpoints and reuses the remote directory through the real transport without copying unchanged bytes", async () => {
     const remoteCwd = path.join(home, "warm-remote-task");
     await fs.mkdir(remoteCwd, { recursive: true });
-    const runner: import("@paperclipai/adapter-utils/command-managed-runtime").CommandManagedRuntimeRunner = {
+    const runner: import("@bionicai/adapter-utils/command-managed-runtime").CommandManagedRuntimeRunner = {
       execute: async input => {
         const startedAt = new Date().toISOString();
         const env = { ...process.env, ...input.env };
         const args = [...(input.args ?? [])];
         if (input.stdin != null && (args[0] === "-c" || args[0] === "-lc")) {
-          env.PAPERCLIP_TEST_STDIN = input.stdin;
-          args[1] = `printf '%s' "$PAPERCLIP_TEST_STDIN" | (${args[1]})`;
+          env.BIONIC_TEST_STDIN = input.stdin;
+          args[1] = `printf '%s' "$BIONIC_TEST_STDIN" | (${args[1]})`;
         }
         try {
           const result = await execFile(input.command, args, { cwd: input.cwd, env, timeout: input.timeoutMs, maxBuffer: 32 * 1024 * 1024 });
@@ -680,7 +680,7 @@ describe("persistent agent directories", () => {
       if (turn > 1) expect(saved.receipt?.checkpointStats).toMatchObject({ copiedFiles: 1, copiedBytes: turn * 7, hashedBytes: turn * 7 });
       expect(await fs.readFile(path.join(root, "memory.txt"), "utf8")).toBe(Array.from({ length: turn }, (_, i) => `turn ${i + 1}\n`).join(""));
       expect((await fs.readdir(path.dirname(copy.localRoot))).filter(name => name.startsWith("checkpoint-"))).toEqual([]);
-      expect((await fs.readdir(path.join(copy.executionRoot, ".paperclip-runtime"))).filter(name => name.startsWith("checkpoint-"))).toEqual([]);
+      expect((await fs.readdir(path.join(copy.executionRoot, ".bionic-runtime"))).filter(name => name.startsWith("checkpoint-"))).toEqual([]);
       if (turn < 3) { copy = await prepare(copy.runId); expect(copy.executionRoot).toBe(original.executionRoot); }
     }
     await copies.collectStopped({ companyId, runId: original.runId, target: executionTarget });
@@ -724,7 +724,7 @@ describe("persistent agent directories", () => {
     copies = agentInstructionWorkingCopyService(db);
     await copies.recoverCaptured();
     const row = await copies.get(companyId, copy.runId);
-    expect(row?.receipt?.schema).toBe("paperclip.agent-files.v1");
+    expect(row?.receipt?.schema).toBe("bionic.agent-files.v1");
     expect(row?.receipt?.baseline).toBeUndefined();
     expect(await fs.readFile(path.join(root, "note.txt"), "utf8")).toBe("one write");
   });

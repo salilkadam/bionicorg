@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Environment } from "@paperclipai/shared";
+import type { Environment } from "@bionicai/shared";
 import {
   resolvePaperclipRunnerTransitionModel,
   supportsAdapterModelRefresh,
@@ -15,7 +15,7 @@ describe("supportsAdapterModelRefresh", () => {
 
   it("keeps the refresh action hidden for adapters without a live refresh hook", () => {
     expect(supportsAdapterModelRefresh("opencode_local")).toBe(true);
-    expect(supportsAdapterModelRefresh("paperclip_runner")).toBe(true);
+    expect(supportsAdapterModelRefresh("bionic_runner")).toBe(true);
     expect(supportsAdapterModelRefresh("process")).toBe(false);
   });
 });

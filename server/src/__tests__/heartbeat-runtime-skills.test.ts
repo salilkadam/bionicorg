@@ -15,9 +15,9 @@ import {
   toolProfileBindings,
   toolProfileEntries,
   toolProfiles,
-} from "@paperclipai/db";
-import type { AdapterRuntimeMcpServer } from "@paperclipai/adapter-utils";
-import type { PaperclipSkillEntry } from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/db";
+import type { AdapterRuntimeMcpServer } from "@bionicai/adapter-utils";
+import type { PaperclipSkillEntry } from "@bionicai/adapter-utils/server-utils";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -56,7 +56,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
   let oldPaperclipHome: string | undefined;
   let oldPaperclipApiUrl: string | undefined;
-  let paperclipHome: string | null = null;
+  let bionicHome: string | null = null;
   const capturedRuns: Array<{
     agentId: string;
     skills: PaperclipSkillEntry[];
@@ -69,14 +69,14 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
   beforeAll(async () => {
     tempDb = await startEmbeddedPostgresTestDatabase("heartbeat-runtime-skills-");
     db = createDb(tempDb.connectionString);
-    oldPaperclipHome = process.env.PAPERCLIP_HOME;
-    paperclipHome = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-runtime-skills-home-"));
-    process.env.PAPERCLIP_HOME = paperclipHome;
-    // The server normalizes PAPERCLIP_API_URL into its own env at boot
+    oldPaperclipHome = process.env.BIONIC_HOME;
+    bionicHome = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-runtime-skills-home-"));
+    process.env.BIONIC_HOME = bionicHome;
+    // The server normalizes BIONIC_API_URL into its own env at boot
     // (server/src/index.ts); heartbeat gateway delivery requires it, so pin
     // a deterministic value for tests that never boot the full server.
-    oldPaperclipApiUrl = process.env.PAPERCLIP_API_URL;
-    process.env.PAPERCLIP_API_URL = "http://127.0.0.1:3100/api";
+    oldPaperclipApiUrl = process.env.BIONIC_API_URL;
+    process.env.BIONIC_API_URL = "http://127.0.0.1:3100/api";
     registerServerAdapter({
       type: TEST_ADAPTER_TYPE,
       execute: async (ctx) => {
@@ -88,7 +88,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
         await ctx.onLog("stdout", `${serializedRuntimeInput}\n`);
         capturedRuns.push({
           agentId: ctx.agent.id,
-          skills: (ctx.config.paperclipRuntimeSkills ?? []) as PaperclipSkillEntry[],
+          skills: (ctx.config.bionicRuntimeSkills ?? []) as PaperclipSkillEntry[],
           mcpServers: ctx.runtimeMcp?.getServers() ?? [],
           config: ctx.config,
           serializedRuntimeInput,
@@ -134,12 +134,12 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
 
   afterAll(async () => {
     unregisterServerAdapter(TEST_ADAPTER_TYPE);
-    if (oldPaperclipHome === undefined) delete process.env.PAPERCLIP_HOME;
-    else process.env.PAPERCLIP_HOME = oldPaperclipHome;
-    if (oldPaperclipApiUrl === undefined) delete process.env.PAPERCLIP_API_URL;
-    else process.env.PAPERCLIP_API_URL = oldPaperclipApiUrl;
-    if (paperclipHome) {
-      await fs.rm(paperclipHome, { recursive: true, force: true });
+    if (oldPaperclipHome === undefined) delete process.env.BIONIC_HOME;
+    else process.env.BIONIC_HOME = oldPaperclipHome;
+    if (oldPaperclipApiUrl === undefined) delete process.env.BIONIC_API_URL;
+    else process.env.BIONIC_API_URL = oldPaperclipApiUrl;
+    if (bionicHome) {
+      await fs.rm(bionicHome, { recursive: true, force: true });
     }
     await tempDb?.cleanup();
   });
@@ -151,12 +151,12 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
     const secondAgentId = randomUUID();
     const issuePrefix = `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
     const skillKey = `company/${companyId}/runtime-coach`;
-    const skillDir = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-versioned-runtime-skill-"));
+    const skillDir = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-versioned-runtime-skill-"));
     cleanupDirs.add(skillDir);
 
     await db.insert(companies).values({
       id: companyId,
-      name: "Paperclip",
+      name: "Bionic",
       issuePrefix,
       requireBoardApprovalForNewAgents: false,
       defaultResponsibleUserId: "responsible-user",
@@ -206,7 +206,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
         status: "idle",
         adapterType: TEST_ADAPTER_TYPE,
         adapterConfig: {
-          paperclipSkillSync: {
+          bionicSkillSync: {
             desiredSkills: [{ key: skillKey, versionId: versionOne.id }],
           },
         },
@@ -221,7 +221,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
         status: "idle",
         adapterType: TEST_ADAPTER_TYPE,
         adapterConfig: {
-          paperclipSkillSync: {
+          bionicSkillSync: {
             desiredSkills: [{ key: skillKey, versionId: versionTwo.id }],
           },
         },
@@ -304,7 +304,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
       .where(eq(agents.id, firstAgentId))
       .then((rows) => rows[0]?.adapterConfig);
     expect(storedPreference).toMatchObject({
-      paperclipSkillSync: {
+      bionicSkillSync: {
         desiredSkills: [{ key: skillKey, versionId: versionOne.id }],
       },
     });
@@ -412,7 +412,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
     expect(captured?.mcpServers).toHaveLength(1);
     expect(captured?.mcpServers[0]).toMatchObject({
       connectionId: expect.stringMatching(/^assignment:[a-f0-9]{64}$/),
-      name: "paperclip-assigned",
+      name: "bionic-assigned",
       token: expect.stringMatching(/^pcgw_/),
       url: expect.stringMatching(/\/mcp\/gateways\/gw_[a-f0-9]{32}$/),
     });
@@ -428,7 +428,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
     const bearer = captured?.mcpServers[0]?.token;
     expect(bearer).toMatch(/^pcgw_/);
     if (!bearer) throw new Error("Expected runtime MCP bearer");
-    expect(captured?.config).not.toHaveProperty("paperclipRuntimeMcpServers");
+    expect(captured?.config).not.toHaveProperty("bionicRuntimeMcpServers");
     expect(JSON.stringify(captured?.config)).not.toContain(bearer);
     expect(captured?.serializedRuntimeInput).not.toContain(bearer);
     const log = await heartbeat.readLog(run!.id);

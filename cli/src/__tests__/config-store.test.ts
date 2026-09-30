@@ -7,7 +7,7 @@ import {
   readConfig,
   writeConfig,
 } from "../config/store.js";
-import { paperclipConfigSchema, type PaperclipConfig } from "../config/schema.js";
+import { bionicConfigSchema, type PaperclipConfig } from "../config/schema.js";
 
 const roots: string[] = [];
 
@@ -19,13 +19,13 @@ afterEach(() => {
 });
 
 function createConfigPath(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-config-store-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-config-store-"));
   roots.push(root);
   return path.join(root, "config.json");
 }
 
 function defaultConfig(): PaperclipConfig {
-  return paperclipConfigSchema.parse({
+  return bionicConfigSchema.parse({
     $meta: {
       version: 1,
       updatedAt: "2026-08-06T00:00:00.000Z",

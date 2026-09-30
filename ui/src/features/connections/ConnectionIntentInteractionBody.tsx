@@ -8,7 +8,7 @@ import {
   RotateCcw,
   XCircle,
 } from "lucide-react";
-import type { AiAuthMethod, ConnectionIntentInteraction } from "@paperclipai/shared";
+import type { AiAuthMethod, ConnectionIntentInteraction } from "@bionicai/shared";
 import { connectionIntentsApi } from "@/api/connection-intents";
 import { aiConnectionsApi } from "@/api/ai-connections";
 import { agentsApi } from "@/api/agents";

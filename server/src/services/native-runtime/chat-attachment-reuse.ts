@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
 import {
   assets,
   agents,
@@ -19,7 +19,7 @@ import {
   issueComments,
   issues,
   issueWorkProducts,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 
 import {
   isAllowedContentType,
@@ -58,7 +58,7 @@ export const LIST_CHAT_ATTACHMENTS_TOOL_DEFINITION = Object.freeze({
     additionalProperties: false,
   },
   annotations: {
-    semanticContract: "paperclip.server-chat-attachment-reuse.v1",
+    semanticContract: "bionic.server-chat-attachment-reuse.v1",
     operationId: LIST_CHAT_ATTACHMENTS_TOOL_NAME,
     version: 1,
     exposure: "run_scoped",
@@ -82,7 +82,7 @@ export const REUSE_CHAT_ATTACHMENT_TOOL_DEFINITION = Object.freeze({
     additionalProperties: false,
   },
   annotations: {
-    semanticContract: "paperclip.server-chat-attachment-reuse.v1",
+    semanticContract: "bionic.server-chat-attachment-reuse.v1",
     operationId: REUSE_CHAT_ATTACHMENT_TOOL_NAME,
     version: 1,
     exposure: "run_scoped",
@@ -111,7 +111,7 @@ type AuthorizationLockMode = "blocking" | "nonblocking" | "read";
 
 class ExternalChatWaitAuthorizationContentionError extends Error {
   constructor() {
-    super("paperclip_external_chat_wait_authorization_contended");
+    super("bionic_external_chat_wait_authorization_contended");
     this.name = "ExternalChatWaitAuthorizationContentionError";
   }
 }
@@ -157,7 +157,7 @@ export type ListedChatAttachmentPage = {
 };
 
 type ListCursor = {
-  schema: "paperclip.chat-attachment-list-cursor.v1";
+  schema: "bionic.chat-attachment-list-cursor.v1";
   conversationId: string;
   sourceCommentId: string | null;
   createdAt: string;
@@ -238,7 +238,7 @@ function decodeListCursor(
 ): ListCursor | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== "string" || value.length === 0 || value.length > 1024) {
-    throw new Error("paperclip_runner_chat_attachment_cursor_invalid");
+    throw new Error("bionic_runner_chat_attachment_cursor_invalid");
   }
   try {
     const parsed = record(
@@ -248,7 +248,7 @@ function decodeListCursor(
       typeof parsed.createdAt === "string" ? parsed.createdAt : "";
     const parsedDate = new Date(createdAt);
     if (
-      parsed.schema !== "paperclip.chat-attachment-list-cursor.v1" ||
+      parsed.schema !== "bionic.chat-attachment-list-cursor.v1" ||
       parsed.conversationId !== conversationId ||
       (parsed.sourceCommentId ?? null) !== sourceCommentId ||
       Number.isNaN(parsedDate.getTime()) ||
@@ -259,7 +259,7 @@ function decodeListCursor(
     }
     return parsed as ListCursor;
   } catch {
-    throw new Error("paperclip_runner_chat_attachment_cursor_invalid");
+    throw new Error("bionic_runner_chat_attachment_cursor_invalid");
   }
 }
 
@@ -362,7 +362,7 @@ async function principalAuthorized(
   const linkQuery = tx
     .select({
       status: chatIdentityLinks.status,
-      userId: chatIdentityLinks.paperclipUserId,
+      userId: chatIdentityLinks.bionicUserId,
     })
     .from(chatIdentityLinks)
     .where(
@@ -415,7 +415,7 @@ export async function authorizeChatConversationForBoundRun(
   let context = record(contextSnapshot);
   if (context.source === "issue.interaction.respond") {
     const answer = await resolveExternalChatQuestionResponse(tx, binding, context, lockMode);
-    if (!answer) throw new Error("paperclip_runner_chat_attachment_binding_denied");
+    if (!answer) throw new Error("bionic_runner_chat_attachment_binding_denied");
     context = answer.authorizationContext;
   }
   const source = typeof context.source === "string" ? context.source : "";
@@ -423,11 +423,11 @@ export async function authorizeChatConversationForBoundRun(
   const commentIds = wakeCommentIds(context);
   if (
     !provider ||
-    (context.paperclipHarnessCheckedOut !== true &&
-      context.paperclipExternalChatExecutionBound !== true) ||
+    (context.bionicHarnessCheckedOut !== true &&
+      context.bionicExternalChatExecutionBound !== true) ||
     commentIds.length === 0
   ) {
-    throw new Error("paperclip_runner_chat_attachment_binding_denied");
+    throw new Error("bionic_runner_chat_attachment_binding_denied");
   }
   const linksQuery = tx
     .select({
@@ -495,12 +495,12 @@ export async function authorizeChatConversationForBoundRun(
     !commentIds.every((id) => linkedCommentIds.has(id)) ||
     links.some((row) => !row.principalId)
   ) {
-    throw new Error("paperclip_runner_chat_attachment_binding_denied");
+    throw new Error("bionic_runner_chat_attachment_binding_denied");
   }
   const conversation = links[0]!.conversation;
   const endpoint = links[0]!.endpoint;
   if (!currentSetupTestAcceptsBoundDeliveries(endpoint, links)) {
-    throw new Error("paperclip_runner_chat_attachment_binding_denied");
+    throw new Error("bionic_runner_chat_attachment_binding_denied");
   }
   const resource = conversation.resourceId
     ? await (() => {
@@ -524,11 +524,11 @@ export async function authorizeChatConversationForBoundRun(
       })()
     : null;
   if (!destinationAllowed(endpoint, conversation, resource)) {
-    throw new Error("paperclip_runner_chat_attachment_destination_denied");
+    throw new Error("bionic_runner_chat_attachment_destination_denied");
   }
   for (const principalId of new Set(links.map((row) => row.principalId!))) {
     if (!(await principalAuthorized(tx, endpoint, principalId, lockMode))) {
-      throw new Error("paperclip_runner_chat_attachment_principal_denied");
+      throw new Error("bionic_runner_chat_attachment_principal_denied");
     }
   }
   return { conversationId: conversation.id, endpointId: endpoint.id };
@@ -542,7 +542,7 @@ function externalChatWaitCandidate(
   const source = typeof context.source === "string" ? context.source : "";
   const provider = boundExternalChatProvider(source);
   const commentIds = wakeCommentIds(context);
-  const wake = record(context.paperclipWake);
+  const wake = record(context.bionicWake);
   const wakeIssue = record(wake.issue);
   const payloadCommentIds = Array.isArray(wake.commentIds)
     ? wake.commentIds.filter(
@@ -553,9 +553,9 @@ function externalChatWaitCandidate(
   if (
     !provider ||
     !(
-      (context.paperclipHarnessCheckedOut === true &&
+      (context.bionicHarnessCheckedOut === true &&
         wake.checkedOutByHarness === true) ||
-      (context.paperclipExternalChatExecutionBound === true &&
+      (context.bionicExternalChatExecutionBound === true &&
         wake.externalChatExecutionBound === true)
     ) ||
     commentIds.length === 0 ||
@@ -630,7 +630,7 @@ export async function resolveExternalChatResponseWaitAuthorizationInTransaction(
   if (
     run &&
     record(run.contextSnapshot).source === "issue.interaction.respond" &&
-    record(run.contextSnapshot).paperclipExternalChatQuestionResponse &&
+    record(run.contextSnapshot).bionicExternalChatQuestionResponse &&
     !answerContext
   )
     return "revoked";
@@ -737,9 +737,9 @@ export async function resolveExternalChatResponseWaitAuthorizationInTransaction(
     if (
       error instanceof Error &&
       [
-        "paperclip_runner_chat_attachment_binding_denied",
-        "paperclip_runner_chat_attachment_destination_denied",
-        "paperclip_runner_chat_attachment_principal_denied",
+        "bionic_runner_chat_attachment_binding_denied",
+        "bionic_runner_chat_attachment_destination_denied",
+        "bionic_runner_chat_attachment_principal_denied",
       ].includes(error.message)
     ) {
       return "revoked";
@@ -914,7 +914,7 @@ async function loadSource(
     .for("update")
     .limit(1);
   if (!sourceComment) {
-    throw new Error("paperclip_runner_chat_attachment_source_denied");
+    throw new Error("bionic_runner_chat_attachment_source_denied");
   }
   const [row] = await tx
     .select({
@@ -960,7 +960,7 @@ async function loadSource(
     !isAllowedContentType(normalizeContentType(row.contentType)) ||
     !/^[a-f0-9]{64}$/iu.test(row.sha256)
   ) {
-    throw new Error("paperclip_runner_chat_attachment_source_denied");
+    throw new Error("bionic_runner_chat_attachment_source_denied");
   }
   const sourceWithParent = {
     sourceCommentId,
@@ -981,7 +981,7 @@ async function loadSource(
   if (
     !(await sourceLineageExists(tx, binding, conversation, sourceWithParent))
   ) {
-    throw new Error("paperclip_runner_chat_attachment_source_denied");
+    throw new Error("bionic_runner_chat_attachment_source_denied");
   }
   const { parentCommentId: _parentCommentId, ...source } = sourceWithParent;
   return source;
@@ -1032,7 +1032,7 @@ export async function listAuthorizedChatAttachments(input: {
         current.actorStatus,
       )
     ) {
-      throw new Error("paperclip_runner_tool_binding_not_authorized");
+      throw new Error("bionic_runner_tool_binding_not_authorized");
     }
     const conversation = await authorizeChatConversationForBoundRun(
       tx as unknown as Db,
@@ -1186,7 +1186,7 @@ export async function listAuthorizedChatAttachments(input: {
         // Metadata listing omits deleted, oversized, or no-longer-lineaged files.
         if (
           !(error instanceof Error) ||
-          error.message !== "paperclip_runner_chat_attachment_source_denied"
+          error.message !== "bionic_runner_chat_attachment_source_denied"
         ) {
           throw error;
         }
@@ -1199,7 +1199,7 @@ export async function listAuthorizedChatAttachments(input: {
       nextCursor:
         hasMore && lastScanned
           ? encodeListCursor({
-              schema: "paperclip.chat-attachment-list-cursor.v1",
+              schema: "bionic.chat-attachment-list-cursor.v1",
               conversationId: conversation.conversationId,
               sourceCommentId: sourceFilter,
               createdAt: lastScanned.createdAt.toISOString(),
@@ -1250,7 +1250,7 @@ async function readSourceBytes(
   const acquisitionTimer = setTimeout(() => {
     acquisitionTimedOut = true;
     rejectAcquisition(
-      new Error("paperclip_runner_chat_attachment_source_read_timed_out"),
+      new Error("bionic_runner_chat_attachment_source_read_timed_out"),
     );
   }, timeoutMs);
   acquisitionTimer.unref?.();
@@ -1268,7 +1268,7 @@ async function readSourceBytes(
   }
   const timeout = setTimeout(() => {
     object.stream.destroy(
-      new Error("paperclip_runner_chat_attachment_source_read_timed_out"),
+      new Error("bionic_runner_chat_attachment_source_read_timed_out"),
     );
   }, timeoutMs);
   timeout.unref?.();
@@ -1281,7 +1281,7 @@ async function readSourceBytes(
       if (total > source.byteSize || total > MAX_ATTACHMENT_BYTES) {
         object.stream.destroy();
         throw new Error(
-          "paperclip_runner_chat_attachment_source_size_mismatch",
+          "bionic_runner_chat_attachment_source_size_mismatch",
         );
       }
       chunks.push(buffer);
@@ -1299,7 +1299,7 @@ async function readSourceBytes(
       object.stream.destroy();
     }
     throw new Error(
-      "paperclip_runner_chat_attachment_source_integrity_mismatch",
+      "bionic_runner_chat_attachment_source_integrity_mismatch",
     );
   }
   return body;
@@ -1343,7 +1343,7 @@ async function putStorageObjectWithin(
   const timer = setTimeout(() => {
     timedOut = true;
     rejectTimeout(
-      new Error("paperclip_runner_chat_attachment_storage_write_timed_out"),
+      new Error("bionic_runner_chat_attachment_storage_write_timed_out"),
     );
   }, timeoutMs);
   timer.unref?.();
@@ -1397,7 +1397,7 @@ export async function prepareReusedChatAttachment(input: {
     )
     .limit(1);
   if (!issue)
-    throw new Error("paperclip_runner_chat_attachment_binding_denied");
+    throw new Error("bionic_runner_chat_attachment_binding_denied");
   const storage = input.storage ?? getStorageService();
   const storageTimeoutMs =
     typeof input.storageTimeoutMs === "number" &&
@@ -1428,7 +1428,7 @@ export async function prepareReusedChatAttachment(input: {
       stored.sha256.toLowerCase() !== input.source.sha256.toLowerCase() ||
       stored.contentType !== input.source.contentType
     ) {
-      throw new Error("paperclip_runner_chat_attachment_storage_mismatch");
+      throw new Error("bionic_runner_chat_attachment_storage_mismatch");
     }
     const attachment = await issueService(input.db).createAttachment({
       issueId: input.binding.issueId,
@@ -1445,7 +1445,7 @@ export async function prepareReusedChatAttachment(input: {
       !attachment.artifactWorkProductId ||
       attachment.originatingRunId !== input.binding.runId
     ) {
-      throw new Error("paperclip_runner_chat_attachment_origin_not_persisted");
+      throw new Error("bionic_runner_chat_attachment_origin_not_persisted");
     }
     const [workProduct] = await input.db
       .select({ metadata: issueWorkProducts.metadata })
@@ -1461,7 +1461,7 @@ export async function prepareReusedChatAttachment(input: {
       .for("update")
       .limit(1);
     if (!workProduct) {
-      throw new Error("paperclip_runner_chat_attachment_origin_not_persisted");
+      throw new Error("bionic_runner_chat_attachment_origin_not_persisted");
     }
     await input.db
       .update(issueWorkProducts)
@@ -1489,7 +1489,7 @@ export async function prepareReusedChatAttachment(input: {
       { agentId: input.binding.agentId, runId: input.binding.runId },
       {
         attachmentIds: [attachment.id],
-        authorizationReason: "paperclip_runner_protocol",
+        authorizationReason: "bionic_runner_protocol",
       },
       input.db,
     );

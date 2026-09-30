@@ -142,7 +142,7 @@ function shellQuote(value: string) {
 }
 
 function mergeRuntimeExcludes(entries: string[] | undefined): string[] {
-  return [...new Set([".paperclip-runtime", ...(entries ?? [])])];
+  return [...new Set([".bionic-runtime", ...(entries ?? [])])];
 }
 
 // Largest base64 body we hand to the runner as a single stdin string. Normal
@@ -287,7 +287,7 @@ export function createCommandManagedRuntimeClient(input: {
       const total = buffer.byteLength;
       const encodedLength = base64EncodedLength(total);
       const remoteDir = path.posix.dirname(remotePath);
-      const remoteTempPath = buildUniqueStagingPath({ targetPath: remotePath, suffix: ".paperclip-upload" });
+      const remoteTempPath = buildUniqueStagingPath({ targetPath: remotePath, suffix: ".bionic-upload" });
       const canUseSingleStreamProgressPath = input.runner.supportsSingleStreamStdinProgress === true;
 
       try {
@@ -433,7 +433,7 @@ export function createCommandManagedRuntimeClient(input: {
   // rides the shared `execute` seam.
   const fallbackSyncIn = async (operations: SandboxSyncOperation[]): Promise<SandboxSyncResult> => {
     const resultOperations: SandboxSyncResult["operations"] = [];
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-syncin-fallback-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-syncin-fallback-"));
     try {
       for (const operation of operations) {
         let filesTransferred = 0;
@@ -452,7 +452,7 @@ export function createCommandManagedRuntimeClient(input: {
               const tarBytes = await fs.readFile(archivePath);
               const remoteTarPath = buildUniqueStagingPath({
                 targetPath: mapping.targetPath,
-                suffix: ".paperclip-syncin.tar",
+                suffix: ".bionic-syncin.tar",
               });
               cleanupPaths.push(remoteTarPath);
               await client.writeFile(remoteTarPath, bufferToArrayBuffer(tarBytes));
@@ -638,7 +638,7 @@ export async function prepareCommandManagedRuntime(input: {
         text.split(/\r?\n/).filter((line) => line.trim().length > 0).slice(-3).join(" | ").slice(0, 480);
       const reason = result.timedOut ? "timed out" : `exited ${result.exitCode ?? "?"}`;
       console.warn(
-        `[paperclip] managed-runtime install command ${reason}: ${installCommand} :: ${tail(result.stderr || result.stdout)}`,
+        `[bionic] managed-runtime install command ${reason}: ${installCommand} :: ${tail(result.stderr || result.stdout)}`,
       );
     }
   }

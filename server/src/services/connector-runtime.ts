@@ -1,17 +1,17 @@
-import { SLACK_TOOLS } from "@paperclipai/shared";
+import { SLACK_TOOLS } from "@bionicai/shared";
 import { slackAssignedResource, executeGovernedSlackTool } from "./connectors/slack.js";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import type { Db } from "@paperclipai/db";
-import type { AgentSkillSnapshot } from "@paperclipai/shared";
+import type { Db } from "@bionicai/db";
+import type { AgentSkillSnapshot } from "@bionicai/shared";
 import {
   resolvePaperclipSkillsDir,
   readPaperclipSkillSyncPreference,
   writePaperclipSkillSyncPreference,
   type PaperclipSkillEntry,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@bionicai/adapter-utils/server-utils";
 import { forbidden } from "../errors.js";
 import { emailChannelService } from "./email-channels.js";
 import {
@@ -61,7 +61,7 @@ interface ConnectorDefinition {
 // current access, not credential availability or agent-authored config, select them.
 const connectors: ConnectorDefinition[] = [
   { key: "browser-use-cloud", label: "Browser Use Cloud", skillName: "browser-use-cloud", skillMarkdown: BROWSER_USE_CLOUD_SKILL, tools: [],
-    legacySkillKeys: ["paperclipai/paperclip/browser-use"],
+    legacySkillKeys: ["bionicai/bionic/browser-use"],
     async resolve(db, binding) {
       const { getAssignedMcpGateway } = await import("./native-runtime/assigned-mcp-tools.js");
       try { return await getAssignedMcpGateway(db).browserUseResources(binding); } catch { return []; }
@@ -105,7 +105,7 @@ const connectors: ConnectorDefinition[] = [
   },
 ];
 const skillKey = (connector: ConnectorDefinition) =>
-  `paperclipai/paperclip/${connector.skillName}`;
+  `bionicai/bionic/${connector.skillName}`;
 export type ConnectorAssignment = {
   key: string;
   label: string;
@@ -220,8 +220,8 @@ export async function applyConnectorSkills(
     : null;
   return {
     ...writePaperclipSkillSyncPreference(config, desired),
-    paperclipRuntimeSkills: skills,
-    paperclipConnectorSkillDigest: connectorSkillDigest,
+    bionicRuntimeSkills: skills,
+    bionicConnectorSkillDigest: connectorSkillDigest,
   };
 }
 
@@ -231,21 +231,21 @@ export async function prepareConnectorSkillDelivery(
   adapterType: string,
 ) {
   const scopedFiles =
-    adapterType === "paperclip_runner" ||
+    adapterType === "bionic_runner" ||
     (config.engine === "cli" &&
       ["codex_local", "claude_local", "kimi_local"].includes(adapterType));
   if (scopedFiles) {
     // Runner models with semantic tools cannot necessarily read staged skill
     // files. Supply the Slack contract and verified source IDs in their input;
     // keep the staged bundle for CLI-capable engines and compatibility hashing.
-    const slack = adapterType === "paperclip_runner"
-      ? config.paperclipRuntimeSkills.filter(entry => entry.key === "paperclipai/paperclip/slack")
+    const slack = adapterType === "bionic_runner"
+      ? config.bionicRuntimeSkills.filter(entry => entry.key === "bionicai/bionic/slack")
       : [];
     const instructions = (await Promise.all(slack.map(entry =>
       fs.readFile(path.join(entry.source, "SKILL.md"), "utf8")))).join("\n\n");
     return { config, instructions };
   }
-  const assigned = config.paperclipRuntimeSkills.filter((entry) =>
+  const assigned = config.bionicRuntimeSkills.filter((entry) =>
     isConnectorSkill(entry.key),
   );
   const instructions = (
@@ -258,13 +258,13 @@ export async function prepareConnectorSkillDelivery(
   ).join("\n\n");
   const stripped = await applyConnectorSkills(
     config,
-    config.paperclipRuntimeSkills,
+    config.bionicRuntimeSkills,
     [],
   );
   return {
     config: {
       ...stripped,
-      paperclipConnectorSkillDigest: config.paperclipConnectorSkillDigest,
+      bionicConnectorSkillDigest: config.bionicConnectorSkillDigest,
     },
     instructions,
   };

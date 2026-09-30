@@ -2,7 +2,7 @@ import { generateKeyPairSync, sign } from "node:crypto";
 import express from "express";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createDb, instanceSettings } from "@paperclipai/db";
+import { createDb, instanceSettings } from "@bionicai/db";
 import {
   applyCloudRuntimeIdentityAssertion,
   CLOUD_RUNTIME_IDENTITY_AUDIENCE,
@@ -14,7 +14,7 @@ import {
   runtimePublicOrigin,
 } from "../services/cloud-runtime-identity.js";
 import { routineWebhookUrl } from "../services/routines.js";
-import { paperclipCloudConnectorEnrollmentStatus } from "../services/paperclip-cloud-connector-enrollment.js";
+import { bionicCloudConnectorEnrollmentStatus } from "../services/bionic-cloud-connector-enrollment.js";
 import { cloudRuntimeIdentityMiddleware } from "../middleware/cloud-runtime-identity.js";
 import { healthRoutes } from "../routes/health.js";
 import {
@@ -26,8 +26,8 @@ const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
 const describeEmbeddedPostgres = embeddedPostgresSupport.supported ? describe : describe.skip;
 
 const STACK_ID = "stack-pool-123";
-const POOL_ORIGIN = "https://pool-123.staging.paperclip.app";
-const CANONICAL_ORIGIN = "https://gonzo.staging.paperclip.app";
+const POOL_ORIGIN = "https://pool-123.staging.bionic.app";
+const CANONICAL_ORIGIN = "https://gonzo.staging.bionic.app";
 const NOW = new Date("2099-01-01T00:00:00.000Z");
 
 const pair = generateKeyPairSync("ed25519");
@@ -81,47 +81,47 @@ describeEmbeddedPostgres("Cloud runtime identity", () => {
   const originalEnv = { ...process.env };
 
   beforeAll(async () => {
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-cloud-runtime-identity-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-cloud-runtime-identity-");
     db = createDb(tempDb.connectionString);
   }, 20_000);
 
   beforeEach(async () => {
     await db.delete(instanceSettings);
     resetCloudRuntimeIdentityForTests();
-    process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN = "test-tenant-server-token";
-    process.env.PAPERCLIP_CLOUD_STACK_ID = STACK_ID;
-    process.env.PAPERCLIP_CLOUD_API_ORIGIN = "https://my-staging.paperclip.app";
-    process.env.PAPERCLIP_PUBLIC_URL = POOL_ORIGIN;
-    process.env.PAPERCLIP_AUTH_PUBLIC_BASE_URL = POOL_ORIGIN;
-    process.env.PAPERCLIP_API_URL = POOL_ORIGIN;
-    process.env.PAPERCLIP_PRIMARY_HOST = "pool-123.staging.paperclip.app";
-    process.env.PAPERCLIP_STACK_SLUG = "pool-123";
-    process.env.PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS = JSON.stringify({ keys: [publicJwk] });
-    process.env.PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID = "managed-instance";
-    process.env.PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY = "managed-signing-key";
-    process.env.PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY = "managed-sealing-key";
-    process.env.PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT = "staging";
-    process.env.PAPERCLIP_CLOUD_CONNECTOR_BASE_URL = "https://my-staging.paperclip.app";
+    process.env.BIONIC_CLOUD_TENANT_SERVER_TOKEN = "test-tenant-server-token";
+    process.env.BIONIC_CLOUD_STACK_ID = STACK_ID;
+    process.env.BIONIC_CLOUD_API_ORIGIN = "https://my-staging.bionic.app";
+    process.env.BIONIC_PUBLIC_URL = POOL_ORIGIN;
+    process.env.BIONIC_AUTH_PUBLIC_BASE_URL = POOL_ORIGIN;
+    process.env.BIONIC_API_URL = POOL_ORIGIN;
+    process.env.BIONIC_PRIMARY_HOST = "pool-123.staging.bionic.app";
+    process.env.BIONIC_STACK_SLUG = "pool-123";
+    process.env.BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS = JSON.stringify({ keys: [publicJwk] });
+    process.env.BIONIC_CLOUD_CONNECTOR_INSTANCE_ID = "managed-instance";
+    process.env.BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY = "managed-signing-key";
+    process.env.BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY = "managed-sealing-key";
+    process.env.BIONIC_CLOUD_CONNECTOR_ENVIRONMENT = "staging";
+    process.env.BIONIC_CLOUD_CONNECTOR_BASE_URL = "https://my-staging.bionic.app";
     await initializeCloudRuntimeIdentity(db);
   });
 
   afterEach(() => {
     for (const key of [
-      "PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN",
-      "PAPERCLIP_CLOUD_STACK_ID",
-      "PAPERCLIP_CLOUD_API_ORIGIN",
-      "PAPERCLIP_PUBLIC_URL",
-      "PAPERCLIP_AUTH_PUBLIC_BASE_URL",
-      "PAPERCLIP_API_URL",
-      "PAPERCLIP_PRIMARY_HOST",
-      "PAPERCLIP_STACK_SLUG",
-      "PAPERCLIP_CLOUD_RUNTIME_IDENTITY_JWKS",
-      "PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID",
-      "PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY",
-      "PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY",
-      "PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT",
-      "PAPERCLIP_CLOUD_CONNECTOR_BASE_URL",
-      "PAPERCLIP_RUNTIME_API_CANDIDATES_JSON",
+      "BIONIC_CLOUD_TENANT_SERVER_TOKEN",
+      "BIONIC_CLOUD_STACK_ID",
+      "BIONIC_CLOUD_API_ORIGIN",
+      "BIONIC_PUBLIC_URL",
+      "BIONIC_AUTH_PUBLIC_BASE_URL",
+      "BIONIC_API_URL",
+      "BIONIC_PRIMARY_HOST",
+      "BIONIC_STACK_SLUG",
+      "BIONIC_CLOUD_RUNTIME_IDENTITY_JWKS",
+      "BIONIC_CLOUD_CONNECTOR_INSTANCE_ID",
+      "BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY",
+      "BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY",
+      "BIONIC_CLOUD_CONNECTOR_ENVIRONMENT",
+      "BIONIC_CLOUD_CONNECTOR_BASE_URL",
+      "BIONIC_RUNTIME_API_CANDIDATES_JSON",
     ]) {
       const original = originalEnv[key];
       if (original === undefined) delete process.env[key];
@@ -144,15 +144,15 @@ describeEmbeddedPostgres("Cloud runtime identity", () => {
     expect(applied.canonicalOrigin).toBe(CANONICAL_ORIGIN);
     expect(getCloudRuntimeIdentity()?.stackSlug).toBe("gonzo");
     expect(runtimePublicOrigin()).toBe(CANONICAL_ORIGIN);
-    expect(process.env.PAPERCLIP_PUBLIC_URL).toBe(CANONICAL_ORIGIN);
-    expect(process.env.PAPERCLIP_AUTH_PUBLIC_BASE_URL).toBe(CANONICAL_ORIGIN);
-    expect(process.env.PAPERCLIP_API_URL).toBe(CANONICAL_ORIGIN);
-    expect(process.env.PAPERCLIP_PRIMARY_HOST).toBe("gonzo.staging.paperclip.app");
-    expect(process.env.PAPERCLIP_STACK_SLUG).toBe("gonzo");
+    expect(process.env.BIONIC_PUBLIC_URL).toBe(CANONICAL_ORIGIN);
+    expect(process.env.BIONIC_AUTH_PUBLIC_BASE_URL).toBe(CANONICAL_ORIGIN);
+    expect(process.env.BIONIC_API_URL).toBe(CANONICAL_ORIGIN);
+    expect(process.env.BIONIC_PRIMARY_HOST).toBe("gonzo.staging.bionic.app");
+    expect(process.env.BIONIC_STACK_SLUG).toBe("gonzo");
     expect(routineWebhookUrl("hook-1")).toBe(
-      "https://gonzo.staging.paperclip.app/api/routine-triggers/public/hook-1/fire",
+      "https://gonzo.staging.bionic.app/api/routine-triggers/public/hook-1/fire",
     );
-    expect(paperclipCloudConnectorEnrollmentStatus()).toMatchObject({
+    expect(bionicCloudConnectorEnrollmentStatus()).toMatchObject({
       configured: true,
       status: "active",
       origins: [CANONICAL_ORIGIN],
@@ -172,7 +172,7 @@ describeEmbeddedPostgres("Cloud runtime identity", () => {
 
     const response = await request(app)
       .get("/api/health")
-      .set("x-paperclip-cloud-runtime-identity", assertion({
+      .set("x-bionic-cloud-runtime-identity", assertion({
         claims: { iat: requestTime, exp: requestTime + 300 },
       }));
 
@@ -186,22 +186,22 @@ describeEmbeddedPostgres("Cloud runtime identity", () => {
   it("restores the canonical identity before consumers read stale startup variables", async () => {
     await applyCloudRuntimeIdentityAssertion({ db, compactJws: assertion(), now: NOW });
     resetCloudRuntimeIdentityForTests();
-    process.env.PAPERCLIP_PUBLIC_URL = POOL_ORIGIN;
-    process.env.PAPERCLIP_AUTH_PUBLIC_BASE_URL = POOL_ORIGIN;
-    process.env.PAPERCLIP_API_URL = POOL_ORIGIN;
+    process.env.BIONIC_PUBLIC_URL = POOL_ORIGIN;
+    process.env.BIONIC_AUTH_PUBLIC_BASE_URL = POOL_ORIGIN;
+    process.env.BIONIC_API_URL = POOL_ORIGIN;
 
     await initializeCloudRuntimeIdentity(db);
 
     expect(runtimePublicOrigin()).toBe(CANONICAL_ORIGIN);
-    expect(process.env.PAPERCLIP_API_URL).toBe(CANONICAL_ORIGIN);
+    expect(process.env.BIONIC_API_URL).toBe(CANONICAL_ORIGIN);
   });
 
   it("accepts the identical claim after a restart with already-aligned provider variables", async () => {
     await applyCloudRuntimeIdentityAssertion({ db, compactJws: assertion(), now: NOW });
     resetCloudRuntimeIdentityForTests();
-    process.env.PAPERCLIP_PUBLIC_URL = CANONICAL_ORIGIN;
-    process.env.PAPERCLIP_AUTH_PUBLIC_BASE_URL = CANONICAL_ORIGIN;
-    process.env.PAPERCLIP_API_URL = CANONICAL_ORIGIN;
+    process.env.BIONIC_PUBLIC_URL = CANONICAL_ORIGIN;
+    process.env.BIONIC_AUTH_PUBLIC_BASE_URL = CANONICAL_ORIGIN;
+    process.env.BIONIC_API_URL = CANONICAL_ORIGIN;
     await initializeCloudRuntimeIdentity(db);
 
     await expect(applyCloudRuntimeIdentityAssertion({
@@ -228,7 +228,7 @@ describeEmbeddedPostgres("Cloud runtime identity", () => {
   it.each([
     ["expired", { exp: Math.floor(NOW.getTime() / 1000) - 1 }],
     ["cross-stack", { sub: "stack-someone-else" }],
-    ["wrong previous origin", { previousOrigin: "https://another.staging.paperclip.app" }],
+    ["wrong previous origin", { previousOrigin: "https://another.staging.bionic.app" }],
     ["path-bearing destination", { canonicalOrigin: `${CANONICAL_ORIGIN}/GON` }],
     ["slug mismatch", { stackSlug: "kermit" }],
   ])("rejects %s assertions", async (_label, claims) => {

@@ -29,8 +29,8 @@ function otherServiceDefinitions(platform: NodeJS.Platform, userHomeDir: string,
     ? systemdServiceName(instanceId)
     : `${launchdServiceName(instanceId)}.plist`;
   const pattern = platform === "linux"
-    ? /^paperclipai(?:-.+)?\.service$/
-    : /^ing\.paperclip\.paperclipai(?:\..+)?\.plist$/;
+    ? /^bionicai(?:-.+)?\.service$/
+    : /^ing\.bionic\.bionicai(?:\..+)?\.plist$/;
   return fs.readdirSync(directory)
     .filter((name) => name !== currentName && pattern.test(name))
     .map((name) => path.join(directory, name));
@@ -83,8 +83,8 @@ export async function uninstallCommand(
   }, paths, { initialize: !hadStore });
 
   if (!shimRemoved) {
-    console.log(pc.yellow(`Left ${paths.shimPath} unchanged because it is not a Paperclip-managed shim.`));
+    console.log(pc.yellow(`Left ${paths.shimPath} unchanged because it is not a Bionic-managed shim.`));
   }
-  console.log(pc.green("Removed the managed Paperclip CLI install."));
-  console.log(pc.dim(`User data was left untouched under ${paths.paperclipHome}.`));
+  console.log(pc.green("Removed the managed Bionic CLI install."));
+  console.log(pc.dim(`User data was left untouched under ${paths.bionicHome}.`));
 }

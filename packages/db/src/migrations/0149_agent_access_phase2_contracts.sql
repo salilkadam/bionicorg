@@ -439,9 +439,9 @@ INSERT INTO "tool_applications" (
 )
 SELECT
   c."id",
-  'paperclip_plugin:' || p."plugin_key",
+  'bionic_plugin:' || p."plugin_key",
   coalesce(p."manifest_json"->>'name', p."plugin_key"),
-  'paperclip_plugin',
+  'bionic_plugin',
   'active',
   p."id",
   jsonb_build_object('source', 'plugin_backfill', 'pluginKey', p."plugin_key"),
@@ -476,8 +476,8 @@ SELECT
   'remote_http',
   'active',
   true,
-  jsonb_build_object('pluginKey', p."plugin_key", 'type', 'paperclip_plugin'),
-  jsonb_build_object('pluginKey', p."plugin_key", 'type', 'paperclip_plugin'),
+  jsonb_build_object('pluginKey', p."plugin_key", 'type', 'bionic_plugin'),
+  jsonb_build_object('pluginKey', p."plugin_key", 'type', 'bionic_plugin'),
   '[]'::jsonb,
   '[]'::jsonb,
   'ok',
@@ -485,7 +485,7 @@ SELECT
   now()
 FROM "tool_applications" a
 JOIN "plugins" p ON p."id" = a."plugin_id"
-WHERE a."type" = 'paperclip_plugin'
+WHERE a."type" = 'bionic_plugin'
   AND NOT EXISTS (
     SELECT 1 FROM "tool_connections" existing
     WHERE existing."company_id" = a."company_id"
@@ -542,7 +542,7 @@ FROM "tool_connections" c
 JOIN "tool_applications" a ON a."id" = c."application_id"
 JOIN "plugins" p ON p."id" = a."plugin_id"
 CROSS JOIN LATERAL jsonb_array_elements(coalesce(p."manifest_json"->'tools', '[]'::jsonb)) AS tool(value)
-WHERE a."type" = 'paperclip_plugin'
+WHERE a."type" = 'bionic_plugin'
   AND tool.value ? 'name'
 ON CONFLICT ("connection_id", "name") DO NOTHING;--> statement-breakpoint
 

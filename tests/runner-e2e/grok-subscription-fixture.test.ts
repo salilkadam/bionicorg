@@ -16,9 +16,9 @@ afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, {
 async function setup() {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "grok-fixture-")));
   roots.push(root);
-  const home = path.join(root, "paperclip-home");
+  const home = path.join(root, "bionic-home");
   await mkdir(home);
-  return { PAPERCLIP_RUNNER_E2E_TEMP_ROOT: root, PAPERCLIP_HOME: home, PAPERCLIP_INSTANCE_ID: "runner-e2e-test" };
+  return { BIONIC_RUNNER_E2E_TEMP_ROOT: root, BIONIC_HOME: home, BIONIC_INSTANCE_ID: "runner-e2e-test" };
 }
 
 it("stages only the explicit company credential privately and cleans refreshed state", async () => {
@@ -37,7 +37,7 @@ it("refuses malformed credentials and nonisolated or redirected homes", async ()
   const environment = await setup();
   await expect(stageGrokSubscriptionFixture({ raw: "{}", companyId, environment })).rejects.toThrow("malformed");
   await expect(stageGrokSubscriptionFixture({ raw, companyId: "../outside", environment })).rejects.toThrow("isolated");
-  await expect(stageGrokSubscriptionFixture({ raw, companyId, environment: { ...environment, PAPERCLIP_HOME: tmpdir() } })).rejects.toThrow("outside");
+  await expect(stageGrokSubscriptionFixture({ raw, companyId, environment: { ...environment, BIONIC_HOME: tmpdir() } })).rejects.toThrow("outside");
   const home = resolveManagedGrokHomeDir(environment, companyId);
   await mkdir(path.dirname(home), { recursive: true });
   await symlink(tmpdir(), home);

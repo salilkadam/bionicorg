@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import type { IssueQueuedCommentEntry, IssueQueuedCommentQueue } from "@paperclipai/shared";
+import type { IssueQueuedCommentEntry, IssueQueuedCommentQueue } from "@bionicai/shared";
 import { TaskChatComposer } from "@/components/task-chat/TaskChatComposer";
 import { TaskChatQueuedMessages } from "@/components/task-chat/TaskChatQueuedMessages";
 import { composerAgentAppearance, composerAgents } from "../prototypes/composer-model-picker/fixtures";
@@ -133,7 +133,7 @@ const meta = {
     layout: "fullscreen",
     docs: { description: { component: "The production queued-message strip sits above the production composer. Steer, edit, reorder, discard, and legacy interrupt can be tried locally." } },
   },
-  args: { protocol: "paperclip_runner_v1", steeringDisposition: "available", initialEdit: false, mobile: false },
+  args: { protocol: "bionic_runner_v1", steeringDisposition: "available", initialEdit: false, mobile: false },
 } satisfies Meta<typeof QueuedComposer>;
 
 export default meta;

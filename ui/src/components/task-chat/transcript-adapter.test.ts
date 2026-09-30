@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TranscriptEntry } from "@/adapters";
-import type { HeartbeatRunEvent } from "@paperclipai/shared";
+import type { HeartbeatRunEvent } from "@bionicai/shared";
 import {
   assembleThreadItems,
   attachSettledTurns,
@@ -15,10 +15,10 @@ import {
   isNestableLiveChild,
   ISSUE_BRIEF_ITEM_ID,
   omitProgressRepeatedByResponseAcrossSegments,
-  paperclipRunnerActivityItems,
-  paperclipRunnerFinalResponse,
-  paperclipRunnerHistoryItems,
-  paperclipRunnerTimelineItems,
+  bionicRunnerActivityItems,
+  bionicRunnerFinalResponse,
+  bionicRunnerHistoryItems,
+  bionicRunnerTimelineItems,
   prependIssueBrief,
   settledRunChildren,
   splitTranscriptAtAnchors,
@@ -43,7 +43,7 @@ describe("accepted native response-wake answers", () => {
     "**Before release**\n- Test and rehearse rollback.\n\n**During release**\n- Deploy incrementally and watch errors.\n\n**After release**\n- Verify workflows and record follow-ups.";
   function fixture(mode = "accepted") {
     const result = {
-      schema: "paperclip.run_result.v1",
+      schema: "bionic.run_result.v1",
       reportedWorkDisposition: "yielded",
       summary,
       completionClaim: { objectiveSatisfied: true, remainingWork: [] },
@@ -76,7 +76,7 @@ describe("accepted native response-wake answers", () => {
         createdAt: new Date(TS),
         payload: {
           prpEvent: {
-            schema: "paperclip.prp.event.v1",
+            schema: "bionic.prp.event.v1",
             schemaVersion: 1,
             runId,
             eventType,
@@ -117,7 +117,7 @@ describe("accepted native response-wake answers", () => {
         ? []
         : [
             event(4, "run.terminal", {
-              schema: "paperclip.prp.terminal.v1",
+              schema: "bionic.prp.terminal.v1",
               turnTerminalState: "completed",
               runTerminalState:
                 mode === "failed_terminal" ? "failed" : "succeeded",
@@ -147,7 +147,7 @@ describe("accepted native response-wake answers", () => {
     "renders the exact accepted response-wake summary instead of commentary: %s",
     (mode) => {
       expect(
-        paperclipRunnerFinalResponse(fixture(mode), { runId }),
+        bionicRunnerFinalResponse(fixture(mode), { runId }),
       ).toMatchObject({
         text: summary,
         channel: "final",
@@ -167,16 +167,16 @@ describe("accepted native response-wake answers", () => {
     "failed_terminal",
   ])("keeps %s evidence out of the response-wake final exception", (mode) => {
     expect(
-      paperclipRunnerFinalResponse(fixture(mode), { runId }),
+      bionicRunnerFinalResponse(fixture(mode), { runId }),
     ).toBeUndefined();
   });
 
   it("does not grant the exception to another run or a live fallback", () => {
     expect(
-      paperclipRunnerFinalResponse(fixture(), { runId: "other-run" }),
+      bionicRunnerFinalResponse(fixture(), { runId: "other-run" }),
     ).toBeUndefined();
     expect(
-      paperclipRunnerFinalResponse(fixture(), { runId, allowFallback: false }),
+      bionicRunnerFinalResponse(fixture(), { runId, allowFallback: false }),
     ).toBeUndefined();
   });
 });
@@ -196,8 +196,8 @@ describe("completion tool feed visibility", () => {
   it("keeps completion events inspectable but hides both tool representations from live and settled feed activity", () => {
     for (const running of [true, false]) {
       const entries: TranscriptEntry[] = [
-        { kind: "tool_call", ts: TS, toolUseId: "legacy-finish", name: "paperclip_finish", input: {} },
-        ...["paperclip_finish", "search_tasks"].map((name) => ({
+        { kind: "tool_call", ts: TS, toolUseId: "legacy-finish", name: "bionic_finish", input: {} },
+        ...["bionic_finish", "search_tasks"].map((name) => ({
           kind: "provider_activity" as const, ts: TS, family: "tool_execution" as const,
           eventType: running ? "tool.execution.started" : "tool.execution.completed",
           status: running ? "running" as const : "completed" as const,
@@ -210,12 +210,12 @@ describe("completion tool feed visibility", () => {
       ];
       const parsed = transcriptToTaskChatItems(entries, { runId: "finish-visibility", running });
       expect(parsed).toHaveLength(4);
-      const activity = paperclipRunnerActivityItems(parsed);
+      const activity = bionicRunnerActivityItems(parsed);
       expect(activity).toHaveLength(2);
-      expect(JSON.stringify(activity)).not.toContain("paperclip_finish");
+      expect(JSON.stringify(activity)).not.toContain("bionic_finish");
       expect(JSON.stringify(activity)).toContain("search_tasks");
       expect(JSON.stringify(activity)).toContain("Repository is not trusted");
-      expect(paperclipRunnerTimelineItems(parsed)).toEqual(activity);
+      expect(bionicRunnerTimelineItems(parsed)).toEqual(activity);
     }
   });
 });
@@ -542,7 +542,7 @@ describe("transcriptToTaskChatItems protocol surfaces", () => {
           payload: {
             executionId: "exec-lifecycle",
             transport: "mcp",
-            namespace: "paperclip",
+            namespace: "bionic",
             name: "search_tasks",
             operation: "search",
             progress: "Searching the task index",
@@ -583,7 +583,7 @@ describe("transcriptToTaskChatItems protocol surfaces", () => {
     expect(item.details).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: "Name", value: "search_tasks" }),
-        expect.objectContaining({ label: "Namespace", value: "paperclip" }),
+        expect.objectContaining({ label: "Namespace", value: "bionic" }),
         expect.objectContaining({ label: "Operation", value: "search" }),
         expect.objectContaining({ label: "Target", value: "doc/plan.md" }),
         expect.objectContaining({
@@ -595,7 +595,7 @@ describe("transcriptToTaskChatItems protocol surfaces", () => {
     expect(providerActivityPresentation(item)).toMatchObject({
       runningLabel: "Searching tasks",
       completedLabel: "Searched tasks",
-      detail: "Searching the task index · Paperclip · search_tasks",
+      detail: "Searching the task index · Bionic · search_tasks",
     });
   });
 
@@ -903,7 +903,7 @@ describe("buildActivityPhases provider summaries", () => {
         {
           id: "finish",
           kind: "tool",
-          name: "Paperclip_finish",
+          name: "Bionic_finish",
           status: "completed",
         },
         provider("research-1", "research"),
@@ -982,15 +982,15 @@ describe("buildActivityPhases provider summaries", () => {
       ...Array.from({ length: 6 }, (_, index) =>
         providerTool(`search-${index}`, "ToolSearch", "search"),
       ),
-      providerTool("context", "get_task_context", "read", "paperclip"),
-      providerTool("documents", "list_documents", "list", "paperclip"),
-      providerTool("history", "get_task_history", "read", "paperclip"),
-      providerTool("tasks", "search_tasks", "search", "paperclip"),
-      providerTool("progress", "report_progress", "edit", "paperclip"),
-      providerTool("block", "paperclip_block", "edit", "paperclip"),
+      providerTool("context", "get_task_context", "read", "bionic"),
+      providerTool("documents", "list_documents", "list", "bionic"),
+      providerTool("history", "get_task_history", "read", "bionic"),
+      providerTool("tasks", "search_tasks", "search", "bionic"),
+      providerTool("progress", "report_progress", "edit", "bionic"),
+      providerTool("block", "bionic_block", "edit", "bionic"),
     ];
     expect(buildActivityPhases(items, false)[0]?.summary).toBe(
-      "Searched available tools 6 times, read from Paperclip 3 times, used Paperclip 3 times",
+      "Searched available tools 6 times, read from Bionic 3 times, used Bionic 3 times",
     );
   });
 });
@@ -1123,10 +1123,10 @@ describe("buildTurnTimelineRows (DOT-217)", () => {
     ]);
   });
 
-  it("keeps runtime requests in the Paperclip Runner timeline input", () => {
+  it("keeps runtime requests in the Bionic Runner timeline input", () => {
     const pending = request("pending", "pending");
     expect(
-      paperclipRunnerTimelineItems([
+      bionicRunnerTimelineItems([
         commentary("commentary", "Checking."),
         pending,
         { id: "usage", kind: "usage", usage: { used: 1, size: 10 } },
@@ -1136,7 +1136,7 @@ describe("buildTurnTimelineRows (DOT-217)", () => {
 
   it("keeps aggregate workspace changes at the turn boundary outside activity", () => {
     const rows = buildTurnTimelineRows(
-      paperclipRunnerTimelineItems([tool("before"), workspace, tool("after")]),
+      bionicRunnerTimelineItems([tool("before"), workspace, tool("after")]),
       false,
     );
     expect(rows.map((row) => row.kind)).toEqual([
@@ -1159,15 +1159,15 @@ describe("buildTurnTimelineRows (DOT-217)", () => {
       status: "completed",
       diff: { path: "src/App.tsx", added: 2, removed: 1 },
     };
-    expect(paperclipRunnerActivityItems([fileChange])).toEqual([fileChange]);
-    expect(paperclipRunnerActivityItems([fileChange, workspace])).toEqual([
+    expect(bionicRunnerActivityItems([fileChange])).toEqual([fileChange]);
+    expect(bionicRunnerActivityItems([fileChange, workspace])).toEqual([
       workspace,
     ]);
   });
 
   it("keeps a yielded run-result and provider wait prose out of the durable final slot", () => {
     expect(
-      paperclipRunnerFinalResponse([
+      bionicRunnerFinalResponse([
         {
           id: "provider-wait",
           kind: "message",
@@ -1229,7 +1229,7 @@ describe("buildTurnTimelineRows (DOT-217)", () => {
     );
 
     const rows = buildTurnTimelineRows(
-      paperclipRunnerTimelineItems(embedded),
+      bionicRunnerTimelineItems(embedded),
       false,
     );
     expect(
@@ -1420,7 +1420,7 @@ describe("transcriptToTaskChatItems native usage", () => {
           outputTokens: 10,
           cachedTokens: 5,
           costUsd: 0.02,
-          subtype: "paperclip_runner_usage",
+          subtype: "bionic_runner_usage",
           isError: false,
           errors: [],
         },
@@ -1454,7 +1454,7 @@ describe("transcriptToTaskChatItems native usage", () => {
           outputTokens: 20,
           cachedTokens: 0,
           costUsd: 0,
-          subtype: "paperclip_runner_session_usage",
+          subtype: "bionic_runner_session_usage",
           isError: false,
           errors: [],
         },
@@ -1537,14 +1537,14 @@ describe("buildTurnSummary tool counting", () => {
     const runUsage = {
       kind: "result",
       ts: TS,
-      subtype: "paperclip_runner_usage",
+      subtype: "bionic_runner_usage",
       inputTokens: 40,
       outputTokens: 10,
     } as TranscriptEntry;
     const sessionUsage = {
       kind: "result",
       ts: TS,
-      subtype: "paperclip_runner_session_usage",
+      subtype: "bionic_runner_session_usage",
       inputTokens: 800,
       outputTokens: 200,
     } as TranscriptEntry;
@@ -1837,7 +1837,7 @@ describe("settledRunChildren (PAP-361)", () => {
           outputTokens: 10,
           cachedTokens: 0,
           costUsd: 0,
-          subtype: "paperclip_runner_usage",
+          subtype: "bionic_runner_usage",
           isError: false,
           errors: [],
         } as TranscriptEntry,
@@ -1870,7 +1870,7 @@ describe("settledRunChildren (PAP-361)", () => {
           outputTokens: 10,
           cachedTokens: 0,
           costUsd: 0,
-          subtype: "paperclip_runner_usage",
+          subtype: "bionic_runner_usage",
           isError: false,
           errors: [],
         } as TranscriptEntry,
@@ -1942,7 +1942,7 @@ describe("settledRunChildren (PAP-361)", () => {
           outputTokens: 10,
           cachedTokens: 0,
           costUsd: 0,
-          subtype: "paperclip_runner_usage",
+          subtype: "bionic_runner_usage",
           isError: false,
           errors: [],
         } as TranscriptEntry,
@@ -1992,7 +1992,7 @@ describe("settledRunChildren (PAP-361)", () => {
   });
 });
 
-describe("paperclip runner semantic channels", () => {
+describe("bionic runner semantic channels", () => {
   it("concatenates fragmented reasoning deltas into logical lines", () => {
     const parsed = transcriptToTaskChatItems(
       [
@@ -2199,7 +2199,7 @@ describe("paperclip runner semantic channels", () => {
       {
         id: "tool",
         kind: "tool",
-        name: "Paperclip_finish",
+        name: "Bionic_finish",
         status: "completed",
         target: "done",
       },
@@ -2223,7 +2223,7 @@ describe("paperclip runner semantic channels", () => {
       },
     ];
 
-    expect(paperclipRunnerHistoryItems(items).map((item) => item.id)).toEqual([
+    expect(bionicRunnerHistoryItems(items).map((item) => item.id)).toEqual([
       "tool",
       "interrupt",
       "runner",
@@ -2269,8 +2269,8 @@ describe("paperclip runner semantic channels", () => {
       {
         id: "finish",
         kind: "tool",
-        name: "Paperclip_finish",
-        rawName: "paperclip_finish",
+        name: "Bionic_finish",
+        rawName: "bionic_finish",
         status: "completed",
       },
       {
@@ -2321,7 +2321,7 @@ describe("paperclip runner semantic channels", () => {
       },
     ];
 
-    expect(paperclipRunnerActivityItems(items).map((item) => item.id)).toEqual([
+    expect(bionicRunnerActivityItems(items).map((item) => item.id)).toEqual([
       "progress",
       "thinking",
       "tool",

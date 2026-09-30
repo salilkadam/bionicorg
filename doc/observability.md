@@ -6,11 +6,11 @@ instrumentation contracts; see the
 [Telemetry Data Contract](../packages/shared/src/telemetry/README.md) for the
 separate first-party event system.
 
-Paperclip ships with **opt-in** OpenTelemetry auto-instrumentation for the
+Bionic ships with **opt-in** OpenTelemetry auto-instrumentation for the
 server process. When activated it produces **traces only** — no metrics and no
 logs are exported by this integration.
 
-`@opentelemetry/api` is a normal dependency of `@paperclipai/server`. Every
+`@opentelemetry/api` is a normal dependency of `@bionicai/server`. Every
 install includes it. It stays a no-op interface until an SDK registers a
 provider, so it exports no telemetry by itself.
 
@@ -30,20 +30,20 @@ server tests against; install that exact version. Our Dependabot cannot bump
 these versions: its npm parser reads only `dependencies`, `devDependencies`,
 and `optionalDependencies`, never `peerDependencies`. A peer version here is a
 compatibility claim, not an installed version, so raising it is a human
-decision. `@opentelemetry/api` is the one OpenTelemetry package Paperclip
+decision. `@opentelemetry/api` is the one OpenTelemetry package Bionic
 maintains as a dependency; once you install the packages below, they become
 normal dependencies of **your own** project, and your own Dependabot updates
 them.
 
 ## Task detail loading
 
-`GET /api/issues/:id` returns `Server-Timing` with `paperclip_issue` for the
+`GET /api/issues/:id` returns `Server-Timing` with `bionic_issue` for the
 whole handler and `issue_<phase>` for its reads. The total includes the final
 execution-blocker read after recovery revalidation. Concurrent phases overlap;
 do not sum them to obtain request duration.
 
 With the existing operator-configured OTLP endpoint, the same reads produce
-`issue.read.<phase>` child spans through the `paperclip.issue-read` tracer.
+`issue.read.<phase>` child spans through the `bionic.issue-read` tracer.
 There are no custom attributes, identifiers, content, or exception messages.
 The closed phase names in `server/src/services/issue-read-timing.ts` are:
 `lookup`, `authorization`, `project_goal`, `ancestors`, `mentions`, `documents`,
@@ -110,7 +110,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT="http://otel-collector:4317"
 export OTEL_EXPORTER_OTLP_PROTOCOL="grpc"
 
 # Optional — service identity attached to every span.
-export OTEL_SERVICE_NAME="paperclip"
+export OTEL_SERVICE_NAME="bionic"
 export OTEL_SERVICE_VERSION="2026.5.0"
 ```
 
@@ -124,7 +124,7 @@ returns a value:
    `dist/build-info.json`. The stamp wins so the reported version tracks the
    true built commit and cannot go stale across rebuilds. The build script
    reads the commit from `git rev-parse --short HEAD` first. A Docker image
-   build excludes `.git`, so the build script reads the `PAPERCLIP_BUILD_COMMIT`
+   build excludes `.git`, so the build script reads the `BIONIC_BUILD_COMMIT`
    environment variable instead. Pass the built commit in that variable so the
    image stamp records the true commit.
 2. **A runtime `git rev-parse --short HEAD`.** This covers `tsx src/index.ts`
@@ -132,14 +132,14 @@ returns a value:
    stamp. A failure here is not fatal.
 3. **The `OTEL_SERVICE_VERSION` environment variable.** This is the fallback
    for a build with no stamp and no reachable git — for example a tarball
-   build. `OTEL_SERVICE_VERSION` is a Paperclip-specific variable, not an
-   OpenTelemetry SDK variable, so Paperclip controls this precedence.
+   build. `OTEL_SERVICE_VERSION` is a Bionic-specific variable, not an
+   OpenTelemetry SDK variable, so Bionic controls this precedence.
 4. **`"unknown"`** when no source returns a value.
 
 The server logs the resolved `service.version` once at startup, so an operator
 can confirm the value.
 
-If `OTEL_EXPORTER_OTLP_PROTOCOL` is set to an unrecognized value, Paperclip
+If `OTEL_EXPORTER_OTLP_PROTOCOL` is set to an unrecognized value, Bionic
 logs a single warning and falls back to gRPC.
 
 Before it imports any OTel package, the server checks the four common
@@ -162,7 +162,7 @@ Those sections follow below.
 
 ## Native Runner Trace Spans
 
-Paperclip Runner task runs emit a single foldable OpenTelemetry trace. This is
+Bionic Runner task runs emit a single foldable OpenTelemetry trace. This is
 the native-run trace schema version `2`. `task.run` is the only full-run root;
 every other native span carries a real OpenTelemetry parent context rather than
 only a descriptive `parentName` field.
@@ -249,7 +249,7 @@ retain their documented fallback behavior.
 
 The root carries only a hashed run id, runtime label, schema version, wall time,
 and outcome. Native child attributes use the bounded
-`paperclip.native.span.` prefix and a closed key allowlist; values are limited
+`bionic.native.span.` prefix and a closed key allowlist; values are limited
 to finite numbers, booleans, or short strings. Commands, arguments, environment
 values, paths, output, credentials, and raw identifiers are discarded by the
 trace helper. `task.run.measured` remains in the local run log for compatibility
@@ -263,7 +263,7 @@ run-log copy is unaffected.
 
 ## Sentry Error Monitoring
 
-Paperclip ships with **opt-in** Sentry error monitoring for the server
+Bionic ships with **opt-in** Sentry error monitoring for the server
 process and the browser app. The operator activates it with two
 environment variables: `SENTRY_DSN_FRONTEND` for the browser and
 `SENTRY_DSN_BACKEND` for the server. Each variable is optional. A
@@ -390,7 +390,7 @@ loaded bundle, even if the server has since deployed another version.
 The feature uses built-in Sentry options only.
 
 - `sendDefaultPii` is `false`, on both runtimes.
-- `tracesSampleRate` is `0`, on both runtimes. Paperclip sends no
+- `tracesSampleRate` is `0`, on both runtimes. Bionic sends no
   performance trace and no profile.
 - There is no `beforeSend` hook and no custom filter, on either runtime.
 
@@ -406,7 +406,7 @@ server event captured inside a real HTTP request handler carries no
 request field").
 
 The reason is `skipOpenTelemetrySetup: true`. This feature sets that
-option so it never fights Paperclip's separate, independently opt-in
+option so it never fights Bionic's separate, independently opt-in
 OpenTelemetry feature for control of the global tracer. The same option
 turns off Sentry's per-request context tracking. Sentry's built-in
 `RequestData` integration needs that tracking to find a URL, a method, a
@@ -535,7 +535,7 @@ The server sets `release` to the full source commit from its build metadata.
 An explicit `SENTRY_RELEASE` overrides that default. If neither is available,
 the server leaves the release unset.
 
-The browser also sets `release`, using the full `PAPERCLIP_BUILD_COMMIT`
+The browser also sets `release`, using the full `BIONIC_BUILD_COMMIT`
 supplied when its bundle is built, or the checkout commit for source and npm
 builds. The server reads its packaged build stamp when no deployment marker
 is present. Docker passes the same commit to both
@@ -659,17 +659,17 @@ Two controls belong to the operator. This feature ships neither one.
 
 ## Sandbox Startup Trace Spans
 
-Paperclip opens OpenTelemetry spans on the sandbox start path. These spans are
-an Observability surface. They are not Paperclip Telemetry events. The
+Bionic opens OpenTelemetry spans on the sandbox start path. These spans are
+an Observability surface. They are not Bionic Telemetry events. The
 generated telemetry contract does not cover them, so this section is their
 canonical contract.
 
-The spans are opt-in. Paperclip exports them only when an OTLP endpoint is
-configured. With no endpoint the whole span path is a no-op. Paperclip opens the
+The spans are opt-in. Bionic exports them only when an OTLP endpoint is
+configured. With no endpoint the whole span path is a no-op. Bionic opens the
 spans only for a run that targets a remote sandbox. A local run and an SSH run
 stay out of these spans.
 
-Every span attribute uses the closed `paperclip.sandbox.startup.` prefix and
+Every span attribute uses the closed `bionic.sandbox.startup.` prefix and
 rides a fixed allowlist. A command line, an argument, an environment value, a
 file path, program output, or a raw identifier never rides a span. It rides
 neither as an attribute nor as an event. The producer bounds each free-form
@@ -680,7 +680,7 @@ value:
 - An image id, a sandbox id, and a lease id ride only as a non-reversible short
   hash.
 
-Each numeric attribute is finite. Paperclip omits an attribute when its value is
+Each numeric attribute is finite. Bionic omits an attribute when its value is
 absent, never a misleading `0`.
 
 ### Spans
@@ -698,7 +698,7 @@ absent, never a misleading `0`.
 | `stage.asset.<key>`                   | One inbound asset stage task inside `stage.sync`. It packs and uploads one managed-home asset. The `<key>` segment is the asset key.                       | `stage.sync`                    |
 | `stage.project.<id>`                  | One inbound referenced-project stage task inside `stage.sync`. It uploads one referenced project. The `<id>` segment is the project id.                    | `stage.sync`                    |
 | `pack`                                | Host-side workspace tarball build inside the `stage.workspace` task.                                                                                       | `stage.workspace`               |
-| `bridge.paperclip`                    | Paperclip bridge start step.                                                                                                                               | `sandbox.startup`               |
+| `bridge.bionic`                    | Bionic bridge start step.                                                                                                                               | `sandbox.startup`               |
 | `bridge.process-session`              | Process-session bridge start step.                                                                                                                         | `sandbox.startup`               |
 | `acp.handshake`                       | ACP session handshake step.                                                                                                                                | `sandbox.startup`               |
 | `sandbox.syncBack`                    | The settlement sync-back that restores the managed home at teardown.                                                                                       | the active run span             |
@@ -706,7 +706,7 @@ absent, never a misleading `0`.
 | `restore.asset.<key>`                 | One outbound asset restore task at teardown. It reads one asset back to its host store. The `<key>` segment is the asset key.                              | `sandbox.syncBack`              |
 | `sandbox.agentSession.sendInput`      | One outbound ACP message to the agent — the socket handler's one `writeTextFile` exec.                                                                     | the active run span             |
 | `sandbox.agentSession.pollOutput`     | One 100 ms poll tick — `list`, then `read`+`remove` per file found (`1 + 2n` execs).                                                                       | the active run span             |
-| `sandbox.callbackBridge.relayRequest` | One Paperclip-API callback request — read the request, write the response, remove it.                                                                      | the active run span             |
+| `sandbox.callbackBridge.relayRequest` | One Bionic-API callback request — read the request, write the response, remove it.                                                                      | the active run span             |
 | `sandbox.agentProcess`                | The persistent streamed agent process the process-session bridge launches; open until the process settles or the bridge tears down, whichever comes first. | the active run span             |
 | `sandbox.exec`                        | One host-to-sandbox execution.                                                                                                                             | the active step or wrapper span |
 
@@ -748,7 +748,7 @@ status when the exit code is non-zero or the execution throws.
 
 ### Outcome values
 
-The `paperclip.sandbox.startup.outcome` attribute uses a closed value set:
+The `bionic.sandbox.startup.outcome` attribute uses a closed value set:
 
 - `ok` — the step or the execution settled with a success result.
 - `skipped` — a warm cache skipped the step; the step ran no work.
@@ -760,15 +760,15 @@ The `sandbox.startup` root span uses this closed attribute allowlist.
 
 | Attribute                                | Type    | Optional | Meaning                                                    |
 | ---------------------------------------- | ------- | -------- | ---------------------------------------------------------- |
-| `paperclip.sandbox.startup.root.wall_ms` | number  | no       | The root-span wall time of the whole bring-up.             |
-| `paperclip.sandbox.startup.root.work_ms` | number  | no       | The sum of the step wall times.                            |
-| `paperclip.sandbox.startup.root.diff_ms` | number  | no       | `work_ms − wall_ms`; the overlap the parallel steps saved. |
-| `paperclip.sandbox.startup.provider`     | string  | yes      | The normalized provider family.                            |
-| `paperclip.sandbox.startup.cold_start`   | boolean | yes      | Whether the bring-up is a cold start.                      |
-| `paperclip.sandbox.startup.region`       | string  | yes      | The clamped region label.                                  |
-| `paperclip.sandbox.startup.image_id`     | string  | yes      | The hashed image id.                                       |
-| `paperclip.sandbox.startup.sandbox_id`   | string  | yes      | The hashed sandbox id.                                     |
-| `paperclip.sandbox.startup.lease_id`     | string  | yes      | The hashed lease id.                                       |
+| `bionic.sandbox.startup.root.wall_ms` | number  | no       | The root-span wall time of the whole bring-up.             |
+| `bionic.sandbox.startup.root.work_ms` | number  | no       | The sum of the step wall times.                            |
+| `bionic.sandbox.startup.root.diff_ms` | number  | no       | `work_ms − wall_ms`; the overlap the parallel steps saved. |
+| `bionic.sandbox.startup.provider`     | string  | yes      | The normalized provider family.                            |
+| `bionic.sandbox.startup.cold_start`   | boolean | yes      | Whether the bring-up is a cold start.                      |
+| `bionic.sandbox.startup.region`       | string  | yes      | The clamped region label.                                  |
+| `bionic.sandbox.startup.image_id`     | string  | yes      | The hashed image id.                                       |
+| `bionic.sandbox.startup.sandbox_id`   | string  | yes      | The hashed sandbox id.                                     |
+| `bionic.sandbox.startup.lease_id`     | string  | yes      | The hashed lease id.                                       |
 
 ### Step span attributes
 
@@ -777,36 +777,36 @@ rides the span name, so no `step` attribute repeats it.
 
 | Attribute                                                    | Type   | Optional | Meaning                                                  |
 | ------------------------------------------------------------ | ------ | -------- | -------------------------------------------------------- |
-| `paperclip.sandbox.startup.step.wall_ms`                     | number | no       | The wall time of the step.                               |
-| `paperclip.sandbox.startup.outcome`                          | string | no       | The step outcome (`ok`, `skipped`, or `failed`).         |
-| `paperclip.sandbox.startup.provider`                         | string | yes      | The normalized provider family.                          |
-| `paperclip.sandbox.startup.batch`                            | string | yes      | A shared tag that marks two parallel steps as one batch. |
-| `paperclip.sandbox.startup.handshake.create_runtime.wall_ms` | number | yes      | The create-runtime sub-time of the `acp.handshake` step. |
-| `paperclip.sandbox.startup.handshake.ensure_session.wall_ms` | number | yes      | The ensure-session sub-time of the `acp.handshake` step. |
+| `bionic.sandbox.startup.step.wall_ms`                     | number | no       | The wall time of the step.                               |
+| `bionic.sandbox.startup.outcome`                          | string | no       | The step outcome (`ok`, `skipped`, or `failed`).         |
+| `bionic.sandbox.startup.provider`                         | string | yes      | The normalized provider family.                          |
+| `bionic.sandbox.startup.batch`                            | string | yes      | A shared tag that marks two parallel steps as one batch. |
+| `bionic.sandbox.startup.handshake.create_runtime.wall_ms` | number | yes      | The create-runtime sub-time of the `acp.handshake` step. |
+| `bionic.sandbox.startup.handshake.ensure_session.wall_ms` | number | yes      | The ensure-session sub-time of the `acp.handshake` step. |
 
 The round-trip count and the provider durations no longer ride a step span. The
 per-execution `sandbox.exec` child spans carry that detail.
 
 ### `sandbox.exec` span attributes
 
-The `sandbox.exec` span uses this closed attribute allowlist. Paperclip omits a
+The `sandbox.exec` span uses this closed attribute allowlist. Bionic omits a
 numeric attribute when the provider does not report the value.
 
 | Attribute                                       | Type    | Optional | Meaning                                                                    |
 | ----------------------------------------------- | ------- | -------- | -------------------------------------------------------------------------- |
-| `paperclip.sandbox.startup.provider`            | string  | no       | The normalized provider family.                                            |
-| `paperclip.sandbox.startup.exec.command`        | string  | no       | The clamped `argv[0]` command label.                                       |
-| `paperclip.sandbox.startup.exec.exit_code`      | number  | yes      | The numeric process exit code.                                             |
-| `paperclip.sandbox.startup.exec.wall_ms`        | number  | no       | The host-measured wall time of the execution.                              |
-| `paperclip.sandbox.startup.exec.wait_before_ms` | number  | yes      | The provider handle-fetch wait before the execution ran.                   |
-| `paperclip.sandbox.startup.exec.sandbox_ms`     | number  | yes      | The in-sandbox run time of the execution.                                  |
-| `paperclip.sandbox.startup.exec.network_ms`     | number  | yes      | The transport time the host adds; `wall_ms − wait_before_ms − sandbox_ms`. |
-| `paperclip.sandbox.startup.exec.critical_path`  | boolean | no       | Whether the execution sits on the startup critical path.                   |
-| `paperclip.sandbox.startup.exec.cache_hit`      | boolean | yes      | Whether the provider served the sandbox handle from its warm cache.        |
-| `paperclip.sandbox.startup.outcome`             | string  | no       | The execution outcome (`ok` or `failed`).                                  |
+| `bionic.sandbox.startup.provider`            | string  | no       | The normalized provider family.                                            |
+| `bionic.sandbox.startup.exec.command`        | string  | no       | The clamped `argv[0]` command label.                                       |
+| `bionic.sandbox.startup.exec.exit_code`      | number  | yes      | The numeric process exit code.                                             |
+| `bionic.sandbox.startup.exec.wall_ms`        | number  | no       | The host-measured wall time of the execution.                              |
+| `bionic.sandbox.startup.exec.wait_before_ms` | number  | yes      | The provider handle-fetch wait before the execution ran.                   |
+| `bionic.sandbox.startup.exec.sandbox_ms`     | number  | yes      | The in-sandbox run time of the execution.                                  |
+| `bionic.sandbox.startup.exec.network_ms`     | number  | yes      | The transport time the host adds; `wall_ms − wait_before_ms − sandbox_ms`. |
+| `bionic.sandbox.startup.exec.critical_path`  | boolean | no       | Whether the execution sits on the startup critical path.                   |
+| `bionic.sandbox.startup.exec.cache_hit`      | boolean | yes      | Whether the provider served the sandbox handle from its warm cache.        |
+| `bionic.sandbox.startup.outcome`             | string  | no       | The execution outcome (`ok` or `failed`).                                  |
 
 The plugin decides the cache hit at the sandbox-handle lookup. The span no
-longer infers a cache hit from `wait_before_ms == 0`. Paperclip omits the
+longer infers a cache hit from `wait_before_ms == 0`. Bionic omits the
 `cache_hit` attribute when the provider does not report the value.
 
 To add a span attribute, extend the `SANDBOX_STARTUP_SPAN_ATTRS` allowlist in
@@ -816,7 +816,7 @@ the code first. Keep the attribute low-cardinality and free of user content.
 
 A sandbox provider plugin also opens spans for its own sync steps. These spans
 use the `sandbox.daytona.` name prefix. They share the
-`paperclip.sandbox.startup.` attribute prefix and obey the same opt-in and
+`bionic.sandbox.startup.` attribute prefix and obey the same opt-in and
 no-user-content rules as the startup spans above.
 
 The plugin worker runs in a separate process from the host. So the host treats
@@ -827,7 +827,7 @@ before it records the span.
 | Span                                 | Scope                                                                                                                                                                                | Parent                                                                                       |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | `sandbox.daytona.pack`               | The host-local pack step that builds the upload tarball. It makes no sandbox round trip.                                                                                             | the active startup step span                                                                 |
-| `sandbox.daytona.transfer`           | The transfer step: an upload to the sandbox (inbound) or a download from the sandbox (outbound). The `paperclip.sandbox.startup.transfer.direction` attribute records the direction. | the active sync task span (`stage.*` inbound, `restore.*` under `sandbox.syncBack` outbound) |
+| `sandbox.daytona.transfer`           | The transfer step: an upload to the sandbox (inbound) or a download from the sandbox (outbound). The `bionic.sandbox.startup.transfer.direction` attribute records the direction. | the active sync task span (`stage.*` inbound, `restore.*` under `sandbox.syncBack` outbound) |
 | `sandbox.daytona.ensureDirectory`    | The `mkdir -p` step that ensures a directory exists before a write.                                                                                                                  | the active startup step span                                                                 |
 | `sandbox.daytona.checkSymlinkEscape` | The re-check step that a path resolves inside the workspace root before use.                                                                                                         | the active startup step span                                                                 |
 | `sandbox.daytona.promote`            | The atomic move of a staged temp onto its target via a pinned dir handle.                                                                                                            | the active startup step span                                                                 |
@@ -852,12 +852,12 @@ the attributes that the producer sends for one span.
 
 | Attribute                                        | Type   | Optional | Meaning                                                                                                   |
 | ------------------------------------------------ | ------ | -------- | --------------------------------------------------------------------------------------------------------- |
-| `paperclip.sandbox.startup.provider`             | string | no       | The normalized provider family.                                                                           |
-| `paperclip.sandbox.startup.outcome`              | string | yes      | The step outcome (`ok`, `skipped`, or `failed`).                                                          |
-| `paperclip.sandbox.startup.pack.wall_ms`         | number | yes      | The host-local wall time of the pack step. It rides the `sandbox.daytona.pack` span.                      |
-| `paperclip.sandbox.startup.transfer.wall_ms`     | number | yes      | The wall time of the transfer step. It rides the `sandbox.daytona.transfer` span.                         |
-| `paperclip.sandbox.startup.transfer.guard.count` | number | yes      | The number of serial guard round trips before one transfer. It rides the `sandbox.daytona.transfer` span. |
-| `paperclip.sandbox.startup.transfer.direction`   | string | yes      | The transfer direction (`inbound` or `outbound`). It rides the `sandbox.daytona.transfer` span.           |
+| `bionic.sandbox.startup.provider`             | string | no       | The normalized provider family.                                                                           |
+| `bionic.sandbox.startup.outcome`              | string | yes      | The step outcome (`ok`, `skipped`, or `failed`).                                                          |
+| `bionic.sandbox.startup.pack.wall_ms`         | number | yes      | The host-local wall time of the pack step. It rides the `sandbox.daytona.pack` span.                      |
+| `bionic.sandbox.startup.transfer.wall_ms`     | number | yes      | The wall time of the transfer step. It rides the `sandbox.daytona.transfer` span.                         |
+| `bionic.sandbox.startup.transfer.guard.count` | number | yes      | The number of serial guard round trips before one transfer. It rides the `sandbox.daytona.transfer` span. |
+| `bionic.sandbox.startup.transfer.direction`   | string | yes      | The transfer direction (`inbound` or `outbound`). It rides the `sandbox.daytona.transfer` span.           |
 
 The `span.record` host handler enforces the allowlist. It re-maps `provider`
 through the provider-family normalizer. It keeps `outcome` only when the value
@@ -893,8 +893,8 @@ This section documents one duplex transport with three sinks: an
 OpenTelemetry span, a counter in the `tool_runtime_metric_counters` table, and
 one run-log event.
 
-Paperclip opens a fixed observability surface for the sandbox duplex transport.
-This instrumentation is separate from Paperclip Telemetry events and from the
+Bionic opens a fixed observability surface for the sandbox duplex transport.
+This instrumentation is separate from Bionic Telemetry events and from the
 sandbox startup trace spans above. The generated telemetry contract does not
 cover it, so this section is its canonical contract. The code owner is
 `packages/adapter-utils/src/duplex-observability.ts`. That module holds each name and
@@ -1045,7 +1045,7 @@ Read-only listings validate caches without downloading or repairing them. A
 publication lock left by an abruptly terminated process is reported for operator
 cleanup; remove it only after confirming its recorded PID is no longer running.
 
-Run `pnpm --filter @paperclipai/server exec tsx ../scripts/benchmark-skill-preparation.ts` for an isolated embedded
+Run `pnpm --filter @bionicai/server exec tsx ../scripts/benchmark-skill-preparation.ts` for an isolated embedded
 PostgreSQL benchmark with 114 mixed skills and at least 400 remote files. It
 reports one cold sample and ten warm samples (one in a new process), refresh and
 fetch counts, rebuilds, missing entries, and content checks. Upstream responses are

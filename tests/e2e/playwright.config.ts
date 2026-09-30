@@ -5,30 +5,30 @@ import { defineConfig } from "@playwright/test";
 
 // Use a dedicated port so e2e tests always start their own server in local_trusted mode,
 // even when the dev server is running on :3100 in authenticated mode.
-const PORT = Number(process.env.PAPERCLIP_E2E_PORT ?? 3199);
+const PORT = Number(process.env.BIONIC_E2E_PORT ?? 3199);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
-const PAPERCLIP_HOME = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-e2e-home-"));
-const PAPERCLIP_INSTANCE_ID = "playwright-e2e";
-const PAPERCLIP_CONFIG = path.join(PAPERCLIP_HOME, "instances", PAPERCLIP_INSTANCE_ID, "config.json");
-const PAPERCLIP_AGENT_JWT_SECRET = process.env.PAPERCLIP_AGENT_JWT_SECRET ?? "playwright-e2e-agent-jwt-secret";
-const PAPERCLIP_DECISION_SIGNING_SECRET =
-  process.env.PAPERCLIP_DECISION_SIGNING_SECRET ?? "playwright-e2e-decision-signing-secret";
-const PAPERCLIP_TOOL_ACTION_SIGNING_SECRET =
-  process.env.PAPERCLIP_TOOL_ACTION_SIGNING_SECRET ?? "playwright-e2e-tool-action-signing-secret";
-const PLAYWRIGHT_CHANNEL = process.env.PAPERCLIP_PLAYWRIGHT_CHANNEL;
+const BIONIC_HOME = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-e2e-home-"));
+const BIONIC_INSTANCE_ID = "playwright-e2e";
+const BIONIC_CONFIG = path.join(BIONIC_HOME, "instances", BIONIC_INSTANCE_ID, "config.json");
+const BIONIC_AGENT_JWT_SECRET = process.env.BIONIC_AGENT_JWT_SECRET ?? "playwright-e2e-agent-jwt-secret";
+const BIONIC_DECISION_SIGNING_SECRET =
+  process.env.BIONIC_DECISION_SIGNING_SECRET ?? "playwright-e2e-decision-signing-secret";
+const BIONIC_TOOL_ACTION_SIGNING_SECRET =
+  process.env.BIONIC_TOOL_ACTION_SIGNING_SECRET ?? "playwright-e2e-tool-action-signing-secret";
+const PLAYWRIGHT_CHANNEL = process.env.BIONIC_PLAYWRIGHT_CHANNEL;
 
-process.env.PAPERCLIP_HOME = PAPERCLIP_HOME;
-process.env.PAPERCLIP_CONFIG = PAPERCLIP_CONFIG;
+process.env.BIONIC_HOME = BIONIC_HOME;
+process.env.BIONIC_CONFIG = BIONIC_CONFIG;
 // Worker processes reload this config; retain the main process's server path
 // for specs that seed historical database state in the throwaway instance.
-process.env.PAPERCLIP_E2E_SERVER_CONFIG ??= PAPERCLIP_CONFIG;
+process.env.BIONIC_E2E_SERVER_CONFIG ??= BIONIC_CONFIG;
 // Specs that mint agent JWTs in-process (via createLocalAgentJwt) must derive
 // the same per-instance signing key as the webServer, or verification fails
 // with a 401 instead of authenticating as the agent.
-process.env.PAPERCLIP_INSTANCE_ID = PAPERCLIP_INSTANCE_ID;
-process.env.PAPERCLIP_AGENT_JWT_SECRET = PAPERCLIP_AGENT_JWT_SECRET;
-process.env.PAPERCLIP_DECISION_SIGNING_SECRET = PAPERCLIP_DECISION_SIGNING_SECRET;
-process.env.PAPERCLIP_TOOL_ACTION_SIGNING_SECRET = PAPERCLIP_TOOL_ACTION_SIGNING_SECRET;
+process.env.BIONIC_INSTANCE_ID = BIONIC_INSTANCE_ID;
+process.env.BIONIC_AGENT_JWT_SECRET = BIONIC_AGENT_JWT_SECRET;
+process.env.BIONIC_DECISION_SIGNING_SECRET = BIONIC_DECISION_SIGNING_SECRET;
+process.env.BIONIC_TOOL_ACTION_SIGNING_SECRET = BIONIC_TOOL_ACTION_SIGNING_SECRET;
 
 export default defineConfig({
   testDir: ".",
@@ -59,7 +59,7 @@ export default defineConfig({
     },
   ],
   // The webServer directive bootstraps a throwaway instance and then starts it.
-  // `onboard --yes --run` works in a non-interactive temp PAPERCLIP_HOME.
+  // `onboard --yes --run` works in a non-interactive temp BIONIC_HOME.
   webServer: {
     cwd: path.resolve(import.meta.dirname, "../.."),
     // Exercise the shipped UI. Source-checkout onboarding otherwise enables
@@ -67,10 +67,10 @@ export default defineConfig({
     // service-worker-intercepted requests, before React can even start.
     // Build the server's first-choice static directory so a prior package build
     // cannot shadow the UI under test with stale server/ui-dist assets.
-    command: "pnpm --filter @paperclipai/ui build --outDir ../server/ui-dist --emptyOutDir && node cli/node_modules/tsx/dist/cli.mjs cli/src/index.ts onboard --yes --run",
+    command: "pnpm --filter @bionicai/ui build --outDir ../server/ui-dist --emptyOutDir && node cli/node_modules/tsx/dist/cli.mjs cli/src/index.ts onboard --yes --run",
     url: `${BASE_URL}/api/health`,
     // Always boot a dedicated throwaway instance for e2e so browser tests
-    // never attach to the developer's active Paperclip home/server.
+    // never attach to the developer's active Bionic home/server.
     reuseExistingServer: false,
     timeout: 120_000,
     stdout: "pipe",
@@ -78,20 +78,20 @@ export default defineConfig({
     env: {
       ...process.env,
       NODE_ENV: "test",
-      PAPERCLIP_UI_DEV_MIDDLEWARE: "false",
+      BIONIC_UI_DEV_MIDDLEWARE: "false",
       NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --import=${path.resolve(import.meta.dirname, "fixtures/agent-chat-github.mjs")}`,
       PORT: String(PORT),
-      PAPERCLIP_OPEN_ON_LISTEN: "false",
-      PAPERCLIP_API_URL: BASE_URL,
-      PAPERCLIP_HOME,
-      PAPERCLIP_INSTANCE_ID,
-      PAPERCLIP_CONFIG,
-      PAPERCLIP_AGENT_JWT_SECRET,
-      PAPERCLIP_DECISION_SIGNING_SECRET,
-      PAPERCLIP_TOOL_ACTION_SIGNING_SECRET,
-      PAPERCLIP_BIND: "loopback",
-      PAPERCLIP_DEPLOYMENT_MODE: "local_trusted",
-      PAPERCLIP_DEPLOYMENT_EXPOSURE: "private",
+      BIONIC_OPEN_ON_LISTEN: "false",
+      BIONIC_API_URL: BASE_URL,
+      BIONIC_HOME,
+      BIONIC_INSTANCE_ID,
+      BIONIC_CONFIG,
+      BIONIC_AGENT_JWT_SECRET,
+      BIONIC_DECISION_SIGNING_SECRET,
+      BIONIC_TOOL_ACTION_SIGNING_SECRET,
+      BIONIC_BIND: "loopback",
+      BIONIC_DEPLOYMENT_MODE: "local_trusted",
+      BIONIC_DEPLOYMENT_EXPOSURE: "private",
     },
   },
   outputDir: "./test-results",

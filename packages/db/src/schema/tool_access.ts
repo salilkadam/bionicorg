@@ -65,7 +65,7 @@ import type {
   ToolRuntimeSlotStatus,
   VercelConnectCredentialReference,
   VercelConnectGrantReference,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { agents } from "./agents.js";
 import { approvals } from "./approvals.js";
 import { companies } from "./companies.js";
@@ -124,7 +124,7 @@ export const toolConnections = pgTable(
     ownership: text("ownership").$type<ToolConnectionOwnership>().notNull().default("customer"),
     transport: text("transport").$type<ToolConnectionTransport>().notNull(),
     authKind: text("auth_kind").$type<ToolConnectionAuthKind>().notNull().default("none"),
-    credentialSource: text("credential_source").$type<ToolConnectionCredentialSource>().notNull().default("paperclip_vault"),
+    credentialSource: text("credential_source").$type<ToolConnectionCredentialSource>().notNull().default("bionic_vault"),
     externalCredential: jsonb("external_credential").$type<VercelConnectCredentialReference>(),
     credentialPolicy: text("credential_policy").$type<ToolConnectionCredentialPolicy>().notNull().default("shared"),
     status: text("status").$type<ToolConnectionStatus>().notNull().default("draft"),
@@ -156,9 +156,9 @@ export const toolConnections = pgTable(
       (${table.connectionPurpose} = 'ai' and ${table.transport} = 'runtime_auth')
     )`),
     check("tool_connections_auth_kind_check", sql`${table.authKind} in ('oauth', 'api_key', 'none')`),
-    check("tool_connections_credential_source_check", sql`${table.credentialSource} in ('paperclip_vault', 'vercel_connect')`),
+    check("tool_connections_credential_source_check", sql`${table.credentialSource} in ('bionic_vault', 'vercel_connect')`),
     check("tool_connections_credential_source_one_of_check", sql`(
-      (${table.credentialSource} = 'paperclip_vault' and ${table.externalCredential} is null)
+      (${table.credentialSource} = 'bionic_vault' and ${table.externalCredential} is null)
       or
       (${table.credentialSource} = 'vercel_connect' and ${table.externalCredential} is not null and jsonb_array_length(${table.credentialRefs}) = 0 and jsonb_array_length(${table.credentialSecretRefs}) = 0)
     )`),

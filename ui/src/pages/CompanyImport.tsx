@@ -7,7 +7,7 @@ import type {
   CompanyPortabilityPreviewResult,
   CompanyPortabilitySource,
   CompanyPortabilityAdapterOverride,
-} from "@paperclipai/shared";
+} from "@bionicai/shared";
 import { useCompany } from "../context/CompanyContext";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { useToastActions } from "../context/ToastContext";
@@ -39,7 +39,7 @@ import { Field, adapterLabels } from "../components/agent-config-primitives";
 import { getAdapterLabel } from "../adapters/adapter-display-registry";
 import { defaultCreateValues } from "../components/agent-config-defaults";
 import { getUIAdapter, listUIAdapters } from "../adapters";
-import type { CreateConfigValues } from "@paperclipai/adapter-utils";
+import type { CreateConfigValues } from "@bionicai/adapter-utils";
 import {
   type FileTreeNode,
   type FrontmatterData,
@@ -52,7 +52,7 @@ import {
 } from "../components/FileTree";
 import { readZipArchive } from "../lib/zip";
 import { formatMegabytes } from "../lib/import-preflight";
-import { buildAlreadyImportedMessage, type CompanyImportTransferDeclaration } from "@paperclipai/shared/company-import-transfer";
+import { buildAlreadyImportedMessage, type CompanyImportTransferDeclaration } from "@bionicai/shared/company-import-transfer";
 import {
   CHUNKED_IMPORT_THRESHOLD_BYTES,
   IMPORT_TRANSFER_PART_ATTEMPTS,
@@ -1030,19 +1030,19 @@ export function CompanyImport() {
   }, [installedAdapters]);
   // Native runner is the one adapter that fails closed in the importer. Other
   // adapter choices preserve the importer's existing fail-open behavior when
-  // availability cannot be read, but Paperclip Runner only appears after the
+  // availability cannot be read, but Bionic Runner only appears after the
   // server explicitly reports that its experimental flag is enabled.
   const nativeRunnerAvailable =
-    availableAdapterTypes?.has("paperclip_runner") === true;
+    availableAdapterTypes?.has("bionic_runner") === true;
   const importAdapterOptions = useMemo(
     () => IMPORT_ADAPTER_OPTIONS.filter(
-      (option) => option.value !== "paperclip_runner" || nativeRunnerAvailable,
+      (option) => option.value !== "bionic_runner" || nativeRunnerAvailable,
     ),
     [nativeRunnerAvailable],
   );
 
   const localZipHelpText =
-    "Upload a .zip exported directly from Paperclip. Re-zipped archives created by Finder, Explorer, or other zip tools may not import correctly.";
+    "Upload a .zip exported directly from Bionic. Re-zipped archives created by Finder, Explorer, or other zip tools may not import correctly.";
 
   useEffect(() => {
     setBreadcrumbs([
@@ -1590,12 +1590,12 @@ export function CompanyImport() {
     if (!importPreview) return [];
     return importPreview.manifest.agents.map((a) => {
       let fallbackAdapterType: string | null = null;
-      if (a.adapterType === "paperclip_runner" && !nativeRunnerAvailable) {
+      if (a.adapterType === "bionic_runner" && !nativeRunnerAvailable) {
         const firstEnabledLegacyAdapter = availableAdapterTypes
-          ? [...availableAdapterTypes].find((type) => type !== "paperclip_runner") ?? null
+          ? [...availableAdapterTypes].find((type) => type !== "bionic_runner") ?? null
           : null;
         fallbackAdapterType =
-          ceoAdapterType !== "paperclip_runner" &&
+          ceoAdapterType !== "bionic_runner" &&
           (!availableAdapterTypes || availableAdapterTypes.has(ceoAdapterType))
             ? ceoAdapterType
             : firstEnabledLegacyAdapter ?? FALLBACK_IMPORT_ADAPTER_TYPE;
@@ -1847,7 +1847,7 @@ export function CompanyImport() {
         <div>
           <h2 className="text-base font-semibold">Import source</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Choose a GitHub repo or upload a local Paperclip zip package.
+            Choose a GitHub repo or upload a local Bionic zip package.
           </p>
         </div>
 

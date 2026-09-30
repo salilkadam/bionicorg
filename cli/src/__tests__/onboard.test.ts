@@ -17,9 +17,9 @@ const ORIGINAL_PATH = process.env.PATH;
 const ORIGINAL_EXIT_CODE = process.exitCode;
 
 function createExistingConfigFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-onboard-"));
   const runtimeRoot = path.join(root, "runtime");
-  const configPath = path.join(root, ".paperclip", "config.json");
+  const configPath = path.join(root, ".bionic", "config.json");
   const config: PaperclipConfig = {
     $meta: {
       version: 1,
@@ -62,7 +62,7 @@ function createExistingConfigFixture() {
         baseDir: path.join(runtimeRoot, "storage"),
       },
       s3: {
-        bucket: "paperclip",
+        bucket: "bionic",
         region: "us-east-1",
         prefix: "",
         forcePathStyle: false,
@@ -84,33 +84,33 @@ function createExistingConfigFixture() {
 }
 
 function createFreshConfigPath() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-fresh-"));
-  return path.join(root, ".paperclip", "config.json");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-onboard-fresh-"));
+  return path.join(root, ".bionic", "config.json");
 }
 
 describe("onboard", () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    delete process.env.PAPERCLIP_AGENT_JWT_SECRET;
-    delete process.env.PAPERCLIP_TOOL_ACTION_SIGNING_SECRET;
-    delete process.env.PAPERCLIP_SECRETS_MASTER_KEY;
-    delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
-    delete process.env.PAPERCLIP_DB_BACKUP_DIR;
-    delete process.env.PAPERCLIP_DB_BACKUP_ENABLED;
-    delete process.env.PAPERCLIP_DB_BACKUP_INTERVAL_MINUTES;
-    delete process.env.PAPERCLIP_DB_BACKUP_RETENTION_DAYS;
-    delete process.env.PAPERCLIP_STORAGE_PROVIDER;
-    delete process.env.PAPERCLIP_STORAGE_LOCAL_DIR;
-    delete process.env.PAPERCLIP_SECRETS_PROVIDER;
-    delete process.env.PAPERCLIP_SECRETS_STRICT_MODE;
-    delete process.env.PAPERCLIP_HOME;
-    delete process.env.PAPERCLIP_CONFIG;
-    delete process.env.PAPERCLIP_INSTANCE_ID;
-    delete process.env.PAPERCLIP_BIND;
-    delete process.env.PAPERCLIP_BIND_HOST;
-    delete process.env.PAPERCLIP_TAILNET_BIND_HOST;
-    delete process.env.PAPERCLIP_OPEN_ON_LISTEN;
-    delete process.env.PAPERCLIP_NO_BROWSER;
+    delete process.env.BIONIC_AGENT_JWT_SECRET;
+    delete process.env.BIONIC_TOOL_ACTION_SIGNING_SECRET;
+    delete process.env.BIONIC_SECRETS_MASTER_KEY;
+    delete process.env.BIONIC_SECRETS_MASTER_KEY_FILE;
+    delete process.env.BIONIC_DB_BACKUP_DIR;
+    delete process.env.BIONIC_DB_BACKUP_ENABLED;
+    delete process.env.BIONIC_DB_BACKUP_INTERVAL_MINUTES;
+    delete process.env.BIONIC_DB_BACKUP_RETENTION_DAYS;
+    delete process.env.BIONIC_STORAGE_PROVIDER;
+    delete process.env.BIONIC_STORAGE_LOCAL_DIR;
+    delete process.env.BIONIC_SECRETS_PROVIDER;
+    delete process.env.BIONIC_SECRETS_STRICT_MODE;
+    delete process.env.BIONIC_HOME;
+    delete process.env.BIONIC_CONFIG;
+    delete process.env.BIONIC_INSTANCE_ID;
+    delete process.env.BIONIC_BIND;
+    delete process.env.BIONIC_BIND_HOST;
+    delete process.env.BIONIC_TAILNET_BIND_HOST;
+    delete process.env.BIONIC_OPEN_ON_LISTEN;
+    delete process.env.BIONIC_NO_BROWSER;
     delete process.env.HOST;
     runCommandMock.mockReset();
   });
@@ -147,7 +147,7 @@ describe("onboard", () => {
     await onboard({ config: fixture.configPath, yes: true });
 
     expect(runCommandMock).toHaveBeenCalledWith({ config: fixture.configPath, repair: true, yes: true });
-    expect(process.env.PAPERCLIP_OPEN_ON_LISTEN).toBeUndefined();
+    expect(process.env.BIONIC_OPEN_ON_LISTEN).toBeUndefined();
   });
 
   it.each([
@@ -161,7 +161,7 @@ describe("onboard", () => {
     Object.defineProperty(process.stdin, "isTTY", { configurable: true, value: true });
     Object.defineProperty(process.stdout, "isTTY", { configurable: true, value: true });
     runCommandMock.mockImplementation(async () => {
-      openOnListenDuringRun = process.env.PAPERCLIP_OPEN_ON_LISTEN;
+      openOnListenDuringRun = process.env.BIONIC_OPEN_ON_LISTEN;
     });
 
     try {
@@ -173,12 +173,12 @@ describe("onboard", () => {
 
     expect(runCommandMock).toHaveBeenCalledWith({ config: configPath, repair: true, yes: true });
     expect(openOnListenDuringRun).toBe("true");
-    expect(process.env.PAPERCLIP_OPEN_ON_LISTEN).toBeUndefined();
+    expect(process.env.BIONIC_OPEN_ON_LISTEN).toBeUndefined();
   });
 
   it.each([
-    ["PAPERCLIP_NO_BROWSER", "1"],
-    ["PAPERCLIP_OPEN_ON_LISTEN", "false"],
+    ["BIONIC_NO_BROWSER", "1"],
+    ["BIONIC_OPEN_ON_LISTEN", "false"],
   ])("respects the interactive browser opt-out %s", async (key, value) => {
     const configPath = createFreshConfigPath();
     const stdinIsTTY = process.stdin.isTTY;
@@ -188,7 +188,7 @@ describe("onboard", () => {
     Object.defineProperty(process.stdout, "isTTY", { configurable: true, value: true });
     process.env[key] = value;
     runCommandMock.mockImplementation(async () => {
-      openOnListenDuringRun = process.env.PAPERCLIP_OPEN_ON_LISTEN;
+      openOnListenDuringRun = process.env.BIONIC_OPEN_ON_LISTEN;
     });
 
     try {
@@ -220,7 +220,7 @@ describe("onboard", () => {
   it("keeps --yes onboarding on local trusted loopback defaults", async () => {
     const configPath = createFreshConfigPath();
     process.env.HOST = "0.0.0.0";
-    process.env.PAPERCLIP_BIND = "lan";
+    process.env.BIONIC_BIND = "lan";
 
     await onboard({ config: configPath, yes: true, invokedByRun: true });
 
@@ -231,11 +231,11 @@ describe("onboard", () => {
     expect(raw.server.host).toBe("127.0.0.1");
   });
 
-  it("creates instance-root config and data paths for a fresh PAPERCLIP_HOME", async () => {
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-home-"));
-    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-cwd-"));
+  it("creates instance-root config and data paths for a fresh BIONIC_HOME", async () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-onboard-home-"));
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "bionic-onboard-cwd-"));
     process.chdir(cwd);
-    process.env.PAPERCLIP_HOME = home;
+    process.env.BIONIC_HOME = home;
 
     await onboard({ yes: true, invokedByRun: true });
 
@@ -250,13 +250,13 @@ describe("onboard", () => {
     expect(raw.secrets.localEncrypted.keyFilePath).toBe(path.join(instanceRoot, "secrets", "master.key"));
     expect(fs.existsSync(path.join(instanceRoot, ".env"))).toBe(true);
     expect(fs.readFileSync(path.join(instanceRoot, ".env"), "utf8"))
-      .toContain("PAPERCLIP_TOOL_ACTION_SIGNING_SECRET=");
+      .toContain("BIONIC_TOOL_ACTION_SIGNING_SECRET=");
     expect(fs.existsSync(path.join(instanceRoot, "secrets", "master.key"))).toBe(true);
   });
 
   it("supports authenticated/private quickstart bind presets", async () => {
     const configPath = createFreshConfigPath();
-    process.env.PAPERCLIP_TAILNET_BIND_HOST = "100.64.0.8";
+    process.env.BIONIC_TAILNET_BIND_HOST = "100.64.0.8";
 
     await onboard({ config: configPath, yes: true, invokedByRun: true, bind: "tailnet" });
 
@@ -269,7 +269,7 @@ describe("onboard", () => {
 
   it("keeps tailnet quickstart on loopback until tailscale is available", async () => {
     const configPath = createFreshConfigPath();
-    delete process.env.PAPERCLIP_TAILNET_BIND_HOST;
+    delete process.env.BIONIC_TAILNET_BIND_HOST;
     process.env.PATH = "";
 
     try {
@@ -287,7 +287,7 @@ describe("onboard", () => {
 
   it("ignores deployment env overrides during --yes quickstart", async () => {
     const configPath = createFreshConfigPath();
-    process.env.PAPERCLIP_DEPLOYMENT_MODE = "authenticated";
+    process.env.BIONIC_DEPLOYMENT_MODE = "authenticated";
 
     await onboard({ config: configPath, yes: true, invokedByRun: true });
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { AdapterExecutionTarget } from "@paperclipai/adapter-utils/execution-target";
+import type { AdapterExecutionTarget } from "@bionicai/adapter-utils/execution-target";
 
 const {
   ensureAdapterExecutionTargetDirectory,
@@ -28,13 +28,13 @@ const {
       startedAt: new Date().toISOString(),
     })),
     describeAdapterExecutionTarget: vi.fn(() => "Daytona"),
-    resolveAdapterExecutionTargetCwd: vi.fn(() => "/home/daytona/paperclip-workspace"),
+    resolveAdapterExecutionTargetCwd: vi.fn(() => "/home/daytona/bionic-workspace"),
   };
 });
 
-vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/execution-target")>(
-    "@paperclipai/adapter-utils/execution-target",
+vi.mock("@bionicai/adapter-utils/execution-target", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/execution-target")>(
+    "@bionicai/adapter-utils/execution-target",
   );
   return {
     ...actual,
@@ -55,7 +55,7 @@ const sandboxTarget: AdapterExecutionTarget = {
   kind: "remote",
   transport: "sandbox",
   providerKey: "daytona",
-  remoteCwd: "/home/daytona/paperclip-workspace",
+  remoteCwd: "/home/daytona/bionic-workspace",
   runner: {
     execute: async () => ({
       exitCode: 0,
@@ -72,13 +72,13 @@ const sandboxTarget: AdapterExecutionTarget = {
 const sshTarget: AdapterExecutionTarget = {
   kind: "remote",
   transport: "ssh",
-  remoteCwd: "/home/agent/paperclip-workspace",
+  remoteCwd: "/home/agent/bionic-workspace",
   spec: {
     host: "ssh.example.test",
     port: 22,
     username: "agent",
-    remoteCwd: "/home/agent/paperclip-workspace",
-    remoteWorkspacePath: "/home/agent/paperclip-workspace",
+    remoteCwd: "/home/agent/bionic-workspace",
+    remoteWorkspacePath: "/home/agent/bionic-workspace",
     privateKey: null,
     knownHosts: null,
     strictHostKeyChecking: true,
@@ -86,7 +86,7 @@ const sshTarget: AdapterExecutionTarget = {
 };
 
 const initLine =
-  '{"type":"system","subtype":"init","cwd":"/home/daytona/paperclip-workspace","session_id":"abc","tools":["Bash","Read"]}';
+  '{"type":"system","subtype":"init","cwd":"/home/daytona/bionic-workspace","session_id":"abc","tools":["Bash","Read"]}';
 
 const loginRequiredStdout = [
   initLine,

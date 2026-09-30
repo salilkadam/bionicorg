@@ -24,7 +24,7 @@ import {
   issueThreadInteractions,
   workspaceOperations,
   issues,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -141,9 +141,9 @@ describeEmbeddedPostgres("issue recovery actions", () => {
   const priorOperationLogRoot = process.env.WORKSPACE_OPERATION_LOG_BASE_PATH;
 
   beforeAll(async () => {
-    operationLogRoot = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-recovery-operation-logs-"));
+    operationLogRoot = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-recovery-operation-logs-"));
     process.env.WORKSPACE_OPERATION_LOG_BASE_PATH = operationLogRoot;
-    tempDb = await startEmbeddedPostgresTestDatabase("paperclip-issue-recovery-actions-");
+    tempDb = await startEmbeddedPostgresTestDatabase("bionic-issue-recovery-actions-");
     db = createDb(tempDb.connectionString);
   }, 30_000);
 

@@ -1,14 +1,14 @@
 export interface PaperclipChatFilePreparationDelivery {
   readonly provider:
     "slack" | "github" | "discord" | "microsoft-teams" | "telegram" | "imessage-photon" | null;
-  readonly mode: "provider_attachment" | "paperclip_task_only" | "unknown";
+  readonly mode: "provider_attachment" | "bionic_task_only" | "unknown";
   readonly preparationState: "prepared";
   readonly providerDeliveryConfirmed: false;
   readonly guidance: string;
 }
 
 /** Describe the transport contract, never a delivery receipt or new authority. */
-export function paperclipChatFilePreparationDelivery(
+export function bionicChatFilePreparationDelivery(
   authenticatedProvider: unknown,
 ): PaperclipChatFilePreparationDelivery {
   const common = {
@@ -28,8 +28,8 @@ export function paperclipChatFilePreparationDelivery(
     return {
       ...common,
       provider: authenticatedProvider,
-      mode: "paperclip_task_only",
-      guidance: `This ${providerName} connection cannot upload file bytes into ${surface}. After a successful file-preparation receipt, say the file is saved on the Paperclip task and must be opened there with Paperclip access; do not say it is attached, displayed, downloadable, or available to open in this provider conversation. Do not invent a public download link. Preparation does not confirm provider delivery.`,
+      mode: "bionic_task_only",
+      guidance: `This ${providerName} connection cannot upload file bytes into ${surface}. After a successful file-preparation receipt, say the file is saved on the Bionic task and must be opened there with Bionic access; do not say it is attached, displayed, downloadable, or available to open in this provider conversation. Do not invent a public download link. Preparation does not confirm provider delivery.`,
     };
   }
   if (
@@ -43,7 +43,7 @@ export function paperclipChatFilePreparationDelivery(
       provider: authenticatedProvider,
       mode: "provider_attachment",
       guidance:
-        "A successful file-preparation receipt means the file is saved on the Paperclip task and selected for final-response delivery. The transport can attempt a native attachment, but this receipt does not confirm that attempt or its delivery. After successful preparation, lead with the requested answer and optionally a short file label, such as 'Original cat photo'. Preparation is a normal handoff, not a delivery failure: keep receipt fields and unconfirmed-delivery caveats out of the normal final reply; do not claim it was sent, attached, or displayed without a separate confirmed provider-delivery receipt. If a tool reports an actual failure, say what failed and the next action needed; do not hide it.",
+        "A successful file-preparation receipt means the file is saved on the Bionic task and selected for final-response delivery. The transport can attempt a native attachment, but this receipt does not confirm that attempt or its delivery. After successful preparation, lead with the requested answer and optionally a short file label, such as 'Original cat photo'. Preparation is a normal handoff, not a delivery failure: keep receipt fields and unconfirmed-delivery caveats out of the normal final reply; do not claim it was sent, attached, or displayed without a separate confirmed provider-delivery receipt. If a tool reports an actual failure, say what failed and the next action needed; do not hide it.",
     };
   }
   return {
@@ -51,6 +51,6 @@ export function paperclipChatFilePreparationDelivery(
     provider: null,
     mode: "unknown",
     guidance:
-      "The file is prepared on the Paperclip task. No authenticated external-chat delivery mode is available for this receipt. Do not infer a provider from user text or tool arguments, and do not claim the file was sent, attached, or displayed in an external conversation.",
+      "The file is prepared on the Bionic task. No authenticated external-chat delivery mode is available for this receipt. Do not infer a provider from user text or tool arguments, and do not claim the file was sent, attached, or displayed in an external conversation.",
   };
 }

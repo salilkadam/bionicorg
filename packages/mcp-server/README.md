@@ -1,32 +1,32 @@
-# Paperclip MCP Server
+# Bionic MCP Server
 
-Model Context Protocol server for Paperclip.
+Model Context Protocol server for Bionic.
 
-This package is a thin MCP wrapper over the existing Paperclip REST API. It does
+This package is a thin MCP wrapper over the existing Bionic REST API. It does
 not talk to the database directly and it does not reimplement business logic.
 
 ## Authentication
 
 The server reads its configuration from environment variables:
 
-- `PAPERCLIP_API_URL` - Paperclip base URL, for example `http://localhost:3100`
-- `PAPERCLIP_API_KEY` - bearer token used for `/api` requests
-- `PAPERCLIP_COMPANY_ID` - optional default company for company-scoped tools
-- `PAPERCLIP_AGENT_ID` - optional default agent for checkout helpers
-- `PAPERCLIP_RUN_ID` - optional run id forwarded on mutating requests
+- `BIONIC_API_URL` - Bionic base URL, for example `http://localhost:3100`
+- `BIONIC_API_KEY` - bearer token used for `/api` requests
+- `BIONIC_COMPANY_ID` - optional default company for company-scoped tools
+- `BIONIC_AGENT_ID` - optional default agent for checkout helpers
+- `BIONIC_RUN_ID` - optional run id forwarded on mutating requests
 
-Inside an active heartbeat, Paperclip also injects `PAPERCLIP_RUNTIME_TOOLS_*` variables. They enable the run-scoped `connections_search` and `connection_request` tools and expire with the run.
+Inside an active heartbeat, Bionic also injects `BIONIC_RUNTIME_TOOLS_*` variables. They enable the run-scoped `connections_search` and `connection_request` tools and expire with the run.
 
 ## Usage
 
 ```sh
-npx -y @paperclipai/mcp-server
+npx -y @bionicai/mcp-server
 ```
 
 Or locally in this repo:
 
 ```sh
-pnpm --filter @paperclipai/mcp-server build
+pnpm --filter @bionicai/mcp-server build
 node packages/mcp-server/dist/stdio.js
 ```
 
@@ -39,52 +39,52 @@ Run-scoped connection tools:
 
 Read tools:
 
-- `paperclipMe`
-- `paperclipInboxLite`
-- `paperclipListAgents`
-- `paperclipGetAgent`
-- `paperclipListIssues`
-- `paperclipGetIssue`
-- `paperclipGetHeartbeatContext`
-- `paperclipListComments`
-- `paperclipGetComment`
-- `paperclipListIssueApprovals`
-- `paperclipListDocuments`
-- `paperclipGetDocument`
-- `paperclipListDocumentRevisions`
-- `paperclipListProjects`
-- `paperclipGetProject`
-- `paperclipGetIssueWorkspaceRuntime`
-- `paperclipWaitForIssueWorkspaceService`
-- `paperclipListGoals`
-- `paperclipGetGoal`
-- `paperclipListApprovals`
-- `paperclipGetApproval`
-- `paperclipGetApprovalIssues`
-- `paperclipListApprovalComments`
+- `bionicMe`
+- `bionicInboxLite`
+- `bionicListAgents`
+- `bionicGetAgent`
+- `bionicListIssues`
+- `bionicGetIssue`
+- `bionicGetHeartbeatContext`
+- `bionicListComments`
+- `bionicGetComment`
+- `bionicListIssueApprovals`
+- `bionicListDocuments`
+- `bionicGetDocument`
+- `bionicListDocumentRevisions`
+- `bionicListProjects`
+- `bionicGetProject`
+- `bionicGetIssueWorkspaceRuntime`
+- `bionicWaitForIssueWorkspaceService`
+- `bionicListGoals`
+- `bionicGetGoal`
+- `bionicListApprovals`
+- `bionicGetApproval`
+- `bionicGetApprovalIssues`
+- `bionicListApprovalComments`
 
 Write tools:
 
-- `paperclipCreateIssue`
-- `paperclipUpdateIssue`
-- `paperclipCheckoutIssue`
-- `paperclipReleaseIssue`
-- `paperclipAddComment`
-- `paperclipSuggestTasks`
-- `paperclipAskUserQuestions`
-- `paperclipRequestConfirmation`
-- `paperclipUpsertIssueDocument`
-- `paperclipRestoreIssueDocumentRevision`
-- `paperclipControlIssueWorkspaceServices`
-- `paperclipCreateApproval`
-- `paperclipLinkIssueApproval`
-- `paperclipUnlinkIssueApproval`
-- `paperclipApprovalDecision`
-- `paperclipAddApprovalComment`
+- `bionicCreateIssue`
+- `bionicUpdateIssue`
+- `bionicCheckoutIssue`
+- `bionicReleaseIssue`
+- `bionicAddComment`
+- `bionicSuggestTasks`
+- `bionicAskUserQuestions`
+- `bionicRequestConfirmation`
+- `bionicUpsertIssueDocument`
+- `bionicRestoreIssueDocumentRevision`
+- `bionicControlIssueWorkspaceServices`
+- `bionicCreateApproval`
+- `bionicLinkIssueApproval`
+- `bionicUnlinkIssueApproval`
+- `bionicApprovalDecision`
+- `bionicAddApprovalComment`
 
 Escape hatch:
 
-- `paperclipApiRequest`
+- `bionicApiRequest`
 
-`paperclipApiRequest` is limited to paths under `/api` and JSON bodies. It is
+`bionicApiRequest` is limited to paths under `/api` and JSON bodies. It is
 meant for endpoints that do not yet have a dedicated MCP tool.

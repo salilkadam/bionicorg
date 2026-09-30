@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { and, eq } from "drizzle-orm";
-import { agents, environmentLeases, environments, agentInstructionWorkingCopies as copies, type Db } from "@paperclipai/db";
-import { syncDirectoryToSsh, restoreWorkspaceFromSshExecution } from "@paperclipai/adapter-utils/ssh";
-import { prepareAdapterExecutionTargetRuntime, runAdapterExecutionTargetShellCommand, type AdapterExecutionTarget, type PreparedAdapterExecutionTargetRuntime } from "@paperclipai/adapter-utils/execution-target";
-import { withDirectoryMergeLock, directorySnapshotSha256, parseDirectorySnapshot, serializeDirectorySnapshot } from "@paperclipai/adapter-utils/workspace-restore-merge";
+import { agents, environmentLeases, environments, agentInstructionWorkingCopies as copies, type Db } from "@bionicai/db";
+import { syncDirectoryToSsh, restoreWorkspaceFromSshExecution } from "@bionicai/adapter-utils/ssh";
+import { prepareAdapterExecutionTargetRuntime, runAdapterExecutionTargetShellCommand, type AdapterExecutionTarget, type PreparedAdapterExecutionTargetRuntime } from "@bionicai/adapter-utils/execution-target";
+import { withDirectoryMergeLock, directorySnapshotSha256, parseDirectorySnapshot, serializeDirectorySnapshot } from "@bionicai/adapter-utils/workspace-restore-merge";
 import { AGENT_FILES_CONTRACT, AgentFileLimitError, agentFileStore, agentStorageWarning, inspectAgentDirectory } from "./agent-file-store.js";
 import { agentInstructionsBundleMode, deriveBundleState, resolveManagedInstructionsRoot } from "./agent-instructions.js";
 import { instructionGitExcludeProgram } from "./agent-instruction-files.js";
@@ -12,7 +12,7 @@ import { resolveInstructionActor } from "./agent-instruction-authorization.js";
 import { HttpError, conflict, notFound } from "../errors.js";
 import type { AuthorizationActor } from "./authorization.js";
 import type { EnvironmentRuntimeService } from "./environment-runtime.js";
-import type { Environment, EnvironmentLease } from "@paperclipai/shared";
+import type { Environment, EnvironmentLease } from "@bionicai/shared";
 import { hasRemoteTerminationReceipt } from "./remote-execution-termination.js";
 import { cachedAgentFileManifest, captureAgentFileCheckpoint, checkpointBaseline, checkpointSnapshot, type AgentFileManifest } from "./agent-file-checkpoints.js";
 import { logger } from "../middleware/logger.js";
@@ -54,17 +54,17 @@ export function agentDirectoryWorkingCopyService(db: Db, get: (companyId: string
     if (target.transport === "ssh") {
       // Reuse SSH's plain directory transfer without its task-workspace suffix
       // or Git-history discovery. The registered root is the exact writable root.
-      await syncDirectoryToSsh({ spec: target.spec, localDir: row.localRoot, remoteDir: row.executionRoot, exclude: [".paperclip-runtime"] });
+      await syncDirectoryToSsh({ spec: target.spec, localDir: row.localRoot, remoteDir: row.executionRoot, exclude: [".bionic-runtime"] });
       return { target, workspaceRemoteDir: row.executionRoot, runtimeRootDir: null,
         assetDirs: {}, additionalSourceDirs: {}, additionalSourceFailures: [], workspaceSyncSnapshot: null,
         restoreWorkspace: () => restoreWorkspaceFromSshExecution({ spec: target.spec, localDir: row.localRoot,
-          remoteDir: row.executionRoot, baselineSnapshot: { ...baseline(row), exclude: [".paperclip-runtime"] }, restoreGitHistory: false }) };
+          remoteDir: row.executionRoot, baselineSnapshot: { ...baseline(row), exclude: [".bionic-runtime"] }, restoreGitHistory: false }) };
     }
     return prepareAdapterExecutionTargetRuntime({ target, runId: row.runId, adapterKey: "agent-files",
       workspaceLocalDir: row.localRoot, workspaceRemoteDir: row.executionRoot,
       syncWorkspace: true, workspaceInboundMode: recovering ? "adopt_remote" : undefined,
       workspaceBaseline: baseline(row), workspaceGitSnapshot: null, workspaceFileMode: "all",
-      workspaceExclude: [".paperclip-runtime", ".paperclip-runtime/**"] });
+      workspaceExclude: [".bionic-runtime", ".bionic-runtime/**"] });
   }
   async function prepare(input: { companyId: string; agentId: string; runId: string; target?: AdapterExecutionTarget | null; cwd: string; warm?: boolean; reuseRunId?: string; onWarmHandoff?: (copy: Copy) => void }) {
     const [agent] = await db.select().from(agents).where(and(eq(agents.id, input.agentId), eq(agents.companyId, input.companyId)));
@@ -115,7 +115,7 @@ export function agentDirectoryWorkingCopyService(db: Db, get: (companyId: string
     // excluded runtime area inside the provider's confined workspace. They are
     // synchronized independently; provider HOME is never reinterpreted.
     const executionRoot = input.target?.kind === "remote"
-      ? path.posix.join(input.target.remoteCwd, ".paperclip-runtime", "agent-files", input.agentId, input.runId)
+      ? path.posix.join(input.target.remoteCwd, ".bionic-runtime", "agent-files", input.agentId, input.runId)
       : localRoot;
     const location = input.target?.kind === "remote" ? `remote:${input.target.environmentId ?? ""}` : "local";
     let row = await get(input.companyId, input.runId);
@@ -297,7 +297,7 @@ export function agentDirectoryWorkingCopyService(db: Db, get: (companyId: string
     await runtime?.cleanupWorkspaceSnapshot?.().catch(() => { cleanupPending = true; });
     const cleanupTarget = target ?? runtime?.target;
     if (row.processStoppedAt && completed.has(row.state) && cleanupTarget?.kind === "remote") {
-      const expected = path.posix.join(cleanupTarget.remoteCwd, ".paperclip-runtime", "agent-files", row.agentId, String(row.receipt?.directoryRunId ?? row.runId));
+      const expected = path.posix.join(cleanupTarget.remoteCwd, ".bionic-runtime", "agent-files", row.agentId, String(row.receipt?.directoryRunId ?? row.runId));
       if (row.executionRoot !== expected) throw new Error("Agent directory cleanup path changed");
       const quoted = `'${expected.replaceAll("'", `'"'"'`)}'`;
       const remoteCleanupFailed = await runAdapterExecutionTargetShellCommand(row.runId, cleanupTarget, `rm -rf -- ${quoted}`,
@@ -338,7 +338,7 @@ export function agentDirectoryWorkingCopyService(db: Db, get: (companyId: string
     const [environment] = await db.select().from(environments).where(eq(environments.id, lease.environmentId));
     if (!environment) return false;
     const remoteCwd = cleanup?.remoteCwd ?? lease.metadata?.remoteCwd;
-    if (typeof remoteCwd !== "string" || row.executionRoot !== path.posix.join(remoteCwd, ".paperclip-runtime", "agent-files", row.agentId, String(row.receipt?.directoryRunId ?? row.runId))) return false;
+    if (typeof remoteCwd !== "string" || row.executionRoot !== path.posix.join(remoteCwd, ".bionic-runtime", "agent-files", row.agentId, String(row.receipt?.directoryRunId ?? row.runId))) return false;
     const result = await environmentRuntime.execute({ environment: environment as Environment, lease: lease as EnvironmentLease, command: "rm", args: ["-rf", "--", row.executionRoot],
       cwd: remoteCwd, env: {}, timeoutMs: 15_000, bypassSession: true });
     return result.exitCode === 0 && !result.timedOut;

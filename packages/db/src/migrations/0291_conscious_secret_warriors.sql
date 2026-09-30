@@ -81,7 +81,7 @@ BEGIN
       FROM company_skills
       WHERE id > last_id AND source_type = 'github'
         AND coalesce(metadata->>'hostname', 'github.com') = 'github.com'
-        AND coalesce(metadata->>'sourceKind', '') NOT IN ('paperclip_bundled', 'catalog')
+        AND coalesce(metadata->>'sourceKind', '') NOT IN ('bionic_bundled', 'catalog')
         AND metadata->>'catalogId' IS NULL
         AND metadata->>'owner' ~ '^[A-Za-z0-9_.-]+$'
         AND metadata->>'repo' ~ '^[A-Za-z0-9_.-]+$'

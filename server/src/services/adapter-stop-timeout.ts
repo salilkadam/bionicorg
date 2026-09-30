@@ -1,4 +1,4 @@
-import { AGENT_ADAPTER_TYPES } from "@paperclipai/shared";
+import { AGENT_ADAPTER_TYPES } from "@bionicai/shared";
 
 export interface AdapterStopContext {
   runId?: string;

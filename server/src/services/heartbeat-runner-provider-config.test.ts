@@ -7,8 +7,8 @@ import {
   resolvePaperclipRunnerNativeProviderInput,
 } from "./native-runtime/provider-profile.js";
 
-describe("Paperclip Runner native provider configuration", () => {
-  it.each([undefined, "approve-all", "approve-paperclip", "approve-reads", "deny-all"])(
+describe("Bionic Runner native provider configuration", () => {
+  it.each([undefined, "approve-all", "approve-bionic", "approve-reads", "deny-all"])(
     "passes Grok's full-auto default or explicit %s policy to the native runner",
     (acpxPermissionMode) => {
       expect(resolvePaperclipRunnerNativeProviderInput({
@@ -139,7 +139,7 @@ describe("Paperclip Runner native provider configuration", () => {
       memoryArn: "arn:aws:bedrock-agentcore:us-east-1:123456789012:memory/m-1",
       memoryId: "m-1",
       invocationRoleArn: "arn:aws:iam::123456789012:role/invoke",
-      contextBucket: "paperclip-context",
+      contextBucket: "bionic-context",
       contextPrefix: "runner/",
       contextKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/key-1",
       qualificationRevision: "aws-agentcore-harness-context-v2",
@@ -276,7 +276,7 @@ describe("Paperclip Runner native provider configuration", () => {
           memoryArn: "arn:aws:bedrock-agentcore:us-east-1:123456789012:memory/m-1",
           memoryId: "m-1",
           invocationRoleArn: "arn:aws:iam::123456789012:role/invoke",
-          contextBucket: "paperclip-context",
+          contextBucket: "bionic-context",
           contextPrefix: "runner/",
           contextKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/key-1",
           qualificationRevision: "aws-agentcore-harness-context-v2",
@@ -330,7 +330,7 @@ describe("Paperclip Runner native provider configuration", () => {
           memoryArn: "arn:aws:bedrock-agentcore:us-east-1:123456789012:memory/m-1",
           memoryId: "m-1",
           invocationRoleArn: "arn:aws:iam::123456789012:role/invoke",
-          contextBucket: "paperclip-context",
+          contextBucket: "bionic-context",
           contextPrefix: "runner/",
           contextKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/key-1",
           qualificationRevision: "aws-agentcore-harness-context-v2",
@@ -404,7 +404,7 @@ describe("Paperclip Runner native provider configuration", () => {
           memoryArn: "arn:aws:bedrock-agentcore:us-east-1:123456789012:memory/m-1",
           memoryId: "m-1",
           invocationRoleArn: "arn:aws:iam::123456789012:role/invoke",
-          contextBucket: "paperclip-context",
+          contextBucket: "bionic-context",
           contextPrefix: "runner/",
           contextKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/key-1",
           qualificationRevision: "aws-agentcore-harness-context-v2",

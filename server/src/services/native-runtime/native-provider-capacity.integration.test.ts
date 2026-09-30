@@ -11,25 +11,25 @@ import {
   issueRecoveryActions,
   issues,
   nativeRunFinalizations,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 import type {
   ControlPlanePort,
   NativeExecutionInputV1,
   PrpEvent,
-} from "@paperclipai/paperclip-runner";
+} from "@bionicai/bionic-runner";
 import { startEmbeddedPostgresTestDatabase } from "../../__tests__/helpers/embedded-postgres.js";
 
 const provider = vi.hoisted(() => ({ execute: vi.fn() }));
-vi.mock("../../vendor/paperclip-runner/index.js", async (importOriginal) => ({
+vi.mock("../../vendor/bionic-runner/index.js", async (importOriginal) => ({
   ...(await importOriginal<
-    typeof import("../../vendor/paperclip-runner/index.js")
+    typeof import("../../vendor/bionic-runner/index.js")
   >()),
   executeNativeSession: provider.execute,
 }));
 
 import { executePaperclipNativeSession } from "./native-session-executor.js";
 import { buildNativeCompletionContract } from "./completion-contracts.js";
-import { PaperclipControlPlanePort } from "./paperclip-control-plane-port.js";
+import { PaperclipControlPlanePort } from "./bionic-control-plane-port.js";
 import { prepareNativeHeartbeatRun } from "./prepare-native-run.js";
 
 describe("native provider capacity failure persistence", () => {
@@ -53,7 +53,7 @@ describe("native provider capacity failure persistence", () => {
       companyId,
       name: "Native capacity agent",
       status: "active",
-      adapterType: "paperclip_runner",
+      adapterType: "bionic_runner",
       adapterConfig: { provider: "codex", model: "gpt-5.6-luna" },
     });
   });
@@ -131,7 +131,7 @@ describe("native provider capacity failure persistence", () => {
         .where(eq(heartbeatRuns.id, runId));
 
       const execution: NativeExecutionInputV1 = {
-        schema: "paperclip.native-execution-input.v1",
+        schema: "bionic.native-execution-input.v1",
         binding: {
           companyId,
           runId,
@@ -162,14 +162,14 @@ describe("native provider capacity failure persistence", () => {
         completionContract: {
           id: contract.id,
           sha256: contract.canonicalSha256,
-          schemaVersion: "paperclip.completion-contract.v1",
+          schemaVersion: "bionic.completion-contract.v1",
           contract: completionInput,
         },
         interactionResponses: [],
         credentialBindings: [],
       };
       const event: PrpEvent = {
-        schema: "paperclip.prp.event.v1",
+        schema: "bionic.prp.event.v1",
         runId,
         normalizedSessionId: native.normalizedSessionId,
         turnId: native.turnId,

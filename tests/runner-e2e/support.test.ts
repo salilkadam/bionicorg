@@ -139,7 +139,7 @@ describe("runner E2E local binary resolution", () => {
     ).toBe(
       path.join(
         "/repository",
-        "packages/paperclip-runner/runner/target/debug/paperclip-runnerd",
+        "packages/bionic-runner/runner/target/debug/bionic-runnerd",
       ),
     );
   });
@@ -149,10 +149,10 @@ describe("runner E2E local binary resolution", () => {
       resolvePaperclipRunnerBinaryForHarness(
         [localNativeExecution],
         "/repository",
-        "/custom/paperclip-runnerd",
+        "/custom/bionic-runnerd",
         "linux",
       ),
-    ).toBe("/custom/paperclip-runnerd");
+    ).toBe("/custom/bionic-runnerd");
   });
 
   it("uses and stages the same build-once binary for remote native cells", () => {
@@ -165,7 +165,7 @@ describe("runner E2E local binary resolution", () => {
     expect(runnerBinary).toBe(
       path.join(
         "/repository",
-        "packages/paperclip-runner/runner/target/debug/paperclip-runnerd",
+        "packages/bionic-runner/runner/target/debug/bionic-runnerd",
       ),
     );
     expect(
@@ -196,10 +196,10 @@ describe("runner E2E local binary resolution", () => {
       resolvePaperclipRemoteRunnerBinaryForHarness(
         [remoteNativeExecution],
         runnerBinary,
-        "/cross-compiled/paperclip-runnerd",
+        "/cross-compiled/bionic-runnerd",
         "darwin",
       ),
-    ).toBe("/cross-compiled/paperclip-runnerd");
+    ).toBe("/cross-compiled/bionic-runnerd");
   });
 });
 
@@ -224,7 +224,7 @@ describe("runner E2E provider environment", () => {
           { KEEP_ME: "yes", OPENCODE_ALLOW_ALL_MODELS: "ambient" },
           [execution],
         ),
-      ).toEqual({ KEEP_ME: "yes", OPENCODE_ALLOW_ALL_MODELS: "true", PAPERCLIP_ANNOUNCEMENTS_ENABLED: "false" });
+      ).toEqual({ KEEP_ME: "yes", OPENCODE_ALLOW_ALL_MODELS: "true", BIONIC_ANNOUNCEMENTS_ENABLED: "false" });
     }
 
     for (const execution of [nativeOpenCode, breadthOpenCode]) {
@@ -233,16 +233,16 @@ describe("runner E2E provider environment", () => {
           { KEEP_ME: "yes", OPENCODE_ALLOW_ALL_MODELS: "ambient" },
           [execution],
         ),
-      ).toEqual({ KEEP_ME: "yes", PAPERCLIP_ANNOUNCEMENTS_ENABLED: "false" });
+      ).toEqual({ KEEP_ME: "yes", BIONIC_ANNOUNCEMENTS_ENABLED: "false" });
     }
   });
 
   it("disables announcements through the server boundary for every runner cell", () => {
     for (const execution of runnerMatrix) {
-      const source = { PAPERCLIP_ANNOUNCEMENTS_ENABLED: "true" };
+      const source = { BIONIC_ANNOUNCEMENTS_ENABLED: "true" };
       const env = buildRunnerE2EProcessEnvironment(source, [execution]);
-      expect(buildPaperclipServerEnvironment(env).PAPERCLIP_ANNOUNCEMENTS_ENABLED).toBe("false");
-      expect(source.PAPERCLIP_ANNOUNCEMENTS_ENABLED).toBe("true");
+      expect(buildPaperclipServerEnvironment(env).BIONIC_ANNOUNCEMENTS_ENABLED).toBe("false");
+      expect(source.BIONIC_ANNOUNCEMENTS_ENABLED).toBe("true");
     }
   });
 });
@@ -251,9 +251,9 @@ describe("hiring capability opt-in", () => {
   it("enables API tools only when the manual hiring story is selected", () => {
     const hire = runnerMatrix.find((e) => e.suite.id === "everyday-workflows" && e.task.id === "hire-reuse")!;
     const delegate = runnerMatrix.find((e) => e.suite.id === "everyday-workflows" && e.task.id === "delegate-feedback")!;
-    expect(buildRunnerE2EProcessEnvironment({}, [hire]).PAPERCLIP_RUNNER_API_TOOLS_ENABLED).toBe("true");
-    expect(buildRunnerE2EProcessEnvironment({}, [delegate]).PAPERCLIP_RUNNER_API_TOOLS_ENABLED).toBeUndefined();
-    expect(buildRunnerE2EProcessEnvironment({}, []).PAPERCLIP_RUNNER_API_TOOLS_ENABLED).toBeUndefined();
+    expect(buildRunnerE2EProcessEnvironment({}, [hire]).BIONIC_RUNNER_API_TOOLS_ENABLED).toBe("true");
+    expect(buildRunnerE2EProcessEnvironment({}, [delegate]).BIONIC_RUNNER_API_TOOLS_ENABLED).toBeUndefined();
+    expect(buildRunnerE2EProcessEnvironment({}, []).BIONIC_RUNNER_API_TOOLS_ENABLED).toBeUndefined();
   });
 });
 
@@ -289,7 +289,7 @@ describe("runner E2E server port allocation", () => {
 
 describe("runner E2E sensitive API boundary", () => {
   it("keeps secret request bodies out of Playwright API tracing", async () => {
-    vi.stubEnv("PAPERCLIP_RUNNER_E2E_PORT", "43123");
+    vi.stubEnv("BIONIC_RUNNER_E2E_PORT", "43123");
     const playwrightPost = vi.fn();
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ id: "secret-id" }), {
@@ -434,10 +434,10 @@ describe("runner E2E matchers", () => {
   it("normalizes message text and evaluates state invariants", async () => {
     const results = await evaluateMatchers(
       [
-        { kind: "message_contains", expected: "PAPERCLIP_E2E_OK_nonce" },
+        { kind: "message_contains", expected: "BIONIC_E2E_OK_nonce" },
         {
           kind: "message_occurrences",
-          expected: "PAPERCLIP_E2E_OK_nonce",
+          expected: "BIONIC_E2E_OK_nonce",
           count: 1,
         },
         { kind: "issue_status", expected: "done" },
@@ -558,9 +558,9 @@ describe("runner E2E run observations", () => {
       taskId: "hello-complete",
       expectedMarker,
       finalRunMessage:
-        "I'll complete this deterministic hello task by calling paperclip_finish once.",
+        "I'll complete this deterministic hello task by calling bionic_finish once.",
       allAgentMessages:
-        "I'll complete this deterministic hello task by calling paperclip_finish once.",
+        "I'll complete this deterministic hello task by calling bionic_finish once.",
       semanticSummary: expectedMarker,
       issueStatus: "done",
       runStatuses: ["succeeded"],
@@ -653,12 +653,12 @@ describe("runner E2E run observations", () => {
       eventType: "run.result.accepted",
       payload: {
         prpEvent: {
-          schema: "paperclip.prp.event.v1",
+          schema: "bionic.prp.event.v1",
           eventType: "run.result.accepted",
           sourceKind: "control_plane",
           payload: {
             result: {
-              schema: "paperclip.run_result.v1",
+              schema: "bionic.run_result.v1",
               reportedWorkDisposition: "yielded",
               evidence: [{ ref: "interaction:pending" }],
               artifacts: [
@@ -864,7 +864,7 @@ describe("runner E2E failure policy", () => {
     expect(
       classifyFailure(
         new Error(
-          "runner_ingress_unavailable: paperclip-runnerd: cumulative ACK cannot move beyond the produced source cursor",
+          "runner_ingress_unavailable: bionic-runnerd: cumulative ACK cannot move beyond the produced source cursor",
         ),
       ),
     ).toBe("transient_infrastructure");
@@ -899,7 +899,7 @@ describe("runner E2E server isolation", () => {
     });
   });
 
-  it("strips database and paid-provider credentials from the Paperclip process", () => {
+  it("strips database and paid-provider credentials from the Bionic process", () => {
     const env = buildPaperclipServerEnvironment(
       {
         PATH: "/bin",
@@ -915,21 +915,21 @@ describe("runner E2E server isolation", () => {
         XAI_ORG_ID: "xai-sensitive",
         GROK_HOME: "/outside/grok",
         OPENAI_ORG_ID: "also-provider-sensitive",
-        PAPERCLIP_API_KEY: "ambient-board-key",
-        PAPERCLIP_AGENT_API_KEY: "ambient-agent-key",
-        PAPERCLIP_TASK_BRIDGE_TOKEN: "ambient-task-token",
-        PAPERCLIP_SETUP_TOKEN: "ambient-setup-token",
-        PAPERCLIP_SECRETS_MASTER_KEY: "ambient-master-key",
-        PAPERCLIP_SECRETS_MASTER_KEY_FILE: "/outside/master.key",
-        PAPERCLIP_STORAGE_S3_BUCKET: "production-bucket",
+        BIONIC_API_KEY: "ambient-board-key",
+        BIONIC_AGENT_API_KEY: "ambient-agent-key",
+        BIONIC_TASK_BRIDGE_TOKEN: "ambient-task-token",
+        BIONIC_SETUP_TOKEN: "ambient-setup-token",
+        BIONIC_SECRETS_MASTER_KEY: "ambient-master-key",
+        BIONIC_SECRETS_MASTER_KEY_FILE: "/outside/master.key",
+        BIONIC_STORAGE_S3_BUCKET: "production-bucket",
       },
       {
-        PAPERCLIP_HOME: "/tmp/cell/paperclip-home",
-        PAPERCLIP_CONFIG: "/tmp/cell/paperclip-home/instances/e2e/config.json",
+        BIONIC_HOME: "/tmp/cell/bionic-home",
+        BIONIC_CONFIG: "/tmp/cell/bionic-home/instances/e2e/config.json",
         XDG_CACHE_HOME: "/tmp/cell/xdg-cache",
-        PAPERCLIP_AGENT_JWT_SECRET: "generated-agent-jwt",
-        PAPERCLIP_DECISION_SIGNING_SECRET: "generated-decision-key",
-        PAPERCLIP_TOOL_ACTION_SIGNING_SECRET: "generated-tool-key",
+        BIONIC_AGENT_JWT_SECRET: "generated-agent-jwt",
+        BIONIC_DECISION_SIGNING_SECRET: "generated-decision-key",
+        BIONIC_TOOL_ACTION_SIGNING_SECRET: "generated-tool-key",
         BETTER_AUTH_SECRET: "generated-auth-key",
       },
     );
@@ -942,31 +942,31 @@ describe("runner E2E server isolation", () => {
     expect(env.OPENAI_ORG_ID).toBeUndefined();
     expect(env.XAI_ORG_ID).toBeUndefined();
     expect(env.GROK_HOME).toBeUndefined();
-    expect(env.PAPERCLIP_API_KEY).toBeUndefined();
-    expect(env.PAPERCLIP_AGENT_API_KEY).toBeUndefined();
+    expect(env.BIONIC_API_KEY).toBeUndefined();
+    expect(env.BIONIC_AGENT_API_KEY).toBeUndefined();
     expect(env.XDG_CACHE_HOME).toBe("/tmp/cell/xdg-cache");
-    expect(env.PAPERCLIP_AGENT_JWT_SECRET).toBe("generated-agent-jwt");
-    expect(env.PAPERCLIP_TASK_BRIDGE_TOKEN).toBeUndefined();
-    expect(env.PAPERCLIP_SETUP_TOKEN).toBeUndefined();
-    expect(env.PAPERCLIP_SECRETS_MASTER_KEY).toBeUndefined();
-    expect(env.PAPERCLIP_SECRETS_MASTER_KEY_FILE).toBeUndefined();
-    expect(env.PAPERCLIP_STORAGE_S3_BUCKET).toBeUndefined();
+    expect(env.BIONIC_AGENT_JWT_SECRET).toBe("generated-agent-jwt");
+    expect(env.BIONIC_TASK_BRIDGE_TOKEN).toBeUndefined();
+    expect(env.BIONIC_SETUP_TOKEN).toBeUndefined();
+    expect(env.BIONIC_SECRETS_MASTER_KEY).toBeUndefined();
+    expect(env.BIONIC_SECRETS_MASTER_KEY_FILE).toBeUndefined();
+    expect(env.BIONIC_STORAGE_S3_BUCKET).toBeUndefined();
     expect(() =>
       assertIsolatedServerEnvironment(env, {
         temporaryRoot: "/tmp/cell",
-        paperclipHome: "/tmp/cell/paperclip-home",
-        configPath: "/tmp/cell/paperclip-home/instances/e2e/config.json",
+        bionicHome: "/tmp/cell/bionic-home",
+        configPath: "/tmp/cell/bionic-home/instances/e2e/config.json",
       }),
     ).not.toThrow();
   });
 
   it("uses absolute repository paths for the Playwright web server", () => {
-    const command = runnerE2EWebServerCommand("/workspace/paperclip");
+    const command = runnerE2EWebServerCommand("/workspace/bionic");
     expect(command).toContain(
-      "'/workspace/paperclip/cli/node_modules/tsx/dist/cli.mjs'",
+      "'/workspace/bionic/cli/node_modules/tsx/dist/cli.mjs'",
     );
     expect(command).toContain(
-      "'/workspace/paperclip/tests/runner-e2e/server.ts'",
+      "'/workspace/bionic/tests/runner-e2e/server.ts'",
     );
   });
 
@@ -975,14 +975,14 @@ describe("runner E2E server isolation", () => {
       path.join(os.tmpdir(), "runner-e2e-instance-isolation-test-"),
     );
     cleanupDirectories.push(root);
-    const database = path.join(root, "paperclip-home", "db");
+    const database = path.join(root, "bionic-home", "db");
     const secretsKey = path.join(
       root,
-      "paperclip-home",
+      "bionic-home",
       "secrets",
       "master.key",
     );
-    const configPath = path.join(root, "paperclip-home", "config.json");
+    const configPath = path.join(root, "bionic-home", "config.json");
     await mkdir(database, { recursive: true });
     await mkdir(path.dirname(secretsKey), { recursive: true });
     await writeFile(secretsKey, "generated-master-key");
@@ -1050,8 +1050,8 @@ describe("runner E2E evidence redaction", () => {
         apiKeyRef: "DAYTONA_API_KEY",
       },
     });
-    expect(sanitizeJson("paperclip.runner-e2e.evidence/v1", [secret])).toBe(
-      "paperclip.runner-e2e.evidence/v1",
+    expect(sanitizeJson("bionic.runner-e2e.evidence/v1", [secret])).toBe(
+      "bionic.runner-e2e.evidence/v1",
     );
   });
 
@@ -1202,7 +1202,7 @@ describe("runner E2E evidence redaction", () => {
   });
 
   it("recognizes managed and durable Codex runtime auth files", () => {
-    const root = path.join(os.tmpdir(), "paperclip-home");
+    const root = path.join(os.tmpdir(), "bionic-home");
     expect(
       isEphemeralCodexRuntimeAuthFile(
         root,
@@ -1217,7 +1217,7 @@ describe("runner E2E evidence redaction", () => {
         root,
         path.join(
           root,
-          "instances/instance-1/runtime/paperclip-runner/acpx/acpx/session-1/codex-home/auth.json",
+          "instances/instance-1/runtime/bionic-runner/acpx/acpx/session-1/codex-home/auth.json",
         ),
       ),
     ).toBe(true);
@@ -1226,7 +1226,7 @@ describe("runner E2E evidence redaction", () => {
         root,
         path.join(
           root,
-          "instances/instance-1/runtime/paperclip-runner/durable-sessions/session-1/codex-home/auth.json",
+          "instances/instance-1/runtime/bionic-runner/durable-sessions/session-1/codex-home/auth.json",
         ),
       ),
     ).toBe(true);
@@ -1241,7 +1241,7 @@ describe("runner E2E evidence redaction", () => {
         root,
         path.join(
           root,
-          "instances/instance-1/runtime/paperclip-runner/durable-sessions/session-1/codex-home/config.toml",
+          "instances/instance-1/runtime/bionic-runner/durable-sessions/session-1/codex-home/config.toml",
         ),
       ),
     ).toBe(false);
@@ -1345,7 +1345,7 @@ describe("runner E2E evidence redaction", () => {
     await writeFile(
       path.join(privateDir, "snapshots", "api-state.json"),
       JSON.stringify({
-        log: String.raw`curl -H \"Authorization: Bearer temporary-run-token\" \\\n+  \"$PAPERCLIP_API_URL/api/issues\"`,
+        log: String.raw`curl -H \"Authorization: Bearer temporary-run-token\" \\\n+  \"$BIONIC_API_URL/api/issues\"`,
       }),
     );
     await packageEvidence({
@@ -1442,20 +1442,20 @@ describe("warm continuity grading scope", () => {
     const execution = runnerMatrix.find((cell) => cell.task.flow === "warm_three_turn")!;
     const matchers = execution.task.buildMatchers("test-nonce", execution);
     expect(matchers).toContainEqual({
-      kind: "message_occurrences", expected: "PAPERCLIP_E2E_WARM_T1_test-nonce", count: 1,
+      kind: "message_occurrences", expected: "BIONIC_E2E_WARM_T1_test-nonce", count: 1,
     });
     expect(matchers).toContainEqual({
-      kind: "message_occurrences", expected: "PAPERCLIP_E2E_WARM_T2_test-nonce", count: 1,
+      kind: "message_occurrences", expected: "BIONIC_E2E_WARM_T2_test-nonce", count: 1,
     });
     expect(matchers).toContainEqual({
-      kind: "message_occurrences", expected: "PAPERCLIP_E2E_WARM_T3_test-nonce", count: 1,
+      kind: "message_occurrences", expected: "BIONIC_E2E_WARM_T3_test-nonce", count: 1,
     });
     expect(matchers).toContainEqual({
       kind: "message_ordered",
       expected: [
-        "PAPERCLIP_E2E_WARM_T1_test-nonce",
-        "PAPERCLIP_E2E_WARM_T2_test-nonce",
-        "PAPERCLIP_E2E_WARM_T3_test-nonce",
+        "BIONIC_E2E_WARM_T1_test-nonce",
+        "BIONIC_E2E_WARM_T2_test-nonce",
+        "BIONIC_E2E_WARM_T3_test-nonce",
       ],
     });
     expect(matchers).toContainEqual({
@@ -1473,17 +1473,17 @@ describe("warm continuity grading scope", () => {
       .filter((matcher) => matcher.kind.startsWith("message_"));
     const passing = await evaluateMatchers(matchers, {
       message: [
-        "Turn one is complete: PAPERCLIP_E2E_WARM_T1_test-nonce.",
-        "Turn two is complete: PAPERCLIP_E2E_WARM_T2_test-nonce.",
-        "Turn three is complete: PAPERCLIP_E2E_WARM_T3_test-nonce.",
+        "Turn one is complete: BIONIC_E2E_WARM_T1_test-nonce.",
+        "Turn two is complete: BIONIC_E2E_WARM_T2_test-nonce.",
+        "Turn three is complete: BIONIC_E2E_WARM_T3_test-nonce.",
       ].join("\n"),
     });
     expect(passing.every((result) => result.passed)).toBe(true);
 
     const invalidMessages = [
-      "PAPERCLIP_E2E_WARM_T1_test-nonce PAPERCLIP_E2E_WARM_T1_test-nonce PAPERCLIP_E2E_WARM_T2_test-nonce PAPERCLIP_E2E_WARM_T3_test-nonce",
-      "PAPERCLIP_E2E_WARM_T1_test-nonce PAPERCLIP_E2E_WARM_T3_test-nonce",
-      "PAPERCLIP_E2E_WARM_T3_test-nonce PAPERCLIP_E2E_WARM_T2_test-nonce PAPERCLIP_E2E_WARM_T1_test-nonce",
+      "BIONIC_E2E_WARM_T1_test-nonce BIONIC_E2E_WARM_T1_test-nonce BIONIC_E2E_WARM_T2_test-nonce BIONIC_E2E_WARM_T3_test-nonce",
+      "BIONIC_E2E_WARM_T1_test-nonce BIONIC_E2E_WARM_T3_test-nonce",
+      "BIONIC_E2E_WARM_T3_test-nonce BIONIC_E2E_WARM_T2_test-nonce BIONIC_E2E_WARM_T1_test-nonce",
     ];
     for (const message of invalidMessages) {
       const results = await evaluateMatchers(matchers, { message });

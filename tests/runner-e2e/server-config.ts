@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { paperclipConfigSchema } from "../../packages/shared/src/config-schema.js";
+import { bionicConfigSchema } from "../../packages/shared/src/config-schema.js";
 import { reserveRunnerE2EDatabasePort } from "./ports.js";
 
 /** Seed only the disposable fixture. Onboarding preserves this validated config
@@ -22,7 +22,7 @@ export async function prepareRunnerE2EServerConfig(input: {
   );
   try {
     const instanceRoot = path.dirname(input.configPath);
-    const config = paperclipConfigSchema.parse({
+    const config = bionicConfigSchema.parse({
       $meta: {
         version: 1,
         updatedAt: new Date().toISOString(),

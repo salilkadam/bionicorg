@@ -5,7 +5,7 @@ import { isVideoLikeOutput } from "@/lib/issue-output";
 import { AgentAvatar, type AvatarAgent } from "../AgentAvatar";
 import { useCallback, useContext, useState, type ReactNode } from "react";
 import { useEmailComment } from "@/components/EmailMessageCard";
-import type { IssueAttachment } from "@paperclipai/shared";
+import type { IssueAttachment } from "@bionicai/shared";
 import { IssueGalleryContext } from "@/context/IssueGalleryContext";
 import { cn } from "@/lib/utils";
 import { useStreamlinedTaskChatPresentation } from "./presentation-mode";
@@ -249,10 +249,10 @@ function TaskChatBubbleContent({
             // The human bubble sits on the solid --liveness-blue accent, so the
             // prose body text must follow the bubble's `text-white` rather than
             // the default light-mode prose color (which reads as black on blue).
-            // `paperclip-markdown-on-accent` flips prose tokens to currentColor
+            // `bionic-markdown-on-accent` flips prose tokens to currentColor
             // (== inherited white) in both themes; dark mode was already correct
             // only because `prose-invert` happened to lighten the text.
-            className={isHuman ? "paperclip-markdown-on-accent" : undefined}
+            className={isHuman ? "bionic-markdown-on-accent" : undefined}
             softBreaks
             linkIssueReferences
             onImageClick={openImage}

@@ -9,17 +9,17 @@ describe("isCloudManagedInstance", () => {
   it("unifies both prior signals without weakening either restrictive floor", () => {
     const cases: CloudInstanceEnv[] = [
       {},
-      { PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN: "tenant-token" },
-      { PAPERCLIP_MANAGED_CONFIG: "" },
+      { BIONIC_CLOUD_TENANT_SERVER_TOKEN: "tenant-token" },
+      { BIONIC_MANAGED_CONFIG: "" },
       {
-        PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN: "tenant-token",
-        PAPERCLIP_MANAGED_CONFIG: "managed-document",
+        BIONIC_CLOUD_TENANT_SERVER_TOKEN: "tenant-token",
+        BIONIC_MANAGED_CONFIG: "managed-document",
       },
     ];
 
     for (const env of cases) {
-      const priorTokenFloor = Boolean(env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN?.trim());
-      const priorManagedConfigFloor = env.PAPERCLIP_MANAGED_CONFIG !== undefined;
+      const priorTokenFloor = Boolean(env.BIONIC_CLOUD_TENANT_SERVER_TOKEN?.trim());
+      const priorManagedConfigFloor = env.BIONIC_MANAGED_CONFIG !== undefined;
       const canonicalFloor = isCloudManagedInstance(env);
 
       expect(canonicalFloor).toBe(priorTokenFloor || priorManagedConfigFloor);
@@ -29,34 +29,34 @@ describe("isCloudManagedInstance", () => {
   });
 
   it("does not treat a blank tenant token alone as a managed signal", () => {
-    expect(isCloudManagedInstance({ PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN: "   " })).toBe(false);
+    expect(isCloudManagedInstance({ BIONIC_CLOUD_TENANT_SERVER_TOKEN: "   " })).toBe(false);
   });
 });
 
 describe("getCloudStackContext", () => {
-  it("returns null outside Paperclip Cloud even when stray stack metadata exists", () => {
-    expect(getCloudStackContext({ PAPERCLIP_STACK_SLUG: "stray-stack" })).toBeNull();
+  it("returns null outside Bionic Cloud even when stray stack metadata exists", () => {
+    expect(getCloudStackContext({ BIONIC_STACK_SLUG: "stray-stack" })).toBeNull();
   });
 
   it("returns normalized provisioner metadata for cloud instances", () => {
     expect(getCloudStackContext({
-      PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN: "tenant-token",
-      PAPERCLIP_CLOUD_STACK_ID: " stack-1 ",
-      PAPERCLIP_STACK_SLUG: " acme ",
-      PAPERCLIP_CLOUD_ACCOUNT_GROUP_ID: " account-group-1 ",
-      PAPERCLIP_PRIMARY_HOST: " acme.paperclip.app ",
-      PAPERCLIP_CLOUD_API_ORIGIN: " https://app.paperclip.app ",
+      BIONIC_CLOUD_TENANT_SERVER_TOKEN: "tenant-token",
+      BIONIC_CLOUD_STACK_ID: " stack-1 ",
+      BIONIC_STACK_SLUG: " acme ",
+      BIONIC_CLOUD_ACCOUNT_GROUP_ID: " account-group-1 ",
+      BIONIC_PRIMARY_HOST: " acme.bionic.app ",
+      BIONIC_CLOUD_API_ORIGIN: " https://app.bionic.app ",
     })).toEqual({
       stackId: "stack-1",
       stackSlug: "acme",
       accountGroupId: "account-group-1",
-      primaryHost: "acme.paperclip.app",
-      cloudOrigin: "https://app.paperclip.app",
+      primaryHost: "acme.bionic.app",
+      cloudOrigin: "https://app.bionic.app",
     });
   });
 
   it("represents missing managed metadata explicitly without failing health checks", () => {
-    expect(getCloudStackContext({ PAPERCLIP_MANAGED_CONFIG: "managed-document" })).toEqual({
+    expect(getCloudStackContext({ BIONIC_MANAGED_CONFIG: "managed-document" })).toEqual({
       stackId: null,
       stackSlug: null,
       accountGroupId: null,

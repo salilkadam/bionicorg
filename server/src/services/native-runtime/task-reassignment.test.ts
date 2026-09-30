@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { eq, and } from "drizzle-orm";
-import { activityLog, agents, companies, createDb, heartbeatRuns, issues, issueComments } from "@paperclipai/db";
+import { activityLog, agents, companies, createDb, heartbeatRuns, issues, issueComments } from "@bionicai/db";
 import { startEmbeddedPostgresTestDatabase } from "../../__tests__/helpers/embedded-postgres.js";
 import { issueService } from "../issues.js";
-import { PaperclipRunnerToolAuthority } from "./paperclip-runner-tool-authority.js";
+import { PaperclipRunnerToolAuthority } from "./bionic-runner-tool-authority.js";
 
 describe("runner task reassignment", () => {
   let temporary: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>>;
@@ -19,8 +19,8 @@ describe("runner task reassignment", () => {
     const companyId = randomUUID(), agentId = randomUUID(), nextId = randomUUID(), issueId = randomUUID(), targetId = randomUUID(), runId = randomUUID();
     await db.insert(companies).values({ id: companyId, name: "Reassignment", issuePrefix: `R${companyId.slice(0, 6)}` });
     await db.insert(agents).values([
-      { id: agentId, companyId, name: "Manager", role: "ceo", status: "active", adapterType: "paperclip_runner" },
-      { id: nextId, companyId, name: "Engineer", role: "engineer", status: "active", adapterType: "paperclip_runner" },
+      { id: agentId, companyId, name: "Manager", role: "ceo", status: "active", adapterType: "bionic_runner" },
+      { id: nextId, companyId, name: "Engineer", role: "engineer", status: "active", adapterType: "bionic_runner" },
     ]);
     await db.insert(issues).values([
       { id: issueId, companyId, title: "Coordinate", status: "in_progress", assigneeAgentId: agentId },

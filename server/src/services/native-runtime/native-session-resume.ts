@@ -1,12 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
-import { heartbeatRunEvents, heartbeatRuns, type Db } from "@paperclipai/db";
+import { heartbeatRunEvents, heartbeatRuns, type Db } from "@bionicai/db";
 import type {
   NativeExecutionInput,
   PersistedNativeSession,
-} from "../../vendor/paperclip-runner/index.js";
-import { parseNativeExecutionInput } from "../../vendor/paperclip-runner/index.js";
+} from "../../vendor/bionic-runner/index.js";
+import { parseNativeExecutionInput } from "../../vendor/bionic-runner/index.js";
 
 export type NativeToolExecutionTargetKind = "local" | "remote";
 
@@ -23,7 +23,7 @@ export function nativeToolContractFingerprintForTarget(
   return `sha256:${createHash("sha256")
     .update(
       JSON.stringify({
-        schema: "paperclip.native-tool-contract.v13",
+        schema: "bionic.native-tool-contract.v13",
         executionTargetKind,
         advertisementPolicy: {
           // Direct provider threads retain declarations from thread/start.
@@ -46,22 +46,22 @@ export function nativeToolContractFingerprintForTarget(
           { name: "register_deliverable", version: 2 },
           {
             name: "read_current_wake_comments",
-            semanticContract: "paperclip.server-current-wake-comments.v1",
+            semanticContract: "bionic.server-current-wake-comments.v1",
             version: 1,
           },
           {
             name: "list_chat_attachments",
-            semanticContract: "paperclip.server-chat-attachment-reuse.v1",
+            semanticContract: "bionic.server-chat-attachment-reuse.v1",
             version: 1,
           },
           {
             name: "reuse_chat_attachment",
-            semanticContract: "paperclip.server-chat-attachment-reuse.v1",
+            semanticContract: "bionic.server-chat-attachment-reuse.v1",
             version: 1,
           },
           {
             name: "read_chat_attachment",
-            semanticContract: "paperclip.server-chat-attachment-read.v1",
+            semanticContract: "bionic.server-chat-attachment-read.v1",
             version: 1,
           },
           { name: "request_human_input", version: 1 },
@@ -402,9 +402,9 @@ export function buildNativeExecutionWithCheckpoint(input: {
   // A presentation-only upgrade must not rotate a healthy provider session or
   // lose a durable goal. Keep its v4/v5 format until that session naturally ends.
   // All ordinary identity, workspace, provider, tool and recovery checks still apply.
-  if (input.previousRun && (execution.schema === "paperclip.native-execution-input.v4" || execution.schema === "paperclip.native-execution-input.v5")) {
+  if (input.previousRun && (execution.schema === "bionic.native-execution-input.v4" || execution.schema === "bionic.native-execution-input.v5")) {
     const previousSchema = record(record(input.previousRun.runnerProfileJson).nativeExecutionInput).schema;
-    if ((previousSchema === "paperclip.native-execution-input.v4" || previousSchema === "paperclip.native-execution-input.v5") && previousSchema !== execution.schema) {
+    if ((previousSchema === "bionic.native-execution-input.v4" || previousSchema === "bionic.native-execution-input.v5") && previousSchema !== execution.schema) {
       const { completionSources: _sources, ...common } = execution as typeof execution & { completionSources?: unknown };
       const retainedFormat = parseNativeExecutionInput({ ...common, schema: previousSchema });
       const retainedCheckpoint = rebindNativeSessionCheckpoint({

@@ -1,9 +1,9 @@
-import { createProviderStoppedBoundary } from "@paperclipai/adapter-utils/provider-stopped-boundary";
+import { createProviderStoppedBoundary } from "@bionicai/adapter-utils/provider-stopped-boundary";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AdapterExecutionContext, AdapterExecutionResult } from "@paperclipai/adapter-utils";
+import type { AdapterExecutionContext, AdapterExecutionResult } from "@bionicai/adapter-utils";
 import {
   adapterExecutionTargetIsRemote,
   adapterExecutionTargetRemoteCwd,
@@ -21,7 +21,7 @@ import {
   resolveAdapterExecutionTargetCommandForLogs,
   runAdapterExecutionTargetProcess,
   startAdapterExecutionTargetPaperclipBridge,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import {
   asNumber,
   asString,
@@ -42,9 +42,9 @@ import {
   selectPaperclipPromptSections,
   selectInitialCommunicationGuidance,
   isPaperclipRecoveryWakePayload,
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
-  DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE,
-} from "@paperclipai/adapter-utils/server-utils";
+  DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE,
+} from "@bionicai/adapter-utils/server-utils";
 import {
   SANDBOX_INSTALL_COMMAND,
   modelSupportsEffort,
@@ -145,13 +145,13 @@ function buildKimiRuntimeEnv(env: Record<string, string>): Record<string, string
 }
 
 function renderPaperclipEnvNote(env: Record<string, string>): string {
-  const paperclipKeys = Object.keys(env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+  const bionicKeys = Object.keys(env)
+    .filter((key) => key.startsWith("BIONIC_"))
     .sort();
-  if (paperclipKeys.length === 0) return "";
+  if (bionicKeys.length === 0) return "";
   return [
-    "Paperclip runtime note:",
-    `The following PAPERCLIP_* environment variables are available in this run: ${paperclipKeys.join(", ")}`,
+    "Bionic runtime note:",
+    `The following BIONIC_* environment variables are available in this run: ${bionicKeys.join(", ")}`,
     "Do not assume these variables are missing without checking your shell environment.",
     "",
     "",
@@ -159,11 +159,11 @@ function renderPaperclipEnvNote(env: Record<string, string>): string {
 }
 
 function renderApiAccessNote(env: Record<string, string>): string {
-  if (!hasNonEmptyEnvValue(env, "PAPERCLIP_API_URL") || !hasNonEmptyEnvValue(env, "PAPERCLIP_API_KEY")) return "";
+  if (!hasNonEmptyEnvValue(env, "BIONIC_API_URL") || !hasNonEmptyEnvValue(env, "BIONIC_API_KEY")) return "";
   return [
-    "Paperclip API access note:",
-    "Use shell commands with curl to make Paperclip API requests when needed.",
-    "Include X-Paperclip-Run-Id on mutating requests.",
+    "Bionic API access note:",
+    "Use shell commands with curl to make Bionic API requests when needed.",
+    "Include X-Bionic-Run-Id on mutating requests.",
     "",
     "",
   ].join("\n");
@@ -172,7 +172,7 @@ function renderApiAccessNote(env: Record<string, string>): string {
 async function buildKimiSkillsDir(
   config: Record<string, unknown>,
 ): Promise<string> {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-kimi-skills-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "bionic-kimi-skills-"));
   const target = path.join(tmp, "skills");
   await fs.mkdir(target, { recursive: true });
   const availableEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
@@ -214,21 +214,21 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const promptTemplate = asString(
     config.promptTemplate,
     context.conversationMode === true
-      ? DEFAULT_PAPERCLIP_CONVERSATION_PROMPT_TEMPLATE
-      : DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+      ? DEFAULT_BIONIC_CONVERSATION_PROMPT_TEMPLATE
+      : DEFAULT_BIONIC_AGENT_PROMPT_TEMPLATE,
   );
   const command = asString(config.command, "kimi");
   const model = asString(config.model, "").trim();
 
-  const workspaceContext = parseObject(context.paperclipWorkspace);
+  const workspaceContext = parseObject(context.bionicWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
   const workspaceId = asString(workspaceContext.workspaceId, "");
   const workspaceRepoUrl = asString(workspaceContext.repoUrl, "");
   const workspaceRepoRef = asString(workspaceContext.repoRef, "");
   const agentHome = asString(workspaceContext.agentHome, "");
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.bionicWorkspaces)
+    ? context.bionicWorkspaces.filter(
       (value): value is Record<string, unknown> => typeof value === "object" && value !== null,
     )
     : [];
@@ -243,12 +243,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const envConfig = parseObject(config.env);
 
   const hasExplicitApiKey =
-    typeof envConfig.PAPERCLIP_API_KEY === "string" && envConfig.PAPERCLIP_API_KEY.trim().length > 0;
+    typeof envConfig.BIONIC_API_KEY === "string" && envConfig.BIONIC_API_KEY.trim().length > 0;
   const env: Record<string, string> = {
     ...buildPaperclipEnv(agent),
     ...buildRuntimeToolsEnv(ctx.runtimeTools),
   };
-  env.PAPERCLIP_RUN_ID = runId;
+  env.BIONIC_RUN_ID = runId;
   const wakeTaskId =
     (typeof context.taskId === "string" && context.taskId.trim().length > 0 && context.taskId.trim()) ||
     (typeof context.issueId === "string" && context.issueId.trim().length > 0 && context.issueId.trim()) ||
@@ -273,13 +273,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     ? context.issueIds.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     : [];
   const issueWorkMode = readPaperclipIssueWorkModeFromContext(context);
-  if (wakeTaskId) env.PAPERCLIP_TASK_ID = wakeTaskId;
-  if (issueWorkMode) env.PAPERCLIP_ISSUE_WORK_MODE = issueWorkMode;
-  if (wakeReason) env.PAPERCLIP_WAKE_REASON = wakeReason;
-  if (wakeCommentId) env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
-  if (approvalId) env.PAPERCLIP_APPROVAL_ID = approvalId;
-  if (approvalStatus) env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
-  if (linkedIssueIds.length > 0) env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
+  if (wakeTaskId) env.BIONIC_TASK_ID = wakeTaskId;
+  if (issueWorkMode) env.BIONIC_ISSUE_WORK_MODE = issueWorkMode;
+  if (wakeReason) env.BIONIC_WAKE_REASON = wakeReason;
+  if (wakeCommentId) env.BIONIC_WAKE_COMMENT_ID = wakeCommentId;
+  if (approvalId) env.BIONIC_APPROVAL_ID = approvalId;
+  if (approvalStatus) env.BIONIC_APPROVAL_STATUS = approvalStatus;
+  if (linkedIssueIds.length > 0) env.BIONIC_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
   refreshPaperclipWorkspaceEnvForExecution({
     env,
     envConfig,
@@ -294,7 +294,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     executionCwd: effectiveExecutionCwd,
   });
   if (!hasExplicitApiKey && authToken) {
-    env.PAPERCLIP_API_KEY = authToken;
+    env.BIONIC_API_KEY = authToken;
   }
   // Forward configured thinking effort as KIMI_MODEL_THINKING_EFFORT. Kimi has
   // no per-invocation effort flag; this env var is an operational override that
@@ -337,14 +337,14 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   let localSkillsDir: string | null = null;
   let remoteSkillsDir: string | null = null;
   let remoteRuntimeRootDir: string | null = null;
-  let paperclipBridge: Awaited<ReturnType<typeof startAdapterExecutionTargetPaperclipBridge>> = null;
+  let bionicBridge: Awaited<ReturnType<typeof startAdapterExecutionTargetPaperclipBridge>> = null;
 
   if (executionTargetIsRemote) {
     try {
       localSkillsDir = await buildKimiSkillsDir(config);
       await onLog(
         "stdout",
-        `[paperclip] Syncing workspace and Kimi runtime assets to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
+        `[bionic] Syncing workspace and Kimi runtime assets to ${describeAdapterExecutionTarget(executionTarget)}.\n`,
       );
       const preparedExecutionTargetRuntime = await prepareAdapterExecutionTargetRuntime({
         runId,
@@ -391,7 +391,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       // from its isolated per-run location instead of copying it over the
       // shared $KIMI_CODE_HOME/skills home. Overwriting the shared home would
       // delete Kimi skills installed by the operator or other agents that
-      // Paperclip does not own.
+      // Bionic does not own.
       if (desiredKimiSkillNames.length > 0 && preparedExecutionTargetRuntime.assetDirs.skills) {
         remoteSkillsDir = preparedExecutionTargetRuntime.assetDirs.skills;
       }
@@ -405,17 +405,17 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   }
   const runtimeExecutionTarget = overrideAdapterExecutionTargetRemoteCwd(executionTarget, effectiveExecutionCwd);
   if (executionTargetIsRemote && adapterExecutionTargetUsesPaperclipBridge(executionTarget)) {
-    paperclipBridge = await startAdapterExecutionTargetPaperclipBridge({
+    bionicBridge = await startAdapterExecutionTargetPaperclipBridge({
       runId,
       target: runtimeExecutionTarget,
       runtimeRootDir: remoteRuntimeRootDir,
       adapterKey: "kimi",
       timeoutSec,
-      hostApiToken: env.PAPERCLIP_API_KEY,
+      hostApiToken: env.BIONIC_API_KEY,
       onLog,
     });
-    if (paperclipBridge) {
-      Object.assign(env, paperclipBridge.env);
+    if (bionicBridge) {
+      Object.assign(env, bionicBridge.env);
     }
   }
 
@@ -428,7 +428,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     localSkillsDir = await buildKimiSkillsDir(config);
     await onLog(
       "stderr",
-      `[paperclip] Prepared ${desiredKimiSkillNames.length} Kimi skill(s) for --skills-dir delivery.\n`,
+      `[bionic] Prepared ${desiredKimiSkillNames.length} Kimi skill(s) for --skills-dir delivery.\n`,
     );
   }
 
@@ -444,12 +444,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   if (executionTargetIsRemote && runtimeSessionId && !canResumeSession) {
     await onLog(
       "stdout",
-      `[paperclip] Kimi session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
+      `[bionic] Kimi session "${runtimeSessionId}" does not match the current remote execution identity and will not be resumed in "${effectiveExecutionCwd}". Starting a fresh remote session.\n`,
     );
   } else if (runtimeSessionId && !canResumeSession) {
     await onLog(
       "stdout",
-      `[paperclip] Kimi session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
+      `[bionic] Kimi session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${effectiveExecutionCwd}".\n`,
     );
   }
 
@@ -469,7 +469,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       const reason = err instanceof Error ? err.message : String(err);
       await onLog(
         "stdout",
-        `[paperclip] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
+        `[bionic] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
       );
     }
   }
@@ -511,8 +511,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     run: { id: runId, source: "on_demand" },
     context,
   };
-  const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
-  const paperclipEnvNote = renderPaperclipEnvNote(env);
+  const sessionHandoffNote = asString(context.bionicSessionHandoffMarkdown, "").trim();
+  const bionicEnvNote = renderPaperclipEnvNote(env);
   const apiAccessNote = renderApiAccessNote(env);
 
   const buildArgs = (resumeSessionId: string | null, prompt: string) => {
@@ -526,7 +526,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (!executionTargetIsRemote && instructionsFilePath) {
       args.push("--add-dir", path.dirname(instructionsFilePath));
     }
-    // Load desired Paperclip skills from the dedicated per-run directory
+    // Load desired Bionic skills from the dedicated per-run directory
     // (local snapshot, or the synced remote snapshot) instead of the shared
     // skills home. Only passed when skills are desired so unconfigured agents
     // keep Kimi's default skill discovery.
@@ -549,7 +549,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       : "";
     const attemptWakePrompt = attemptSections.wakePrompt;
     const attemptRenderedPrompt = Boolean(resumeSessionId) && attemptWakePrompt.length > 0
-      || isPaperclipRecoveryWakePayload(context.paperclipWake)
+      || isPaperclipRecoveryWakePayload(context.bionicWake)
       ? ""
       : renderTemplate(promptTemplate, templateData);
     const attemptBasePrompt = joinPromptSections([
@@ -558,7 +558,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       attemptWakePrompt,
       attemptSections.taskContextNote,
       sessionHandoffNote,
-      paperclipEnvNote,
+      bionicEnvNote,
       apiAccessNote,
       attemptRenderedPrompt,
     ]);
@@ -573,7 +573,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       wakePromptChars: attemptWakePrompt.length,
       taskContextChars: attemptSections.taskContextNote.length,
       sessionHandoffChars: sessionHandoffNote.length,
-      runtimeNoteChars: paperclipEnvNote.length + apiAccessNote.length,
+      runtimeNoteChars: bionicEnvNote.length + apiAccessNote.length,
       heartbeatPromptChars: attemptRenderedPrompt.length,
     };
     const args = buildArgs(resumeSessionId, prompt);
@@ -610,8 +610,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       onSpawn,
       onRuntimeProgress: ctx.onRuntimeProgress,
       onLog: eventForwarder.log,
-      runLogTail: paperclipBridge?.runLogTail,
-      settleRunDisposition: paperclipBridge?.settleRunDisposition,
+      runLogTail: bionicBridge?.runLogTail,
+      settleRunDisposition: bionicBridge?.settleRunDisposition,
     });
     await eventForwarder.flush();
     return {
@@ -736,7 +736,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     ) {
       await onLog(
         "stdout",
-        `[paperclip] Kimi resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
+        `[bionic] Kimi resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
       );
       const retry = await runAttempt(null);
       return toResult(retry, true, true);
@@ -748,7 +748,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       await providerStop.collectBeforeRestore();
     } finally {
       await Promise.all([
-        paperclipBridge?.stop(),
+        bionicBridge?.stop(),
         restoreRemoteWorkspace?.(),
         localSkillsDir ? fs.rm(path.dirname(localSkillsDir), { recursive: true, force: true }).catch(() => undefined) : Promise.resolve(),
       ]);

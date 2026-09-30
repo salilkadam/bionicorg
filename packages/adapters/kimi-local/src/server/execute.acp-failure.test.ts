@@ -9,8 +9,8 @@ vi.mock("./acp.js", () => ({
   createKimiAcpExecutor: () => executeAcp,
   resolveKimiExecutionEngineForRun: async () => ({ engine: "acp", explicit: false }),
 }));
-vi.mock("@paperclipai/adapter-utils/execution-target", async (importOriginal) => ({
-  ...await importOriginal<typeof import("@paperclipai/adapter-utils/execution-target")>(),
+vi.mock("@bionicai/adapter-utils/execution-target", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@bionicai/adapter-utils/execution-target")>(),
   runAdapterExecutionTargetProcess: runProcess,
 }));
 

@@ -18,18 +18,18 @@ const httpServerPath = resolve(repoRoot, "scripts/mcp-fixtures/servers/http-fixt
 
 function parseArgs(argv) {
   const args = {
-    paperclipUrl: process.env.PAPERCLIP_API_URL ?? "http://127.0.0.1:3100/api",
+    bionicUrl: process.env.BIONIC_API_URL ?? "http://127.0.0.1:3100/api",
     requirePaperclip: false,
     json: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--") continue;
-    if (arg === "--paperclip-url") args.paperclipUrl = argv[++i];
-    else if (arg === "--require-paperclip") args.requirePaperclip = true;
+    if (arg === "--bionic-url") args.bionicUrl = argv[++i];
+    else if (arg === "--require-bionic") args.requirePaperclip = true;
     else if (arg === "--json") args.json = true;
     else if (arg === "--help") {
-      console.log(`Usage: node scripts/smoke/mcp-fixture-harness.mjs [--paperclip-url URL] [--require-paperclip] [--json]`);
+      console.log(`Usage: node scripts/smoke/mcp-fixture-harness.mjs [--bionic-url URL] [--require-bionic] [--json]`);
       process.exit(0);
     } else {
       throw new Error(`Unknown argument: ${arg}`);
@@ -54,7 +54,7 @@ async function checkPaperclipHealth(rawUrl, required) {
     return { ok: true, baseUrl };
   } catch (error) {
     if (required) {
-      throw new Error(`Paperclip health check failed at ${baseUrl}/api/health: ${error.message}`);
+      throw new Error(`Bionic health check failed at ${baseUrl}/api/health: ${error.message}`);
     }
     return { ok: false, baseUrl, skippedReason: error.message };
   }
@@ -63,7 +63,7 @@ async function checkPaperclipHealth(rawUrl, required) {
 function redactHostileText(value) {
   return JSON.stringify(value)
     .replace(/pc_live_[A-Za-z0-9_=-]+/g, "[REDACTED_SECRET]")
-    .replace(/PAPERCLIP_API_KEY/g, "[REDACTED_ENV_NAME]");
+    .replace(/BIONIC_API_KEY/g, "[REDACTED_ENV_NAME]");
 }
 
 function fingerprintTool(tool) {
@@ -298,7 +298,7 @@ function assert(condition, message) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const paperclip = await checkPaperclipHealth(args.paperclipUrl, args.requirePaperclip);
+  const bionic = await checkPaperclipHealth(args.bionicUrl, args.requirePaperclip);
   const stdioClient = new StdioFixtureClient();
   const httpClient = new HttpFixtureClient();
   const results = [];
@@ -381,7 +381,7 @@ async function main() {
       assert(response.ok, "malicious result fixture should return a result");
       assert(response.outcome === "malicious_result_quarantined", "malicious result should be quarantined");
       assert(!response.result.redacted.includes("pc_live_should_be_redacted"), "synthetic secret should be redacted");
-      assert(!response.result.redacted.includes("PAPERCLIP_API_KEY"), "env key name should be redacted");
+      assert(!response.result.redacted.includes("BIONIC_API_KEY"), "env key name should be redacted");
     });
 
     await runCase(results, "idempotent approved writes only execute once", async () => {
@@ -401,7 +401,7 @@ async function main() {
 
     const summary = {
       ok: results.every((result) => result.ok),
-      paperclip,
+      bionic,
       results,
       auditEvents: harness.audit.length,
       profiles: fixtureProfiles.map((profile) => profile.id),
@@ -411,7 +411,7 @@ async function main() {
       console.log(JSON.stringify(summary, null, 2));
     } else {
       console.log(`MCP fixture smoke: ${summary.ok ? "PASS" : "FAIL"}`);
-      console.log(`Paperclip health: ${paperclip.ok ? "ok" : `skipped (${paperclip.skippedReason})`}`);
+      console.log(`Bionic health: ${bionic.ok ? "ok" : `skipped (${bionic.skippedReason})`}`);
       for (const result of results) {
         console.log(`${result.ok ? "PASS" : "FAIL"} ${result.name}${result.error ? ` - ${result.error}` : ""}`);
       }

@@ -138,7 +138,7 @@ const mockDb = vi.hoisted(() => ({
   transaction: mockDbTransaction,
 }));
 
-vi.mock("@paperclipai/shared/telemetry", () => ({
+vi.mock("@bionicai/shared/telemetry", () => ({
   trackAgentTaskCompleted: vi.fn(),
   trackErrorHandlerCrash: vi.fn(),
 }));
@@ -2089,14 +2089,14 @@ describe.sequential("issue thread interaction routes", () => {
       ASSIGNEE_AGENT_ID,
       expect.objectContaining({
         payload: expect.objectContaining({
-          paperclipAgentMessage: {
+          bionicAgentMessage: {
             text: "Read T1, append T2, and verify both lines.",
             source: "interaction_rejection",
             sessionId: "interaction-warm-turn",
           },
         }),
         contextSnapshot: expect.objectContaining({
-          paperclipAgentMessage: expect.objectContaining({
+          bionicAgentMessage: expect.objectContaining({
             text: "Read T1, append T2, and verify both lines.",
           }),
         }),

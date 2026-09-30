@@ -7,14 +7,14 @@ import {
 describe("GitHub commit details", () => {
   it("extracts commit references from URLs and metadata shorthand", () => {
     expect(extractGitHubCommitReference([
-      "https://github.com/paperclipai/paperclip/commit/9c12ae7b41e5",
+      "https://github.com/bionicai/bionic/commit/9c12ae7b41e5",
     ])).toEqual({
       host: "github.com",
-      owner: "paperclipai",
-      repo: "paperclip",
+      owner: "bionicai",
+      repo: "bionic",
       sha: "9c12ae7b41e5",
     });
-    expect(extractGitHubCommitReference(["paperclipai/paperclip@9c12ae7b41e5"])?.sha)
+    expect(extractGitHubCommitReference(["bionicai/bionic@9c12ae7b41e5"])?.sha)
       .toBe("9c12ae7b41e5");
   });
 

@@ -37,7 +37,7 @@ const {
     pid: 123,
     startedAt: new Date().toISOString(),
   })),
-  tempCodexHome: "/tmp/paperclip-codex-acp-fallback-test-home",
+  tempCodexHome: "/tmp/bionic-codex-acp-fallback-test-home",
 }));
 
 vi.mock("./acp.js", () => ({
@@ -50,9 +50,9 @@ vi.mock("./acp.js", () => ({
       : { engine: "acp", explicit: false },
 }));
 
-vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/execution-target")>(
-    "@paperclipai/adapter-utils/execution-target",
+vi.mock("@bionicai/adapter-utils/execution-target", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/execution-target")>(
+    "@bionicai/adapter-utils/execution-target",
   );
   return {
     ...actual,
@@ -63,9 +63,9 @@ vi.mock("@paperclipai/adapter-utils/execution-target", async () => {
   };
 });
 
-vi.mock("@paperclipai/adapter-utils/server-utils", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/adapter-utils/server-utils")>(
-    "@paperclipai/adapter-utils/server-utils",
+vi.mock("@bionicai/adapter-utils/server-utils", async () => {
+  const actual = await vi.importActual<typeof import("@bionicai/adapter-utils/server-utils")>(
+    "@bionicai/adapter-utils/server-utils",
   );
   return {
     ...actual,

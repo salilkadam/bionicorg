@@ -15,11 +15,11 @@ import {
   invalidatePaperclipCloudConnectorCapabilities,
   GMAIL_CONNECTOR_SCOPES,
   GOOGLE_WORKSPACE_CONNECTOR_PROFILES,
-  paperclipCloudConnectorCapabilitiesFromEnv,
-  paperclipCloudConnectorConfigFromEnv,
+  bionicCloudConnectorCapabilitiesFromEnv,
+  bionicCloudConnectorConfigFromEnv,
   PaperclipCloudConnectorError,
   type PaperclipCloudConnectorConfig,
-} from "./paperclip-cloud-connector.js";
+} from "./bionic-cloud-connector.js";
 
 const instanceId = "inst_test";
 const companyId = "company_test";
@@ -53,7 +53,7 @@ function config() {
   };
 }
 
-describe("Paperclip Cloud connector", () => {
+describe("Bionic Cloud connector", () => {
   async function rejection(response: Response) {
     const connector = createPaperclipCloudConnector({
       config: config().config,
@@ -61,7 +61,7 @@ describe("Paperclip Cloud connector", () => {
     });
     return connector.startAuthorization({
       subject, companyId, profile: "gmail.read",
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "private-state",
     }).catch((error: unknown) => error);
   }
@@ -71,7 +71,7 @@ describe("Paperclip Cloud connector", () => {
       status: originRejectionContract.status,
     }))).toMatchObject({
       code: "CONNECTOR_REQUEST_FAILED", status: 400,
-      message: "Paperclip Cloud connector rejected the request (operation=session, status=400, reason=RETURN_ORIGIN_NOT_ENROLLED)",
+      message: "Bionic Cloud connector rejected the request (operation=session, status=400, reason=RETURN_ORIGIN_NOT_ENROLLED)",
     });
   });
 
@@ -83,7 +83,7 @@ describe("Paperclip Cloud connector", () => {
     expect(error).toBeInstanceOf(PaperclipCloudConnectorError);
     expect(error).toMatchObject({
       code: "CONNECTOR_REQUEST_FAILED", status: 400,
-      message: "Paperclip Cloud connector rejected the request (operation=session, status=400, reason=RETURN_ORIGIN_NOT_ENROLLED)",
+      message: "Bionic Cloud connector rejected the request (operation=session, status=400, reason=RETURN_ORIGIN_NOT_ENROLLED)",
     });
     expect(JSON.stringify(error)).not.toMatch(/DO_NOT_REPORT|private-state|access-secret|private\.example/);
   });
@@ -97,7 +97,7 @@ describe("Paperclip Cloud connector", () => {
     const error = await rejection(new Response(body, { status: 409 }));
     expect(error).toMatchObject({
       code: "REAUTHORIZATION_REQUIRED", status: 409,
-      message: "Paperclip Cloud connector rejected the request (operation=session, status=409, reason=UNKNOWN_BROKER_ERROR)",
+      message: "Bionic Cloud connector rejected the request (operation=session, status=409, reason=UNKNOWN_BROKER_ERROR)",
     });
   });
 
@@ -145,11 +145,11 @@ describe("Paperclip Cloud connector", () => {
   it("refreshes capabilities after enrollment and rejects stale cache writes", async () => {
     const keys = config().config;
     const env = {
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: keys.baseUrl,
-      PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID: keys.instanceId,
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: keys.environment,
-      PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: keys.signPrivateKey,
-      PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: keys.sealPrivateKey,
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: keys.baseUrl,
+      BIONIC_CLOUD_CONNECTOR_INSTANCE_ID: keys.instanceId,
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: keys.environment,
+      BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: keys.signPrivateKey,
+      BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: keys.sealPrivateKey,
     };
     let completeOldRequest!: (response: Response) => void;
     const request = vi.spyOn(globalThis, "fetch")
@@ -158,16 +158,16 @@ describe("Paperclip Cloud connector", () => {
       .mockResolvedValue(Response.json({ status: "active", active: true, profiles: ["gmail.read"] }));
     invalidatePaperclipCloudConnectorCapabilities();
     try {
-      await expect(paperclipCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual([]);
-      await expect(paperclipCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual([]);
+      await expect(bionicCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual([]);
+      await expect(bionicCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual([]);
       expect(request).toHaveBeenCalledTimes(1);
       invalidatePaperclipCloudConnectorCapabilities();
-      const oldRequest = paperclipCloudConnectorCapabilitiesFromEnv(env);
+      const oldRequest = bionicCloudConnectorCapabilitiesFromEnv(env);
       invalidatePaperclipCloudConnectorCapabilities();
-      await expect(paperclipCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual(["gmail.read"]);
+      await expect(bionicCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual(["gmail.read"]);
       completeOldRequest(Response.json({ status: "pending", active: false }));
       await expect(oldRequest).resolves.toEqual([]);
-      await expect(paperclipCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual(["gmail.read"]);
+      await expect(bionicCloudConnectorCapabilitiesFromEnv(env)).resolves.toEqual(["gmail.read"]);
       expect(request).toHaveBeenCalledTimes(3);
     } finally {
       request.mockRestore();
@@ -188,7 +188,7 @@ describe("Paperclip Cloud connector", () => {
     });
     const connector = createPaperclipCloudConnector({ config: keys.config, request: request as typeof fetch });
     await connector.startAuthorization({ subject, companyId, profile,
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback", returnState: "chat-state" });
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback", returnState: "chat-state" });
     expect(request).toHaveBeenCalledOnce();
   });
 
@@ -199,7 +199,7 @@ describe("Paperclip Cloud connector", () => {
       const [encodedHeader, encodedClaims] = body.request.split(".");
       expect(JSON.parse(Buffer.from(encodedHeader!, "base64url").toString("utf8"))).toEqual({
         alg: "EdDSA",
-        typ: "paperclip-cloud-connector-request+jwt",
+        typ: "bionic-cloud-connector-request+jwt",
       });
       const claims = JSON.parse(Buffer.from(encodedClaims!, "base64url").toString("utf8"));
       expect(claims).toMatchObject({
@@ -212,7 +212,7 @@ describe("Paperclip Cloud connector", () => {
         prv: "google",
         prf: "gmail.draft",
         scp: [...GMAIL_CONNECTOR_SCOPES],
-        ruri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+        ruri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
         rst: "state-1",
       });
       return Response.json({
@@ -229,12 +229,12 @@ describe("Paperclip Cloud connector", () => {
     await expect(connector.startAuthorization({
       subject,
       companyId,
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "state-1",
     })).resolves.toMatchObject({
       authorizationUrl: expect.stringContaining("/connections/confirm"),
       handoff: {
-        kind: "paperclip_cloud",
+        kind: "bionic_cloud",
         session: "broker_state_abcdefghijklmnop",
       },
     });
@@ -255,7 +255,7 @@ describe("Paperclip Cloud connector", () => {
       subject,
       companyId,
       profile: "github.code",
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "state-direct",
     })).resolves.toMatchObject({
       authorizationUrl: "https://github.com/login/oauth/authorize?client_id=client&state=broker-state",
@@ -277,7 +277,7 @@ describe("Paperclip Cloud connector", () => {
       subject,
       companyId,
       profile: "gmail.draft",
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "state-direct-google",
     })).resolves.toMatchObject({
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth?client_id=client&state=broker-state",
@@ -307,7 +307,7 @@ describe("Paperclip Cloud connector", () => {
       subject,
       companyId,
       profile: "github.code",
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "state-malformed-direct",
     })).rejects.toMatchObject({ code: "CONNECTOR_BAD_RESPONSE" });
   });
@@ -365,7 +365,7 @@ describe("Paperclip Cloud connector", () => {
     await expect(legacy.startAuthorization({
       subject,
       companyId,
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "state-legacy",
     })).resolves.not.toHaveProperty("handoff");
 
@@ -380,7 +380,7 @@ describe("Paperclip Cloud connector", () => {
     await expect(malformed.startAuthorization({
       subject,
       companyId,
-      returnUri: "https://paperclip.example.test/api/tools/oauth/cloud-connector/callback",
+      returnUri: "https://bionic.example.test/api/tools/oauth/cloud-connector/callback",
       returnState: "state-malformed",
     })).rejects.toMatchObject({ code: "CONNECTOR_BAD_RESPONSE" });
   });
@@ -549,25 +549,25 @@ describe("Paperclip Cloud connector", () => {
   });
 
   it("requires an all-or-nothing environment configuration and loopback for HTTP", () => {
-    expect(paperclipCloudConnectorConfigFromEnv({})).toBeNull();
-    expect(() => paperclipCloudConnectorConfigFromEnv({
-      PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID: instanceId,
+    expect(bionicCloudConnectorConfigFromEnv({})).toBeNull();
+    expect(() => bionicCloudConnectorConfigFromEnv({
+      BIONIC_CLOUD_CONNECTOR_INSTANCE_ID: instanceId,
     })).toThrowError(/incomplete/);
-    expect(() => paperclipCloudConnectorConfigFromEnv({
-      PAPERCLIP_CLOUD_CONNECTOR_INSTANCE_ID: instanceId,
-      PAPERCLIP_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "key",
-      PAPERCLIP_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "key",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "development",
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "http://my.example.test",
+    expect(() => bionicCloudConnectorConfigFromEnv({
+      BIONIC_CLOUD_CONNECTOR_INSTANCE_ID: instanceId,
+      BIONIC_CLOUD_CONNECTOR_SIGN_PRIVATE_KEY: "key",
+      BIONIC_CLOUD_CONNECTOR_SEAL_PRIVATE_KEY: "key",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "development",
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "http://my.example.test",
     })).toThrowError(/HTTPS/);
     const legacyError = (() => {
       try {
-        paperclipCloudConnectorConfigFromEnv({
-          PAPERCLIP_ID_CONNECTOR_INSTANCE_ID: instanceId,
-          PAPERCLIP_ID_CONNECTOR_SIGN_PRIVATE_KEY: "key",
-          PAPERCLIP_ID_CONNECTOR_SEAL_PRIVATE_KEY: "key",
-          PAPERCLIP_ID_CONNECTOR_ENVIRONMENT: "development",
-          PAPERCLIP_ID_CONNECTOR_BASE_URL: "https://id.paperclip.app",
+        bionicCloudConnectorConfigFromEnv({
+          BIONIC_ID_CONNECTOR_INSTANCE_ID: instanceId,
+          BIONIC_ID_CONNECTOR_SIGN_PRIVATE_KEY: "key",
+          BIONIC_ID_CONNECTOR_SEAL_PRIVATE_KEY: "key",
+          BIONIC_ID_CONNECTOR_ENVIRONMENT: "development",
+          BIONIC_ID_CONNECTOR_BASE_URL: "https://id.bionic.app",
         });
         return null;
       } catch (error) {
@@ -579,9 +579,9 @@ describe("Paperclip Cloud connector", () => {
   });
 
   it("keeps gallery capability discovery available during incomplete enrollment", async () => {
-    await expect(paperclipCloudConnectorCapabilitiesFromEnv({
-      PAPERCLIP_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.paperclip.app",
-      PAPERCLIP_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
+    await expect(bionicCloudConnectorCapabilitiesFromEnv({
+      BIONIC_CLOUD_CONNECTOR_BASE_URL: "https://my-staging.bionic.app",
+      BIONIC_CLOUD_CONNECTOR_ENVIRONMENT: "staging",
     })).resolves.toEqual([]);
   });
 });

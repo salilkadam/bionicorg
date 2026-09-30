@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderPaperclipWakePrompt } from "@paperclipai/adapter-utils/server-utils";
+import { renderPaperclipWakePrompt } from "@bionicai/adapter-utils/server-utils";
 import { buildPaperclipWakePayload } from "../services/heartbeat.js";
 
 describe("agent session wake messages", () => {
@@ -51,10 +51,10 @@ describe("agent session wake messages", () => {
       companyId: "company-1",
       contextSnapshot: {
         wakeReason: "gateway_chat_message",
-        paperclipAgentMessage: {
+        bionicAgentMessage: {
           text: "hello",
           source: "plugin_session",
-          pluginKey: "paperclip.gateway",
+          pluginKey: "bionic.gateway",
           sessionId: "session-1",
         },
       },
@@ -66,7 +66,7 @@ describe("agent session wake messages", () => {
       agentMessage: {
         text: "hello",
         source: "plugin_session",
-        pluginKey: "paperclip.gateway",
+        pluginKey: "bionic.gateway",
         sessionId: "session-1",
       },
     });
@@ -92,10 +92,10 @@ describe("agent session wake messages", () => {
       companyId: "company-1",
       contextSnapshot: {
         wakeReason: "gateway_chat_message",
-        paperclipAgentMessage: {
+        bionicAgentMessage: {
           text: `OPENAI_API_KEY=${secret}\n${"x".repeat(13_000)}`,
           source: "plugin_session",
-          pluginKey: "paperclip.gateway",
+          pluginKey: "bionic.gateway",
           sessionId: "session-1",
         },
       },
@@ -110,7 +110,7 @@ describe("agent session wake messages", () => {
       db: {} as never,
       companyId: "company-1",
       contextSnapshot: {
-        paperclipAgentMessage: {
+        bionicAgentMessage: {
           source: "tool_action_review",
           text: "The approved action already ran. Do not call it again.",
           untrustedToolResults: [{

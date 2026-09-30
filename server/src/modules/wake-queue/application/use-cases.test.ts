@@ -472,9 +472,9 @@ describe("releaseIssueExecution", () => {
             wakeCommentIds: ["comment-1"],
             // A queue-time render from a prior coalesced run. Promotion must
             // not persist this alongside the current (unrelated) comment id.
-            paperclipTaskMarkdown: "queue-time markdown",
-            paperclipTaskMarkdownCompact: "queue-time compact markdown",
-            paperclipWake: { commentId: "comment-1" },
+            bionicTaskMarkdown: "queue-time markdown",
+            bionicTaskMarkdownCompact: "queue-time compact markdown",
+            bionicWake: { commentId: "comment-1" },
             executionStage: { stage: "review" },
             planReviewInteraction: { acceptedTargetRevision: { revisionId: "revision-1" } },
             acceptedPlanWakeRouting: { targetAgentId: "agent-1" },
@@ -495,9 +495,9 @@ describe("releaseIssueExecution", () => {
     // The rendered text is cleared; `executeRun` rebuilds it, with proper
     // trust-based redaction, from the current issue and comment rows before
     // the run dispatches.
-    expect(promotedContextSnapshot.paperclipTaskMarkdown).toBeUndefined();
-    expect(promotedContextSnapshot.paperclipTaskMarkdownCompact).toBeUndefined();
-    expect(promotedContextSnapshot.paperclipWake).toBeUndefined();
+    expect(promotedContextSnapshot.bionicTaskMarkdown).toBeUndefined();
+    expect(promotedContextSnapshot.bionicTaskMarkdownCompact).toBeUndefined();
+    expect(promotedContextSnapshot.bionicWake).toBeUndefined();
     // The raw fields that render depends on are not dropped.
     expect(promotedContextSnapshot.issueId).toBe(ISSUE.id);
     expect(promotedContextSnapshot.executionStage).toEqual({ stage: "review" });
@@ -857,7 +857,7 @@ describe("admitWakeBehindIssueExecution", () => {
           durableReceipt,
           payload: {
             issueId: "issue-1",
-            _paperclipWakeContext: contextSnapshot,
+            _bionicWakeContext: contextSnapshot,
           },
         }),
       );
@@ -1026,7 +1026,7 @@ describe("admitWakeBehindIssueExecution", () => {
         mergedPayload: {
           issueId: "issue-1",
           preserved: true,
-          _paperclipWakeContext: {
+          _bionicWakeContext: {
             preservedContext: true,
             wakeReason: "issue_commented",
           },

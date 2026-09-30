@@ -1,0 +1,462 @@
+{
+  "schema": "bionic.prp.contract_manifest.v1",
+  "protocolVersion": 2,
+  "fixtureVersion": 1,
+  "generatedFrom": [
+    "protocol/schemas",
+    "protocol/fixtures"
+  ],
+  "schemas": [
+    {
+      "path": "schemas/capabilities-v2.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v2/capabilities.schema.json",
+      "sha256": "6169876d91e709fc1d0a4f6d3af4cbbbec275d853208ca54f9508f4e1ca8e998"
+    },
+    {
+      "path": "schemas/capabilities.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/capabilities.schema.json",
+      "sha256": "0ed629ab450028e6ece7d8ad994efc41bbc4bec6f8bd2bbdbb4e53c65b84195e"
+    },
+    {
+      "path": "schemas/command-v2.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v2/command.schema.json",
+      "sha256": "bd512d14f4908c9610b8e42185ce7a7b5e3b92adf76834f9c5ab3f3f700b19cf"
+    },
+    {
+      "path": "schemas/command.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/command.schema.json",
+      "sha256": "926fae02f7d4327dba0b67b949d6079ada5de52d955aa5d791a09909e6de4419"
+    },
+    {
+      "path": "schemas/conformance-fixture.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/conformance-fixture.schema.json",
+      "sha256": "9d9b29b1324d8a9962738d82950916f25f3829686ec13c2935fa476a8e836098"
+    },
+    {
+      "path": "schemas/conformance-output.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/conformance-output.schema.json",
+      "sha256": "42b5c7242d8bfcc9ae240847ca669ac180f94a227abfc515971e9123f080c719"
+    },
+    {
+      "path": "schemas/event-v2.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v2/event.schema.json",
+      "sha256": "1923fd1a561e3e6359ee259a72186e5fb3a4bd02c76553b26393b60731da5e61"
+    },
+    {
+      "path": "schemas/event.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/event.schema.json",
+      "sha256": "1148388d3ba2d3c937cf86d579c9a1e6da2c133c0fab30fde865701b4b35d1e9"
+    },
+    {
+      "path": "schemas/fixture.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/fixture.schema.json",
+      "sha256": "1c1757a6b139d65ce7f59031d0b103b2f3d055e94a60d2ce8c8a8fc228f267f4"
+    },
+    {
+      "path": "schemas/identity.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/identity.schema.json",
+      "sha256": "0ec2a4a91e328ab122fd7574894ad975da1852db86e6443c04dac54c16659be4"
+    },
+    {
+      "path": "schemas/native-execution.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/native-execution.schema.json",
+      "sha256": "eaa61866508dcfdd4c36c8c70f2a80be36f8b04d109cd54b330139eeaea32ccf"
+    },
+    {
+      "path": "schemas/provider-descriptor.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/provider-descriptor.schema.json",
+      "sha256": "2aa8e2b3e994465ebc88be51652ece4d007457cdfbaa77e9b35b7862c617d1db"
+    },
+    {
+      "path": "schemas/provider-event.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/provider-event.schema.json",
+      "sha256": "d901796b352ce8c38c58392c3cb48ec9cd15caab527a11b641dd66e5ca24f373"
+    },
+    {
+      "path": "schemas/question-adapter-fixture.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/question-adapter-fixture.schema.json",
+      "sha256": "27f663ff4bfae96b9d37b2b8b7c9e10aea8854a5cfee1bc1312380f58af91a47"
+    },
+    {
+      "path": "schemas/question-response.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/question-response.schema.json",
+      "sha256": "eea3fd3bfe925fb530453152c11798b96a9b3b9fbf38f2195b13886c00cbff76"
+    },
+    {
+      "path": "schemas/question-set.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/question-set.schema.json",
+      "sha256": "71171ca9ca292bffa187372401e8a5f364d49a34bd5a05351a2d55c4d2199753"
+    },
+    {
+      "path": "schemas/request.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/request.schema.json",
+      "sha256": "df42e3658013c266a669f04573e0aacf48e8fd2140f00d01f5c23422c09301c3"
+    },
+    {
+      "path": "schemas/result.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/result.schema.json",
+      "sha256": "7562098d9f2e9821da6c8110b79c557bcc9732bd961a3b2270a8eb524bff689c"
+    },
+    {
+      "path": "schemas/semantic-tool.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/semantic-tool.schema.json",
+      "sha256": "5783b6d5d513f47f8e5348bebecbe0937adbac36b6b5031bcbc0c973e6130c4c"
+    },
+    {
+      "path": "schemas/session-goal.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v2/session-goal.schema.json",
+      "sha256": "be6ff15de1c68484ca848e47a46a9d17ba4b29798a59ff2c3d0cbb0af7b4f7fd"
+    },
+    {
+      "path": "schemas/stop-reason.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/stop-reason.schema.json",
+      "sha256": "61433f273814f6ca96d337fa9c4c6b0e7d365c4f77c881b75b8b814e63621209"
+    },
+    {
+      "path": "schemas/terminal.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/terminal.schema.json",
+      "sha256": "beeb9474a1298c0c7c2a1f8b084d926c167517ac53f8cc0fd1bc6d5c5a44e680"
+    },
+    {
+      "path": "schemas/usage.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/usage.schema.json",
+      "sha256": "e73b25d3edf006e4329e4de2c0141cee9858b2f1289df0f2fa3bcbcae2f0d3d7"
+    },
+    {
+      "path": "schemas/workspace-diff.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/workspace-diff.schema.json",
+      "sha256": "cfe041001687cfac734671f3e5aaacdcd5d8e314d7bdad9c9b71251b2be86bf4"
+    },
+    {
+      "path": "schemas/workspace-file-reference.schema.json",
+      "id": "https://bionic.dev/schemas/prp/v1/workspace-file-reference.schema.json",
+      "sha256": "519e98c184bf3225869c90a8b84d56438dc09fb5b7b71ccb9254e5042dd7f3ed"
+    }
+  ],
+  "fixtures": [
+    {
+      "path": "fixtures/codex-driver/driver-conformance.json",
+      "sha256": "cbaab82e4a9de8979f7574425bef498f51ce413d3b025b14ecae9ce928e27db8",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/conformance-expected-output.json",
+      "sha256": "870485a7c2475cac7bf47ed30211c6d78d8d7617a725e18b906f47d3d82deee5",
+      "expectation": "accept",
+      "compatibilityCase": "cross-language-output"
+    },
+    {
+      "path": "fixtures/conformance-minimal-run.json",
+      "sha256": "7f4764ef6e2c2124fda206081dd9233a2c0d3a6992df1a6b78a2297010fb2d09",
+      "expectation": "accept",
+      "compatibilityCase": "cross-language-input"
+    },
+    {
+      "path": "fixtures/evals/harness-driver-conformance.json",
+      "sha256": "3b9c8daf4dc44a4546a8859db58f6ddd2cda79baad50eb839962600ae5f73875",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/evals/native-execution-seeded.json",
+      "sha256": "17f3638ce0d4b7d6d9c32fa0722fb9a486bb7606e979ccd5ebb29cb8e37ae120",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/duplicate-terminal.json",
+      "sha256": "b670f6b7d1abc09ba655941eface9357d9dc15fb3ffe10644252b55ab3618ff5",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/error.json",
+      "sha256": "5a3185e07fa9eb0b521b845ec5e3518b73b5dd0431aa0d2ffba51e7487352d91",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/happy-path.json",
+      "sha256": "1ade7e12e58d2954a4a613f8a68008f1bfd3161c132dab582996c313e3014f38",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/interrupted.json",
+      "sha256": "3de8d8c57dc0b4dd91fb57b4da5d2c7bf4a3acbdcc021e465001084877905ae5",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/linger.json",
+      "sha256": "4a31ffa8b868d71d081e67eb46d5d9bceeb27aba8ec7db609e4bba3d2a31e6d3",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/oversized-line.json",
+      "sha256": "e69b5c41fe0a349415e80f77d18d8b18acfef18b3c8e908ae18f3bf75f375f91",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/local-runner/scripts/permission-input.json",
+      "sha256": "2da9ea2168f1c2e8b03f7033f431643f6f555ce4615df4191d093a13520279f5",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/provider-boundary/local-integrity.json",
+      "sha256": "2b26a62f6b4ea7a0094ebd7789afdd51779ab8eb00f755d2132febc14f0e0d14",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/questions/acpx.json",
+      "sha256": "4b35d432266b105dbf26b3f84203ce7d919a69e13ce3f5a944a4c6ec99be214b",
+      "expectation": "accept",
+      "compatibilityCase": "acpx-structured-input"
+    },
+    {
+      "path": "fixtures/questions/codex.json",
+      "sha256": "96c3ca4c647a2d6af1ca070e51e5760938d8cf6ea64ff9dc55357e4ed2bdcf80",
+      "expectation": "accept",
+      "compatibilityCase": "codex-structured-input"
+    },
+    {
+      "path": "fixtures/questions/opencode.json",
+      "sha256": "5b5b5f37f26c9ed44904b824e9b050ebad693621d060207e76a9baec4128b0c9",
+      "expectation": "accept",
+      "compatibilityCase": "opencode-structured-input"
+    },
+    {
+      "path": "fixtures/replay/budget-cost-stop-reason.json",
+      "sha256": "e4b6d7afc62e52ad608d4458759eb122d9e127a77e21ef2bdeb66bf36ade89f5",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/duplicate-event.json",
+      "sha256": "dca98b1ee29b0ff31493f548b9f8803ff3a7f7f0bef608dd0f926bd54cd6217b",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/failed-run.json",
+      "sha256": "e2e6402d7b6d2c07ce5fa796cc9e62ffaf2ad79cd07442e4d13f6acacc9f614b",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/golden/budget-cost-stop-reason.snapshot.json",
+      "sha256": "c5c9107622082baec868fc89d0d7a2a0b1a59f85789e829cb421f89c29dafe45",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/budget-cost-stop-reason.summary.json",
+      "sha256": "4c5c1a2a68e38655746b81940b45b77fa74142a1d0cb80c9c8045ca4643b0d94",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/duplicate-event.snapshot.json",
+      "sha256": "ee35fad13f405e2d09f45688f8295e24d226dea5337cd867df69fc359a8cb7c8",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/duplicate-event.summary.json",
+      "sha256": "dcbb2dae5810649cc59c6c0fe136e1033131d9510ebcbcc5f3435bfa998b95c9",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/failed-run.snapshot.json",
+      "sha256": "580fb06df39c50c99007099bf230e1b6bb0237c6e4b5c3910e258fdeebc7e219",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/failed-run.summary.json",
+      "sha256": "d7ac19d40b5d1d6106e2232cd2436ba1c4232bc6daa8a71957f12300ba851f65",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/happy-path.snapshot.json",
+      "sha256": "a0a61a12c96a575d946a6a387eacb12415c5bb5bbd3bd0f5728eddf2946dcceb",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/happy-path.summary.json",
+      "sha256": "00d2a033518c7b3f51ecb10aa64f7456922f6b3f930d853b3db35e72eaf55325",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/interrupted-run.snapshot.json",
+      "sha256": "dcefc86b66e340c8a6d6fd5f3e501e669ec9caf7633945ff790647d2cdb8c2aa",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/interrupted-run.summary.json",
+      "sha256": "753f226607b2d97301736d7f54b281ab7157397f3f32015c644787d370526332",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-artifact-happy-path.snapshot.json",
+      "sha256": "8c2700451bc67b2d842975664ad61850df21642cbc38a3da92eb99fb0339c01d",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-artifact-happy-path.summary.json",
+      "sha256": "8b3e72e071f7458e67180fdd9933bb89cb6458f2507f2706000c1f172d1e529f",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-conflict-duplicate-retry.snapshot.json",
+      "sha256": "406b6630b5c88cee1aaf18636e78b84a94a93910b61cab2fa6d40beaa846774b",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-conflict-duplicate-retry.summary.json",
+      "sha256": "f0b277d37c422b90d2012ad61ea5fbe214ebf1607f1a6c2419c518c4f9a52b7e",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-denial-redaction.snapshot.json",
+      "sha256": "cb38f19309156a990f8d540ca4bab3fe0f4a61be73f261b3d8ea9c5c6927d8e4",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-denial-redaction.summary.json",
+      "sha256": "b0379c2ea8d30e9c2866d3737d9fdc73711de24a955364bd78b75769d925764f",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-governance-wake-monitor.snapshot.json",
+      "sha256": "395f4ec5caec8a0ac909776eeac74ceeec50d466f854d897212f3ea380769041",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-governance-wake-monitor.summary.json",
+      "sha256": "a20a038c04e3f023f7eb478b67144fca48dd288cf484e74d66810d92debc62e5",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-unknown-optional-envelope.snapshot.json",
+      "sha256": "21fb67ee1d650f417844aef509714184eaaada597a41615bed3b2f4537a9f3a5",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/semantic-tool-unknown-optional-envelope.summary.json",
+      "sha256": "51fb686791aa158f9a23a0c2b90ca24d43bcc953add9e3277ab3f01b958fc26a",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/source-gap.snapshot.json",
+      "sha256": "dfa8e5c60f66274a3dba7df212d08261db0a41fe31811de3443e206f60f32b16",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/source-gap.summary.json",
+      "sha256": "861d0ee3fafe13bf8bf0fb71b7c1ef9a62cb26efba4dc8db889f36d27a14a813",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/unknown-optional-fields.snapshot.json",
+      "sha256": "7356e7bc284317025a15e111a281ce15dd26763a2838d1eb9c1b22cce7df0d6c",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/golden/unknown-optional-fields.summary.json",
+      "sha256": "7d983bcad0439b7884e70d07f8070b53ed594fba2da3e8ac6998570e238e84dc",
+      "expectation": "accept",
+      "compatibilityCase": "deterministic-replay-oracle"
+    },
+    {
+      "path": "fixtures/replay/happy-path.json",
+      "sha256": "cafd3b816437ecadc64253149c26b1a0f3fa3c0b14d7e544629e3807f42a4c73",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/interrupted-run.json",
+      "sha256": "015c73b9724d4396ff2575956f5e034136458afac88a1d1fb8315522a04badac",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/semantic-tool-artifact-happy-path.json",
+      "sha256": "d8dd39554f0d4f12e2a9990b8e46d676c91606b7498ffb0127687756c0fcb772",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/semantic-tool-conflict-duplicate-retry.json",
+      "sha256": "6f51c884afadf8e15750042e9b49c2673cc4861c6a44b5f95c6876e4729a6613",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/semantic-tool-denial-redaction.json",
+      "sha256": "2ca0eb19cdd2ca21094300a58240516a16d974f2228d61b443be75029cf6c9de",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/semantic-tool-governance-wake-monitor.json",
+      "sha256": "00f93fa56261048874c92b06c142444c66a52e8894e0daa6fac01ba09fbcac1d",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/semantic-tool-unknown-optional-envelope.json",
+      "sha256": "15384808efb670b8334f1168302dc52afa8583a985d0fd155d10e5e375024248",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/semantic-tool-unsupported-required-version.json",
+      "sha256": "114c0fea6ed3dd8112f68801c2937b4565bb9fbc91fb048c8f9e8670961ef4dc",
+      "expectation": "reject",
+      "compatibilityCase": "unknown-required-version"
+    },
+    {
+      "path": "fixtures/replay/source-gap.json",
+      "sha256": "8acf11009ddd7daad7cfbf1b66863fc8724ecf811f6ac40ab0bfe6c3de0d6757",
+      "expectation": "accept",
+      "compatibilityCase": "canonical"
+    },
+    {
+      "path": "fixtures/replay/unknown-optional-fields.json",
+      "sha256": "3e35da0b5a26538e7b527df2b89217cba28a17377212df92c2aff8affdb127f0",
+      "expectation": "accept",
+      "compatibilityCase": "additive-optional-fields"
+    },
+    {
+      "path": "fixtures/replay/unsupported-required-version.json",
+      "sha256": "a6f34e45ab227d2c5ae7fa007766f0aaa4b74b06b404f3fb165d9e0c1039e448",
+      "expectation": "reject",
+      "compatibilityCase": "unknown-required-version"
+    }
+  ]
+}

@@ -1,12 +1,187 @@
 {
   "schemaVersion": 1,
-  "packageName": "@paperclipai/skills-catalog",
+  "packageName": "@bionicai/skills-catalog",
   "packageVersion": "0.3.1",
-  "generatedAt": "2026-08-11T15:05:34.526Z",
+  "generatedAt": "2026-09-30T21:15:10.106Z",
   "skills": [
     {
-      "id": "paperclipai:bundled:docs:doc-maintenance",
-      "key": "paperclipai/bundled/docs/doc-maintenance",
+      "id": "bionicai:bundled:bionic-operations:issue-triage",
+      "key": "bionicai/bundled/bionic-operations/issue-triage",
+      "kind": "bundled",
+      "category": "bionic-operations",
+      "slug": "issue-triage",
+      "name": "issue-triage",
+      "description": "Triage Bionic inbox issues that are stale, blocked, in-review, or assigned-but-not-progressing, and decide a single next action per issue (resume, reassign, unblock, escalate, or close).",
+      "path": "catalog/bundled/bionic-operations/issue-triage",
+      "entrypoint": "SKILL.md",
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "defaultInstall": false,
+      "recommendedForRoles": [
+        "manager",
+        "ceo",
+        "engineer"
+      ],
+      "requires": [],
+      "tags": [
+        "bionic",
+        "triage",
+        "inbox",
+        "workflow"
+      ],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "kind": "skill",
+          "sizeBytes": 4030,
+          "sha256": "228af705735e0627dd56371e80f4ed213bb21ad0edaf509721d25c11132b6b2d"
+        }
+      ],
+      "contentHash": "sha256:2bf8a7972afb45f0c33c5b8da20fc3c62264ccecb64a9acda90959529efb1ec4"
+    },
+    {
+      "id": "bionicai:bundled:bionic-operations:reflection-coach",
+      "key": "bionicai/bundled/bionic-operations/reflection-coach",
+      "kind": "bundled",
+      "category": "bionic-operations",
+      "slug": "reflection-coach",
+      "name": "reflection-coach",
+      "description": "Reflect on another agent's recent execution record and propose the smallest durable instruction, skill, or tool-description change. Use for evidence-backed coaching proposals, never hot-swaps.",
+      "path": "catalog/bundled/bionic-operations/reflection-coach",
+      "entrypoint": "SKILL.md",
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "defaultInstall": false,
+      "recommendedForRoles": [
+        "manager",
+        "general"
+      ],
+      "requires": [],
+      "tags": [
+        "bionic",
+        "reflection",
+        "coaching",
+        "agents",
+        "skills"
+      ],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "kind": "skill",
+          "sizeBytes": 11980,
+          "sha256": "1fc86dc8b6b4ffc18f69fc1be72b491160d98874c5fac6326be849c882194152"
+        }
+      ],
+      "contentHash": "sha256:8432873aecdb7d3dc6936cac0859066e02b2b1e17a454b6e2363b2a3c012b8fc"
+    },
+    {
+      "id": "bionicai:bundled:bionic-operations:status-card-query",
+      "key": "bionicai/bundled/bionic-operations/status-card-query",
+      "kind": "bundled",
+      "category": "bionic-operations",
+      "slug": "status-card-query",
+      "name": "status-card-query",
+      "description": "Create and maintain agent-authored Bionic status cards, or compile a prose interest prompt into bounded CompanySearchQuery objects and write the first summary from the assigned Summarizer run.",
+      "path": "catalog/bundled/bionic-operations/status-card-query",
+      "entrypoint": "SKILL.md",
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "defaultInstall": false,
+      "recommendedForRoles": [
+        "general",
+        "manager"
+      ],
+      "requires": [],
+      "tags": [
+        "bionic",
+        "status",
+        "search",
+        "reporting",
+        "operations"
+      ],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "kind": "skill",
+          "sizeBytes": 6320,
+          "sha256": "cf50715b2cf0002f10f020c16702c6c0559dd6b96c3df63d26bf2b266e94cc61"
+        }
+      ],
+      "contentHash": "sha256:111148e0bf54571b460cb0372b7a4de56da2d7a36c2ff65e61385207fdf3dfd4"
+    },
+    {
+      "id": "bionicai:bundled:bionic-operations:summarize-status",
+      "key": "bionicai/bundled/bionic-operations/summarize-status",
+      "kind": "bundled",
+      "category": "bionic-operations",
+      "slug": "summarize-status",
+      "name": "summarize-status",
+      "description": "Write a short, colloquial summary for a Bionic summary slot: open with the 1–3 specific, concrete actions the reader needs to take right now to unblock the work, then a brief plain-language status, streaming progress as it works.",
+      "path": "catalog/bundled/bionic-operations/summarize-status",
+      "entrypoint": "SKILL.md",
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "defaultInstall": false,
+      "recommendedForRoles": [
+        "general",
+        "manager"
+      ],
+      "requires": [],
+      "tags": [
+        "bionic",
+        "summary",
+        "status",
+        "reporting",
+        "operations"
+      ],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "kind": "skill",
+          "sizeBytes": 8850,
+          "sha256": "90fa8201cb9217be6feb58e9ace0a320b5a9ae91d868f4c53338553f07506202"
+        }
+      ],
+      "contentHash": "sha256:5b5a74a3e54e1a977de503dd8702935d2d62343aca6a2ea4c51702ff084c239f"
+    },
+    {
+      "id": "bionicai:bundled:bionic-operations:task-planning",
+      "key": "bionicai/bundled/bionic-operations/task-planning",
+      "kind": "bundled",
+      "category": "bionic-operations",
+      "slug": "task-planning",
+      "name": "task-planning",
+      "description": "Turn a Bionic issue or request into a structured implementation plan with child task graph, blockers, owners, and acceptance criteria, then save it as the issue `plan` document.",
+      "path": "catalog/bundled/bionic-operations/task-planning",
+      "entrypoint": "SKILL.md",
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "defaultInstall": false,
+      "recommendedForRoles": [
+        "manager",
+        "engineer",
+        "product"
+      ],
+      "requires": [],
+      "tags": [
+        "bionic",
+        "planning",
+        "issues",
+        "delegation"
+      ],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "kind": "skill",
+          "sizeBytes": 4917,
+          "sha256": "4aad7954d5c8bf360d033a050520d5526d4e087889d9d1dde7664a1a663d79f3"
+        }
+      ],
+      "contentHash": "sha256:9df41a9d8f9080f368838a41577c0d6521dc5aa64394e437e0be408e7529b2ae"
+    },
+    {
+      "id": "bionicai:bundled:docs:doc-maintenance",
+      "key": "bionicai/bundled/docs/doc-maintenance",
       "kind": "bundled",
       "category": "docs",
       "slug": "doc-maintenance",
@@ -32,196 +207,21 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 4478,
-          "sha256": "fb0353386c5e5e5e13bcbb3233f044e3dccecf371f429d6328f26c26d7cb6169"
+          "sizeBytes": 4475,
+          "sha256": "9efa7bda3329f48714675d62d7c53c4102db4e2dc4ba676e09dd6b0d8e6c297e"
         }
       ],
-      "contentHash": "sha256:2e02299210fd17c1fe1867b4ee8c144a11b6fe1fe481f83b8268cfbaaf10f9aa"
+      "contentHash": "sha256:c5fea280043346d29ace830d8208c4e751cc181152f98b504fa268449ce4428a"
     },
     {
-      "id": "paperclipai:bundled:paperclip-operations:issue-triage",
-      "key": "paperclipai/bundled/paperclip-operations/issue-triage",
-      "kind": "bundled",
-      "category": "paperclip-operations",
-      "slug": "issue-triage",
-      "name": "issue-triage",
-      "description": "Triage Paperclip inbox issues that are stale, blocked, in-review, or assigned-but-not-progressing, and decide a single next action per issue (resume, reassign, unblock, escalate, or close).",
-      "path": "catalog/bundled/paperclip-operations/issue-triage",
-      "entrypoint": "SKILL.md",
-      "trustLevel": "markdown_only",
-      "compatibility": "compatible",
-      "defaultInstall": false,
-      "recommendedForRoles": [
-        "manager",
-        "ceo",
-        "engineer"
-      ],
-      "requires": [],
-      "tags": [
-        "paperclip",
-        "triage",
-        "inbox",
-        "workflow"
-      ],
-      "files": [
-        {
-          "path": "SKILL.md",
-          "kind": "skill",
-          "sizeBytes": 4042,
-          "sha256": "df5bdc8bf5e017b7ba5f70a4b5323fad51d0c323278f386580f26cf43ad09160"
-        }
-      ],
-      "contentHash": "sha256:88dc13560371fb364963782cb4f6eeb4090fcde92ee3774479428ed6b90e11c1"
-    },
-    {
-      "id": "paperclipai:bundled:paperclip-operations:reflection-coach",
-      "key": "paperclipai/bundled/paperclip-operations/reflection-coach",
-      "kind": "bundled",
-      "category": "paperclip-operations",
-      "slug": "reflection-coach",
-      "name": "reflection-coach",
-      "description": "Reflect on another agent's recent execution record and propose the smallest durable instruction, skill, or tool-description change. Use for evidence-backed coaching proposals, never hot-swaps.",
-      "path": "catalog/bundled/paperclip-operations/reflection-coach",
-      "entrypoint": "SKILL.md",
-      "trustLevel": "markdown_only",
-      "compatibility": "compatible",
-      "defaultInstall": false,
-      "recommendedForRoles": [
-        "manager",
-        "general"
-      ],
-      "requires": [],
-      "tags": [
-        "paperclip",
-        "reflection",
-        "coaching",
-        "agents",
-        "skills"
-      ],
-      "files": [
-        {
-          "path": "SKILL.md",
-          "kind": "skill",
-          "sizeBytes": 12028,
-          "sha256": "083d5fa8dc43c3ce7747e89c1afb6f6f42d0603a31808bffc5f8e56735f2d865"
-        }
-      ],
-      "contentHash": "sha256:f2592d81f616628a3eba92636616424f2eed82ec22bb504240a58f6be115e407"
-    },
-    {
-      "id": "paperclipai:bundled:paperclip-operations:status-card-query",
-      "key": "paperclipai/bundled/paperclip-operations/status-card-query",
-      "kind": "bundled",
-      "category": "paperclip-operations",
-      "slug": "status-card-query",
-      "name": "status-card-query",
-      "description": "Create and maintain agent-authored Paperclip status cards, or compile a prose interest prompt into bounded CompanySearchQuery objects and write the first summary from the assigned Summarizer run.",
-      "path": "catalog/bundled/paperclip-operations/status-card-query",
-      "entrypoint": "SKILL.md",
-      "trustLevel": "markdown_only",
-      "compatibility": "compatible",
-      "defaultInstall": false,
-      "recommendedForRoles": [
-        "general",
-        "manager"
-      ],
-      "requires": [],
-      "tags": [
-        "paperclip",
-        "status",
-        "search",
-        "reporting",
-        "operations"
-      ],
-      "files": [
-        {
-          "path": "SKILL.md",
-          "kind": "skill",
-          "sizeBytes": 6368,
-          "sha256": "0c6140f51d503cbadc98723ce54c0def48e7e31ea159b0935b8ad6369291498a"
-        }
-      ],
-      "contentHash": "sha256:2b6e53bf8491f027afdbd6961ad84f677cfd385a0a6a73616ea84111ca8886ed"
-    },
-    {
-      "id": "paperclipai:bundled:paperclip-operations:summarize-status",
-      "key": "paperclipai/bundled/paperclip-operations/summarize-status",
-      "kind": "bundled",
-      "category": "paperclip-operations",
-      "slug": "summarize-status",
-      "name": "summarize-status",
-      "description": "Write a short, colloquial summary for a Paperclip summary slot: open with the 1–3 specific, concrete actions the reader needs to take right now to unblock the work, then a brief plain-language status, streaming progress as it works.",
-      "path": "catalog/bundled/paperclip-operations/summarize-status",
-      "entrypoint": "SKILL.md",
-      "trustLevel": "markdown_only",
-      "compatibility": "compatible",
-      "defaultInstall": false,
-      "recommendedForRoles": [
-        "general",
-        "manager"
-      ],
-      "requires": [],
-      "tags": [
-        "paperclip",
-        "summary",
-        "status",
-        "reporting",
-        "operations"
-      ],
-      "files": [
-        {
-          "path": "SKILL.md",
-          "kind": "skill",
-          "sizeBytes": 8877,
-          "sha256": "4cb3d177f5d16e3cc2052d2f80e7fb245ab95e79c1e947abdc84cd4ee3d8c61e"
-        }
-      ],
-      "contentHash": "sha256:3e49ee2b8d83d1371fb0f59197bb96c46b64f722540405f46d4a5a756fbe1b89"
-    },
-    {
-      "id": "paperclipai:bundled:paperclip-operations:task-planning",
-      "key": "paperclipai/bundled/paperclip-operations/task-planning",
-      "kind": "bundled",
-      "category": "paperclip-operations",
-      "slug": "task-planning",
-      "name": "task-planning",
-      "description": "Turn a Paperclip issue or request into a structured implementation plan with child task graph, blockers, owners, and acceptance criteria, then save it as the issue `plan` document.",
-      "path": "catalog/bundled/paperclip-operations/task-planning",
-      "entrypoint": "SKILL.md",
-      "trustLevel": "markdown_only",
-      "compatibility": "compatible",
-      "defaultInstall": false,
-      "recommendedForRoles": [
-        "manager",
-        "engineer",
-        "product"
-      ],
-      "requires": [],
-      "tags": [
-        "paperclip",
-        "planning",
-        "issues",
-        "delegation"
-      ],
-      "files": [
-        {
-          "path": "SKILL.md",
-          "kind": "skill",
-          "sizeBytes": 4938,
-          "sha256": "9c52a44a30ec8d306119da51bf298e9e3e6c382a9a9559ffd3054bf5e0c75f36"
-        }
-      ],
-      "contentHash": "sha256:487c3116eead89fef4f71c984329c41836bd69951b7ef9ed8736c69435e02438"
-    },
-    {
-      "id": "paperclipai:bundled:product:paperclip-capsules",
-      "key": "paperclipai/bundled/product/paperclip-capsules",
+      "id": "bionicai:bundled:product:bionic-capsules",
+      "key": "bionicai/bundled/product/bionic-capsules",
       "kind": "bundled",
       "category": "product",
-      "slug": "paperclip-capsules",
-      "name": "paperclip-capsules",
-      "description": "Generate, implement, or review Paperclip capsule visuals. Use for capsule art, agent capsules, heartbeat status capsules, identicons, capsule banks, or brand-usage validation.",
-      "path": "catalog/bundled/product/paperclip-capsules",
+      "slug": "bionic-capsules",
+      "name": "bionic-capsules",
+      "description": "Generate, implement, or review Bionic capsule visuals. Use for capsule art, agent capsules, heartbeat status capsules, identicons, capsule banks, or brand-usage validation.",
+      "path": "catalog/bundled/product/bionic-capsules",
       "entrypoint": "SKILL.md",
       "trustLevel": "markdown_only",
       "compatibility": "compatible",
@@ -234,7 +234,7 @@
       ],
       "requires": [],
       "tags": [
-        "paperclip",
+        "bionic",
         "brand",
         "capsules",
         "agents",
@@ -245,39 +245,39 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 5831,
-          "sha256": "dd659ccb46e105336eb00fbe689b1d5531347fc69493c3156390d40ee413c93e"
+          "sizeBytes": 5795,
+          "sha256": "92fae1a0c5630c726700ff6f65dd355d4fac86c44881a1c63137654800792674"
         },
         {
           "path": "references/generator-workflows.md",
           "kind": "reference",
-          "sizeBytes": 4356,
-          "sha256": "b5f72e5b6683e8f93f2d852e84c2cc19e6ab438b250bf777dfb2480dd4f6e1b6"
+          "sizeBytes": 4323,
+          "sha256": "476162736976a8f106dcfa51e06b348d9bf890bead1ce4d56be39bb34599abe7"
         },
         {
           "path": "references/hero-capsule-bank.md",
           "kind": "reference",
-          "sizeBytes": 5981,
-          "sha256": "ec3d34113aa7bb527560d1eb4d8ab7667c73e18284c85a2019122743a767525a"
+          "sizeBytes": 5969,
+          "sha256": "e0ecff172854785a05e4fe11f201c66f957778a17653251c09769873571a4745"
         },
         {
           "path": "references/identicon-prototyper.md",
           "kind": "reference",
-          "sizeBytes": 6669,
-          "sha256": "0b19419efa1396a402097decabe24ea9ae649678569449c8ce855e0678df6bfe"
+          "sizeBytes": 6642,
+          "sha256": "f40c55d9fd5b6e5ae629443aa71e0e8935157dd54d882781e0efe587863d2ae7"
         },
         {
           "path": "references/individual-status-capsules.md",
           "kind": "reference",
-          "sizeBytes": 5031,
-          "sha256": "be1f2eccf96b4d2deefe45b3bc1dd0a3597278472c2ffedadc43c57161e9103d"
+          "sizeBytes": 5025,
+          "sha256": "b4746187ef583599e3302a6a89e7be975f2ac564a6adf693843824f1670c4d82"
         }
       ],
-      "contentHash": "sha256:a2b26cf6895affeeb70c85567a061094450a59bd3c4fdcf28ee65858599ac12c"
+      "contentHash": "sha256:6aa497df4fb86563bd7ea40657473d365798255bd69e21aecaa427d6ab5cdde1"
     },
     {
-      "id": "paperclipai:bundled:product:wireframe",
-      "key": "paperclipai/bundled/product/wireframe",
+      "id": "bionicai:bundled:product:wireframe",
+      "key": "bionicai/bundled/product/wireframe",
       "kind": "bundled",
       "category": "product",
       "slug": "wireframe",
@@ -305,8 +305,8 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 11509,
-          "sha256": "6992047cc97b67211cc8c1183718ab9aa26b8afc34c70d54d20558c215daaf48"
+          "sizeBytes": 11506,
+          "sha256": "9fcf0fc5ef06f1d5cc04f90c0c23b8302196bb3a67f9272ff5bb3243e0e0af9a"
         },
         {
           "path": "assets/site-template.html",
@@ -345,11 +345,11 @@
           "sha256": "017260d2216859d57e5fa869e0efc6b88c7ed4d8a8a4f5af04fe89a3ef2445bd"
         }
       ],
-      "contentHash": "sha256:7106d84fc9db2053090f692706e41cfc586e7dd85a44f568e3319c4eefbdde46"
+      "contentHash": "sha256:82c61245dcf1bebbc5a40d1f79bf7909e7feafb83bcda1cbc3c1026a541b997d"
     },
     {
-      "id": "paperclipai:bundled:quality:qa-acceptance",
-      "key": "paperclipai/bundled/quality/qa-acceptance",
+      "id": "bionicai:bundled:quality:qa-acceptance",
+      "key": "bionicai/bundled/quality/qa-acceptance",
       "kind": "bundled",
       "category": "quality",
       "slug": "qa-acceptance",
@@ -376,15 +376,15 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 3861,
-          "sha256": "c631b437ab26d104af6cdb963d8f679a9341439041b3cb3ec8835f4ff551b378"
+          "sizeBytes": 3858,
+          "sha256": "ce5044287cef30128af95df076e6ebb7dd3628afd2a5e65869e7571d10f72ddc"
         }
       ],
-      "contentHash": "sha256:32372dacaf62e93454b9855968c4eec96456ba78b509f450b3dfaa48e31ef356"
+      "contentHash": "sha256:c3d0518f5bd1bd37aa1fd3b972cc9ca96e64a4fc4f3812046301bd297f6f9504"
     },
     {
-      "id": "paperclipai:bundled:software-development:github-pr-workflow",
-      "key": "paperclipai/bundled/software-development/github-pr-workflow",
+      "id": "bionicai:bundled:software-development:github-pr-workflow",
+      "key": "bionicai/bundled/software-development/github-pr-workflow",
       "kind": "bundled",
       "category": "software-development",
       "slug": "github-pr-workflow",
@@ -409,15 +409,15 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 3970,
-          "sha256": "f498ec4ebb1779dea37adeb1db8a8b22316282798e35ee02e2fc5ff627d7e261"
+          "sizeBytes": 3967,
+          "sha256": "f5cdbbfb8b30d1b373eb231013071df6828b93259a0040a6944a1ee2072d4afa"
         }
       ],
-      "contentHash": "sha256:90f278c89aa0711be150c1cd2456ca25620d02f36995b113ca9837d756a37f6c"
+      "contentHash": "sha256:f5da6b989c20599e6d88ead8825c9ce9b3d1b7974fb523d66d57efe8e1193dd8"
     },
     {
-      "id": "paperclipai:optional:browser:agent-browser",
-      "key": "paperclipai/optional/browser/agent-browser",
+      "id": "bionicai:optional:browser:agent-browser",
+      "key": "bionicai/optional/browser/agent-browser",
       "kind": "optional",
       "category": "browser",
       "slug": "agent-browser",
@@ -444,15 +444,15 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 5133,
-          "sha256": "362f7b9d02297782bc6f0c093f495b8a0304a75bcf4b42e5c280a42b1f757b7d"
+          "sizeBytes": 5130,
+          "sha256": "1dc00f4d06c6ed015728d0a41c3d102892c42400475060d9f37830c747c4cf1a"
         }
       ],
-      "contentHash": "sha256:eabb2c9f7b5e1a27ebb1e05a711d61433a266478154cd671a685e99e67aadea2"
+      "contentHash": "sha256:604714545166778bbc69e4e1818c4f46c65007c2ffe35f72ba7feac26f52d6ba"
     },
     {
-      "id": "paperclipai:optional:content:release-announcement",
-      "key": "paperclipai/optional/content/release-announcement",
+      "id": "bionicai:optional:content:release-announcement",
+      "key": "bionicai/optional/content/release-announcement",
       "kind": "optional",
       "category": "content",
       "slug": "release-announcement",
@@ -479,15 +479,15 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 6945,
-          "sha256": "d745cca96350518fabae14f5c407d779e1df2c5d091b5b4a5c55bb888b569e5f"
+          "sizeBytes": 6906,
+          "sha256": "91890baaaa29cff0f61def1df74d38a092293810b0ad9210d1280db36bc807d0"
         }
       ],
-      "contentHash": "sha256:efe8ea89b552df95222609867c9c75f1b40e16f457d34e7e4a124f54daa33efa"
+      "contentHash": "sha256:29817d1dfcb70420cf18ca2803605034c3b7f779eb311546c183a5bab045c909"
     },
     {
-      "id": "paperclipai:optional:content:simplified-english",
-      "key": "paperclipai/optional/content/simplified-english",
+      "id": "bionicai:optional:content:simplified-english",
+      "key": "bionicai/optional/content/simplified-english",
       "kind": "optional",
       "category": "content",
       "slug": "simplified-english",
@@ -515,20 +515,20 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 1578,
-          "sha256": "a0f7385599873910e2fabf400346016a07dacbc7ece27c0e3616ae8fd94ebfbb"
+          "sizeBytes": 1575,
+          "sha256": "909fd02a2da03d881d0b1c2835d40c7a087274af35c2069a4253ce7b0e7ca262"
         }
       ],
-      "contentHash": "sha256:642321f40d51e0125df05c6fbace49aeb07ec30392058756909c259c9c5eac6a"
+      "contentHash": "sha256:4a35e28bb1c33b75af16cb1add8ec0661808102d43c5632b55ffc0d545120762"
     },
     {
-      "id": "paperclipai:optional:finance:ramp",
-      "key": "paperclipai/optional/finance/ramp",
+      "id": "bionicai:optional:finance:ramp",
+      "key": "bionicai/optional/finance/ramp",
       "kind": "optional",
       "category": "finance",
       "slug": "ramp",
       "name": "ramp",
-      "description": "Fetch and follow Ramp's published agent playbooks inside Paperclip, with mandatory approval gates for spend, incorporation, cards, account setup, and other financial actions.",
+      "description": "Fetch and follow Ramp's published agent playbooks inside Bionic, with mandatory approval gates for spend, incorporation, cards, account setup, and other financial actions.",
       "path": "catalog/optional/finance/ramp",
       "entrypoint": "SKILL.md",
       "trustLevel": "markdown_only",
@@ -552,15 +552,15 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 7016,
-          "sha256": "698cd69ebf2f2481ed83c8e9477b56ae78288cc4c751d7d35f649ff2483802a3"
+          "sizeBytes": 6962,
+          "sha256": "ff7486deb6ff587026d57070b8b5b0eb91d4f79e3b7d8519ac8c70ad77f4c28d"
         }
       ],
-      "contentHash": "sha256:276d85e98a4732f278204e26438aa95fde158dd2d15c1e427c4c7c7d492e769d"
+      "contentHash": "sha256:5b841480c9a6189bc555deb68535e9b83d2f9f15e123f2945463b41c192877d3"
     },
     {
-      "id": "paperclipai:optional:product:design-critique",
-      "key": "paperclipai/optional/product/design-critique",
+      "id": "bionicai:optional:product:design-critique",
+      "key": "bionicai/optional/product/design-critique",
       "kind": "optional",
       "category": "product",
       "slug": "design-critique",
@@ -587,15 +587,15 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 4851,
-          "sha256": "022e619baf6cc25725946279cb8052d22af090dd6cd6dc8c20f17867f71a5d8e"
+          "sizeBytes": 4848,
+          "sha256": "750735fb250d4e7f5e231e393d8937c7dea07addd40e0a0c3615cfe211e5d18f"
         }
       ],
-      "contentHash": "sha256:429f94df398a0697042b5bbe4755b1ff1a230aa5f41d99118ad37493ac65d21c"
+      "contentHash": "sha256:01aea1e0cfa19853dda76e734691af962cb4b16a73b9f41749584b2971404a89"
     },
     {
-      "id": "paperclipai:optional:research:last30days",
-      "key": "paperclipai/optional/research/last30days",
+      "id": "bionicai:optional:research:last30days",
+      "key": "bionicai/optional/research/last30days",
       "kind": "optional",
       "category": "research",
       "slug": "last30days",
@@ -1115,13 +1115,13 @@
       }
     },
     {
-      "id": "paperclipai:optional:software-development:prepare-mcp-integration",
-      "key": "paperclipai/optional/software-development/prepare-mcp-integration",
+      "id": "bionicai:optional:software-development:prepare-mcp-integration",
+      "key": "bionicai/optional/software-development/prepare-mcp-integration",
       "kind": "optional",
       "category": "software-development",
       "slug": "prepare-mcp-integration",
       "name": "prepare-mcp-integration",
-      "description": "Prepare MCP/vendor integrations through cited research, a content PR, exact-revision human approval, and one governed Paperclip connector PR per approved connection. Use for new integration research and delivery; not for ad hoc connector coding that bypasses the playbooks.",
+      "description": "Prepare MCP/vendor integrations through cited research, a content PR, exact-revision human approval, and one governed Bionic connector PR per approved connection. Use for new integration research and delivery; not for ad hoc connector coding that bypasses the playbooks.",
       "path": "catalog/optional/software-development/prepare-mcp-integration",
       "entrypoint": "SKILL.md",
       "trustLevel": "markdown_only",
@@ -1149,17 +1149,17 @@
         {
           "path": "SKILL.md",
           "kind": "skill",
-          "sizeBytes": 12409,
-          "sha256": "5278d288a0cbfe10fdda4ef3d99cf61e6ed068f4b6c1282406b0e001c9f45253"
+          "sizeBytes": 12340,
+          "sha256": "f8a9ea2c942a96a2848bdc03ec3430f3c4fe7a89b2f0272ede031d66abb2970f"
         },
         {
           "path": "examples/notion-mcp-research-gate.md",
           "kind": "markdown",
-          "sizeBytes": 1900,
-          "sha256": "944b13ac67c06c65643eb236e856f1479106749861535648d29334f84cf1b50b"
+          "sizeBytes": 1879,
+          "sha256": "f9ed1f6970734ea2c625792e7cc6f1acb97b38bec02864d53d98b86be968d6c9"
         }
       ],
-      "contentHash": "sha256:84f2a28d7d004393719684f2b435e5ee01ddc58591e0dfeb73d72c7605db7f49"
+      "contentHash": "sha256:f2658dc0acbe7c08e740737a559094487d33822aaad42c0c07b8a96bd0cd9d92"
     }
   ]
 }

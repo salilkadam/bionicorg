@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { createDb } from "@paperclipai/db";
+import { createDb } from "@bionicai/db";
 import {
   CAPABILITY_HIGH_RISK_SEMANTIC_VECTORS,
   CAPABILITY_SEMANTIC_CONFORMANCE_IDS,
   CapabilityMockSemanticConformanceAdapter,
   runSemanticConformanceKit,
-} from "../vendor/paperclip-runner/testing.js";
+} from "../vendor/bionic-runner/testing.js";
 
 import {
   getEmbeddedPostgresTestSupport,
@@ -15,13 +15,13 @@ import {
   PaperclipProductionSemanticConformanceAdapter,
   seedPaperclipSemanticConformance,
   type PaperclipSemanticConformanceIds,
-} from "./helpers/paperclip-semantic-conformance.js";
+} from "./helpers/bionic-semantic-conformance.js";
 
 vi.hoisted(() => {
-  process.env.PAPERCLIP_HOME = "/tmp/paperclip-semantic-conformance-home";
-  process.env.PAPERCLIP_INSTANCE_ID = "semantic-conformance";
-  process.env.PAPERCLIP_LOG_DIR = "/tmp/paperclip-semantic-conformance-home/logs";
-  process.env.PAPERCLIP_IN_WORKTREE = "false";
+  process.env.BIONIC_HOME = "/tmp/bionic-semantic-conformance-home";
+  process.env.BIONIC_INSTANCE_ID = "semantic-conformance";
+  process.env.BIONIC_LOG_DIR = "/tmp/bionic-semantic-conformance-home/logs";
+  process.env.BIONIC_IN_WORKTREE = "false";
 });
 
 const embeddedSupport = await getEmbeddedPostgresTestSupport();
@@ -31,7 +31,7 @@ if (!embeddedSupport.supported) {
   console.warn(`Skipping semantic production conformance: ${embeddedSupport.reason ?? "unsupported host"}`);
 }
 
-describeEmbedded("Paperclip semantic mock/production conformance", () => {
+describeEmbedded("Bionic semantic mock/production conformance", () => {
   let temporary: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
   let mock: CapabilityMockSemanticConformanceAdapter | null = null;
 
@@ -60,7 +60,7 @@ describeEmbedded("Paperclip semantic mock/production conformance", () => {
   };
 
   beforeAll(async () => {
-    temporary = await startEmbeddedPostgresTestDatabase("paperclip-semantic-conformance-");
+    temporary = await startEmbeddedPostgresTestDatabase("bionic-semantic-conformance-");
     const db = createDb(temporary.connectionString);
     await seedPaperclipSemanticConformance(db, ids);
     mock = await CapabilityMockSemanticConformanceAdapter.create();
@@ -84,7 +84,7 @@ describeEmbedded("Paperclip semantic mock/production conformance", () => {
     });
 
     expect(report.rows).toHaveLength(CAPABILITY_HIGH_RISK_SEMANTIC_VECTORS.length);
-    expect(report.rows.every((row) => row.adapterIds.join(",") === "capability-mock,paperclip-production-services"))
+    expect(report.rows.every((row) => row.adapterIds.join(",") === "capability-mock,bionic-production-services"))
       .toBe(true);
     expect(report.rows.find((row) => row.vectorId === "progress-duplicate-retry")?.observation.audit)
       .toEqual([]);

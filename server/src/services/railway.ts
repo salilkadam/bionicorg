@@ -4,7 +4,7 @@ import { initializeMcpHttpSession, mcpHttpRequestHeaders, parseMcpHttpResponseBo
 
 export const RAILWAY_MCP_URL = "https://mcp.railway.com";
 export const RAILWAY_API_URL = "https://backboard.railway.com/graphql/v2";
-export const RAILWAY_TOOL_PREFIX = "paperclip-railway-";
+export const RAILWAY_TOOL_PREFIX = "bionic-railway-";
 /** Reserve time for target checks while staying inside the gateway's 60s cap. */
 export function railwayCommandBudgetMs(parameters: unknown): number {
   const seconds = parameters && typeof parameters === "object" ? (parameters as Record<string, unknown>).timeoutSeconds : undefined;
@@ -31,7 +31,7 @@ export function isRailwayConnection(connection: {
   config: Record<string, unknown>;
 }): boolean {
   return connection.transport === "mcp_remote" && connection.authKind === "oauth"
-    && connection.credentialSource === "paperclip_vault"
+    && connection.credentialSource === "bionic_vault"
     && connection.config.sourceTemplateKey === "railway"
     && connection.config.connectionMethodKey === "mcp-oauth"
     && isRailwayEndpoint(connection.config.url);
@@ -167,12 +167,12 @@ export async function discoverRailwayWorkspace(options: RailwayClientOptions): P
   const headers = { Authorization: options.authorization };
   const list = (requestHeaders: Record<string, string>) => send({
     method: "POST", headers: mcpHttpRequestHeaders(requestHeaders),
-    body: JSON.stringify({ jsonrpc: "2.0", id: "paperclip-railway-workspace-probe", method: "tools/call", params: { name: "list-workspaces", arguments: {} } }),
+    body: JSON.stringify({ jsonrpc: "2.0", id: "bionic-railway-workspace-probe", method: "tools/call", params: { name: "list-workspaces", arguments: {} } }),
   });
   let response = await list(headers);
   if (response.status === 400) {
     await response.body?.cancel();
-    response = await list(await initializeMcpHttpSession({ send, headers, requestId: "paperclip-railway-workspace-probe" }));
+    response = await list(await initializeMcpHttpSession({ send, headers, requestId: "bionic-railway-workspace-probe" }));
   }
   if (!response.ok) {
     await response.body?.cancel();

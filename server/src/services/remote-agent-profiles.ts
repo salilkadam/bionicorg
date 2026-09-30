@@ -1,6 +1,6 @@
 import { and, asc, eq } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { remoteAgentProfiles } from "@paperclipai/db";
+import type { Db } from "@bionicai/db";
+import { remoteAgentProfiles } from "@bionicai/db";
 
 import { conflict, notFound, unprocessable } from "../errors.js";
 import {

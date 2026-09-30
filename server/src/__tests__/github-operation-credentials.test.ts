@@ -23,8 +23,8 @@ import {
   toolConnectionInstalls,
   toolConnections,
   userSecretDefinitions,
-} from "@paperclipai/db";
-import { LOW_TRUST_REVIEW_PRESET } from "@paperclipai/shared";
+} from "@bionicai/db";
+import { LOW_TRUST_REVIEW_PRESET } from "@bionicai/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -57,11 +57,11 @@ const support = await getEmbeddedPostgresTestSupport();
       db: ReturnType<typeof createDb>;
     beforeAll(async () => {
       vi.stubEnv(
-        "PAPERCLIP_AGENT_JWT_SECRET",
+        "BIONIC_AGENT_JWT_SECRET",
         "test-github-broker-signing-secret",
       );
       database = await startEmbeddedPostgresTestDatabase(
-        "paperclip-github-operation-",
+        "bionic-github-operation-",
       );
       db = createDb(database.connectionString);
     }, 30_000);
@@ -809,8 +809,8 @@ const support = await getEmbeddedPostgresTestSupport();
         scope: input, target: null, cwd: process.cwd(), env: { PATH: process.env.PATH },
         resolveCredentials: (binding) => resolveGitHubOperationCredentials(db, binding),
       });
-      const post = () => fetch(`${broker.env.PAPERCLIP_GITHUB_BROKER_URL}/runtime-tools/github/credentials`, {
-        method: "POST", headers: { authorization: `Bearer ${broker.env.PAPERCLIP_GITHUB_BRIDGE_TOKEN}` },
+      const post = () => fetch(`${broker.env.BIONIC_GITHUB_BROKER_URL}/runtime-tools/github/credentials`, {
+        method: "POST", headers: { authorization: `Bearer ${broker.env.BIONIC_GITHUB_BRIDGE_TOKEN}` },
       });
       try {
         const releaseA = broker.activate(input);
@@ -893,7 +893,7 @@ const support = await getEmbeddedPostgresTestSupport();
         (
           await post()
             .set("Authorization", "Bearer bridge-host-token")
-            .set("x-paperclip-github-capability", token)
+            .set("x-bionic-github-capability", token)
         ).status,
       ).toBe(200);
       await switchTo(input, "B");

@@ -64,7 +64,7 @@ describe("git workspace sync", () => {
   }, 30_000); // The output-limit fixture removes 40,000 files on teardown.
 
   it("delegates every host-side full-tree enumeration to the registered scheduler", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-scheduler-hook-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-scheduler-hook-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     await writeFile(path.join(repo, "untracked.txt"), "untracked\n", "utf8");
@@ -86,7 +86,7 @@ describe("git workspace sync", () => {
   });
 
   it("keeps every filename byte for a padded name in each of the four anchor lanes", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-anchor-whitespace-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-anchor-whitespace-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
 
@@ -124,7 +124,7 @@ describe("git workspace sync", () => {
   });
 
   it.each(["workspace_git_scan_timeout", "workspace_git_scan_saturated", "workspace_git_scan_output_limit", "workspace_git_scan_cancelled", "workspace_git_scan_failed"])("preserves %s instead of reporting a non-Git folder", async (code) => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-scan-failure-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-scan-failure-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     const failure = Object.assign(new Error("Git enumeration failed"), { code });
@@ -136,7 +136,7 @@ describe("git workspace sync", () => {
   });
 
   it("lists ignored paths without traversing ignored directory contents", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-ignored-scan-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-ignored-scan-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     await writeFile(path.join(repo, ".gitignore"), "dependencies/\n*.secret\n");
@@ -153,7 +153,7 @@ describe("git workspace sync", () => {
   });
 
   it("snapshots a generated directory with more than 1 MiB of filenames", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-large-untracked-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-large-untracked-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     const generatedDir = path.join(repo, "storybook-output");
@@ -210,8 +210,8 @@ describe("git workspace sync", () => {
     await mkdir(repo, { recursive: true });
     await git(repo, ["init"]);
     await git(repo, ["checkout", "-b", "main"]);
-    await git(repo, ["config", "user.name", "Paperclip Test"]);
-    await git(repo, ["config", "user.email", "test@paperclip.dev"]);
+    await git(repo, ["config", "user.name", "Bionic Test"]);
+    await git(repo, ["config", "user.email", "test@bionic.dev"]);
     await writeFile(path.join(repo, "tracked.txt"), "base\n", "utf8");
     await git(repo, ["add", "tracked.txt"]);
     await git(repo, ["commit", "-m", "base"]);
@@ -219,7 +219,7 @@ describe("git workspace sync", () => {
   }
 
   it("does not classify a selected repository subfolder as a cloneable repository root", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-selected-folder-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-selected-folder-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     const selectedDir = path.join(repo, "project");
@@ -232,7 +232,7 @@ describe("git workspace sync", () => {
   });
 
   it("creates a shallow standalone clone from the local HEAD snapshot", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-sync-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-sync-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     const baseHead = await git(repo, ["rev-parse", "HEAD"]);
@@ -258,11 +258,11 @@ describe("git workspace sync", () => {
   });
 
   it.skipIf(process.platform === "win32")("preserves nested repository symlinks after the temporary clone is removed", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-nested-links-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-nested-links-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
-    const nested = await createRepo(path.join(repo, ".paperclip-repositories"));
-    await writeFile(path.join(repo, ".git/info/exclude"), ".paperclip-repositories/\n");
+    const nested = await createRepo(path.join(repo, ".bionic-repositories"));
+    await writeFile(path.join(repo, ".git/info/exclude"), ".bionic-repositories/\n");
     await mkdir(path.join(nested, "skills", "demo"), { recursive: true });
     await mkdir(path.join(nested, ".claude", "skills"), { recursive: true });
     await writeFile(path.join(nested, "skills", "demo", "SKILL.md"), "skill content\n");
@@ -281,7 +281,7 @@ describe("git workspace sync", () => {
     await withShallowGitWorkspaceClone({ localDir: repo, snapshot: snapshot! }, async (cloneDir) => {
       // The nested clone's callback has already returned and deleted its temp
       // directory. Relative links must keep their repository meaning here.
-      const copied = path.join(cloneDir, ".paperclip-repositories", "repo");
+      const copied = path.join(cloneDir, ".bionic-repositories", "repo");
       for (const [name, target] of links) {
         expect((await lstat(path.join(copied, name))).isSymbolicLink()).toBe(true);
         expect(await readlink(path.join(copied, name))).toBe(target);
@@ -295,7 +295,7 @@ describe("git workspace sync", () => {
   });
 
   it("copies the workspace origin remote into the shallow clone", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-origin-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-origin-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     await git(repo, ["remote", "add", "origin", "https://github.com/example/repo.git"]);
@@ -310,7 +310,7 @@ describe("git workspace sync", () => {
   });
 
   it("scrubs credentials from the origin remote before copying it", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-origin-scrub-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-origin-scrub-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     await git(repo, ["remote", "add", "origin", "https://x-access-token:sekret@github.com/example/repo.git"]);
@@ -325,7 +325,7 @@ describe("git workspace sync", () => {
   });
 
   it("leaves the shallow clone remote-less when the workspace has no origin", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-no-origin-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-no-origin-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
 
@@ -339,7 +339,7 @@ describe("git workspace sync", () => {
   });
 
   it("drops a filesystem-path origin instead of copying it into the shallow clone", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-path-origin-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-path-origin-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     await git(repo, ["remote", "add", "origin", path.join(rootDir, "elsewhere.git")]);
@@ -354,7 +354,7 @@ describe("git workspace sync", () => {
   });
 
   it("pushes new commits from the shallow clone to an origin that holds the base commit", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-shallow-push-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-shallow-push-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     const upstream = path.join(rootDir, "upstream.git");
@@ -369,8 +369,8 @@ describe("git workspace sync", () => {
       localDir: repo,
       snapshot: snapshot!,
     }, async (cloneDir) => {
-      await git(cloneDir, ["config", "user.name", "Paperclip Sandbox"]);
-      await git(cloneDir, ["config", "user.email", "sandbox@paperclip.dev"]);
+      await git(cloneDir, ["config", "user.name", "Bionic Sandbox"]);
+      await git(cloneDir, ["config", "user.email", "sandbox@bionic.dev"]);
       await writeFile(path.join(cloneDir, "change.txt"), "sandbox change\n", "utf8");
       await git(cloneDir, ["add", "change.txt"]);
       await git(cloneDir, ["commit", "-m", "sandbox change"]);
@@ -390,7 +390,7 @@ describe("git workspace sync", () => {
   });
 
   it("builds thin git delta bundles relative to the imported base", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-delta-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-delta-"));
     cleanupDirs.push(rootDir);
     const repo = await createRepo(rootDir);
     const baseHead = await git(repo, ["rev-parse", "HEAD"]);
@@ -410,8 +410,8 @@ describe("git workspace sync", () => {
       })]);
       expect((await stat(emptyBundle)).size).toBe(0);
 
-      await git(remoteDir, ["config", "user.name", "Paperclip Remote"]);
-      await git(remoteDir, ["config", "user.email", "remote@paperclip.dev"]);
+      await git(remoteDir, ["config", "user.name", "Bionic Remote"]);
+      await git(remoteDir, ["config", "user.email", "remote@bionic.dev"]);
       await writeFile(path.join(remoteDir, "tracked.txt"), "remote\n", "utf8");
       await git(remoteDir, ["commit", "-am", "remote update"]);
       const remoteHead = await git(remoteDir, ["rev-parse", "HEAD"]);
@@ -444,7 +444,7 @@ describe("git workspace sync", () => {
   });
 
   it("imports a diverged sandbox HEAD even when the host no longer holds baseSha", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-diverge-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-diverge-"));
     cleanupDirs.push(rootDir);
     // Host holds only the shared ancestor B (the eventual merge-base), not the
     // recorded base H — the state a shared workspace lands in when it is reset
@@ -456,8 +456,8 @@ describe("git workspace sync", () => {
     // local-only commit S that forked from B and diverges from H.
     const sandbox = path.join(rootDir, "sandbox");
     await git(rootDir, ["clone", host, sandbox]);
-    await git(sandbox, ["config", "user.name", "Paperclip Remote"]);
-    await git(sandbox, ["config", "user.email", "remote@paperclip.dev"]);
+    await git(sandbox, ["config", "user.name", "Bionic Remote"]);
+    await git(sandbox, ["config", "user.email", "remote@bionic.dev"]);
     await writeFile(path.join(sandbox, "advance.txt"), "advance\n", "utf8");
     await git(sandbox, ["add", "-A"]);
     await git(sandbox, ["commit", "-m", "advance"]);
@@ -500,7 +500,7 @@ describe("git workspace sync", () => {
   });
 
   it("re-exports a full bundle that imports when the host holds neither baseSha nor the merge-base", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-ancestor-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-ancestor-"));
     cleanupDirs.push(rootDir);
     // Host was reset to a strict ancestor of the eventual merge-base: it holds
     // only the very first commit, not baseSha and not the fork point.
@@ -509,8 +509,8 @@ describe("git workspace sync", () => {
 
     const sandbox = path.join(rootDir, "sandbox");
     await git(rootDir, ["clone", host, sandbox]);
-    await git(sandbox, ["config", "user.name", "Paperclip Remote"]);
-    await git(sandbox, ["config", "user.email", "remote@paperclip.dev"]);
+    await git(sandbox, ["config", "user.name", "Bionic Remote"]);
+    await git(sandbox, ["config", "user.email", "remote@bionic.dev"]);
     // Advance the merge-base past the host, then baseSha past that, then a
     // divergent local commit — so merge-base(baseSha, HEAD) is itself a commit
     // the host does not hold.
@@ -577,7 +577,7 @@ describe("git workspace sync", () => {
   });
 
   it("falls back to a full self-contained bundle when the sandbox lacks baseSha", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-full-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-full-"));
     cleanupDirs.push(rootDir);
     const sandbox = await createRepo(rootDir);
     await writeFile(path.join(sandbox, "more.txt"), "more\n", "utf8");
@@ -617,13 +617,13 @@ describe("git workspace sync", () => {
   });
 
   it("creates the concurrent-history merge commit with a deterministic identity", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-merge-identity-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-merge-identity-"));
     cleanupDirs.push(rootDir);
     // No repo-local user.name/user.email on purpose: execution hosts are
     // containers without git config, where commit-tree cannot auto-detect an
     // identity. Setup commits pass their identity inline so only the merge
     // commit under test depends on the sync-supplied identity.
-    const setupIdentity = ["-c", "user.name=Setup", "-c", "user.email=setup@paperclip.dev"];
+    const setupIdentity = ["-c", "user.name=Setup", "-c", "user.email=setup@bionic.dev"];
     const repo = path.join(rootDir, "repo");
     await mkdir(repo, { recursive: true });
     await git(repo, ["init"]);
@@ -662,18 +662,18 @@ describe("git workspace sync", () => {
     const parents = (await git(repo, ["rev-list", "--parents", "-1", "HEAD"])).split(" ");
     expect(parents.slice(1)).toEqual([currentHead, importedHead]);
     expect(await git(repo, ["log", "-1", "--format=%an|%ae|%cn|%ce"]))
-      .toBe("Paperclip|noreply@paperclip.ing|Paperclip|noreply@paperclip.ing");
+      .toBe("Bionic|noreply@bionic.ing|Bionic|noreply@bionic.ing");
     expect(await git(repo, ["log", "-1", "--format=%s"]))
-      .toBe(`Paperclip remote git sync merge ${importedHead.slice(0, 12)}`);
+      .toBe(`Bionic remote git sync merge ${importedHead.slice(0, 12)}`);
     const mergedTree = await git(repo, ["ls-tree", "--name-only", "HEAD"]);
     expect(mergedTree).toContain("local.txt");
     expect(mergedTree).toContain("imported.txt");
   });
 
   it("grafts an imported head onto the current head when histories share no ancestor", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-graft-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-graft-"));
     cleanupDirs.push(rootDir);
-    const setupIdentity = ["-c", "user.name=Setup", "-c", "user.email=setup@paperclip.dev"];
+    const setupIdentity = ["-c", "user.name=Setup", "-c", "user.email=setup@bionic.dev"];
     const repo = path.join(rootDir, "repo");
     await mkdir(repo, { recursive: true });
     await git(repo, ["init"]);
@@ -701,14 +701,14 @@ describe("git workspace sync", () => {
     expect(await git(repo, ["rev-parse", "HEAD^{tree}"])).toBe(importedTree);
     expect(await git(repo, ["log", "-1", "--format=%s"])).toBe("sandbox rewrite");
     const body = await git(repo, ["log", "-1", "--format=%B"]);
-    expect(body).toContain(`Paperclip remote git sync graft ${importedHead.slice(0, 12)}`);
+    expect(body).toContain(`Bionic remote git sync graft ${importedHead.slice(0, 12)}`);
     expect(body).toContain("shares no ancestor");
   });
 
   it("does not graft when merge-base fails for a reason other than missing ancestry", async () => {
-    const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-git-no-graft-"));
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-git-no-graft-"));
     cleanupDirs.push(rootDir);
-    const setupIdentity = ["-c", "user.name=Setup", "-c", "user.email=setup@paperclip.dev"];
+    const setupIdentity = ["-c", "user.name=Setup", "-c", "user.email=setup@bionic.dev"];
     const repo = path.join(rootDir, "repo");
     await mkdir(repo, { recursive: true });
     await git(repo, ["init"]);
@@ -729,7 +729,7 @@ describe("git workspace sync", () => {
 
   describe("readReferencedSourceGitIgnoredPaths", () => {
     it("returns null for a directory that is not a Git work tree", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-nogit-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-nogit-"));
       cleanupDirs.push(rootDir);
       const plainDir = path.join(rootDir, "plain");
       await mkdir(plainDir, { recursive: true });
@@ -760,7 +760,7 @@ describe("git workspace sync", () => {
     });
 
     it("reads the repository top level and the ignored paths of a Git work tree", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-git-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-git-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       await writeFile(path.join(repo, ".gitignore"), "secret.env\nbuild/\n", "utf8");
@@ -774,7 +774,7 @@ describe("git workspace sync", () => {
     });
 
     it("preserves trailing whitespace in an ignored path entry", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-trailing-ws-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-trailing-ws-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       // A wildcard pattern avoids the separate rule that git trims an
@@ -789,7 +789,7 @@ describe("git workspace sync", () => {
     });
 
     it("fails closed when the parsed ignored-entry count exceeds the bound", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-bound-count-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-bound-count-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       // Synthesize the `git ls-files --others --ignored -z` output directly,
@@ -815,7 +815,7 @@ describe("git workspace sync", () => {
     });
 
     it("fails closed when the summed UTF-8 byte size of ignored paths exceeds the bound", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-bound-bytes-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-bound-bytes-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       // One entry alone exceeds the byte bound, well under the entry-count bound.
@@ -838,7 +838,7 @@ describe("git workspace sync", () => {
     });
 
     it("fails closed on the byte bound while it is still accumulating, before it would ever reach a later entry-count breach", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-bound-order-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-bound-order-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       // Three entries alone cross the byte bound. Many more small entries
@@ -871,7 +871,7 @@ describe("git workspace sync", () => {
     });
 
     it("bounds the raw command-output allowance to the ignore-scan limits, not the general-purpose full-tree ceiling", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-raw-buffer-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-raw-buffer-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       let observedMaxBuffer: number | undefined;
@@ -896,7 +896,7 @@ describe("git workspace sync", () => {
     });
 
     it("does not fail closed on a huge amount of unrelated tracked-change and untracked noise, when the ignored set itself stays in bounds", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-mixed-status-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-mixed-status-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       await writeFile(path.join(repo, ".gitignore"), "secret.env\n", "utf8");
@@ -940,7 +940,7 @@ describe("git workspace sync", () => {
     });
 
     it("routes both scan commands through the registered scheduler instead of spawning git directly", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-scheduler-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-scheduler-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       await writeFile(path.join(repo, ".gitignore"), "build/\n", "utf8");
@@ -969,7 +969,7 @@ describe("git workspace sync", () => {
     });
 
     it("carries the hardened arguments and does not inherit a poisoned GIT_CONFIG_GLOBAL", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-hardened-env-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-hardened-env-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       const badGlobalConfig = path.join(rootDir, "bad-global-gitconfig");
@@ -990,7 +990,7 @@ describe("git workspace sync", () => {
     });
 
     it("neutralizes a repository-local core.fsmonitor hook", async () => {
-      const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-referenced-fsmonitor-"));
+      const rootDir = await mkdtemp(path.join(os.tmpdir(), "bionic-referenced-fsmonitor-"));
       cleanupDirs.push(rootDir);
       const repo = await createRepo(rootDir);
       const markerPath = path.join(rootDir, "pwned.txt");

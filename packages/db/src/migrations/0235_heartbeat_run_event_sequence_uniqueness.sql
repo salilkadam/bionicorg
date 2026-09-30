@@ -23,6 +23,6 @@ SET "next_event_seq" = COALESCE((
 	FROM "heartbeat_run_events" AS event
 	WHERE event."run_id" = run."id"
 ), 1);--> statement-breakpoint
--- paperclip:migration-safety-ignore large-create-index-not-concurrently: Drizzle migrations run transactionally, so CONCURRENTLY is unavailable. The duplicate repair and uniqueness invariant must commit atomically before native event writers rely on the sequence key.
+-- bionic:migration-safety-ignore large-create-index-not-concurrently: Drizzle migrations run transactionally, so CONCURRENTLY is unavailable. The duplicate repair and uniqueness invariant must commit atomically before native event writers rely on the sequence key.
 CREATE UNIQUE INDEX IF NOT EXISTS "heartbeat_run_events_run_seq_uq" ON "heartbeat_run_events" USING btree ("run_id","seq");--> statement-breakpoint
 DROP INDEX IF EXISTS "heartbeat_run_events_run_seq_idx";

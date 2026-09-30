@@ -1,7 +1,7 @@
 import type { AdapterExecutionTarget } from "./execution-target.js";
 
-export const PAPERCLIP_RUNNER_INGRESS_PORT = 43_127;
-export const PAPERCLIP_RUNNER_CONNECT_PATH_PREFIX = "/api/runner/v1/connect";
+export const BIONIC_RUNNER_INGRESS_PORT = 43_127;
+export const BIONIC_RUNNER_CONNECT_PATH_PREFIX = "/api/runner/v1/connect";
 
 export interface SecretHeader {
   readonly name: string;
@@ -72,7 +72,7 @@ function connectPath(runId: string): string {
       "Runner run id is not safe for a WebSocket route.",
     );
   }
-  return `${PAPERCLIP_RUNNER_CONNECT_PATH_PREFIX}/${encodeURIComponent(runId)}`;
+  return `${BIONIC_RUNNER_CONNECT_PATH_PREFIX}/${encodeURIComponent(runId)}`;
 }
 
 export function buildDirectRunnerConnectUrl(input: {
@@ -141,7 +141,7 @@ export async function resolvePaperclipRunnerTransport(input: {
     if (!ingressAuthorized) {
       throw new PaperclipRunnerTransportError(
         "runner_ingress_unavailable",
-        "Runner ingress is not authorized for this Paperclip Runner run.",
+        "Runner ingress is not authorized for this Bionic Runner run.",
       );
     }
     const getRunnerIngressEndpoint =
@@ -155,13 +155,13 @@ export async function resolvePaperclipRunnerTransport(input: {
     const path = connectPath(input.runId);
     const ingress = await getRunnerIngressEndpoint({
       leaseId: input.target.leaseId,
-      port: PAPERCLIP_RUNNER_INGRESS_PORT,
+      port: BIONIC_RUNNER_INGRESS_PORT,
       path,
     });
     return {
       mode: "provider_ingress",
       listenAddress: "0.0.0.0",
-      listenPort: PAPERCLIP_RUNNER_INGRESS_PORT,
+      listenPort: BIONIC_RUNNER_INGRESS_PORT,
       listenPath: path,
       ingress,
     };

@@ -4,10 +4,10 @@ import { stampClaudeAgentIdHeader } from "./claude-agent-id-header.js";
 import {
   buildSandboxNpmInstallCommand,
   getAdapterSessionManagement,
-  PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES,
-} from "@paperclipai/adapter-utils";
-import type { AdapterLoginCapability } from "@paperclipai/adapter-utils";
-import { runAdapterExecutionTargetShellCommand } from "@paperclipai/adapter-utils/execution-target";
+  BIONIC_RUNNER_PERMISSION_CAPABILITIES,
+} from "@bionicai/adapter-utils";
+import type { AdapterLoginCapability } from "@bionicai/adapter-utils";
+import { runAdapterExecutionTargetShellCommand } from "@bionicai/adapter-utils/execution-target";
 import {
   execute as claudeExecute,
   listClaudeSkills,
@@ -21,11 +21,11 @@ import {
   CLAUDE_SETUP_TOKEN_COMMAND,
   parseSetupTokenPrompt,
   parseSetupTokenCredential,
-} from "@paperclipai/adapter-claude-local/server";
+} from "@bionicai/adapter-claude-local/server";
 import {
   agentConfigurationDoc as claudeAgentConfigurationDoc,
   models as claudeModels,
-} from "@paperclipai/adapter-claude-local";
+} from "@bionicai/adapter-claude-local";
 import {
   execute as codexExecute,
   listCodexSkills,
@@ -36,29 +36,29 @@ import {
   getConfigSchema as getCodexConfigSchema,
   CODEX_DEVICE_LOGIN_COMMAND,
   parseDeviceLoginPrompt,
-} from "@paperclipai/adapter-codex-local/server";
+} from "@bionicai/adapter-codex-local/server";
 import {
   agentConfigurationDoc as codexAgentConfigurationDoc,
   models as codexModels,
-} from "@paperclipai/adapter-codex-local";
+} from "@bionicai/adapter-codex-local";
 import {
   execute as cursorExecute,
   listCursorSkills,
   syncCursorSkills,
   testEnvironment as cursorTestEnvironment,
   sessionCodec as cursorSessionCodec,
-} from "@paperclipai/adapter-cursor-local/server";
+} from "@bionicai/adapter-cursor-local/server";
 import {
   agentConfigurationDoc as cursorAgentConfigurationDoc,
   models as cursorModels,
-} from "@paperclipai/adapter-cursor-local";
+} from "@bionicai/adapter-cursor-local";
 import {
   execute as cursorCloudExecute,
   getConfigSchema as getCursorCloudConfigSchema,
   sessionCodec as cursorCloudSessionCodec,
   testEnvironment as cursorCloudTestEnvironment,
-} from "@paperclipai/adapter-cursor-cloud/server";
-import { agentConfigurationDoc as cursorCloudAgentConfigurationDoc } from "@paperclipai/adapter-cursor-cloud";
+} from "@bionicai/adapter-cursor-cloud/server";
+import { agentConfigurationDoc as cursorCloudAgentConfigurationDoc } from "@bionicai/adapter-cursor-cloud";
 import {
   execute as geminiExecute,
   listGeminiSkills,
@@ -66,11 +66,11 @@ import {
   testEnvironment as geminiTestEnvironment,
   sessionCodec as geminiSessionCodec,
   getConfigSchema as getGeminiConfigSchema,
-} from "@paperclipai/adapter-gemini-local/server";
+} from "@bionicai/adapter-gemini-local/server";
 import {
   agentConfigurationDoc as geminiAgentConfigurationDoc,
   models as geminiModels,
-} from "@paperclipai/adapter-gemini-local";
+} from "@bionicai/adapter-gemini-local";
 import {
   execute as grokExecute,
   listGrokSkills,
@@ -79,26 +79,26 @@ import {
   sessionCodec as grokSessionCodec,
   GROK_DEVICE_LOGIN_COMMAND,
   parseGrokDeviceLoginPrompt,
-} from "@paperclipai/adapter-grok-local/server";
+} from "@bionicai/adapter-grok-local/server";
 import {
   agentConfigurationDoc as grokAgentConfigurationDoc,
   models as grokModels,
-} from "@paperclipai/adapter-grok-local";
+} from "@bionicai/adapter-grok-local";
 import {
   execute as kimiExecute,
   listKimiSkills,
   syncKimiSkills,
   testEnvironment as kimiTestEnvironment,
   sessionCodec as kimiSessionCodec,
-} from "@paperclipai/adapter-kimi-local/server";
+} from "@bionicai/adapter-kimi-local/server";
 import {
   agentConfigurationDoc as kimiAgentConfigurationDoc,
   models as kimiModels,
-} from "@paperclipai/adapter-kimi-local";
+} from "@bionicai/adapter-kimi-local";
 import {
   createHermesGatewayServerAdapter,
   createHermesLocalServerAdapter,
-} from "@paperclipai/hermes-paperclip-adapter";
+} from "@bionicai/hermes-bionic-adapter";
 import {
   execute as openCodeExecute,
   listOpenCodeSkills,
@@ -106,19 +106,19 @@ import {
   testEnvironment as openCodeTestEnvironment,
   sessionCodec as openCodeSessionCodec,
   listOpenCodeModels,
-} from "@paperclipai/adapter-opencode-local/server";
+} from "@bionicai/adapter-opencode-local/server";
 import {
   agentConfigurationDoc as openCodeAgentConfigurationDoc,
   models as openCodeModels,
-} from "@paperclipai/adapter-opencode-local";
+} from "@bionicai/adapter-opencode-local";
 import {
   execute as openclawGatewayExecute,
   testEnvironment as openclawGatewayTestEnvironment,
-} from "@paperclipai/adapter-openclaw-gateway/server";
+} from "@bionicai/adapter-openclaw-gateway/server";
 import {
   agentConfigurationDoc as openclawGatewayAgentConfigurationDoc,
   models as openclawGatewayModels,
-} from "@paperclipai/adapter-openclaw-gateway";
+} from "@bionicai/adapter-openclaw-gateway";
 import { listCodexModels, refreshCodexModels } from "./codex-models.js";
 import { listCursorModels } from "./cursor-models.js";
 import {
@@ -128,8 +128,8 @@ import {
   testEnvironment as piTestEnvironment,
   sessionCodec as piSessionCodec,
   listPiModels,
-} from "@paperclipai/adapter-pi-local/server";
-import { agentConfigurationDoc as piAgentConfigurationDoc } from "@paperclipai/adapter-pi-local";
+} from "@bionicai/adapter-pi-local/server";
+import { agentConfigurationDoc as piAgentConfigurationDoc } from "@bionicai/adapter-pi-local";
 import { BUILTIN_ADAPTER_TYPES } from "./builtin-adapter-types.js";
 import { buildExternalAdapters } from "./plugin-loader.js";
 import { getDisabledAdapterTypes } from "../services/adapter-plugin-store.js";
@@ -194,7 +194,7 @@ The standalone ACPX adapter has been retired. Use:
 - claude_local with adapterConfig.engine="acp" for Claude ACP execution.
 - codex_local with adapterConfig.engine="acp" for Codex ACP execution.
 
-Paperclip keeps this tombstone registered so stale acpx_local rows fail clearly instead of falling back to the process adapter.
+Bionic keeps this tombstone registered so stale acpx_local rows fail clearly instead of falling back to the process adapter.
 `;
 
 // The Claude interactive login capability. Claude runs `claude setup-token` on a
@@ -357,18 +357,18 @@ const codexLocalAdapter: ServerAdapterModule = {
   loginCapability: codexLoginCapability,
 };
 
-const paperclipRunnerAdapter: ServerAdapterModule = {
-  type: "paperclip_runner",
+const bionicRunnerAdapter: ServerAdapterModule = {
+  type: "bionic_runner",
   runtimeToolDelivery: "environment",
   async execute(ctx) {
-    const message = "paperclip_runner requires the native runner coordinator";
+    const message = "bionic_runner requires the native runner coordinator";
     await ctx.onLog("stderr", `${message}\n`);
     return {
       exitCode: 1,
       signal: null,
       timedOut: false,
       errorMessage: message,
-      errorCode: "paperclip_runner_coordinator_required",
+      errorCode: "bionic_runner_coordinator_required",
       provider: ctx.config.provider === "opencode"
         ? "opencode"
         : ctx.config.provider === "claude_managed"
@@ -389,11 +389,11 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
       const profileError = error instanceof PaperclipRunnerProviderProfileError
         ? error
         : new PaperclipRunnerProviderProfileError(
-            "paperclip_runner_provider_unsupported",
-            "Paperclip Runner provider configuration is invalid.",
+            "bionic_runner_provider_unsupported",
+            "Bionic Runner provider configuration is invalid.",
           );
       return {
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "fail" as const,
         testedAt: new Date().toISOString(),
         checks: [{
@@ -408,7 +408,7 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
         // The profile resolver already validated the isolated host's exact
         // qualification pair. Do not report a production readiness pass.
         return {
-          adapterType: "paperclip_runner", status: "warn" as const, testedAt: new Date().toISOString(),
+          adapterType: "bionic_runner", status: "warn" as const, testedAt: new Date().toISOString(),
           checks: [{ code: "acpx_candidate_qualification_only", level: "warn" as const,
             message: "This exact candidate and model are admitted for operator-controlled qualification only. Verified runtime installation, bound credentials, and model access are checked before execution; production support remains pending." }],
         };
@@ -427,27 +427,27 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
             throw new Error(`ACPX ${profile.acpxAgent} requires a qualified Linux x64 or macOS architecture.`);
           }
           return {
-            adapterType: "paperclip_runner", status: "warn" as const, testedAt: new Date().toISOString(),
+            adapterType: "bionic_runner", status: "warn" as const, testedAt: new Date().toISOString(),
             checks: [{ code: "acpx_remote_runtime_unverified", level: "warn" as const,
               message: "The remote platform is supported. Runtime package integrity and readiness must still be verified by the remote runner before launch." }],
           };
         }
-        const { probeAcpxClaudeInstallation, probeAcpxGrokInstallation } = await import("@paperclipai/paperclip-runner/live");
+        const { probeAcpxClaudeInstallation, probeAcpxGrokInstallation } = await import("@bionicai/bionic-runner/live");
         await (profile.acpxAgent === "grok" ? probeAcpxGrokInstallation : probeAcpxClaudeInstallation)(profile.model);
         return {
-          adapterType: "paperclip_runner", status: "pass" as const, testedAt: new Date().toISOString(),
+          adapterType: "bionic_runner", status: "pass" as const, testedAt: new Date().toISOString(),
           checks: [{ code: "acpx_runtime_ready", level: "info" as const, message: `ACPX ${profile.acpxAgent} runtime is installed and verified. Model access is checked when it runs.` }],
         };
       } catch (error) {
         return {
-          adapterType: "paperclip_runner", status: "fail" as const, testedAt: new Date().toISOString(),
+          adapterType: "bionic_runner", status: "fail" as const, testedAt: new Date().toISOString(),
           checks: [{ code: "acpx_runtime_unavailable", level: "error" as const, message: error instanceof Error ? error.message : "ACPX Claude runtime could not be verified." }],
         };
       }
     }
     if (profile.provider === "claude_managed") {
       return {
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "warn" as const,
         testedAt: new Date().toISOString(),
         checks: [{
@@ -463,7 +463,7 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
     }
     if (profile.provider === "aws_agentcore") {
       return {
-        adapterType: "paperclip_runner",
+        adapterType: "bionic_runner",
         status: "warn" as const,
         testedAt: new Date().toISOString(),
         checks: [{
@@ -480,7 +480,7 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
     const result = profile.provider === "opencode"
       ? await openCodeTestEnvironment(context)
       : await codexTestEnvironment(context);
-    return { ...result, adapterType: "paperclip_runner" };
+    return { ...result, adapterType: "bionic_runner" };
   },
   listSkills: listCodexSkills,
   syncSkills: syncCodexSkills,
@@ -510,7 +510,7 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
   getRuntimeCommandSpec: (config) => config.provider === "claude_managed"
     || config.provider === "aws_agentcore"
     || config.provider === "acpx"
-    ? { command: "paperclip-runnerd", detectCommand: null, installCommand: null }
+    ? { command: "bionic-runnerd", detectCommand: null, installCommand: null }
     : config.provider === "opencode"
       ? buildNpmRuntimeCommandSpec(
           config,
@@ -519,7 +519,7 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
         )
       : buildNpmRuntimeCommandSpec(config, "codex", "@openai/codex@0.156.0"),
   agentConfigurationDoc:
-    "# Paperclip Runner\n\nAdapter: paperclip_runner\n\nRuns Codex, OpenCode, Claude Managed, AWS AgentCore, or ACPX Claude/Grok Build through the Rust Paperclip runner and authenticated PRP transport. Cursor, GitHub Copilot, and Pi are awaiting local and Daytona qualification and are not enabled for production runs. Managed providers use company-scoped qualified profiles, explicit retention acknowledgement, and spend limits.\n",
+    "# Bionic Runner\n\nAdapter: bionic_runner\n\nRuns Codex, OpenCode, Claude Managed, AWS AgentCore, or ACPX Claude/Grok Build through the Rust Bionic runner and authenticated PRP transport. Cursor, GitHub Copilot, and Pi are awaiting local and Daytona qualification and are not enabled for production runs. Managed providers use company-scoped qualified profiles, explicit retention acknowledgement, and spend limits.\n",
   getConfigSchema: () => ({
     fields: [
       {
@@ -545,33 +545,33 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
         key: "codexPermissionMode",
         label: "Codex permission mode",
         type: "select" as const,
-        default: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.codex.defaultMode,
-        options: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.codex.options.map(
+        default: BIONIC_RUNNER_PERMISSION_CAPABILITIES.codex.defaultMode,
+        options: BIONIC_RUNNER_PERMISSION_CAPABILITIES.codex.options.map(
           ({ value, label }) => ({ value, label }),
         ),
-        hint: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.codex.description,
+        hint: BIONIC_RUNNER_PERMISSION_CAPABILITIES.codex.description,
         meta: { visibleWhen: { key: "provider", value: "codex" } },
       },
       {
         key: "opencodePermissionMode",
         label: "OpenCode permission mode",
         type: "select" as const,
-        default: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.opencode.defaultMode,
-        options: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.opencode.options.map(
+        default: BIONIC_RUNNER_PERMISSION_CAPABILITIES.opencode.defaultMode,
+        options: BIONIC_RUNNER_PERMISSION_CAPABILITIES.opencode.options.map(
           ({ value, label }) => ({ value, label }),
         ),
-        hint: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.opencode.description,
+        hint: BIONIC_RUNNER_PERMISSION_CAPABILITIES.opencode.description,
         meta: { visibleWhen: { key: "provider", value: "opencode" } },
       },
       {
         key: "acpxPermissionMode",
         label: "ACPX permission mode",
         type: "select" as const,
-        default: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.acpx.defaultMode,
-        options: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.acpx.options.map(
+        default: BIONIC_RUNNER_PERMISSION_CAPABILITIES.acpx.defaultMode,
+        options: BIONIC_RUNNER_PERMISSION_CAPABILITIES.acpx.options.map(
           ({ value, label }) => ({ value, label }),
         ),
-        hint: PAPERCLIP_RUNNER_PERMISSION_CAPABILITIES.acpx.description,
+        hint: BIONIC_RUNNER_PERMISSION_CAPABILITIES.acpx.description,
         meta: { visibleWhen: { key: "provider", value: "acpx" } },
       },
       {
@@ -620,7 +620,7 @@ const paperclipRunnerAdapter: ServerAdapterModule = {
         label: "Estimated session ceiling (USD)",
         type: "number" as const,
         default: 1,
-        hint: "Paperclip estimate; AWS does not provide a per-session currency hard stop.",
+        hint: "Bionic estimate; AWS does not provide a per-session currency hard stop.",
         meta: { visibleWhen: { key: "provider", value: "aws_agentcore" } },
       },
       {
@@ -869,7 +869,7 @@ function registerBuiltInAdapters() {
     acpxLocalAdapter,
     claudeLocalAdapter,
     codexLocalAdapter,
-    paperclipRunnerAdapter,
+    bionicRunnerAdapter,
     openCodeLocalAdapter,
     piLocalAdapter,
     cursorCloudAdapter,
@@ -945,7 +945,7 @@ const externalAdaptersReady: Promise<void> = (async () => {
       const overriding = BUILTIN_ADAPTER_TYPES.has(externalAdapter.type);
       if (overriding) {
         console.log(
-          `[paperclip] External adapter "${externalAdapter.type}" overrides built-in adapter`,
+          `[bionic] External adapter "${externalAdapter.type}" overrides built-in adapter`,
         );
         // Save the original builtin for later restoration.
         const existing = adaptersByType.get(externalAdapter.type);
@@ -959,7 +959,7 @@ const externalAdaptersReady: Promise<void> = (async () => {
       );
     }
   } catch (err) {
-    console.error("[paperclip] Failed to load external adapters:", err);
+    console.error("[bionic] Failed to load external adapters:", err);
   }
 })();
 
@@ -1012,7 +1012,7 @@ export function getServerAdapter(type: string): ServerAdapterModule {
 }
 
 /**
- * Memoized view of PAPERCLIP_ADAPTER_MODELS, keyed by the raw env string so
+ * Memoized view of BIONIC_ADAPTER_MODELS, keyed by the raw env string so
  * tests (and live env mutation) that change the variable are still observed.
  * Parsing happens at most once per distinct raw value instead of per
  * `listAdapterModels` request, and malformed values fail SOFT here: we log the
@@ -1025,7 +1025,7 @@ let adapterModelsEnvCache: {
 } | null = null;
 
 function getDeclaredAdapterModels(): ReturnType<typeof parseAdapterModelsEnv> {
-  const raw = process.env.PAPERCLIP_ADAPTER_MODELS;
+  const raw = process.env.BIONIC_ADAPTER_MODELS;
   if (adapterModelsEnvCache && adapterModelsEnvCache.raw === raw) {
     return adapterModelsEnvCache.value;
   }
@@ -1034,7 +1034,7 @@ function getDeclaredAdapterModels(): ReturnType<typeof parseAdapterModelsEnv> {
     value = parseAdapterModelsEnv(process.env);
   } catch (err) {
     console.error(
-      "[paperclip] Invalid PAPERCLIP_ADAPTER_MODELS; ignoring declared model lists:",
+      "[bionic] Invalid BIONIC_ADAPTER_MODELS; ignoring declared model lists:",
       err,
     );
   }
@@ -1136,12 +1136,12 @@ export function setOverridePaused(type: string, paused: boolean): boolean {
   const wasPaused = pausedOverrides.has(type);
   if (paused && !wasPaused) {
     pausedOverrides.add(type);
-    console.log(`[paperclip] Override paused for "${type}" — builtin adapter restored`);
+    console.log(`[bionic] Override paused for "${type}" — builtin adapter restored`);
     return true;
   }
   if (!paused && wasPaused) {
     pausedOverrides.delete(type);
-    console.log(`[paperclip] Override resumed for "${type}" — external adapter active`);
+    console.log(`[bionic] Override resumed for "${type}" — external adapter active`);
     return true;
   }
   return false;

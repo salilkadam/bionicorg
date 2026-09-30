@@ -63,7 +63,7 @@ factory validated by the shared environment schema.
 The local environment is instance-managed: company creation ensures it exists,
 and the public API intentionally rejects a second local environment. The setup
 registry therefore discovers that row through the public environments API.
-This still provides full isolation because every cell starts a new Paperclip
+This still provides full isolation because every cell starts a new Bionic
 instance and database.
 
 Daytona creates sandbox environments through the public API. The core fixture
@@ -114,9 +114,9 @@ a deletion through public file APIs. Native turns 2 and 3 must copy/hash only th
 changed memory file, with a saved receipt and the same provider PID. Journal and
 Git stress fixtures retain fixed external bundles as controls. Keep the stable-PID
 oracle strict; `instruction-persistence` also covers cold restarts and quota handling.
-Native turns 1 and 2 include an actionable human review in the completion report's `attentionRequests`. Paperclip creates the review gate from that report. An explicit question-tool wait yields the turn and suppresses its final prose, so it is not interchangeable with this completion-review fixture. Turn 3 reports Done without another review.
+Native turns 1 and 2 include an actionable human review in the completion report's `attentionRequests`. Bionic creates the review gate from that report. An explicit question-tool wait yields the turn and suppresses its final prose, so it is not interchangeable with this completion-review fixture. Turn 3 reports Done without another review.
 
-Every selected case runs in its own isolated Paperclip process, and independent
+Every selected case runs in its own isolated Bionic process, and independent
 cases may run concurrently. Follow-up turns inside one case retain their shared
 task state. Each case creates and tears down its own company, secrets,
 environment selection, agent, and browser-created task. The current plan case
@@ -135,7 +135,7 @@ Adding a task expands its suite's matrix. Update the suite's intentional size,
 the complete-catalog size, and credential-free unit tests in the same change.
 Paid tests never silently skip a missing credential or unsupported artifact.
 
-## New Paperclip object fixtures
+## New Bionic object fixtures
 
 The explicit-only `lifecycle-baseline` suite reuses this registry and existing
 continuation, chat and governed-action flows. Its narrative pairs require actual

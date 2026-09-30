@@ -10,7 +10,7 @@ import {
   toolProfileEntries,
   toolProfiles,
   type Db,
-} from "@paperclipai/db";
+} from "@bionicai/db";
 
 /** Only authorization fields participate: receiving messages must not reset sessions. */
 export async function slackAuthorizationRevision(
@@ -40,7 +40,7 @@ export async function slackAuthorizationRevision(
       .select({
         id: chatIdentityLinks.id,
         status: chatIdentityLinks.status,
-        user: chatIdentityLinks.paperclipUserId,
+        user: chatIdentityLinks.bionicUserId,
         updatedAt: chatIdentityLinks.updatedAt,
       })
       .from(chatIdentityLinks)
@@ -48,7 +48,7 @@ export async function slackAuthorizationRevision(
         and(
           eq(chatIdentityLinks.companyId, companyId),
           eq(chatIdentityLinks.endpointId, endpointId),
-          eq(chatIdentityLinks.paperclipUserId, userId),
+          eq(chatIdentityLinks.bionicUserId, userId),
         ),
       )
       .orderBy(chatIdentityLinks.id),

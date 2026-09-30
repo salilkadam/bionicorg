@@ -8,37 +8,37 @@ import type {
   AdapterEnvironmentTestResult,
   AdapterExecutionContext,
   AdapterExecutionResult,
-} from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils";
 import {
   parseLocalProcessFilesystemScope,
   parseLocalProcessNetworkScope,
-} from "@paperclipai/adapter-utils/local-process-sandbox";
-import { inferOpenAiCompatibleBiller } from "@paperclipai/adapter-utils";
+} from "@bionicai/adapter-utils/local-process-sandbox";
+import { inferOpenAiCompatibleBiller } from "@bionicai/adapter-utils";
 import {
   ensureAdapterExecutionTargetCommandResolvable,
   readAdapterExecutionTarget,
   resolveAdapterExecutionTargetCwd,
-} from "@paperclipai/adapter-utils/execution-target";
+} from "@bionicai/adapter-utils/execution-target";
 import {
   DEFAULT_ACP_ENGINE_MODE,
   DEFAULT_ACP_ENGINE_NON_INTERACTIVE_PERMISSIONS,
   DEFAULT_ACP_ENGINE_PERMISSION_MODE,
   DEFAULT_ACP_ENGINE_WARM_HANDLE_IDLE_MS,
-} from "@paperclipai/adapter-utils/acpx-engine/constants";
+} from "@bionicai/adapter-utils/acpx-engine/constants";
 import type {
   AcpxEngineExecutorOptions,
   AcpxRemoteManagedHomeContext,
   AcpxRemoteManagedHomeResult,
   AcpxTerminalFailureClassification,
   AcpxTerminalSessionFailure,
-} from "@paperclipai/adapter-utils/acpx-engine/execute";
+} from "@bionicai/adapter-utils/acpx-engine/execute";
 import {
   asNumber,
   asString,
   asStringArray,
   parseObject,
-} from "@paperclipai/adapter-utils/server-utils";
-import { createWorkspaceRestoreTeardown } from "@paperclipai/adapter-utils/workspace-restore-teardown";
+} from "@bionicai/adapter-utils/server-utils";
+import { createWorkspaceRestoreTeardown } from "@bionicai/adapter-utils/workspace-restore-teardown";
 import { normalizeCodexModel } from "../index.js";
 import { classifyCodexAuthRefreshFailure, extractCodexRetryNotBefore } from "./parse.js";
 import { copyBackCodexAuth } from "./codex-auth-copyback.js";
@@ -141,7 +141,7 @@ export function buildCodexAcpConfig(config: Record<string, unknown>): Record<str
   );
 
   const env = parseObject(config.env);
-  let networkAccess = env.PAPERCLIP_CODEX_ACP_NETWORK_ACCESS !== "false";
+  let networkAccess = env.BIONIC_CODEX_ACP_NETWORK_ACCESS !== "false";
   const extraArgs = asStringArray(config.extraArgs);
   for (const arg of extraArgs.length > 0 ? extraArgs : asStringArray(config.args)) {
     const match = /^(?:(?:--config=|-c=?)\s*)?sandbox_workspace_write\.network_access\s*=\s*(true|false)\s*$/.exec(arg);
@@ -150,7 +150,7 @@ export function buildCodexAcpConfig(config: Record<string, unknown>): Record<str
 
   return {
     ...config,
-    env: { ...env, PAPERCLIP_CODEX_ACP_NETWORK_ACCESS: String(networkAccess) },
+    env: { ...env, BIONIC_CODEX_ACP_NETWORK_ACCESS: String(networkAccess) },
     agent: "codex",
     mode,
     permissionMode,
@@ -243,9 +243,9 @@ async function prepareCodexRemoteManagedHome(
       stagedRuntime,
       onLog,
       startMessage: apiKeyAuth
-        ? "[paperclip] Restoring workspace changes from the sandbox.\n"
-        : "[paperclip] Restoring workspace changes and Codex auth from the sandbox.\n",
-      failurePrefix: "[paperclip] Codex ACP teardown restore/copy-back failed",
+        ? "[bionic] Restoring workspace changes from the sandbox.\n"
+        : "[bionic] Restoring workspace changes and Codex auth from the sandbox.\n",
+      failurePrefix: "[bionic] Codex ACP teardown restore/copy-back failed",
     }),
     // One-time cleanup of the HOST staged home temp dir. Fired ONLY when the
     // staged runtime is dropped (failed/cancelled/timed-out turn, incompatible
@@ -256,7 +256,7 @@ async function prepareCodexRemoteManagedHome(
       await fs.rm(stagedCodexHomeDir, { recursive: true, force: true }).catch(async (error) => {
         await onLog(
           "stderr",
-          `[paperclip] Failed to remove staged Codex home "${stagedCodexHomeDir}": ${
+          `[bionic] Failed to remove staged Codex home "${stagedCodexHomeDir}": ${
             error instanceof Error ? error.message : String(error)
           }\n`,
         );
@@ -359,7 +359,7 @@ export function createCodexAcpExecutor(options: CodexAcpExecutorOptions = {}): C
   return async (ctx) => {
     let currentExecutor = executor;
     if (!currentExecutor) {
-      const { createAcpxEngineExecutor } = await import("@paperclipai/adapter-utils/acpx-engine/execute");
+      const { createAcpxEngineExecutor } = await import("@bionicai/adapter-utils/acpx-engine/execute");
       currentExecutor = createAcpxEngineExecutor(withCodexAcpDefaults(options));
       executor = currentExecutor;
     }
@@ -526,7 +526,7 @@ export async function testCodexAcpEnvironment(
       code: "codex_acp_remote_target",
       level: "info",
       message: "Codex ACP will run against the remote execution environment.",
-      hint: "Remote ACP requires a bidirectional process target such as SSH or Paperclip's sandbox process-session bridge.",
+      hint: "Remote ACP requires a bidirectional process target such as SSH or Bionic's sandbox process-session bridge.",
     });
   }
 
@@ -617,13 +617,13 @@ export async function testCodexAcpEnvironment(
       checks.push({
         code: "codex_acp_credentials_missing",
         level: "warn",
-        message: "No Codex ACP credentials visible to the Paperclip server were detected.",
-        hint: "Set OPENAI_API_KEY in the agent adapter env, set it in the Paperclip server environment, or run `codex login` for the same OS user that runs the Paperclip server before starting a Codex ACP agent. A `/login` in a separate Codex/chat session does not authenticate the server.",
+        message: "No Codex ACP credentials visible to the Bionic server were detected.",
+        hint: "Set OPENAI_API_KEY in the agent adapter env, set it in the Bionic server environment, or run `codex login` for the same OS user that runs the Bionic server before starting a Codex ACP agent. A `/login` in a separate Codex/chat session does not authenticate the server.",
       });
     }
   } else if (targetIsSandbox) {
     // The ACP Test does not probe the sandbox, so it predicts readiness from the
-    // credentials the Paperclip server can seed into the sandbox. The host
+    // credentials the Bionic server can seed into the sandbox. The host
     // environment is not seeded, so only the adapter config key counts here.
     const configApiKey = isNonEmpty(envConfig.OPENAI_API_KEY) ? envConfig.OPENAI_API_KEY : null;
     const configuredCodexHome = isNonEmpty(envConfig.CODEX_HOME) ? envConfig.CODEX_HOME : null;

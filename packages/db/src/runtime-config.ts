@@ -5,7 +5,7 @@ import {
   resolveDefaultEmbeddedPostgresDir,
   resolvePaperclipConfigPathForInstance,
   resolvePaperclipEnvPathForConfig,
-} from "@paperclipai/shared/home-paths";
+} from "@bionicai/shared/home-paths";
 
 const CONFIG_BASENAME = "config.json";
 
@@ -24,7 +24,7 @@ export type ResolvedDatabaseTarget =
   | {
       mode: "postgres";
       connectionString: string;
-      source: "DATABASE_URL" | "paperclip-env" | "config.database.connectionString";
+      source: "DATABASE_URL" | "bionic-env" | "config.database.connectionString";
       configPath: string;
       envPath: string;
     }
@@ -45,7 +45,7 @@ function findConfigFileFromAncestors(startDir: string): string | null {
   let currentDir = path.resolve(startDir);
 
   while (true) {
-    const candidate = path.resolve(currentDir, ".paperclip", CONFIG_BASENAME);
+    const candidate = path.resolve(currentDir, ".bionic", CONFIG_BASENAME);
     if (existsSync(candidate)) return candidate;
 
     const nextDir = path.resolve(currentDir, "..");
@@ -55,8 +55,8 @@ function findConfigFileFromAncestors(startDir: string): string | null {
 }
 
 function resolvePaperclipConfigPath(): string {
-  if (process.env.PAPERCLIP_CONFIG?.trim()) {
-    return path.resolve(process.env.PAPERCLIP_CONFIG.trim());
+  if (process.env.BIONIC_CONFIG?.trim()) {
+    return path.resolve(process.env.BIONIC_CONFIG.trim());
   }
   return findConfigFileFromAncestors(process.cwd()) ?? resolvePaperclipConfigPathForInstance();
 }
@@ -202,7 +202,7 @@ export function resolveDatabaseTarget(): ResolvedDatabaseTarget {
     return {
       mode: "postgres",
       connectionString: fileEnvUrl,
-      source: "paperclip-env",
+      source: "bionic-env",
       configPath,
       envPath,
     };
