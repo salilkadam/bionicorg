@@ -1,0 +1,3 @@
+canonicalId: skad-derive-and-diff
+type: workflow
+description: "Derive what should be true, map what exists with a different model, and triage the gap — the counterpart to an audit"

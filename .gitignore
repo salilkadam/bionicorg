@@ -6,7 +6,7 @@ dist/
 dist-preview/
 dist-flow-preview/
 server/ui-dist/
-packages/paperclip-runner/runner/target/
+packages/bionic-runner/runner/target/
 ui/storybook-static/
 .env
 *.tsbuildinfo
@@ -18,7 +18,7 @@ coverage/
 .AppleDouble
 .LSOverride
 data/
-.paperclip/
+.bionic/
 .pnpm-store/
 tmp-*
 cli/tmp/
@@ -51,8 +51,8 @@ diagnostics/
 *.tmp
 .vscode/
 .claude/settings.local.json
-.paperclip-local/
-.paperclip-runtime/
+.bionic-local/
+.bionic-runtime/
 /.idea/
 /.agents/
 
@@ -82,3 +82,9 @@ test-results/
 
 # Retained local lifecycle behavior measurements
 .lifecycle-baseline/
+
+# SKAD ships data/ directories inside its workflows (CSV lookup tables and
+# templates that workflows reference). The broad `data/` rule above would
+# otherwise silently exclude them and ship a broken _skad install.
+!_skad/**/data/
+!_skad/**/data/**
