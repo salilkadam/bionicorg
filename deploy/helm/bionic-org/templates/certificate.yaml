@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "bionic-org.name" . }}-tls
+  namespace: {{ .Values.namespace | default .Release.Name }}
+  labels:
+    {{- include "bionic-org.labels" . | nindent 4 }}
+spec:
+  dnsNames:
+    - {{ .Values.domain }}
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  secretName: {{ .Values.ingress.tls.secretName }}
+  usages:
+    - digital signature
+    - key encipherment

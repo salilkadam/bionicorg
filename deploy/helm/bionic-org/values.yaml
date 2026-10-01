@@ -1,0 +1,181 @@
+# Default values for bionic-org deployment.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# ---------------------------------------------------------------------------
+# Namespace
+# ---------------------------------------------------------------------------
+namespace: bionicorg
+
+# ---------------------------------------------------------------------------
+# Image
+# ---------------------------------------------------------------------------
+image:
+  repository: docker4zerocool/bionic
+  tag: ""  # defaults to chart appVersion if empty
+  pullPolicy: Always
+
+# Image pull secret (e.g. for Docker Hub rate-limit compliance)
+imagePullSecret:
+  enabled: true
+  name: dockerhub-pull-secret
+
+# ---------------------------------------------------------------------------
+# Replicas
+# ---------------------------------------------------------------------------
+replicaCount: 1
+
+# ---------------------------------------------------------------------------
+# Domain / Ingress
+# ---------------------------------------------------------------------------
+domain: org.baisoln.com
+
+ingress:
+  className: kong
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/https-redirect-status-code: "301"
+    konghq.com/preserve-host: "true"
+    konghq.com/protocols: http,https
+    konghq.com/strip-path: "false"
+  tls:
+    enabled: true
+    secretName: bionic-org-tls
+
+# ---------------------------------------------------------------------------
+# Service
+# ---------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3100
+
+# ---------------------------------------------------------------------------
+# Resource limits
+# ---------------------------------------------------------------------------
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# ---------------------------------------------------------------------------
+# PostgreSQL (CNPG) — new database in existing pg-ceph cluster
+# ---------------------------------------------------------------------------
+postgresql:
+  # The CNPG cluster this new DB belongs to
+  cluster: pg-ceph
+  namespace: pg
+  # New database name to create
+  database: bionicorg
+  # New user name to create
+  username: bionicorg
+  # Password — generated if not provided (stored in Vault secret)
+  password: ""
+  # Connection will be formed as:
+  #   postgresql://<username>:<password>@<primary-svc>.<pg-ns>.svc.cluster.local:5432/<database>
+  primaryService: pg-ceph-rw
+  port: 5432
+
+# ---------------------------------------------------------------------------
+# Vault / ExternalSecrets
+# ---------------------------------------------------------------------------
+vault:
+  # Vault path where app secrets are stored
+  path: t6-apps/bionic-org/config
+  # Secret store (ClusterSecretStore)
+  secretStore: vault-backend
+  # Refresh interval for ESO sync
+  refreshInterval: 5m
+  # Deletion policy for the synced K8s secret
+  deletionPolicy: Retain
+
+# ---------------------------------------------------------------------------
+# Keycloak
+# ---------------------------------------------------------------------------
+keycloak:
+  # Internal URL of the Keycloak service
+  internalUrl: http://keycloak.keycloak.svc.cluster.local:80
+  url: https://auth.bionicaisolutions.com
+  realm: Bionic
+  # Client ID / secret — must be created in Keycloak and stored in Vault
+  clientId: ""
+  clientSecret: ""
+  redirectUri: "https://org.baisoln.com/api/auth/callback"
+
+# ---------------------------------------------------------------------------
+# MinIO / S3 storage (optional — used if PAPERCLIP_STORAGE_PROVIDER=s3)
+# ---------------------------------------------------------------------------
+minio:
+  endpoint: minio-tenant-hl.minio.svc.cluster.local:9000
+  useSSL: "false"
+  bucket: bionicorg
+  rootUserSecret: ""      # synced from existing minio credentials
+  rootPasswordSecret: ""   # synced from existing minio credentials
+
+# ---------------------------------------------------------------------------
+# Vault K8s Auth (for API token signing, etc.)
+# ---------------------------------------------------------------------------
+vaultAuth:
+  role: bionic-org
+  address: http://vault-internal.vault.svc.cluster.local:8200
+
+# ---------------------------------------------------------------------------
+# Environment (non-secret, goes in ConfigMap)
+# ---------------------------------------------------------------------------
+env:
+  NODE_ENV: production
+  PAPERCLIP_DEPLOYMENT_MODE: authenticated
+  PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+  PAPERCLIP_PUBLIC_URL: "https://{{ .Values.domain }}"
+  PAPERCLIP_ALLOWED_HOSTNAMES: "{{ .Values.domain }}"
+  PAPERCLIP_STORAGE_PROVIDER: local_disk  # or s3; set S3 env vars if s3
+  PORT: "3100"
+  SERVE_UI: "true"
+  KEYCLOAK_REALM: "Bionic"
+  KEYCLOAK_URL: "{{ .Values.keycloak.url }}"
+  KEYCLOAK_INTERNAL_URL: "{{ .Values.keycloak.internalUrl }}"
+  KEYCLOAK_REDIRECT_URI: "{{ .Values.keycloak.redirectUri }}"
+  VAULT_ADDR: "{{ .Values.vaultAuth.address }}"
+  VAULT_K8S_ROLE: "{{ .Values.vaultAuth.role }}"
+  MINIO_ENDPOINT: "{{ .Values.minio.endpoint }}"
+  MINIO_USE_SSL: "{{ .Values.minio.useSSL }}"
+  MAIL_FROM: info@bionicaisolutions.com
+  BIONIC_INTERNAL_BASE_URL: "http://bionic.bionicorg.svc.cluster.local"
+
+# ---------------------------------------------------------------------------
+# Node/DNS config (mimics bionic-platform)
+# ---------------------------------------------------------------------------
+dnsConfig:
+  options:
+    - name: ndots
+      value: "2"
+
+# ---------------------------------------------------------------------------
+# Liveness / Readiness probes
+# ---------------------------------------------------------------------------
+probes:
+  liveness:
+    path: /healthz
+    port: 3100
+    initialDelaySeconds: 15
+    periodSeconds: 30
+  readiness:
+    path: /healthz
+    port: 3100
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+# ---------------------------------------------------------------------------
+# Pod annotations (e.g. force-pull)
+# ---------------------------------------------------------------------------
+podAnnotations: {}
+
+# ---------------------------------------------------------------------------
+# Service Account
+# ---------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: bionic-org-sa
