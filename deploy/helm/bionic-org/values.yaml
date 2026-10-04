@@ -12,7 +12,7 @@ namespace: bionicorg
 # ---------------------------------------------------------------------------
 image:
   repository: docker4zerocool/bionic
-  tag: ""  # defaults to chart appVersion if empty
+  tag: "71d7f47fe-fix-patched"  # patched image with /health + /api/health hostname-guard exemption (source fix included in this tree; rebuilds from main will not need the patch)
   pullPolicy: Always
 
 # Image pull secret (e.g. for Docker Hub rate-limit compliance)
@@ -143,7 +143,7 @@ env:
   MINIO_ENDPOINT: "{{ .Values.minio.endpoint }}"
   MINIO_USE_SSL: "{{ .Values.minio.useSSL }}"
   MAIL_FROM: info@bionicaisolutions.com
-  BIONIC_INTERNAL_BASE_URL: "http://bionic.bionicorg.svc.cluster.local"
+  BIONIC_INTERNAL_BASE_URL: "https://org.baisoln.com"
 
 # ---------------------------------------------------------------------------
 # Node/DNS config (mimics bionic-platform)
@@ -158,12 +158,12 @@ dnsConfig:
 # ---------------------------------------------------------------------------
 probes:
   liveness:
-    path: /healthz
+    path: /health
     port: 3100
     initialDelaySeconds: 15
     periodSeconds: 30
   readiness:
-    path: /healthz
+    path: /health
     port: 3100
     initialDelaySeconds: 5
     periodSeconds: 10

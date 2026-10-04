@@ -68,6 +68,12 @@ export function privateHostnameGuard(opts: {
   });
 
   return (req, res, next) => {
+    // Skip the hostname guard for health check endpoints so Kubernetes
+    // liveness/readiness probes (which hit the pod's cluster IP) can pass.
+    if (req.path === "/health" || req.path === "/api/health") {
+      return next();
+    }
+
     const hostname = extractHostname(req);
     const wantsJson = req.path.startsWith("/api") || req.accepts(["json", "html", "text"]) === "json";
 

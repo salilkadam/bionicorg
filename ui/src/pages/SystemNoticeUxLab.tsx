@@ -243,7 +243,7 @@ export function SystemNoticeUxLab() {
             label="System alert"
             source={{ label: "Bionic", href: "/PAP/agents" }}
             timestamp="2026-05-04T16:48:00.000Z"
-            body="Bionic could not resolve this issue's missing disposition automatically. The source assignment is unchanged and a board decision is required.",
+            body="Bionic could not resolve this issue's missing disposition automatically. The source assignment is unchanged and a board decision is required."
             metadata={[
               {
                 title: "Recovery owner",

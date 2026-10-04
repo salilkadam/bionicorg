@@ -248,13 +248,13 @@ import {
 import { listConnectionLifecycleEvents } from "./tool-connection-activity.js";
 import { isRetiredComposioConnection, RETIRED_COMPOSIO_MESSAGE } from "@paperclipai/shared";
 import {
-  appWithBionicCloudConnectorAvailability,
+  appWithPaperclipCloudConnectorAvailability,
   paperclipCloudConnectorCapabilitiesFromEnv,
-  createBionicCloudConnector,
-  isBionicCloudConnectorStrategy,
+  createPaperclipCloudConnector,
+  isPaperclipCloudConnectorStrategy,
   paperclipCloudConnectorConfigFromEnv,
-  BionicCloudConnectorError,
-  type BionicCloudConnector,
+  PaperclipCloudConnectorError,
+  type PaperclipCloudConnector,
 } from "./paperclip-cloud-connector.js";
 import {
   createVercelConnectClient,
@@ -655,9 +655,9 @@ type ToolAccessServiceOptions = {
   /** Test seam for protocol fixtures. Production uses the DNS-pinned transport. */
   remoteHttpRequest?: (url: string, init: RequestInit) => Promise<Response>;
   /** Test seam for the centrally registered Gmail OAuth broker. */
-  paperclipCloudConnector?: BionicCloudConnector | null;
+  paperclipCloudConnector?: PaperclipCloudConnector | null;
   /** @deprecated Use paperclipCloudConnector. */
-  paperclipIdGmailConnector?: BionicCloudConnector | null;
+  paperclipIdGmailConnector?: PaperclipCloudConnector | null;
   /** Test seam for Vercel Connect without live vendor traffic. */
   vercelConnectClient?: VercelConnectClient | null;
 };
@@ -1020,7 +1020,7 @@ function connectionMethodFor(app: AppDefinition, methodKey?: string | null) {
   const toolMethods = app.methods.filter(
     (candidate) =>
       candidate.purpose !== "channel" && candidate.transport !== "chat_sdk"
-      && (availableMethods.has(candidate) || isBionicCloudConnectorStrategy(candidate.oauthStrategy)),
+      && (availableMethods.has(candidate) || isPaperclipCloudConnectorStrategy(candidate.oauthStrategy)),
   );
   const method = normalizedMethodKey
     ? (toolMethods.find((candidate) => candidate.key === normalizedMethodKey) ??
@@ -3078,23 +3078,23 @@ export function toolAccessService(
     options.paperclipCloudConnector !== undefined ||
     options.paperclipIdGmailConnector !== undefined;
   let cachedCloudConnector = configuredCloudConnector ?? null;
-  const currentCloudConnector = (): BionicCloudConnector | null => {
+  const currentCloudConnector = (): PaperclipCloudConnector | null => {
     if (cachedCloudConnector || connectorWasProvided)
       return cachedCloudConnector;
     const config = paperclipCloudConnectorConfigFromEnv();
     cachedCloudConnector = config
-      ? createBionicCloudConnector({ config, now: () => now().getTime() })
+      ? createPaperclipCloudConnector({ config, now: () => now().getTime() })
       : null;
     return cachedCloudConnector;
   };
   async function appForConnectionSetup(app: AppDefinition): Promise<AppDefinition> {
-    if (!app.methods.some((method) => isBionicCloudConnectorStrategy(method.oauthStrategy))) {
+    if (!app.methods.some((method) => isPaperclipCloudConnectorStrategy(method.oauthStrategy))) {
       return app;
     }
     const profiles = connectorWasProvided
       ? (await currentCloudConnector()?.getCapabilities() ?? [])
       : await paperclipCloudConnectorCapabilitiesFromEnv();
-    return appWithBionicCloudConnectorAvailability(app, profiles);
+    return appWithPaperclipCloudConnectorAvailability(app, profiles);
   }
   let nextGitHubContinuitySweepAt = 0;
   const vercelConnect =
@@ -6792,7 +6792,7 @@ export function toolAccessService(
       response = await sendToolsList(headers);
       if (
         response.status === 401 &&
-        isBionicCloudConnectorStrategy(oauthConfig(connection).strategy)
+        isPaperclipCloudConnectorStrategy(oauthConfig(connection).strategy)
       ) {
         const grant = await vaultGrantForConnection(connection, actor);
         if (grant) {
@@ -10721,7 +10721,7 @@ export function toolAccessService(
     if (
       connection.authKind === "oauth" &&
       connection.credentialSource === "paperclip_vault" &&
-      isBionicCloudConnectorStrategy(oauth.strategy)
+      isPaperclipCloudConnectorStrategy(oauth.strategy)
     ) {
       const grantOauth = oauthGrantConfig(initialGrant);
       const expiresAt =
@@ -10806,9 +10806,8 @@ export function toolAccessService(
                 refreshToken: refreshSecret.value,
               });
             } catch (error) {
-              if (
-                error instanceof BionicCloudConnectorError &&
-                error.code === "REAUTHORIZATION_REQUIRED"
+              if (error instanceof PaperclipCloudConnectorError
+                && error.code === "REAUTHORIZATION_REQUIRED"
               ) {
                 await db
                   .update(connectionGrants)
@@ -12108,7 +12107,7 @@ export function toolAccessService(
           ...(galleryEntry.slug === "posthog" ? { safeDefault: true } : {}),
         }
       : { ...baseConfig, quarantineNewEntries: false, unverifiedServer: true };
-    if (method && isBionicCloudConnectorStrategy(method.oauthStrategy)) {
+    if (method && isPaperclipCloudConnectorStrategy(method.oauthStrategy)) {
       const connectorProfile = method.connectorProfile;
       const profile = managedConnectorProfile(connectorProfile);
       if (!profile)
@@ -12238,7 +12237,7 @@ export function toolAccessService(
         : requestedGrantKind === "agent"
           ? "per_agent"
           : "shared";
-    const connectionOwnership = isBionicCloudConnectorStrategy(
+    const connectionOwnership = isPaperclipCloudConnectorStrategy(
       method?.oauthStrategy,
     )
       ? "platform_shared"
@@ -14028,7 +14027,7 @@ export function toolAccessService(
     }
     if (
       galleryMethod &&
-      isBionicCloudConnectorStrategy(galleryMethod.oauthStrategy)
+      isPaperclipCloudConnectorStrategy(galleryMethod.oauthStrategy)
     ) {
       const connectorProfile = galleryMethod.connectorProfile;
       const managedProfile = managedConnectorProfile(connectorProfile);
@@ -14658,7 +14657,7 @@ export function toolAccessService(
     return finished;
   }
 
-  async function completeBionicCloudConnectorCallback(input: {
+  async function completePaperclipCloudConnectorCallback(input: {
     state: string;
     claimId?: string | null;
     error?: string | null;
@@ -14725,7 +14724,7 @@ export function toolAccessService(
     const subjectAgentId = stateRow.subjectAgentId;
     if (
       !method ||
-      !isBionicCloudConnectorStrategy(method.oauthStrategy) ||
+      !isPaperclipCloudConnectorStrategy(method.oauthStrategy) ||
       (!subjectUserId && !subjectAgentId)
     ) {
       throw badRequest(
@@ -16593,7 +16592,7 @@ export function toolAccessService(
 
     peekOAuthState,
 
-    completeBionicCloudConnectorCallback,
+    completePaperclipCloudConnectorCallback,
 
     completeVercelConnectCallback,
 
@@ -17755,7 +17754,7 @@ export function toolAccessService(
           }
         }
       } else if (
-        isBionicCloudConnectorStrategy(oauthConfig(connection).strategy)
+        isPaperclipCloudConnectorStrategy(oauthConfig(connection).strategy)
       ) {
         // Google revocation is client-wide for a user. The managed Workspace
         // profiles intentionally share one Bionic-owned client, so revoking
