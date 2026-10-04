@@ -12,7 +12,7 @@ namespace: bionicorg
 # ---------------------------------------------------------------------------
 image:
   repository: docker4zerocool/bionic
-  tag: "71d7f47fe-fix-patched"  # patched image with /health + /api/health hostname-guard exemption (source fix included in this tree; rebuilds from main will not need the patch)
+  tag: "15ad899dd"  # current production image, built from main@15ad899dd (replaces the retired 71d7f47fe-fix-patched hotfix)
   pullPolicy: Always
 
 # Image pull secret (e.g. for Docker Hub rate-limit compliance)

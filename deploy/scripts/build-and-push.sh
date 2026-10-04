@@ -10,7 +10,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-cd "$(dirname "$0")/.."  # repo root
+cd "$(dirname "$0")/../.."  # repo root (script lives in deploy/scripts/)
 
 TAG="${1:-$(git rev-parse --short HEAD)}"
 IMAGE="docker4zerocool/bionic"
