@@ -348,6 +348,20 @@ export const agentsApi = {
     api.get<ClaudeOAuthTokenStatusResponse>(
       `/companies/${encodeURIComponent(companyId)}/claude-oauth-token-status`,
     ),
+  // Stores a Claude subscription token (`sk-ant-oat01-…` from `claude
+  // setup-token`) that the owner pasted directly, with no browser login. It
+  // writes the same stored login the login flow produces. Without `overwrite`
+  // the write only creates — an existing value returns a 409 with the
+  // `claude_oauth_value_exists` code; with the captured version it is a
+  // confirmed replacement. The response is the status shape, never the token.
+  storeClaudeOAuthToken: (
+    companyId: string,
+    data: { token: string; overwrite?: ClaudeSetupTokenOverwrite },
+  ) =>
+    api.post<ClaudeOAuthTokenStatusResponse>(
+      `/companies/${encodeURIComponent(companyId)}/claude-oauth-token`,
+      data,
+    ),
   startClaudeSetupTokenLogin: (
     companyId: string,
     data: { environmentId: string; overwrite?: ClaudeSetupTokenOverwrite; aiConnection?: import("@paperclipai/shared").AiConnectionLoginIntent },

@@ -7,6 +7,7 @@ import {
   isValidBrowserCode,
   startClaudeSetupTokenSessionRequestSchema,
   submitBrowserCodeRequestSchema,
+  submitClaudeOAuthTokenRequestSchema,
 } from "./claude-setup-token-session.js";
 import { createAgentSchema, createAgentHireSchema } from "./agent.js";
 
@@ -137,5 +138,52 @@ describe("agent create and hire carry an optional stored-session claim", () => {
     expect(
       createAgentHireSchema.parse({ ...base, storedSessionId: "session-claim" }).storedSessionId,
     ).toBe("session-claim");
+  });
+});
+
+describe("owner-pasted Claude subscription token request", () => {
+  const SECRET_ID = "22222222-2222-4222-8222-222222222222";
+
+  it("accepts a setup-token subscription token, tolerating paste whitespace", () => {
+    expect(
+      submitClaudeOAuthTokenRequestSchema.parse({
+        token: "  sk-ant-oat01-abcdefghijklmnopqrst\n",
+      }).token,
+    ).toBe("  sk-ant-oat01-abcdefghijklmnopqrst\n");
+  });
+
+  it("rejects an Anthropic API key and a truncated subscription token", () => {
+    // The grammar mirrors the adapter's setup-token parser, so the field only
+    // ever stores the subscription token it claims to accept.
+    expect(
+      submitClaudeOAuthTokenRequestSchema.safeParse({ token: "sk-ant-api03-abcdefghijklmnopqrst" }).success,
+    ).toBe(false);
+    expect(
+      submitClaudeOAuthTokenRequestSchema.safeParse({ token: "sk-ant-oat01-short" }).success,
+    ).toBe(false);
+    expect(submitClaudeOAuthTokenRequestSchema.safeParse({ token: "" }).success).toBe(false);
+  });
+
+  it("captures the confirmed-overwrite predicate and rejects an incomplete one", () => {
+    const parsed = submitClaudeOAuthTokenRequestSchema.parse({
+      token: "sk-ant-oat01-abcdefghijklmnopqrst",
+      overwrite: { expectedSecretId: SECRET_ID, expectedLatestVersion: 3 },
+    });
+    expect(parsed.overwrite).toEqual({ expectedSecretId: SECRET_ID, expectedLatestVersion: 3 });
+    expect(
+      submitClaudeOAuthTokenRequestSchema.safeParse({
+        token: "sk-ant-oat01-abcdefghijklmnopqrst",
+        overwrite: { expectedSecretId: SECRET_ID },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects extra fields: the body carries no owner, company, or definition", () => {
+    expect(
+      submitClaudeOAuthTokenRequestSchema.safeParse({
+        token: "sk-ant-oat01-abcdefghijklmnopqrst",
+        ownerUserId: "someone-else",
+      }).success,
+    ).toBe(false);
   });
 });

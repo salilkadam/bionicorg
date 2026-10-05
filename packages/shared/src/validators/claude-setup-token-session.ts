@@ -160,6 +160,31 @@ export const claudeSetupTokenCompletionResponseSchema = z.object({
 export type ClaudeSetupTokenCompletionResponse =
   z.infer<typeof claudeSetupTokenCompletionResponseSchema>;
 
+// The owner-pasted Claude subscription token schema. The value is the token a
+// `claude setup-token` login prints. The grammar mirrors the adapter's
+// setup-token parser (`FULL_TOKEN_RE` in
+// `packages/adapters/claude-local/src/server/setup-token-parse.ts`), so an
+// Anthropic API key pasted into the OAuth field — or a truncated paste — is
+// rejected at the boundary with a fixed 400 instead of being stored. The
+// pattern tolerates the surrounding whitespace a paste carries; the service
+// trims the value before it stores it.
+export const claudeSubmittedOAuthTokenSchema = z
+  .string()
+  .regex(/^\s*sk-ant-oat01-[A-Za-z0-9_-]{20,}\s*$/);
+export type ClaudeSubmittedOAuthToken = z.infer<typeof claudeSubmittedOAuthTokenSchema>;
+
+// The owner-pasted token write request. The company and the owner come from the
+// authenticated caller, never from this body. The optional `overwrite` capture
+// turns the write into a confirmed replacement; it carries the same version
+// predicate as the login-path overwrite. `.strict()` rejects an extra field.
+export const submitClaudeOAuthTokenRequestSchema = z
+  .object({
+    token: claudeSubmittedOAuthTokenSchema,
+    overwrite: claudeSetupTokenOverwriteSchema.optional(),
+  })
+  .strict();
+export type SubmitClaudeOAuthTokenRequest = z.infer<typeof submitClaudeOAuthTokenRequestSchema>;
+
 // The stored Claude OAuth token status response schema. It carries only the
 // secret id and the latest version of the owner value; it carries no token.
 // `.strict()` rejects an extra field, so a token never validates. The status

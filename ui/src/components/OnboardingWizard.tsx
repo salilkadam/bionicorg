@@ -1267,6 +1267,144 @@ function OnboardingWizardInner({
    */
   const connectingSinceRef = useRef<number | null>(null);
   const [connectCredentialStored, setConnectCredentialStored] = useState(false);
+
+  // The paste-a-Claude-subscription-token path. The browser sign-in card is
+  // the only way the connect step can produce a stored `claude_local` login,
+  // and a sign-in environment without browser support shows none at all. A
+  // `claude setup-token` token is a credential the customer can always bring,
+  // so the step offers it. Storing one writes the same owner-bound stored
+  // login the browser flow produces — the hire below re-reads the status and
+  // applies the fixed binding unchanged. The save then follows the browser
+  // flow's own success sequence: count the hold, mark the credential stored,
+  // enter "connecting", and let the step's timer run the hire.
+  const [oauthToken, setOauthToken] = useState("");
+  const [oauthTokenOpen, setOauthTokenOpen] = useState(false);
+  const [oauthTokenBusy, setOauthTokenBusy] = useState(false);
+  const [oauthTokenError, setOauthTokenError] = useState<string | null>(null);
+  const [oauthTokenReplace, setOauthTokenReplace] = useState(false);
+  const handleStoreClaudeOAuthToken = async (replace: boolean) => {
+    if (!createdCompanyId || oauthTokenBusy) return;
+    const token = oauthToken.trim();
+    if (!token) return;
+    setOauthTokenBusy(true);
+    setOauthTokenError(null);
+    try {
+      await agentsApi.storeClaudeOAuthToken(createdCompanyId, {
+        token,
+        ...(replace && savedKeys.storedLogin.data
+          ? {
+              overwrite: {
+                expectedSecretId: savedKeys.storedLogin.data.secretId,
+                expectedLatestVersion: savedKeys.storedLogin.data.latestVersion,
+              },
+            }
+          : {}),
+      });
+      setOauthToken("");
+      setOauthTokenReplace(false);
+      setOauthTokenOpen(false);
+      queryClient.invalidateQueries({
+        queryKey: ["claude-oauth-token-status", createdCompanyId],
+      });
+      if (resolvedLoginEnvironmentId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.agents.authSignal(
+            createdCompanyId,
+            adapterType,
+            resolvedLoginEnvironmentId,
+          ),
+        });
+      }
+      if (connectingSinceRef.current === null) connectingSinceRef.current = Date.now();
+      setConnectCredentialStored(true);
+      setConnectPhase("connecting");
+    } catch (error) {
+      const body =
+        error instanceof ApiError && error.body && typeof error.body === "object"
+          ? (error.body as { error?: unknown; code?: unknown })
+          : null;
+      const code = typeof body?.code === "string" ? body.code : null;
+      if (code === "claude_oauth_value_exists" && !replace) {
+        // The owner already has a stored login this paste would clobber. The
+        // server refused without it; offer the confirmed replacement, which
+        // re-sends the status version this page last read.
+        setOauthTokenReplace(true);
+      } else if (error instanceof ApiError && error.status === 409) {
+        setOauthTokenError("The saved login changed since this page loaded. Reload the page and try again.");
+        setOauthTokenReplace(false);
+      } else if (typeof body?.error === "string" && body.error) {
+        setOauthTokenError(body.error);
+      } else {
+        setOauthTokenError("Could not save the token. Check the value and try again.");
+      }
+    } finally {
+      setOauthTokenBusy(false);
+    }
+  };
+  // One row for both places the paste path belongs: under the browser sign-in
+  // card (an alternative to the device flow) and in the no-browser-support
+  // branch (the only path). Gated off `claude_local` and a stored login that
+  // already exists — a customer with a saved token is not being offered a
+  // second one.
+  const claudeTokenPasteRow =
+    adapterType !== "claude_local" || Boolean(savedKeys.storedLogin.data) ? null : !oauthTokenOpen && !oauthTokenReplace ? (
+      <button
+        type="button"
+        className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        onClick={() => {
+          setOauthTokenError(null);
+          setOauthTokenOpen(true);
+        }}
+      >
+        Already signed in with claude setup-token? Paste your subscription token instead
+      </button>
+    ) : (
+      <OnboardingLoginCard instruction="Paste the Claude subscription token from claude setup-token — it starts with sk-ant-oat01-">
+        <OnboardingCardField
+          label="Claude subscription OAuth token"
+          placeholder="Paste Claude subscription token (sk-ant-oat01-…)"
+          masked
+          autoFocus
+          value={oauthToken}
+          disabled={oauthTokenBusy}
+          onChange={(value) => {
+            setOauthToken(value);
+            setOauthTokenError(null);
+          }}
+          onSubmit={() => void handleStoreClaudeOAuthToken(oauthTokenReplace)}
+        />
+        <div className="mt-2 flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={oauthTokenReplace ? "destructive" : "default"}
+            disabled={oauthTokenBusy || oauthToken.trim().length === 0}
+            onClick={() => void handleStoreClaudeOAuthToken(oauthTokenReplace)}
+          >
+            {oauthTokenBusy && <Loader2 className="size-3.5 animate-spin" />}
+            {oauthTokenReplace ? "Replace saved token" : "Save token"}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={oauthTokenBusy}
+            onClick={() => {
+              setOauthTokenOpen(false);
+              setOauthTokenReplace(false);
+              setOauthTokenError(null);
+              setOauthToken("");
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+        {oauthTokenReplace && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            A Claude login is already saved for your account. Saving replaces it.
+          </p>
+        )}
+        {oauthTokenError && <p className="mt-1 text-xs text-destructive">{oauthTokenError}</p>}
+      </OnboardingLoginCard>
+    );
   /** What the button was offering before a paste, for when the paste is refused. */
   const phaseBeforeSubmitRef = useRef<ConnectPhase>("waiting");
 
@@ -2723,6 +2861,7 @@ function OnboardingWizardInner({
                         <CredentialModeLink mode={credentialMode} onChange={setCredentialMode} />
                         {savedKeys.options.length > 0 && <p className="px-3 text-sm text-muted-foreground">{savedKeys.options.length} saved API {savedKeys.options.length === 1 ? "key available" : "keys available"}.</p>}
                         {credentialMode === "subscription" && authSignalStatus === "present" && <p className="px-3 text-sm text-muted-foreground">An existing provider connection is available.</p>}
+                        {credentialMode === "subscription" && adapterType === "claude_local" && savedKeys.storedLogin.data && <p className="px-3 text-sm text-muted-foreground">A Claude subscription token is saved for your account.</p>}
                       </div>
                     </motion.div>
                   </div>
@@ -2797,7 +2936,8 @@ function OnboardingWizardInner({
                     ) : connectStepNeedsLogin &&
                       createdCompanyId &&
                       resolvedLoginEnvironmentId ? (
-                      /* The same panel the agent configuration form shows after
+                      <>
+                      {/* The same panel the agent configuration form shows after
                          a test — see AdapterLoginPanel in AgentConfigForm.tsx —
                          in the connect step's chrome. It owns the session; the
                          step owns the sequence around it.
@@ -2808,7 +2948,7 @@ function OnboardingWizardInner({
                          the session early — see `unwindConnectStep`.
 
                          No "Use saved login" control: the hire step already
-                         applies a stored login on its own. */
+                         applies a stored login on its own. */}
                       <AdapterLoginPanel
                         key={`${adapterType}:${resolvedLoginEnvironmentId}`}
                         companyId={createdCompanyId}
@@ -2888,10 +3028,17 @@ function OnboardingWizardInner({
                           });
                         }}
                       />
+                      {claudeTokenPasteRow}
+                      </>
                     ) : hasSavedSubscription || localLogin.status === "ready" ? null : connectStepHasNoSandbox ? (
                       canUseLocalLogin && managedProvider ? (
                         <LocalProviderLoginInstructions adapterType={adapterType} login={{ ...localLogin, retry: () => { autoConnectStartedRef.current = false; setError(null); localLogin.retry(); } }} />
-                      ) : <p className="text-xs text-muted-foreground">This environment does not support browser sign-in. Choose another sign-in environment or connect with an API key.</p>
+                      ) : (
+                        <>
+                          {claudeTokenPasteRow}
+                          <p className="text-xs text-muted-foreground">This environment does not support browser sign-in. Choose another sign-in environment or connect with an API key.</p>
+                        </>
+                      )
                     ) : null}
                   </motion.div>
 

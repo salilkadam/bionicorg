@@ -607,4 +607,127 @@ describeEmbeddedPostgres("secretService Claude Code OAuth helper and compare-and
     expect(JSON.stringify(activity)).not.toContain(token);
     expect(JSON.stringify(activity)).not.toContain("rotated-secret-oauth-token");
   });
+
+  // --- the owner-pasted subscription token store -------------------
+
+  const PASTED_TOKEN = "sk-ant-oat01-abcdefghijklmnopqrst";
+  const PASTED_TOKEN_ROTATION = "sk-ant-oat01-tuvwxyz0123456789abcd";
+
+  it("storeClaudeOAuthTokenByOwner creates the owner value with no session stamp", async () => {
+    const companyId = await seedCompany();
+    await seedCompanyMember(companyId, "user-1");
+    const svc = secretService(db);
+
+    const result = await svc.storeClaudeOAuthTokenByOwner(
+      companyId,
+      "user-1",
+      { token: `  ${PASTED_TOKEN}  ` },
+      { userId: "user-1", agentId: null },
+    );
+
+    expect(result.secretId).toBeTruthy();
+    expect(result.latestVersion).toBe(1);
+    // The status read sees the pasted value, so the wizard's stored-login gate
+    // and the hire's binding application work on the paste path.
+    expect(await svc.readClaudeOAuthUserSecretStatus(companyId, "user-1")).toEqual({
+      secretId: result.secretId,
+      latestVersion: 1,
+    });
+    // A pasted token is not a login-session completion: no session id is
+    // stamped on the value's metadata.
+    const row = await db
+      .select()
+      .from(companySecrets)
+      .where(eq(companySecrets.id, result.secretId))
+      .then((rows) => rows[0]);
+    expect(JSON.stringify(row?.providerMetadata ?? {})).not.toContain("claudeSetupTokenSessionId");
+  });
+
+  it("storeClaudeOAuthTokenByOwner rejects a non-subscription token with 422 and stores nothing", async () => {
+    const companyId = await seedCompany();
+    await seedCompanyMember(companyId, "user-1");
+    const svc = secretService(db);
+
+    // An Anthropic API key and a truncated subscription token are both refused
+    // at the grammar gate, before anything is encrypted.
+    await expect(
+      svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", { token: "sk-ant-api03-abcdefghijklmnopqrst" }),
+    ).rejects.toMatchObject({ status: 422 });
+    await expect(
+      svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", { token: "sk-ant-oat01-short" }),
+    ).rejects.toMatchObject({ status: 422 });
+    await expect(
+      svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", { token: "   " }),
+    ).rejects.toMatchObject({ status: 422 });
+
+    const rows = await db.select().from(companySecrets);
+    expect(rows).toHaveLength(0);
+  });
+
+  it("storeClaudeOAuthTokenByOwner conflicts with the exists code over a stored value", async () => {
+    const companyId = await seedCompany();
+    await seedCompanyMember(companyId, "user-1");
+    const svc = secretService(db);
+
+    await svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", { token: PASTED_TOKEN });
+
+    await expect(
+      svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", { token: PASTED_TOKEN_ROTATION }),
+    ).rejects.toMatchObject({ status: 409, details: { code: "claude_oauth_value_exists" } });
+    expect(await countVersions((await svc.readClaudeOAuthUserSecretStatus(companyId, "user-1"))!.secretId)).toBe(1);
+  });
+
+  it("storeClaudeOAuthTokenByOwner rotates under the captured version and refuses a stale one", async () => {
+    const companyId = await seedCompany();
+    await seedCompanyMember(companyId, "user-1");
+    const svc = secretService(db);
+
+    const first = await svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", { token: PASTED_TOKEN });
+    const rotated = await svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", {
+      token: PASTED_TOKEN_ROTATION,
+      overwrite: { expectedSecretId: first.secretId, expectedLatestVersion: 1 },
+    });
+
+    expect(rotated.secretId).toBe(first.secretId);
+    expect(rotated.latestVersion).toBe(2);
+    expect(await countVersions(first.secretId)).toBe(2);
+
+    // The captured version is now stale; the same capture cannot rotate twice.
+    await expect(
+      svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", {
+        token: PASTED_TOKEN,
+        overwrite: { expectedSecretId: first.secretId, expectedLatestVersion: 1 },
+      }),
+    ).rejects.toMatchObject({ status: 409, details: { code: "claude_oauth_stale_confirmation" } });
+
+    // A replacement whose target id is not this owner's fixed-definition value
+    // looks like the fixed not-found, the same as the login-path rotation.
+    await expect(
+      svc.storeClaudeOAuthTokenByOwner(companyId, "user-1", {
+        token: PASTED_TOKEN,
+        overwrite: { expectedSecretId: randomUUID(), expectedLatestVersion: 1 },
+      }),
+    ).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("storeClaudeOAuthTokenByOwner is owner-scoped and keeps the token out of activity", async () => {
+    const companyA = await seedCompany("Acme");
+    const companyB = await seedCompany("Globex");
+    await seedCompanyMember(companyA, "user-1");
+    await seedCompanyMember(companyB, "user-1");
+    await seedCompanyMember(companyA, "user-2");
+    const svc = secretService(db);
+
+    await svc.storeClaudeOAuthTokenByOwner(companyA, "user-1", { token: PASTED_TOKEN });
+
+    // Another owner in the same company and the same user in another company
+    // each see no value, and a second owner's first write does not collide.
+    expect(await svc.readClaudeOAuthUserSecretStatus(companyB, "user-1")).toBeNull();
+    expect(await svc.readClaudeOAuthUserSecretStatus(companyA, "user-2")).toBeNull();
+    await svc.storeClaudeOAuthTokenByOwner(companyA, "user-2", { token: PASTED_TOKEN_ROTATION });
+
+    const activity = await db.select().from(activityLog);
+    expect(JSON.stringify(activity)).not.toContain(PASTED_TOKEN);
+    expect(JSON.stringify(activity)).not.toContain(PASTED_TOKEN_ROTATION);
+  });
 });

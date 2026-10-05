@@ -54,6 +54,7 @@ import {
   startAdapterAuthSessionRequestSchema,
   startClaudeSetupTokenSessionRequestSchema,
   submitBrowserCodeRequestSchema,
+  submitClaudeOAuthTokenRequestSchema,
   toAccountHandle,
   type AgentAdapterType,
 } from "@paperclipai/shared";
@@ -6533,6 +6534,39 @@ export function agentRoutes(
     }
     const body: ClaudeOAuthTokenStatusResponse = status;
     res.json(body);
+  });
+
+  // The owner-pasted Claude subscription token store. A `claude setup-token`
+  // token pasted by the authenticated owner writes the same owner-bound stored
+  // login the browser login flow produces, so the hire applies it unchanged.
+  // The company comes from the path, the owner only from the authenticated
+  // actor; the body carries the token and an optional version capture for a
+  // confirmed replacement. The response is the status shape — secret id and
+  // latest version — and never the token. Conflicts propagate to the error
+  // middleware, which surfaces the machine-readable `code` for the client's
+  // replace flow. Like the session routes, this is credential setup, not a
+  // company work action, so it writes no activity-log row.
+  router.post("/companies/:companyId/claude-oauth-token", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    const ownerUserId = resolveCompanySessionOwner(req, companyId, res);
+    if (ownerUserId === null) return;
+    res.setHeader("Cache-Control", "no-store");
+    const parsed = submitClaudeOAuthTokenRequestSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid Claude token submission" });
+      return;
+    }
+    const stored = await secretsSvc.storeClaudeOAuthTokenByOwner(
+      companyId,
+      ownerUserId,
+      { token: parsed.data.token, overwrite: parsed.data.overwrite },
+      { userId: ownerUserId },
+    );
+    const body: ClaudeOAuthTokenStatusResponse = {
+      secretId: stored.secretId,
+      latestVersion: stored.latestVersion,
+    };
+    res.status(201).json(body);
   });
 
   router.post("/companies/:companyId/setup-token-login-sessions", async (req, res) => {

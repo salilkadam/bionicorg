@@ -142,6 +142,16 @@ const CLAUDE_OAUTH_VALUE_EXISTS =
 // The metadata field that records the setup-token session id on the owner value.
 // It is the idempotency key for one completion. It is not a secret.
 const CLAUDE_OAUTH_SESSION_METADATA_FIELD = "claudeSetupTokenSessionId";
+// The grammar of an owner-submitted Claude subscription token, checked against
+// the trimmed value right before it is stored. It mirrors the adapter's
+// setup-token parser (`FULL_TOKEN_RE` in
+// `packages/adapters/claude-local/src/server/setup-token-parse.ts`), so an
+// Anthropic API key or a truncated paste fails here even when the caller
+// reached the service without the route schema. A failure is the fixed text
+// below; it echoes no caller input.
+const CLAUDE_OAUTH_SUBMITTED_TOKEN_RE = /^sk-ant-oat01-[A-Za-z0-9_-]{20,}$/;
+const CLAUDE_OAUTH_SUBMITTED_TOKEN_REJECTED =
+  "The submitted value is not a Claude subscription token.";
 
 /** The stored result of one owner-bound Claude OAuth completion. It holds no secret. */
 export interface ClaudeOAuthUserSecretResult {
@@ -3335,6 +3345,95 @@ export function secretService(db: Db | DbTransaction) {
   }
 
   /**
+   * Stores an owner-submitted Claude subscription OAuth token directly, with no
+   * login session behind it. It writes the same owner-bound fixed-definition
+   * value a browser login completion writes — same definition, same encryption
+   * path, same version semantics — so the hire-side binding application and the
+   * status read work unchanged. It stamps no session id: a pasted token never
+   * satisfies a completion's session-id idempotency.
+   *
+   * The existence rules mirror the login flow. Without a captured overwrite the
+   * write only creates, and an existing value returns the value-exists conflict
+   * with a machine-readable code so the client can offer a replacement. With a
+   * captured overwrite it is a compare-and-set rotation: a missing value or a
+   * foreign id looks like the fixed not-found, and a version mismatch returns
+   * the same stale-confirmation conflict the login rotation uses. The token is
+   * never returned and never logged.
+   */
+  async function storeClaudeOAuthTokenByOwnerInternal(
+    companyId: string,
+    ownerUserId: string,
+    input: {
+      token: string;
+      overwrite?: { expectedSecretId?: string | null; expectedLatestVersion?: number | null } | null;
+    },
+    actor?: { userId?: string | null; agentId?: string | null },
+  ): Promise<ClaudeOAuthUserSecretResult> {
+    const value = input.token?.trim();
+    if (!value) throw unprocessable("A Claude login token value is required");
+    if (!CLAUDE_OAUTH_SUBMITTED_TOKEN_RE.test(value)) {
+      throw unprocessable(CLAUDE_OAUTH_SUBMITTED_TOKEN_REJECTED);
+    }
+
+    const definition = await ensureClaudeOAuthUserSecretDefinitionInternal(companyId, actor);
+    const existing = await getUserSecretValue({ companyId, ownerUserId, definitionId: definition.id });
+
+    if (!input.overwrite) {
+      if (existing) {
+        throw conflict(CLAUDE_OAUTH_VALUE_EXISTS, { code: "claude_oauth_value_exists" });
+      }
+      let created: CompanySecretRow;
+      try {
+        created = await createUserSecretValueInternal(
+          companyId,
+          ownerUserId,
+          { definitionId: definition.id, value },
+          actor,
+        );
+      } catch (error) {
+        // Two concurrent first writes race the partial unique index. The loser
+        // sees the winner's value and reports the same exists conflict.
+        if (error instanceof HttpError && error.status === 409) {
+          throw conflict(CLAUDE_OAUTH_VALUE_EXISTS, { code: "claude_oauth_value_exists" });
+        }
+        throw error;
+      }
+      return toClaudeOAuthResult(created);
+    }
+
+    const { expectedSecretId, expectedLatestVersion } = input.overwrite;
+    if (!expectedSecretId || expectedLatestVersion == null) {
+      throw unprocessable("A token replacement requires expectedSecretId and expectedLatestVersion");
+    }
+    if (!existing) throw notFound("User secret value not found");
+    // The owner-scoped lookup fails closed for a cross-owner or cross-company
+    // id. A mismatched id looks like the same fixed not-found.
+    const current = await getUserSecretValueById(companyId, ownerUserId, expectedSecretId);
+    if (current.userSecretDefinitionId !== definition.id) {
+      throw notFound("User secret value not found");
+    }
+    if (current.latestVersion !== expectedLatestVersion) {
+      throw conflict(CLAUDE_OAUTH_STALE_CONFIRMATION, { code: "claude_oauth_stale_confirmation" });
+    }
+    let rotated: CompanySecretRow;
+    try {
+      rotated = await secretService(db).rotate(
+        current.id,
+        { value, expectedLatestVersion },
+        actor,
+      );
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 409) {
+        // A concurrent rotation bumped the version between the read and the
+        // predicate. Return the same fixed stale-confirmation conflict.
+        throw conflict(CLAUDE_OAUTH_STALE_CONFIRMATION, { code: "claude_oauth_stale_confirmation" });
+      }
+      throw error;
+    }
+    return toClaudeOAuthResult(rotated);
+  }
+
+  /**
    * Reads the stored Claude Code OAuth value metadata for one owner. It returns
    * only the secret id and the latest version, never the token. The client uses
    * the version as the expected version of a later confirmed rotation.
@@ -3966,6 +4065,11 @@ export function secretService(db: Db | DbTransaction) {
     // first value or rotates after a confirmed expected version. The session id
     // is the idempotency key for one completion.
     completeClaudeOAuthUserSecret: completeClaudeOAuthUserSecretInternal,
+
+    // The owner-bound store for a directly-pasted Claude subscription token.
+    // It writes the same value the login completion writes, with no session-id
+    // stamp, under the same first-write and confirmed-rotation rules.
+    storeClaudeOAuthTokenByOwner: storeClaudeOAuthTokenByOwnerInternal,
 
     // The owner-bound Claude Code OAuth status read. It returns only
     // the secret id and the latest version for the owner value, or null. It never

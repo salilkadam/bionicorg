@@ -272,6 +272,7 @@ import {
   declineConnectionIntentSchema,
   startClaudeSetupTokenSessionRequestSchema,
   submitBrowserCodeRequestSchema,
+  submitClaudeOAuthTokenRequestSchema,
   claudeSetupTokenSessionResponseSchema,
   claudeSetupTokenSessionPromptSchema,
   claudeSetupTokenSessionOwnerResponseSchema,
@@ -7230,6 +7231,31 @@ registry.registerPath({
     401: r.unauthorized,
     403: r.forbidden,
     404: r.notFound,
+  },
+});
+
+// The owner-pasted Claude subscription token store. The body carries the token
+// and an optional version capture for a confirmed replacement; the company and
+// the owner come from the authenticated caller, never the body. The 201 returns
+// the status shape and never the token. A first write over an existing value
+// returns 409 with the `claude_oauth_value_exists` code; a stale replacement
+// capture returns 409 too.
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/claude-oauth-token",
+  tags: ["companies"],
+  summary: "Store an owner-submitted Claude subscription OAuth token",
+  request: {
+    params: z.object({ companyId: z.string() }),
+    body: jsonBody(submitClaudeOAuthTokenRequestSchema),
+  },
+  responses: {
+    201: r.ok(claudeOAuthTokenStatusResponseSchema),
+    400: r.badRequest,
+    401: r.unauthorized,
+    403: r.forbidden,
+    404: r.notFound,
+    409: r.conflict,
   },
 });
 

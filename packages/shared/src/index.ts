@@ -1663,9 +1663,13 @@ export {
   storedSessionIdSchema,
   claudeSetupTokenCompletionResponseSchema,
   claudeSetupTokenOverwriteSchema,
+  claudeSubmittedOAuthTokenSchema,
+  submitClaudeOAuthTokenRequestSchema,
   claudeOAuthTokenStatusResponseSchema,
   type StartClaudeSetupTokenSessionRequest,
   type ClaudeSetupTokenOverwrite,
+  type ClaudeSubmittedOAuthToken,
+  type SubmitClaudeOAuthTokenRequest,
   type ClaudeOAuthTokenStatusResponse,
   type BrowserCode,
 } from "./validators/claude-setup-token-session.js";
