@@ -15,7 +15,10 @@
 set -euo pipefail
 
 VPA_NAMESPACE="${VPA_NAMESPACE:-vpa}"
-VPA_CHART_VERSION="${VPA_CHART_VERSION:-1.3.0}"   # FairwindsSquare VPA helm chart
+# Chart 5.x ships VPA app 1.7.x. InPlaceOrRecreate updateMode is GA since
+# VPA 1.6.0 and pure InPlace mode exists since 1.7.0 — do NOT downgrade below
+# chart 4.x / app 1.6.0, the updateMode used by templates/vpa.yaml will not exist.
+VPA_CHART_VERSION="${VPA_CHART_VERSION:-5.1.0}"   # FairwindsSquare VPA helm chart (app 1.7.1)
 
 echo "==> Adding FairwindsSquare VPA helm repo"
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable >/dev/null 2>&1 || true

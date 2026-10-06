@@ -107,11 +107,11 @@ vpa:
   controlledResources:
     - memory
   controlledValues: RequestsOnly
+  # cpu entries omitted on purpose: controlledResources is memory-only, so cpu
+  # bounds here would be ignored by the recommender.
   minAllowed:
-    cpu: 250m
     memory: 512Mi
   maxAllowed:
-    cpu: "2"
     memory: 6Gi
 
 # ---------------------------------------------------------------------------
@@ -155,6 +155,10 @@ persistence:
 # Vault / ExternalSecrets
 # ---------------------------------------------------------------------------
 vault:
+  # Vault server reachable from inside the cluster
+  server: http://vault.vault.svc.cluster.local:8200
+  # Vault JWT auth role used by External Secrets (see deploy/scripts/setup-vault-jwt.sh)
+  jwtRole: eso-reader
   # Vault path where app secrets are stored
   path: t6-apps/bionic-org/config
   # Key inside that path holding the Paperclip secrets master key
@@ -168,8 +172,8 @@ vault:
   apiKeysSecretName: bionic-org-api-keys
   # Secret store (ClusterSecretStore)
   secretStore: vault-backend
-  # Refresh interval for ESO sync
-  refreshInterval: 5m
+  # Refresh interval for ESO sync (JWT auth auto-mints tokens; 1h is plenty)
+  refreshInterval: 1h
   # Deletion policy for the synced K8s secret
   deletionPolicy: Retain
 
