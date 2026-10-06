@@ -49,7 +49,42 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "bionic-org.name" . }}-config
+            {{- if .Values.vault.apiKeysPath }}
+            # Org-wide shared provider API keys (from Vault {{ .Values.vault.apiKeysPath }}).
+            # Keys land as env vars verbatim (anthropic_api_key, github_token, ...);
+            # heartbeat adapter child processes inherit them.
+            - secretRef:
+                name: {{ .Values.vault.apiKeysSecretName }}
+                optional: true
+            {{- end }}
           env:
+            {{- if .Values.vault.apiKeysPath }}
+            # Canonical aliases for CLIs that expect uppercase names.
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: anthropic_api_key
+                  name: {{ .Values.vault.apiKeysSecretName }}
+                  optional: true
+            - name: CLAUDE_CODE_OAUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: claude_subscription_token
+                  name: {{ .Values.vault.apiKeysSecretName }}
+                  optional: true
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: github_token
+                  name: {{ .Values.vault.apiKeysSecretName }}
+                  optional: true
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: openai_api_key
+                  name: {{ .Values.vault.apiKeysSecretName }}
+                  optional: true
+            {{- end }}
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:

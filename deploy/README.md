@@ -89,7 +89,9 @@ ingress:
 
 ## Vault Secrets
 
-The ExternalSecret expects these keys at `t6-apps/bionic-org/config`:
+Two Vault paths feed this deployment via ESO (both synced every 5 min — never edit the K8s Secrets directly):
+
+1. **`t6-apps/bionic-org/config`** → K8s Secret `bionic-org-secrets` (app config):
 
 | Key | Description |
 |-----|-------------|
@@ -105,6 +107,10 @@ The ExternalSecret expects these keys at `t6-apps/bionic-org/config`:
 | `storage_s3_bucket` | S3 bucket name (if using S3 storage) |
 | `storage_s3_endpoint` | S3 endpoint (if using S3 storage) |
 
+2. **`shared/api-keys`** (org-wide shared provider keys) → K8s Secret `bionic-org-api-keys`, mounted via `envFrom` so adapter child processes inherit provider credentials. Contains `anthropic_api_key`, `claude_subscription_token`, `github_token`, `openai_api_key`, `gemini_api_key`, `openrouter_api_key`, and more. The deployment also exposes uppercase aliases (`ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, `GITHUB_TOKEN`, `OPENAI_API_KEY`).
+
+> **Re-seeding Board managed secrets:** after a Case-C rebuild, read the needed values from `bionic-org-api-keys` (`kubectl -n bionicorg get secret bionic-org-api-keys -o go-template=...`) and enter them once in the Board UI — the UI encrypts them into the DB under the master key; the env wiring covers CLI-level fallback.
+
 ## Kubernetes Resources Created
 
 | Resource | Name | Purpose |
@@ -117,7 +123,8 @@ The ExternalSecret expects these keys at `t6-apps/bionic-org/config`:
 | Ingress | `bionic-org` | Kong ingress with TLS |
 | Certificate | `bionic-org-tls` | cert-manager TLS certificate |
 | PVC | `bionic-org-data` | NFS RWX 20Gi at `/paperclip`: instance state (signing keys, local_disk storage, agent workspaces) |
-| ExternalSecret | `bionic-org-secrets` | Vault → K8s secret sync (5m) |
+| ExternalSecret | `bionic-org-secrets` | Vault → K8s secret sync (5m), app config |
+| ExternalSecret | `bionic-org-api-keys` | Vault `shared/api-keys` → K8s secret sync (5m), provider keys |
 | ExternalSecret | `bionic-org-pg-superuser` | PG credentials (if separate) |
 
 ## Disaster Recovery — rebuilding the Org from scratch

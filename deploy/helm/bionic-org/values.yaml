@@ -108,6 +108,11 @@ vault:
   # (base64 32-byte AES-256 key). MUST survive every redeploy — see
   # deploy/scripts/setup-vault-secrets.sh which generates it exactly once.
   masterKeySecretKey: paperclip_secrets_master_key
+  # Shared org-wide provider API keys (Vault KV v2 path, e.g. anthropic_api_key,
+  # claude_subscription_token, github_token, openai_api_key, ...). Synced into a
+  # separate K8s secret so provider credentials live in exactly one place.
+  apiKeysPath: shared/api-keys
+  apiKeysSecretName: bionic-org-api-keys
   # Secret store (ClusterSecretStore)
   secretStore: vault-backend
   # Refresh interval for ESO sync
