@@ -60,12 +60,19 @@ spec:
           env:
             {{- if .Values.vault.apiKeysPath }}
             # Canonical aliases for CLIs that expect uppercase names.
+            # ANTHROPIC_API_KEY is deliberately NOT aliased by default:
+            # Claude Code/ACP picks API-key auth whenever ANTHROPIC_API_KEY is
+            # present, overriding every claude_local agent's subscription token
+            # and billing prepaid credits (2026-10-06 "Credit balance is too
+            # low" incident). See vault.anthropicApiKeyAlias in values.yaml.
+            {{- if .Values.vault.anthropicApiKeyAlias }}
             - name: ANTHROPIC_API_KEY
               valueFrom:
                 secretKeyRef:
                   key: anthropic_api_key
                   name: {{ .Values.vault.apiKeysSecretName }}
                   optional: true
+            {{- end }}
             - name: CLAUDE_CODE_OAUTH_TOKEN
               valueFrom:
                 secretKeyRef:

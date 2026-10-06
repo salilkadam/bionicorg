@@ -159,6 +159,11 @@ vault:
   server: http://vault.vault.svc.cluster.local:8200
   # Vault JWT auth role used by External Secrets (see deploy/scripts/setup-vault-jwt.sh)
   jwtRole: eso-reader
+  # KV v2 mount the ClusterSecretStore points at. This is the Vault MOUNT name
+  # (not a folder): ESO builds read URLs as <kvMount>/data/<key>, and the
+  # eso-reader policy only grants secret/data/* — putting a folder path here
+  # 403s every sync (ExternalSecrets stay Ready=False and keep stale data).
+  kvMount: secret
   # Vault path where app secrets are stored
   path: t6-apps/bionic-org/config
   # Key inside that path holding the Paperclip secrets master key
@@ -170,6 +175,18 @@ vault:
   # separate K8s secret so provider credentials live in exactly one place.
   apiKeysPath: shared/api-keys
   apiKeysSecretName: bionic-org-api-keys
+  # Opt-in uppercase alias for the raw Anthropic API key. Claude Code/ACP auth
+  # precedence checks ANTHROPIC_API_KEY BEFORE CLAUDE_CODE_OAUTH_TOKEN, so a
+  # pod that carries ANTHROPIC_API_KEY makes every claude_local agent bill
+  # prepaid API credits and silently ignores its Claude subscription login.
+  # This org's Anthropic path is the subscription token
+  # (claude_subscription_token), so the alias stays off. It was live by default
+  # until the 2026-10-06 incident, when the credit-exhausted API key turned
+  # every claude_local run into "Credit balance is too low" despite a healthy
+  # ESO-synced subscription token. Only enable with --set
+  # vault.anthropicApiKeyAlias=true if you intentionally switch to API-key
+  # billing (the subscription token in the pod env is still overridden then).
+  anthropicApiKeyAlias: false
   # Secret store (ClusterSecretStore)
   secretStore: vault-backend
   # Refresh interval for ESO sync (JWT auth auto-mints tokens; 1h is plenty)

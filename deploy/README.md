@@ -107,7 +107,7 @@ Two Vault paths feed this deployment via ESO (both synced every 5 min — never 
 | `storage_s3_bucket` | S3 bucket name (if using S3 storage) |
 | `storage_s3_endpoint` | S3 endpoint (if using S3 storage) |
 
-2. **`shared/api-keys`** (org-wide shared provider keys) → K8s Secret `bionic-org-api-keys`, mounted via `envFrom` so adapter child processes inherit provider credentials. Contains `anthropic_api_key`, `claude_subscription_token`, `github_token`, `openai_api_key`, `gemini_api_key`, `openrouter_api_key`, and more. The deployment also exposes uppercase aliases (`ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, `GITHUB_TOKEN`, `OPENAI_API_KEY`).
+2. **`shared/api-keys`** (org-wide shared provider keys) → K8s Secret `bionic-org-api-keys`, mounted via `envFrom` so adapter child processes inherit provider credentials (keys land lowercase and verbatim). Contains `anthropic_api_key`, `claude_subscription_token`, `github_token`, `openai_api_key`, `gemini_api_key`, `openrouter_api_key`, and more. The deployment exposes uppercase CLI-convention aliases for `CLAUDE_CODE_OAUTH_TOKEN`, `GITHUB_TOKEN`, and `OPENAI_API_KEY` only. **`ANTHROPIC_API_KEY` is deliberately NOT aliased** (`vault.anthropicApiKeyAlias: false`): Claude Code/ACP auth precedence picks `ANTHROPIC_API_KEY` over `CLAUDE_CODE_OAUTH_TOKEN`, so a pod carrying it makes every `claude_local` agent bill the prepaid API account and silently ignore its Claude subscription login. This caused the 2026-10-06 incident where every claude_local run failed with "Credit balance is too low" while the ESO-synced subscription token in the same pod was healthy. Runs that should be on subscription show `usage_json->>'billingType' = 'subscription_included'`; `metered_api`/`api` means something re-introduced an API key.
 
 > **Re-seeding Board managed secrets:** after a Case-C rebuild, read the needed values from `bionic-org-api-keys` (`kubectl -n bionicorg get secret bionic-org-api-keys -o go-template=...`) and enter them once in the Board UI — the UI encrypts them into the DB under the master key; the env wiring covers CLI-level fallback.
 
@@ -187,8 +187,45 @@ kubectl -n bionicorg describe pod -l app=bionic-org
 
 ```bash
 kubectl -n bionicorg describe externalsecret bionic-org-secrets
+kubectl -n bionicorg get externalsecret -o wide   # READY column + STATUS
 # Check Vault path exists: vault kv get t6-apps/bionic-org/config
 ```
+
+> **ESO fails SILENTLY.** A failed sync leaves `Ready=False` with
+> `reason=SecretSyncedError` but the target K8s Secret keeps serving **stale
+> data** (deletionPolicy Retain), and app pods never see Vault changes — no pod
+> log shows anything. After any Vault write, always confirm the ES flips to
+> `Synced`/`Ready=True`; force an immediate re-sync with:
+> `kubectl -n bionicorg annotate externalsecret <name> force-sync="$(date +%s)" --overwrite`
+> (restarting the ESO controller does NOT force re-sync).
+
+Known causes:
+
+- **`vault.kvMount` must be the KV v2 *mount name*** (`secret` on this
+  cluster), not a folder. ESO builds `<kvMount>/data/<key>`; a folder path
+  here 403s every sync. (`--reuse-values` also hides NEW chart value keys —
+  pass new keys via `--set` on the upgrade that first introduces them.)
+- **Missing Vault policy.** The JWT role `eso-reader` must have
+  `token_policies=["eso-bionic-org-policy"]` AND that policy must exist
+  (re-create both with `deploy/scripts/setup-vault-jwt.sh`; login 403s while
+  the policy is missing, 401s while the role/JWT config is broken — a useful
+  distinction). The shared store's policy must list every tenant's KV path.
+
+### Claude agents fail with "Credit balance is too low"
+
+```bash
+# The pod must NOT have uppercase ANTHROPIC_API_KEY:
+kubectl -n bionicorg exec deploy/bionic-org -c bionic -- \
+  sh -c '[ -n "$ANTHROPIC_API_KEY" ] && echo POISONED || echo clean'
+```
+
+If POISONED, something set `vault.anthropicApiKeyAlias=true` (see the provider
+keys section above) — unset it and `kubectl -n bionicorg rollout restart
+deploy/bionic-org`. If clean but runs still fail, the subscription token itself
+(`shared/api-keys` key `claude_subscription_token`) is expired/revoked: refresh
+it in Vault, force-sync, rollout-restart the pod (pod env freezes at container
+start), and for Board-managed agents rotate the matching owner user-secret via
+the Board UI or the claude-oauth-token API.
 
 ### TLS not provisioning
 

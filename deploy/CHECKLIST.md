@@ -36,13 +36,18 @@
   - [ ] `minio_root_user`
   - [ ] `minio_root_password`
 
+## Step 4b: Vault JWT auth for ESO
+- [ ] Run `./deploy/scripts/setup-vault-jwt.sh` (creates/refreshes policy `eso-bionic-org-policy` on KV mount `secret` + JWT role `eso-reader`; re-run after k3s API-server reinit, which rotates OIDC signing keys)
+- [ ] Confirm policy exists and is attached: `vault policy read eso-bionic-org-policy` (a missing policy = 403 on every read while login still succeeds)
+
 ## Step 5: Helm Deploy
 - [ ] Run `helm upgrade --install bionic-org deploy/helm/bionic-org --namespace bionicorg --set "image.tag=71d7f47fe" --set "domain=org.baisoln.com" --create-namespace --wait --timeout 5m --atomic`
 - [ ] Verify pods are Running
 - [ ] Verify rollout status
 
 ## Step 6: Post-Deploy Verification
-- [ ] Check ExternalSecret synced
+- [ ] Check ExternalSecret synced — `kubectl -n bionicorg get externalsecret -o wide` shows READY=True / reason=SecretSynced for BOTH `bionic-org-secrets` and `bionic-org-api-keys` (a failed sync silently keeps STALE secret data)
+- [ ] Claude subscription check: pod has NO uppercase `ANTHROPIC_API_KEY` (`kubectl -n bionicorg exec deploy/bionic-org -c bionic -- sh -c '[ -n "$ANTHROPIC_API_KEY" ] && echo POISONED || echo clean'`) and `CLAUDE_CODE_OAUTH_TOKEN` hash matches Vault's `shared/api-keys` → `claude_subscription_token`
 - [ ] Check TLS certificate provisioned
 - [ ] Check pod health (no restarts, no crash loops)
 - [ ] Verify DNS resolves org.baisoln.com
