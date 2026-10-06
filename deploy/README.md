@@ -155,6 +155,10 @@ it preserves; only `--rotate-master-key` changes it).
    Board UI (Anthropic/API-provider keys, Claude OAuth, GitHub token,
    GPU-cluster key). These live encrypted **in the DB** under the master key —
    they are not in Vault or the PVC and cannot be restored from this repo.
+3. Recreate the watchdog agent: copy `deploy/` into the app pod and run
+   `deploy/scripts/create-sr-engineer-agent.sh`, then follow its NEXT output
+   (Claude token → bind → enable heartbeat). Also re-run
+   `register-cluster-mcp-servers.sh` and `apply-agent-opencode-data-isolation.sh`.
 
 ### Verify any restore
 
@@ -309,3 +313,30 @@ which surfaced as `Error: Unexpected error / database is locked` and
 so session resume keeps working. The bindings live in
 `agents.adapter_config.env` (plain values), so they survive pod restarts; run
 the script again after adding agents.
+
+## Sr. Engineer (IT department watchdog agent)
+
+A 6th agent, **Sr. Engineer** (`6c3d9ec8-604d-4621-98b3-761931c72225`), reports
+to the CIO, carries `metadata.department = "IT"`, and patrols Paperclip failures
+on a 5-minute heartbeat: failed/timed-out runs, the recovery backlog, and its
+own assigned issues. It retries transient failures, applies the known-failure
+catalogue fixes, and goes back to sleep when there is nothing actionable. Its
+brain is the Claude subscription (`claude_local` adapter).
+
+- Runbook (instructions bundle entry file): `deploy/agents/sr-engineer-AGENTS.md`
+- Idempotent creation: `deploy/scripts/create-sr-engineer-agent.sh`
+  (requires `PAPERCLIP_BOARD_TOKEN`; runs inside the app pod)
+
+Claude auth note: `claude_local` has **no device login** and the setup-token
+session flow needs a managed sandbox environment. Use the owner-pasted token
+path instead:
+
+1. `claude setup-token` on any machine signed into the subscription.
+2. `POST /api/companies/<cid>/claude-oauth-token {"token":"sk-ant-oat01-..."}`
+3. `PATCH /api/agents/<id> {"applyStoredClaudeLogin":true}`
+4. `PATCH /api/agents/<id> {"runtimeConfig":{"heartbeat":{"enabled":true,"intervalSec":300,"maxConcurrentRuns":1}}}`
+
+The heartbeat ships **disabled** at creation so the agent never loops
+`setup_failed` before its Claude login exists. Memory: with 6 agents at
+`maxConcurrentRuns:1` the pod stays under the 6Gi limit; re-check
+`kubectl top pod` after the first week of patrol activity.
