@@ -52,14 +52,18 @@ service:
 
 # ---------------------------------------------------------------------------
 # Resource limits
+# NOTE: The bionic container hosts agent heartbeat runs, each of which spawns
+# an adapter/CLI child process (~1Gi each). Waking several company agents at
+# once OOMKilled the pod at the previous 2Gi limit. 6Gi lets the org's agents
+# run concurrently; raise further if you wake many agents simultaneously.
 # ---------------------------------------------------------------------------
 resources:
   limits:
-    cpu: 1000m
-    memory: 2Gi
+    cpu: 2000m
+    memory: 6Gi
   requests:
-    cpu: 250m
-    memory: 512Mi
+    cpu: 500m
+    memory: 1Gi
 
 # ---------------------------------------------------------------------------
 # PostgreSQL (CNPG) — new database in existing pg-ceph cluster
