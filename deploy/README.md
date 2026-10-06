@@ -273,3 +273,23 @@ Then ensure Vault has:
               │    t6-apps/bionic-org/  │
               └─────────────────────────┘
 ```
+
+## Cluster MCP servers (Loc-*)
+
+`deploy/mcp/bionic-org-mcp-servers.json` is the discovered catalog of every
+MCP-shaped workload in the cluster (internal DNS, Streamable HTTP where
+supported). `deploy/scripts/register-cluster-mcp-servers.sh` registers the
+`status: ready` entries into a Paperclip company as `Loc-*` tool connections
+(auth kind `none` — internal cluster traffic bypasses the mcp-ingress API-key
+wall; `PAPERCLIP_DEPLOYMENT_EXPOSURE=private` lets the endpoint guard accept
+private URLs) and runs health-check + catalog refresh for each. Re-run it
+any time after recreating the org from scratch.
+
+Cluster prerequisites applied for these connections (see
+`cluster_prerequisites` in the catalog JSON): the comfy host allowlist, the
+mail-bridge service client-IP session affinity, and the private exposure flag.
+
+Entries that are `oauth_gated` (Letta, Google Workspace: Keycloak realm
+`mcp` bearer required), `sse_only` (search MCP: Paperclip speaks Streamable
+HTTP), `unavailable` (qdrant, scaled to zero), `not_mcp` (docs swagger-ui),
+or `unreachable` (archon) are documented but intentionally not registered.

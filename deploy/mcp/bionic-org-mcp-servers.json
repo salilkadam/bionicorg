@@ -1,0 +1,743 @@
+{
+  "$schema": "https://paperclip.local/schemas/cluster-mcp-servers.json",
+  "company": "Reliora Inc",
+  "companyId": "62d63984-df6c-49be-981c-1273f68a451c",
+  "generatedAt": "2026-10-06T19:04:12.122Z",
+  "discovery": "Probed from inside the cluster (MCP initialize + tools/list handshake against every MCP-shaped workload).",
+  "conventions": {
+    "namePrefix": "Loc-",
+    "dns": "*.svc.cluster.local internal DNS; traffic never leaves the cluster, so the mcp ingress API-key wall does not apply. PAPERCLIP_DEPLOYMENT_EXPOSURE=private makes the SSRF endpoint guard accept private URLs.",
+    "registration": "deploy/scripts/register-cluster-mcp-servers.sh"
+  },
+  "cluster_prerequisites": [
+    "mcp-comfy-server env MCP_ALLOWED_HOSTS includes mcp-comfy-server.mcp.svc.cluster.local (with and without :8014) so the internal Host header passes its DNS-rebinding guard.",
+    "mail-bridge-server Service uses sessionAffinity: ClientIP (2 replicas; the MCP session created on one pod must not be answered by the other).",
+    "PAPERCLIP_DEPLOYMENT_EXPOSURE=private in helm values (SSRF guard then allows cluster-private MCP URLs)."
+  ],
+  "servers": [
+    {
+      "key": "loc-comfy",
+      "displayName": "Loc-ComfyUI",
+      "description": "Local GPU image generation workflows (ComfyUI)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-comfy-server.mcp.svc.cluster.local:8014/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Host allowlist includes cluster DNS (see cluster_prerequisites)."
+      },
+      "serverInfo": {
+        "name": "ComfyUI_MCP_Server",
+        "version": "1.27.0"
+      },
+      "toolCount": 17,
+      "tools": [
+        "list_models",
+        "get_defaults",
+        "set_defaults",
+        "list_workflows",
+        "run_workflow",
+        "view_image",
+        "qwen_t2i",
+        "z_image_t2i",
+        "regenerate",
+        "get_queue_status",
+        "get_job",
+        "list_assets",
+        "get_asset_metadata",
+        "cancel_job",
+        "get_publish_info",
+        "set_comfyui_output_root",
+        "publish_asset"
+      ]
+    },
+    {
+      "key": "loc-ai",
+      "displayName": "Loc-AI",
+      "description": "Text/audio/image AI on the local GPU cluster (TTS, STT, embeddings, moderation)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-ai-mcp-server.mcp.svc.cluster.local:8009/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "AI MCP Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 14,
+      "tools": [
+        "ai_register_tenant",
+        "ai_list_models",
+        "ai_chat_completion",
+        "ai_text_completion",
+        "ai_create_embeddings",
+        "ai_create_audio_transcription",
+        "ai_get_mcp_tools",
+        "ai_proxy_service_request",
+        "ai_audio_speech_to_text",
+        "ai_audio_text_to_speech",
+        "ai_audio_list_models",
+        "ai_audio_voices",
+        "ai_audio_voice_clone_xtts_v2",
+        "ai_xtts_v2_list_models"
+      ]
+    },
+    {
+      "key": "loc-calculator",
+      "displayName": "Loc-Calculator",
+      "description": "Math and unit conversion tools",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-calculator-server.mcp.svc.cluster.local:8000/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Calculator Server",
+        "version": "2.14.5"
+      },
+      "toolCount": 7,
+      "tools": [
+        "calc_add",
+        "calc_subtract",
+        "calc_multiply",
+        "calc_divide",
+        "calc_power",
+        "calc_sqrt",
+        "calc_modulo"
+      ]
+    },
+    {
+      "key": "loc-docfiler",
+      "displayName": "Loc-DocFiles",
+      "description": "Document filing and retrieval",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-docfiler-server.mcp.svc.cluster.local:8009/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "docfiler",
+        "version": "3.4.7"
+      },
+      "toolCount": 10,
+      "tools": [
+        "docfiler_search",
+        "docfiler_recent",
+        "docfiler_review_queue",
+        "docfiler_failed_queue",
+        "docfiler_status",
+        "docfiler_requeue",
+        "docfiler_reclassify",
+        "docfiler_approve",
+        "docfiler_migrate_status",
+        "docfiler_migrate_rollback"
+      ]
+    },
+    {
+      "key": "loc-ffmpeg",
+      "displayName": "Loc-FFmpeg",
+      "description": "Audio/video processing",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-ffmpeg-server.mcp.svc.cluster.local:8004/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "FFmpeg Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 8,
+      "tools": [
+        "ffmpeg_convert_video",
+        "ffmpeg_extract_audio",
+        "ffmpeg_merge_videos",
+        "ffmpeg_add_subtitles",
+        "ffmpeg_trim_video",
+        "ffmpeg_get_video_info_tool",
+        "ffmpeg_resize_video",
+        "ffmpeg_extract_frame"
+      ]
+    },
+    {
+      "key": "loc-figma",
+      "displayName": "Loc-Figma",
+      "description": "Figma design gateway",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-figma-server.mcp.svc.cluster.local:8013/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Figma Gateway",
+        "version": "3.4.2"
+      },
+      "toolCount": 35,
+      "tools": [
+        "fg_register_tenant",
+        "fg_set_rate_limit",
+        "fg_tenant_status",
+        "fg_get_file",
+        "fg_get_node",
+        "fg_get_image",
+        "fg_get_components",
+        "fg_get_styles",
+        "fg_get_variables",
+        "fg_get_comments",
+        "fg_post_comment",
+        "fg_get_versions",
+        "fg_use_file",
+        "fg_check_changes",
+        "fg_watch_file",
+        "fg_unwatch_file",
+        "fg_list_watches",
+        "fg_get_changes",
+        "fg_get_document_info",
+        "fg_get_selection",
+        "fg_create_frame",
+        "fg_create_text",
+        "fg_create_rectangle",
+        "fg_create_component_instance",
+        "fg_set_fill",
+        "fg_set_stroke",
+        "fg_set_corner_radius",
+        "fg_set_text_content",
+        "fg_set_auto_layout",
+        "fg_move_node",
+        "fg_resize_node",
+        "fg_clone_node",
+        "fg_delete_node",
+        "fg_set_parent",
+        "fg_exec_batch"
+      ]
+    },
+    {
+      "key": "loc-gen3d",
+      "displayName": "Loc-Gen3D",
+      "description": "3D generation on local GPU cluster",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-gen3d-server.mcp.svc.cluster.local:8014/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Gen3D Server",
+        "version": "2.14.7"
+      },
+      "toolCount": 9,
+      "tools": [
+        "g3d_register_tenant",
+        "g3d_product_shot",
+        "g3d_image_to_geometry",
+        "g3d_status",
+        "g3d_fetch_glb",
+        "g3d_textured_prop",
+        "g3d_meshy_status",
+        "g3d_meshy_fetch",
+        "g3d_generate_prop"
+      ]
+    },
+    {
+      "key": "loc-genimage",
+      "displayName": "Loc-GenImage",
+      "description": "Image generation on local GPU cluster",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-genimage-server.mcp.svc.cluster.local:8008/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "GenImage Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 9,
+      "tools": [
+        "gi_register_tenant",
+        "gi_generate_image",
+        "gi_edit_image",
+        "gi_list_models",
+        "gi_upscale_image",
+        "gi_remove_background",
+        "gi_refine_image",
+        "gi_text_edit_image",
+        "gi_generate_panorama_directional"
+      ]
+    },
+    {
+      "key": "loc-langfuse",
+      "displayName": "Loc-Langfuse",
+      "description": "LLM observability (traces, prompts, metrics)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-langfuse-server.mcp.svc.cluster.local:8011/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Langfuse Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 8,
+      "tools": [
+        "lf_register_tenant",
+        "lf_create_trace",
+        "lf_create_span",
+        "lf_create_generation",
+        "lf_create_event",
+        "lf_create_score",
+        "lf_get_trace",
+        "lf_get_project"
+      ]
+    },
+    {
+      "key": "loc-leffa",
+      "displayName": "Loc-Leffa",
+      "description": "Image editing (Leffa)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-leffa-server.mcp.svc.cluster.local:8013/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Leffa Server",
+        "version": "2.14.7"
+      },
+      "toolCount": 2,
+      "tools": [
+        "leffa_tryon",
+        "leffa_pose_transfer"
+      ]
+    },
+    {
+      "key": "loc-meilisearch",
+      "displayName": "Loc-MeiliSearch",
+      "description": "Cluster-internal search index",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-meilisearch-server.mcp.svc.cluster.local:8007/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "MeiliSearch Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 9,
+      "tools": [
+        "ms_register_tenant",
+        "ms_list_indexes",
+        "ms_get_index",
+        "ms_create_index",
+        "ms_delete_index",
+        "ms_add_documents",
+        "ms_search",
+        "ms_get_document",
+        "ms_delete_documents"
+      ]
+    },
+    {
+      "key": "loc-minio",
+      "displayName": "Loc-MinIO",
+      "description": "S3 object storage (cluster MinIO)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-minio-server.mcp.svc.cluster.local:8002/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "MinIO Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 9,
+      "tools": [
+        "minio_list_buckets",
+        "minio_create_bucket",
+        "minio_delete_bucket",
+        "minio_bucket_exists",
+        "minio_list_objects",
+        "minio_upload_object",
+        "minio_download_object",
+        "minio_delete_object",
+        "minio_register_tenant"
+      ]
+    },
+    {
+      "key": "loc-openproject",
+      "displayName": "Loc-OpenProject",
+      "description": "Project management work packages",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-openproject-server.mcp.svc.cluster.local:8006/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "OpenProject Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 71,
+      "tools": [
+        "list_news",
+        "get_news",
+        "create_news",
+        "update_news",
+        "delete_news",
+        "list_versions",
+        "create_version",
+        "update_version",
+        "list_roles",
+        "list_memberships",
+        "add_project_member",
+        "update_membership",
+        "remove_project_member",
+        "update_time_entry",
+        "delete_time_entry",
+        "update_work_package_relation",
+        "get_attachment",
+        "wiki_list_pages",
+        "wiki_get_page",
+        "wiki_create_page",
+        "wiki_update_page",
+        "wiki_rename_page",
+        "wiki_set_parent",
+        "wiki_delete_page",
+        "wiki_add_attachment",
+        "wiki_publish_document",
+        "project_enable_module",
+        "test_connection",
+        "list_projects",
+        "list_work_packages",
+        "list_types",
+        "create_work_package",
+        "get_work_package",
+        "update_work_package",
+        "delete_work_package",
+        "list_users",
+        "get_user",
+        "list_statuses",
+        "list_priorities",
+        "get_project",
+        "create_project",
+        "update_project",
+        "delete_project",
+        "set_work_package_parent",
+        "remove_work_package_parent",
+        "get_work_package_children",
+        "get_work_package_hierarchy",
+        "bulk_create_work_packages",
+        "bulk_update_work_packages",
+        "query_work_packages",
+        "search_work_packages",
+        "create_work_package_relation",
+        "list_work_package_relations",
+        "delete_work_package_relation",
+        "add_work_package_comment",
+        "list_work_package_activities",
+        "add_work_package_watcher",
+        "remove_work_package_watcher",
+        "list_work_package_watchers",
+        "assign_work_package",
+        "log_time",
+        "list_time_entries",
+        "list_time_entry_activities",
+        "list_work_package_attachments",
+        "add_work_package_attachment",
+        "delete_attachment",
+        "list_custom_fields",
+        "update_work_package_custom_fields",
+        "get_work_package_schema",
+        "update_work_package_status",
+        "get_available_assignees"
+      ]
+    },
+    {
+      "key": "loc-pdf",
+      "displayName": "Loc-PDF",
+      "description": "PDF generation",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-pdf-generator-server.mcp.svc.cluster.local:8003/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "PDF Generator Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 3,
+      "tools": [
+        "pdf_generate_pdf",
+        "pdf_get_pdf_file",
+        "pdf_register_tenant"
+      ]
+    },
+    {
+      "key": "loc-postgres",
+      "displayName": "Loc-Postgres",
+      "description": "SQL access to the org database",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-postgres-server.mcp.svc.cluster.local:8001/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Postgres Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 7,
+      "tools": [
+        "pg_execute_query",
+        "pg_list_tables",
+        "pg_describe_table",
+        "pg_begin_transaction",
+        "pg_commit_transaction",
+        "pg_rollback_transaction",
+        "pg_register_tenant"
+      ]
+    },
+    {
+      "key": "loc-redis",
+      "displayName": "Loc-Redis",
+      "description": "Cache/queue access (cluster Redis)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-redis-server.mcp.svc.cluster.local:8010/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Redis Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 55,
+      "tools": [
+        "redis_register_tenant",
+        "redis_get",
+        "redis_set",
+        "redis_mget",
+        "redis_mset",
+        "redis_incr",
+        "redis_append",
+        "redis_delete",
+        "redis_exists",
+        "redis_keys",
+        "redis_scan",
+        "redis_type",
+        "redis_ttl",
+        "redis_expire",
+        "redis_persist",
+        "redis_rename",
+        "redis_hset",
+        "redis_hget",
+        "redis_hgetall",
+        "redis_hdel",
+        "redis_hexists",
+        "redis_hkeys",
+        "redis_hincrby",
+        "redis_lpush",
+        "redis_rpush",
+        "redis_lpop",
+        "redis_rpop",
+        "redis_lrange",
+        "redis_llen",
+        "redis_lset",
+        "redis_sadd",
+        "redis_srem",
+        "redis_smembers",
+        "redis_sismember",
+        "redis_scard",
+        "redis_sunion",
+        "redis_sinter",
+        "redis_sdiff",
+        "redis_zadd",
+        "redis_zrem",
+        "redis_zrange",
+        "redis_zscore",
+        "redis_zrank",
+        "redis_zcard",
+        "redis_zrangebyscore",
+        "redis_zincrby",
+        "redis_ping",
+        "redis_info",
+        "redis_dbsize",
+        "redis_flushdb",
+        "redis_execute_command",
+        "redis_publish",
+        "redis_subscribe",
+        "redis_poll",
+        "redis_unsubscribe"
+      ]
+    },
+    {
+      "key": "loc-mail",
+      "displayName": "Loc-Mail",
+      "description": "Mail bridge (send/receive)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mail-bridge-server.mcp.svc.cluster.local:8005/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "Mail Server",
+        "version": "3.4.2"
+      },
+      "toolCount": 4,
+      "tools": [
+        "mail_send_email",
+        "mail_send_email_with_attachments",
+        "mail_send_bulk_emails",
+        "mail_register_tenant"
+      ]
+    },
+    {
+      "key": "loc-api-gateway",
+      "displayName": "Loc-API Gateway",
+      "description": "Aggregated gpu-ai REST API MCP server (ai-services)",
+      "status": "ready",
+      "transport": "streamable-http",
+      "url": "http://mcp-api-server.ai-services.svc.cluster.local:8000/mcp",
+      "auth": {
+        "kind": "none",
+        "note": "Internal cluster DNS; Paperclip exposure=private permits private-network MCP endpoints."
+      },
+      "serverInfo": {
+        "name": "mcp-api-server",
+        "version": "1.0.0",
+        "tools": []
+      },
+      "toolCount": 18,
+      "tools": [
+        "llm_chat_completion",
+        "llm_text_completion",
+        "llm_list_models",
+        "audio_speech_to_text",
+        "audio_tts",
+        "audio_text_to_speech",
+        "audio_list_models",
+        "audio_voice_clone",
+        "audio_voice_register",
+        "audio_voice_list",
+        "audio_voice_get",
+        "audio_voice_delete",
+        "audio_format_transcript",
+        "audio_analyze_prosody",
+        "audio_music_generate",
+        "audio_music_get_status",
+        "embeddings_generate",
+        "embeddings_get_status"
+      ]
+    },
+    {
+      "key": "loc-gworkspace",
+      "displayName": "Loc-Google Workspace",
+      "description": "Requires OAuth bearer from Keycloak realm 'mcp' (MCP_OAUTH_ISSUER); shared/api-keys are not accepted.",
+      "status": "oauth_gated",
+      "transport": "streamable-http",
+      "url": "http://mcp-gworkspace-server.mcp.svc.cluster.local:8015/mcp",
+      "auth": {
+        "kind": "oauth",
+        "issuer": "https://auth.bionicaisolutions.com/realms/mcp"
+      },
+      "note": "Requires OAuth bearer from Keycloak realm 'mcp' (MCP_OAUTH_ISSUER); shared/api-keys are not accepted.",
+      "toolCount": 0,
+      "tools": []
+    },
+    {
+      "key": "loc-letta",
+      "displayName": "Loc-Letta",
+      "description": "Requires OAuth bearer from Keycloak realm 'mcp'; shared/api-keys are not accepted.",
+      "status": "oauth_gated",
+      "transport": "streamable-http",
+      "url": "http://mcp-letta-server.mcp.svc.cluster.local:8012/mcp",
+      "auth": {
+        "kind": "oauth",
+        "issuer": "https://auth.bionicaisolutions.com/realms/mcp"
+      },
+      "note": "Requires OAuth bearer from Keycloak realm 'mcp'; shared/api-keys are not accepted.",
+      "toolCount": 0,
+      "tools": []
+    },
+    {
+      "key": "loc-search",
+      "displayName": "Loc-Web Search",
+      "description": "Legacy MCP SSE transport; Paperclip mcp_remote speaks Streamable HTTP only. Also exposes plain REST /search /crawl /extract /analyze.",
+      "status": "sse_only",
+      "transport": "sse",
+      "url": "http://search-mcp-service.mcp.svc.cluster.local:8000/sse",
+      "auth": {
+        "kind": "none"
+      },
+      "note": "Legacy MCP SSE transport; Paperclip mcp_remote speaks Streamable HTTP only. Also exposes plain REST /search /crawl /extract /analyze.",
+      "toolCount": 0,
+      "tools": []
+    },
+    {
+      "key": "loc-qdrant",
+      "displayName": "Loc-Qdrant",
+      "description": "Deployment scaled to 0/0 (paused). Legacy SSE transport.",
+      "status": "unavailable",
+      "transport": "sse",
+      "url": "http://qdrant-mcp-service.mcp.svc.cluster.local:8000/sse",
+      "auth": {
+        "kind": "none"
+      },
+      "note": "Deployment scaled to 0/0 (paused). Legacy SSE transport.",
+      "toolCount": 0,
+      "tools": []
+    },
+    {
+      "key": "loc-docs",
+      "displayName": "Loc-Docs Viewer",
+      "description": "swagger-ui deployment, not an MCP server.",
+      "status": "not_mcp",
+      "transport": "none",
+      "url": "http://mcp-docs-server.mcp.svc.cluster.local:8080/docs",
+      "auth": {
+        "kind": "none"
+      },
+      "note": "swagger-ui deployment, not an MCP server.",
+      "toolCount": 0,
+      "tools": []
+    },
+    {
+      "key": "loc-archon",
+      "displayName": "Loc-Archon Docker",
+      "description": "No response (274d-old default-ns deployment).",
+      "status": "unreachable",
+      "transport": "unknown",
+      "url": "http://archon-docker-mcp.default.svc.cluster.local:8051/mcp",
+      "auth": {
+        "kind": "none"
+      },
+      "note": "No response (274d-old default-ns deployment).",
+      "toolCount": 0,
+      "tools": []
+    }
+  ]
+}
