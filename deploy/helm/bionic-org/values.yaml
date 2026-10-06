@@ -54,8 +54,16 @@ service:
 # Resource limits
 # NOTE: The bionic container hosts agent heartbeat runs, each of which spawns
 # an adapter/CLI child process (~1Gi each). Waking several company agents at
-# once OOMKilled the pod at the previous 2Gi limit. 6Gi lets the org's agents
-# run concurrently; raise further if you wake many agents simultaneously.
+# once OOMKilled the pod at the previous 2Gi limit. 6Gi is the OOM ceiling and
+# MUST stay high because a mass-wake spikes memory in well under a second —
+# neither HPA nor VPA can react that fast (both are poll-based: metrics-server
+# scrape ~15s + HPA sync 15s; VPA recommender runs ~1min).
+#
+# The *request* (node reservation) is deliberately LOW (512Mi). A limit is a
+# ceiling, not a reservation, so the 6Gi limit costs ~nothing when the org is
+# calm; only the request is charged against the node. When the cluster has the
+# VPA operator installed, the VerticalPodAutoscaler below auto-raises this
+# request as real usage grows and lowers it again when calm (see `vpa`).
 # ---------------------------------------------------------------------------
 resources:
   limits:
@@ -63,7 +71,48 @@ resources:
     memory: 6Gi
   requests:
     cpu: 500m
-    memory: 1Gi
+    memory: 512Mi
+
+# ---------------------------------------------------------------------------
+# Vertical Pod Autoscaler (memory right-sizing)
+# ---------------------------------------------------------------------------
+# WHY VPA and not HPA: Paperclip is a single-writer control plane. Every
+# replica runs its own heartbeat scheduler loop (server/src/index.ts
+# startHeartbeatSchedulerInterval) with a PROCESS-LOCAL run-start lock
+# (server/src/services/agent-start-lock.ts) and runs are pinned to the process
+# that spawned them (server/src/services/heartbeat.ts:1387). So scaling OUT
+# (HPA) is unsafe — it would run duplicate schedulers and never cuts per-pod
+# memory anyway (an HPA scales replicas, not a pod's memory ceiling).
+#
+# WHAT THIS DOES: it manages the container's MEMORY REQUEST only
+# (controlledValues: RequestsOnly), letting it grow as usage grows and shrink
+# when calm — automating the manual "bump the memory" step. It leaves the 6Gi
+# limit (the OOM ceiling) untouched so a burst still has headroom, and it does
+# NOT manage CPU.
+#
+# updateMode InPlaceOrRecreate uses the v1.33 in-place resize feature to change
+# the request WITHOUT evicting the pod; it only falls back to eviction if
+# in-place is infeasible. NOTE: eviction would kill in-flight agent runs (they
+# are process-pinned), so this is intentionally request-only + bounded.
+#
+# Requires the VPA operator CRD. This template renders ONLY when the CRD is
+# present (see the capability guard in templates/vpa.yaml), so committing it is
+# safe on clusters without the operator. Install the operator with
+# deploy/scripts/setup-vpa-operator.sh, then `helm upgrade` to activate.
+# Set enabled=false to opt out entirely.
+# ---------------------------------------------------------------------------
+vpa:
+  enabled: true
+  # Only tune memory; leave CPU to the static requests above.
+  controlledResources:
+    - memory
+  controlledValues: RequestsOnly
+  minAllowed:
+    cpu: 250m
+    memory: 512Mi
+  maxAllowed:
+    cpu: "2"
+    memory: 6Gi
 
 # ---------------------------------------------------------------------------
 # PostgreSQL (CNPG) — new database in existing pg-ceph cluster

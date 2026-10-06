@@ -1,0 +1,53 @@
+{{- /*
+Vertical Pod Autoscaler for the bionic control plane.
+
+Renders ONLY when:
+  1. .Values.vpa.enabled is true, AND
+  2. the VPA operator CRD is installed in the cluster
+     (autoscaling.k8s.io/v1 VerticalPodAutoscaler).
+
+The capability guard is deliberate: committing this template is safe on
+clusters without the operator — helm will simply skip it instead of failing the
+whole release on an unknown kind. Install the operator first
+(deploy/scripts/setup-vpa-operator.sh), then `helm upgrade` to activate it.
+
+WHY VPA and not HPA (do not "fix" this by adding an HPA): Paperclip is a
+single-writer control plane. Each replica runs its own heartbeat scheduler
+(server/src/index.ts) with a process-local run-start lock
+(server/src/services/agent-start-lock.ts) and runs are pinned to the spawning
+process (server/src/services/heartbeat.ts:1387). Scaling OUT is unsafe and
+never reduces per-pod memory. This VPA right-sizes the memory REQUEST only so
+the node reservation tracks real usage; the 6Gi limit (OOM ceiling) is left
+alone because a mass-wake OOMs faster than any autoscaler can poll.
+*/ -}}
+{{- if and .Values.vpa.enabled (.Capabilities.APIVersions.Has "autoscaling.k8s.io/v1/VerticalPodAutoscaler") }}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ include "bionic-org.name" . }}
+  namespace: {{ .Values.namespace | default .Release.Name }}
+  labels:
+    {{- include "bionic-org.labels" . | nindent 4 }}
+    app: bionic-org
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: {{ include "bionic-org.name" . }}
+  updatePolicy:
+    # InPlaceOrRecreate: change resources in place (k8s >=1.33 in-place resize,
+    # enabled by default) WITHOUT evicting the pod; only falls back to eviction
+    # when in-place is infeasible. Eviction would kill in-flight agent runs, so
+    # we pair this with RequestsOnly memory tuning below to minimize fallback.
+    updateMode: InPlaceOrRecreate
+  resourcePolicy:
+    containerPolicies:
+      - containerName: bionic
+        controlledResources:
+          {{- toYaml .Values.vpa.controlledResources | nindent 10 }}
+        controlledValues: {{ .Values.vpa.controlledValues }}
+        minAllowed:
+          {{- toYaml .Values.vpa.minAllowed | nindent 10 }}
+        maxAllowed:
+          {{- toYaml .Values.vpa.maxAllowed | nindent 10 }}
+{{- end }}
