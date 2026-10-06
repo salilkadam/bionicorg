@@ -9,11 +9,17 @@
 #      `kubectl get --raw /openid/v1/jwks`, converted to SPKI PEM with node).
 #      k3s regenerates its OIDC signing key when the API server is
 #      reinitialized, so re-run this script after such an event.
-#   3. Creates/updates role "eso-reader": issues Vault service tokens with the
-#      org ESO policy. By default the role is NOT bound to a specific service
-#      account: the ClusterSecretStore is instance-shared and ESO mints its
-#      login JWT from the *ESO controller's* SA (external-secrets ns), not the
-#      app SA. Use --bind-sa name/ns to restrict if you use a dedicated store.
+#   3. Creates/updates role "eso-reader": issues Vault service tokens carrying
+#      the org ESO policy PLUS the broad shared-store policy, merged ADDITIVELY
+#      with whatever policies the role already has. This matters because the
+#      ClusterSecretStore is instance-shared: one role serves every tenant, and
+#      a replay that REPLACED token_policies would silently strip policies
+#      other orgs attached (2026-10-06: a replay stripped the broad read policy
+#      and 111 tenant ExternalSecrets 403'd). By default the role is NOT bound
+#      to a specific service account: the ClusterSecretStore is instance-shared
+#      and ESO mints its login JWT from the *ESO controller's* SA
+#      (external-secrets ns), not the app SA. Use --bind-sa name/ns to restrict
+#      if you use a dedicated store.
 #
 # After this, the ClusterSecretStore (helm template clustersecretstore.yaml)
 # uses auth type jwt with kubernetesServiceAccountToken — ESO mints short-lived
@@ -37,7 +43,7 @@
 #   VAULT_TOKEN=<admin token> ./deploy/scripts/setup-vault-jwt.sh \
 #       [--vault-addr http://vault.vault.svc.cluster.local:8200] \
 #       [--role eso-reader] [--policy eso-bionic-org-policy] \
-#       [--bind-sa <name> <namespace>] \
+#       [--shared-policy eso-reader] [--bind-sa <name> <namespace>] \
 #       [--kv-paths "secret/data/t6-apps/bionic-org/config secret/data/shared/api-keys secret/metadata/t6-apps/bionic-org/config secret/metadata/shared/api-keys"]
 #
 # Requirements: kubectl (cluster admin), node (for JWK->PEM conversion).
@@ -46,6 +52,13 @@ set -euo pipefail
 VAULT_ADDR="${VAULT_ADDR:-http://vault.vault.svc.cluster.local:8200}"
 ROLE="eso-reader"
 POLICY="eso-bionic-org-policy"
+# Broad instance-wide KV read. The shared ClusterSecretStore role must always
+# carry this in addition to the org policy, or every OTHER tenant's bare keys
+# (t6-apps/<x>/config, shared/*, t5-gateway/...) 403. Its name intentionally
+# matches the live role/policy name on this instance (Vault namespaces roles
+# and policies separately, so the collision is harmless; other roles may
+# already reference this policy — never rename it).
+SHARED_POLICY="eso-reader"
 # Default: no SA binding (shared instance store; ESO authenticates with its own
 # controller SA). Set both to pin the role to one service account.
 SA_NAME=""
@@ -60,6 +73,7 @@ while [[ $# -gt 0 ]]; do
     --role) ROLE="$2"; shift 2 ;;
     --policy) POLICY="$2"; shift 2 ;;
     --bind-sa) SA_NAME="$2"; SA_NAMESPACE="$3"; shift 3 ;;
+    --shared-policy) SHARED_POLICY="$2"; shift 2 ;;
     --kv-paths) KV_PATHS="$2"; shift 2 ;;
     *) echo "unknown arg: $1" >&2; exit 1 ;;
   esac
@@ -82,9 +96,44 @@ fs.writeFileSync(process.argv[2], JSON.stringify(jwks.keys.map(k=>createPublicKe
   done
 } > "$WORKDIR/policy.hcl"
 
+# Broad policy for the shared store. Mount name `secret` is the KV v2 mount on
+# this cluster (vault secrets list); adjust if your mount differs.
+cat > "$WORKDIR/shared-policy.hcl" <<'EOF'
+path "secret/data/*" {
+  capabilities = ["read"]
+}
+path "secret/metadata/*" {
+  capabilities = ["read", "list"]
+}
+EOF
+
+# Runs inside the vault pod (busybox sh: no bashisms, vault CLI only).
+# Merge-only: never drop token_policies another org attached to the shared role.
+cat > "$WORKDIR/role-merge.sh" <<'MERGE_EOF'
+#!/bin/sh
+set -eu
+ROLE="$1"; SHARED_POLICY="$2"; ORG_POLICY="$3"; SA_NAME="${4:-}"; SA_NAMESPACE="${5:-}"
+EXISTING=$(vault read -format=json "auth/jwt/role/$ROLE" 2>/dev/null \
+  | tr -d '\n "' \
+  | sed -n 's/.*token_policies:\[\([^]]*\)\].*/\1/p' || true)
+COMBINED=$(printf '%s\n' "$EXISTING" "$SHARED_POLICY" "$ORG_POLICY" \
+  | tr ',' '\n' | sed '/^$/d' | sort -u | paste -sd, -)
+echo "attaching token_policies=$COMBINED to role $ROLE"
+if [ -n "$SA_NAME" ]; then
+  vault write "auth/jwt/role/$ROLE" role_type=jwt user_claim=sub bound_audiences=vault \
+    bound_service_account_names="$SA_NAME" bound_service_account_namespaces="$SA_NAMESPACE" \
+    token_policies="$COMBINED" token_type=service token_num_uses=0
+else
+  vault write "auth/jwt/role/$ROLE" role_type=jwt user_claim=sub bound_audiences=vault \
+    token_policies="$COMBINED" token_type=service token_num_uses=0
+fi
+MERGE_EOF
+
 kubectl create configmap vault-jwt-setup -n vault \
   --from-file=pubkeys.json="$WORKDIR/pubkeys.json" \
   --from-file=policy.hcl="$WORKDIR/policy.hcl" \
+  --from-file=shared-policy.hcl="$WORKDIR/shared-policy.hcl" \
+  --from-file=role-merge.sh="$WORKDIR/role-merge.sh" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # --- one privileged pod does all Vault writes --------------------------------
@@ -104,10 +153,8 @@ kubectl exec "$SETUP_POD" -n vault -- sh -c "
   vault auth enable jwt 2>&1 | tail -1
   vault write auth/jwt/config jwt_validation_pubkeys=\"\$(cat /setup/pubkeys.json)\" 2>&1 | tail -1
   vault policy write $POLICY /setup/policy.hcl 2>&1 | tail -1
-  vault write auth/jwt/role/$ROLE role_type=jwt user_claim=sub \
-    bound_audiences=vault \
-    $([ -n \"$SA_NAME\" ] && printf 'bound_service_account_names=%s bound_service_account_namespaces=%s ' \"$SA_NAME\" \"$SA_NAMESPACE\") \
-    token_policies=$POLICY token_type=service token_num_uses=0 2>&1 | tail -1
+  vault policy write $SHARED_POLICY /setup/shared-policy.hcl 2>&1 | tail -1
+  sh /setup/role-merge.sh $ROLE $SHARED_POLICY $POLICY \"$SA_NAME\" \"$SA_NAMESPACE\" 2>&1 | tail -2
 "
 
 kubectl delete pod "$SETUP_POD" -n vault --grace-period=0 --wait=false >/dev/null 2>&1 || true

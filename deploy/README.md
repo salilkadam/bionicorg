@@ -210,6 +210,25 @@ Known causes:
   (re-create both with `deploy/scripts/setup-vault-jwt.sh`; login 403s while
   the policy is missing, 401s while the role/JWT config is broken — a useful
   distinction). The shared store's policy must list every tenant's KV path.
+- **Shared-store path prefix (cross-tenant blast radius, 2026-10-06).** The
+  instance ClusterSecretStore `vault-backend` is shared by every tenant
+  namespace, and its tenant ExternalSecrets write **bare** keys
+  (`t6-apps/<x>/config`, `shared/*`, `t5-gateway/...`). Two ways to break all
+  of them at once:
+  1. Setting the store's `vault.path` (chart `vault.kvMount`) to a *folder*
+     like `t6-apps/bionic-org/config` instead of the KV mount name `secret` —
+     ESO then prefixes every tenant's key and every foreign sync 403s.
+  2. Writing the shared JWT role `eso-reader` with `token_policies` that
+     **replace** (rather than merge) the existing list, dropping the broad
+     read policy other tenants rely on. `setup-vault-jwt.sh` now merges
+     additively and always attaches the broad `eso-reader` policy
+     (`secret/data/*` read + `secret/metadata/*` read/list) alongside the org
+     policy.
+  After **any** Vault role/policy/store change: `kubectl rollout restart
+  deploy/external-secrets -n external-secrets` (the controller caches store
+  login tokens for up to 1h) and then confirm `kubectl get externalsecret -A`
+  shows every row READY=True — foreign tenants' ES failures are invisible from
+  the bionicorg namespace.
 
 ### Claude agents fail with "Credit balance is too low"
 
