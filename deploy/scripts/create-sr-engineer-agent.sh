@@ -17,10 +17,14 @@
 # deploy/ directory copied in) or anywhere that can reach the Paperclip API.
 #
 # After creation (Claude subscription auth — claude_local has NO device login;
-# it uses an owner-pasted setup token, so heartbeat stays disabled until done):
-#   1. On any machine logged into the Claude subscription, run `claude setup-token`
-#      and paste the printed sk-ant-oat01-... token:
-#        POST /api/companies/<cid>/claude-oauth-token  {"token":"sk-ant-oat01-..."}
+# heartbeat stays disabled until bound). The token lives in Vault
+# (shared/api-keys -> claude_subscription_token), synced by ESO into the pod
+# env CLAUDE_CODE_OAUTH_TOKEN:
+#   1. Inside the app pod, submit the stored token (never echo it):
+#        curl -X POST -H "Authorization: Bearer $(cat /tmp/.bk)" \
+#          -H "Content-Type: application/json" \
+#          -d "{\"token\":\"$CLAUDE_CODE_OAUTH_TOKEN\"}" \
+#          $API/api/companies/<cid>/claude-oauth-token
 #   2. Bind the stored token to the agent:
 #        PATCH /api/agents/<id>  {"applyStoredClaudeLogin":true}
 #   3. Enable the heartbeat:
@@ -101,8 +105,8 @@ async function api(path, init = {}) {
   });
   const id = created.id || created.agent?.id;
   console.log(`created: ${id}`);
-  console.log("NEXT: paste a Claude setup token, bind it, then enable the heartbeat:");
-  console.log(`  POST  /api/companies/${CID}/claude-oauth-token {"token":"sk-ant-oat01-..."}`);
+  console.log("NEXT: bootstrap Claude auth from the Vault-synced pod env, bind, enable heartbeat:");
+  console.log(`  POST  /api/companies/${CID}/claude-oauth-token {"token":"$CLAUDE_CODE_OAUTH_TOKEN"}  (inside app pod)`);
   console.log(`  PATCH /api/agents/${id} {"applyStoredClaudeLogin":true}`);
   console.log(`  PATCH /api/agents/${id} {"runtimeConfig":{"heartbeat":{"enabled":true,"intervalSec":300,"maxConcurrentRuns":1}}}`);
 })().catch((e) => { console.error(e.message); process.exit(1); });

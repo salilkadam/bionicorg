@@ -156,9 +156,11 @@ it preserves; only `--rotate-master-key` changes it).
    GPU-cluster key). These live encrypted **in the DB** under the master key —
    they are not in Vault or the PVC and cannot be restored from this repo.
 3. Recreate the watchdog agent: copy `deploy/` into the app pod and run
-   `deploy/scripts/create-sr-engineer-agent.sh`, then follow its NEXT output
-   (Claude token → bind → enable heartbeat). Also re-run
-   `register-cluster-mcp-servers.sh` and `apply-agent-opencode-data-isolation.sh`.
+   `deploy/scripts/create-sr-engineer-agent.sh`, then bootstrap its Claude
+   credential from the Vault-synced `claude_subscription_token` pod env
+   (see "Sr. Engineer" section), bind it, and enable the heartbeat. Also
+   re-run `register-cluster-mcp-servers.sh` and
+   `apply-agent-opencode-data-isolation.sh`.
 
 ### Verify any restore
 
@@ -328,13 +330,20 @@ brain is the Claude subscription (`claude_local` adapter).
   (requires `PAPERCLIP_BOARD_TOKEN`; runs inside the app pod)
 
 Claude auth note: `claude_local` has **no device login** and the setup-token
-session flow needs a managed sandbox environment. Use the owner-pasted token
-path instead:
+session flow needs a managed sandbox environment. This deployment uses the
+Vault path instead — the subscription token lives in Vault at
+`shared/api-keys` key `claude_subscription_token`, synced by ESO into the
+`bionic-org-api-keys` secret and injected into the pod as both
+`claude_subscription_token` and `CLAUDE_CODE_OAUTH_TOKEN`. One-time bootstrap
+(rotate the Vault value to rotate the credential, then re-run step 1):
 
-1. `claude setup-token` on any machine signed into the subscription.
-2. `POST /api/companies/<cid>/claude-oauth-token {"token":"sk-ant-oat01-..."}`
-3. `PATCH /api/agents/<id> {"applyStoredClaudeLogin":true}`
-4. `PATCH /api/agents/<id> {"runtimeConfig":{"heartbeat":{"enabled":true,"intervalSec":300,"maxConcurrentRuns":1}}}`
+1. `POST /api/companies/<cid>/claude-oauth-token {"token":"sk-ant-oat01-..."}`
+   (read the token from the pod env — never paste it into tickets/logs).
+2. `PATCH /api/agents/<id> {"applyStoredClaudeLogin":true}`
+3. `PATCH /api/agents/<id> {"runtimeConfig":{"heartbeat":{"enabled":true,"intervalSec":300,"maxConcurrentRuns":1}}}`
+
+Done 2026-10-06: bound (`secretId 37564ea7`), first on-demand run succeeded
+(claude-opus-5, exit 0), heartbeat enabled — 5-minute timer patrols active.
 
 The heartbeat ships **disabled** at creation so the agent never loops
 `setup_failed` before its Claude login exists. Memory: with 6 agents at
