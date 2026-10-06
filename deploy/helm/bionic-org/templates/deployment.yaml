@@ -25,6 +25,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      {{- if .Values.persistence.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.persistence.fsGroup }}
+      {{- end }}
       serviceAccountName: {{ include "bionic-org.name" . }}-sa
     {{- with .Values.imagePullSecret }}
       {{- if .enabled }}
@@ -86,6 +90,15 @@ spec:
                 secretKeyRef:
                   key: minio_root_password
                   name: {{ include "bionic-org.name" . }}-secrets
+            # Paperclip secrets master key (local_encrypted provider). MUST come
+            # from Vault; if absent the app silently regenerates a new key on a
+            # fresh filesystem and all previously encrypted secrets become
+            # unreadable. See the 2026-10-06 incident.
+            - name: PAPERCLIP_SECRETS_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: {{ .Values.vault.masterKeySecretKey }}
+                  name: {{ include "bionic-org.name" . }}-secrets
           {{- if eq .Values.env.PAPERCLIP_STORAGE_PROVIDER "s3" }}
             - name: PAPERCLIP_STORAGE_S3_BUCKET
               valueFrom:
@@ -112,3 +125,14 @@ spec:
             periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: paperclip-data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: paperclip-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.name }}
+      {{- end }}

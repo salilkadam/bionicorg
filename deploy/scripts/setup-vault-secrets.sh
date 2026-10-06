@@ -5,6 +5,18 @@
 # Creates/updates the secret at t6-apps/bionic-org/config in Vault
 # with all required environment variables.
 #
+# IMPORTANT (learned the hard way, 2026-10-06):
+#  1. This script MERGES into the existing secret (kv patch). Never use
+#     `kv put`/`vault write` here — KV v2 writes REPLACE the whole object and
+#     silently delete keys you did not pass (this bit us once already).
+#  2. paperclip_secrets_master_key is the AES-256-GCM master key for the
+#     `local_encrypted` secrets provider. It is generated exactly ONCE and must
+#     never be regenerated while any encrypted secret version exists in the
+#     database — regenerating it makes all managed secrets (agent API keys,
+#     OAuth tokens…) permanently undecryptable. This script preserves the
+#     existing value; pass --rotate-master-key ONLY when you intend to wipe and
+#     re-enter every managed secret in the Board UI.
+#
 # Usage:
 #   ./deploy/scripts/setup-vault-secrets.sh \
 #     --database-url "postgresql://..." \
@@ -12,12 +24,17 @@
 #     --session-secret "..." \
 #     --keycloak-client-id "..." \
 #     --keycloak-client-secret "..." \
-#     [--vault-token "token"]
+#     [--vault-token "token"] \
+#     [--minio-root-user "..."] [--minio-root-password "..."] \
+#     [--rotate-master-key]
 #
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 VAULT_PATH="t6-apps/bionic-org/config"
+VAULT_MOUNT="secret"
+MASTER_KEY_KEY="paperclip_secrets_master_key"
+ROTATE_MASTER_KEY=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -28,59 +45,82 @@ while [[ $# -gt 0 ]]; do
     --keycloak-client-id)    KEYCLOAK_CLIENT_ID="$2"; shift 2 ;;
     --keycloak-client-secret) KEYCLOAK_CLIENT_SECRET="$2"; shift 2 ;;
     --vault-token)           VAULT_TOKEN="$2"; shift 2 ;;
+    --minio-root-user)       MINIO_ROOT_USER="$2"; shift 2 ;;
+    --minio-root-password)   MINIO_ROOT_PASSWORD="$2"; shift 2 ;;
+    --rotate-master-key)     ROTATE_MASTER_KEY=true; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
 
-echo "=== Populating Vault secrets ==="
+echo "=== Populating Vault secrets (merge, never replace) ==="
 echo "  Path    : ${VAULT_PATH}"
 echo ""
 
-# Use the vault CLI or API
-if command -v vault &> /dev/null; then
-  VAULT_CMD="vault"
-else
-  # Fall back to kubectl exec into vault pod for kubectl-based access
-  echo "  Note: vault CLI not found. Use the Vault UI or API directly."
-  echo "  Path: ${VAULT_PATH}"
+if ! command -v vault &> /dev/null; then
+  echo "  vault CLI not found. Use the Vault UI or API directly."
+  echo "  Path: ${VAULT_PATH} (KV v2 mount: ${VAULT_MOUNT})"
   echo "  Required keys:"
-  echo "    - database_url"
-  echo "    - better_auth_secret"
-  echo "    - session_secret"
-  echo "    - keycloak_client_id"
-  echo "    - keycloak_client_secret"
-  echo "    - vault_token"
-  echo "    - minio_root_user"
-  echo "    - minio_root_password"
+  echo "    - database_url, better_auth_secret, session_secret"
+  echo "    - keycloak_client_id, keycloak_client_secret"
+  echo "    - vault_token, minio_root_user, minio_root_password"
+  echo "    - ${MASTER_KEY_KEY}  (base64 of a 32-byte key; generate ONCE:"
+  echo "        openssl rand -base64 32)"
   exit 0
 fi
 
-# Build JSON payload
-SECRET_JSON=$(jq -n \
-  --arg db "${DATABASE_URL}" \
-  --arg auth "${BETTER_AUTH_SECRET}" \
-  --arg sess "${SESSION_SECRET}" \
-  --arg kc_id "${KEYCLOAK_CLIENT_ID}" \
-  --arg kc_sec "${KEYCLOAK_CLIENT_SECRET}" \
-  --arg vtok "${VAULT_TOKEN:-}" \
-  --arg muser "${MINIO_ROOT_USER:-}" \
-  --arg mpass "${MINIO_ROOT_PASSWORD:-}" \
-  '{
-    database_url: $db,
-    better_auth_secret: $auth,
-    session_secret: $sess,
-    keycloak_client_id: $kc_id,
-    keycloak_client_secret: $kc_sec,
-    vault_token: $vtok,
-    minio_root_user: $muser,
-    minio_root_password: $mpass
-  }')
+# ---------------------------------------------------------------------------
+# Master key: read existing first. Preserve unless explicitly rotating.
+# ---------------------------------------------------------------------------
+EXISTING_MASTER_KEY=""
+if EXISTING_JSON=$(vault kv get -mount="${VAULT_MOUNT}" -format=json "${VAULT_PATH}" 2>/dev/null); then
+  EXISTING_MASTER_KEY=$(printf '%s' "${EXISTING_JSON}" \
+    | jq -r --arg k "${MASTER_KEY_KEY}" '.data.data[$k] // empty')
+fi
 
-echo "Writing to Vault..."
-echo "${SECRET_JSON}" | ${VAULT_CMD} kv put -mount=secret "${VAULT_PATH}" -input=-
+if [[ "${ROTATE_MASTER_KEY}" == true ]]; then
+  echo "  !! Rotating master key. ALL existing encrypted secrets in the Paperclip"
+  echo "  !! database will become undecryptable and MUST be re-entered in the UI."
+  read -r -p "  Type 'rotate' to continue: " CONFIRM
+  [[ "${CONFIRM}" == "rotate" ]] || { echo "Aborted."; exit 1; }
+  MASTER_KEY=$(openssl rand -base64 32)
+elif [[ -n "${EXISTING_MASTER_KEY}" ]]; then
+  MASTER_KEY="${EXISTING_MASTER_KEY}"
+  echo "  Master key: preserved existing value."
+else
+  MASTER_KEY=$(openssl rand -base64 32)
+  echo "  Master key: generated NEW key (first time for this Vault path)."
+  echo "  !! Back it up off-cluster now; losing it loses all managed secrets."
+fi
+
+# ---------------------------------------------------------------------------
+# Build the patch payload (only provided keys are written; others untouched).
+# ---------------------------------------------------------------------------
+PATCH_JSON=$(jq -n --arg mk "${MASTER_KEY}" --arg k "${MASTER_KEY_KEY}" '{ ($k): $mk }')
+
+for pair in \
+  "database_url:${DATABASE_URL:-}" \
+  "better_auth_secret:${BETTER_AUTH_SECRET:-}" \
+  "session_secret:${SESSION_SECRET:-}" \
+  "keycloak_client_id:${KEYCLOAK_CLIENT_ID:-}" \
+  "keycloak_client_secret:${KEYCLOAK_CLIENT_SECRET:-}" \
+  "vault_token:${VAULT_TOKEN:-}" \
+  "minio_root_user:${MINIO_ROOT_USER:-}" \
+  "minio_root_password:${MINIO_ROOT_PASSWORD:-}"
+do
+  key="${pair%%:*}"; val="${pair#*:}"
+  if [[ -n "${val}" ]]; then
+    PATCH_JSON=$(printf '%s' "${PATCH_JSON}" | jq --arg k "${key}" --arg v "${val}" '. + { ($k): $v }')
+  fi
+done
+
+echo "Writing to Vault (kv patch = merge)..."
+printf '%s' "${PATCH_JSON}" | vault kv patch -mount="${VAULT_MOUNT}" "${VAULT_PATH}" - >/dev/null
 
 echo ""
-echo "✓ Vault secrets written"
+echo "✓ Vault secrets patched (master key preserved or freshly generated)"
 echo ""
-echo "Next: Verify with:"
-echo "  vault kv get ${VAULT_PATH}"
+echo "Verify (key names only, values hidden):"
+echo "  vault kv get -mount=${VAULT_MOUNT} -format=json ${VAULT_PATH} | jq '.data.data | keys'"
+echo ""
+echo "Next: helm upgrade (see deploy/README.md), then confirm the pod env"
+echo "PAPERCLIP_SECRETS_MASTER_KEY resolves and the app starts clean."

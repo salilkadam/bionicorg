@@ -24,6 +24,11 @@ Before running `deploy.sh`, ensure these are set up:
 | 5. Build & push image | `./deploy/scripts/build-and-push.sh` | ⬜ |
 | 6. Create DNS record | `org.baisoln.com` → `192.168.0.210` | ⬜ |
 
+> Step 4 generates `paperclip_secrets_master_key` **exactly once** and then
+> preserves it forever. On a rebuild of an *existing* Org (DB survives), the
+> Vault secret must already contain the original master key — a new key makes
+> every previously encrypted managed secret unreadable.
+
 ### Deploy
 
 ```bash
@@ -62,6 +67,14 @@ postgresql:
 vault:
   path: t6-apps/bionic-org/config
   secretStore: vault-backend
+  masterKeySecretKey: paperclip_secrets_master_key
+
+persistence:            # /paperclip instance state — DO NOT disable
+  enabled: true
+  size: 20Gi
+  storageClassName: nfs-client   # RWX: rolling updates never deadlock
+  mountPath: /paperclip
+  fsGroup: 1000
 
 keycloak:
   url: https://auth.bailsoln.com
@@ -88,6 +101,7 @@ The ExternalSecret expects these keys at `t6-apps/bionic-org/config`:
 | `vault_token` | Vault API token |
 | `minio_root_user` | MinIO access key |
 | `minio_root_password` | MinIO secret key |
+| `paperclip_secrets_master_key` | **AES-256-GCM master key** (`local_encrypted` provider). base64 of a 32-byte key. Generated once by `setup-vault-secrets.sh`; NEVER regenerate while encrypted secret versions exist in the DB — all managed secrets (agent API keys, OAuth tokens, provider keys) become permanently undecryptable. Backed up off-cluster. |
 | `storage_s3_bucket` | S3 bucket name (if using S3 storage) |
 | `storage_s3_endpoint` | S3 endpoint (if using S3 storage) |
 
@@ -102,8 +116,50 @@ The ExternalSecret expects these keys at `t6-apps/bionic-org/config`:
 | Deployment | `bionic-org` | Main application deployment |
 | Ingress | `bionic-org` | Kong ingress with TLS |
 | Certificate | `bionic-org-tls` | cert-manager TLS certificate |
-| ExternalSecret | `bionic-org-secrets` | Vault → K8s secret sync |
+| PVC | `bionic-org-data` | NFS RWX 20Gi at `/paperclip`: instance state (signing keys, local_disk storage, agent workspaces) |
+| ExternalSecret | `bionic-org-secrets` | Vault → K8s secret sync (5m) |
 | ExternalSecret | `bionic-org-pg-superuser` | PG credentials (if separate) |
+
+## Disaster Recovery — rebuilding the Org from scratch
+
+Source of truth for re-creation is **this chart + Vault + the CNPG database**.
+The K8s Secret `bionic-org-secrets` is only a 5-minute cache of Vault —
+never edit it directly (`kubectl patch` edits get reverted by ESO).
+
+### Case A — app/pods deleted, database and Vault intact (common case)
+
+```bash
+helm upgrade --install bionic-org ./deploy/helm/bionic-org --namespace bionicorg
+# ESO re-syncs the K8s secret; the master key comes from Vault via
+# PAPERCLIP_SECRETS_MASTER_KEY; /paperclip re-attaches from the NFS PVC.
+```
+
+### Case B — namespace wiped, DB + Vault + NFS share intact
+
+Run the Pre-deployment Checklist steps 1, 4 (skip 2–3, 6), then `deploy.sh`.
+Do **not** let `setup-vault-secrets.sh` regenerate the master key (it won't —
+it preserves; only `--rotate-master-key` changes it).
+
+### Case C — everything lost (fresh cluster, fresh DB)
+
+1. Full checklist (steps 1–6). `setup-vault-secrets.sh` generates a brand-new
+   master key — fine for a fresh DB; back it up off-cluster immediately.
+2. After rollout, sign in via Keycloak and re-enter all managed secrets in the
+   Board UI (Anthropic/API-provider keys, Claude OAuth, GitHub token,
+   GPU-cluster key). These live encrypted **in the DB** under the master key —
+   they are not in Vault or the PVC and cannot be restored from this repo.
+
+### Verify any restore
+
+```bash
+kubectl -n bionicorg get pods,externalsecret,pvc
+# Externalsecret READY=True, PVC Bound, pod env resolves master key:
+kubectl -n bionicorg exec deploy/bionic-org -- node -e \
+  'console.log("master key set:", !!process.env.PAPERCLIP_SECRETS_MASTER_KEY)'
+curl -sk https://org.baisoln.com/api/health
+# Then check a heartbeat run reaches a real model call (no
+# "Secret decryption failed" in pod logs).
+```
 
 ## Troubleshooting
 

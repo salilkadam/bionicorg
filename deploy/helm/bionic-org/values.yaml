@@ -12,7 +12,7 @@ namespace: bionicorg
 # ---------------------------------------------------------------------------
 image:
   repository: docker4zerocool/bionic
-  tag: "15ad899dd"  # current production image, built from main@15ad899dd (replaces the retired 71d7f47fe-fix-patched hotfix)
+  tag: "40e3e904e"  # current production image (was 15ad899dd before the 2026-10-06 master-key incident)
   pullPolicy: Always
 
 # Image pull secret (e.g. for Docker Hub rate-limit compliance)
@@ -80,11 +80,34 @@ postgresql:
   port: 5432
 
 # ---------------------------------------------------------------------------
+# Persistence — CRITICAL: /paperclip holds the instance state
+# (secrets/decision-signing.key, telemetry, local_disk storage, agent
+# workspaces). Without a volume this lives on the container overlay and is
+# destroyed on every pod recreation. In 2026-10-06 this silently lost the
+# secrets master key before it was pinned via PAPERCLIP_SECRETS_MASTER_KEY.
+# RWX (NFS) is deliberate: rolling updates never deadlock on attachment.
+# ---------------------------------------------------------------------------
+persistence:
+  enabled: true
+  name: bionic-org-data
+  size: 20Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-client
+  mountPath: /paperclip
+  # App container runs as uid/gid 1000 (node)
+  fsGroup: 1000
+
+# ---------------------------------------------------------------------------
 # Vault / ExternalSecrets
 # ---------------------------------------------------------------------------
 vault:
   # Vault path where app secrets are stored
   path: t6-apps/bionic-org/config
+  # Key inside that path holding the Paperclip secrets master key
+  # (base64 32-byte AES-256 key). MUST survive every redeploy — see
+  # deploy/scripts/setup-vault-secrets.sh which generates it exactly once.
+  masterKeySecretKey: paperclip_secrets_master_key
   # Secret store (ClusterSecretStore)
   secretStore: vault-backend
   # Refresh interval for ESO sync
