@@ -293,3 +293,19 @@ Entries that are `oauth_gated` (Letta, Google Workspace: Keycloak realm
 `mcp` bearer required), `sse_only` (search MCP: Paperclip speaks Streamable
 HTTP), `unavailable` (qdrant, scaled to zero), `not_mcp` (docs swagger-ui),
 or `unreachable` (archon) are documented but intentionally not registered.
+
+## Per-agent OpenCode data isolation
+
+All agents execute `opencode run` as the same OS user in the app pod, so they
+would otherwise share one SQLite database
+(`/paperclip/.local/share/opencode/opencode.db`). opencode 1.18.x kills the
+whole run on `SQLITE_BUSY` (upstream anomalyco/opencode#33320, #47566, #48416),
+which surfaced as `Error: Unexpected error / database is locked` and
+`Failed to execute statement` whenever two agents started together.
+
+`scripts/apply-agent-opencode-data-isolation.sh` gives every agent its own
+`XDG_DATA_HOME`/`XDG_STATE_HOME` under the `/paperclip` PVC
+(`/paperclip/agents/<agentId>/opencode/…`), seeded with a copy of the shared DB
+so session resume keeps working. The bindings live in
+`agents.adapter_config.env` (plain values), so they survive pod restarts; run
+the script again after adding agents.
