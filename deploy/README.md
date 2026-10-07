@@ -174,6 +174,55 @@ curl -sk https://org.baisoln.com/api/health
 # "Secret decryption failed" in pod logs).
 ```
 
+## Google Drive artifact space ("AI Team")
+
+Agent-created documents are dropped into the approved Google Drive space
+"AI Team" (folder id `1MmJAx3Rkag90KSSlFISiVvkuWwvO38dK`) via the
+`Loc-Google Workspace` MCP connection (`https://mcp.baisoln.com/gworkspace/mcp`,
+Kong `apikey` header from the `loc-gworkspace-apikey` Paperclip secret).
+The linked Google account is `salil-bionicaisolutions` (tenant `base`).
+
+### Layout (one folder per org role = the owner)
+
+| Folder | ID | Owner role |
+|---|---|---|
+| CEO | `1XGRgQDdZZOeDwVU9omlg6bNE5eEaZFeC` | Chief Executive Officer |
+| COO | `1-UGS4ohfHND3mi1LBIX4eJUln6mxw2ey` | Chief Operating Officer |
+| CMO | `10Ncj5HLJW0NdX0asahftmL1yPmO0W0P3` | Chief Marketing Officer |
+| CIO | `1AZI8sLSO5hjx9B9D2HEfEfYysRg4kdCo` | Head of Development |
+| CLO | `1APCrCwB98knSn7GYjUXpURlhuVRISmZb` | Chief Legal Officer |
+| Project Manager | `1RPveSfN6e8zCmnJwNBk5o3G9JVooAimM` | Project Manager |
+| Sr. Engineer | `16QRpoyGqlaVFTosGBRfoiBg0dkMzY0Y5` | Senior Engineer (error warden, IT) |
+| _shared | `1X3mLZ0IP1pJDJtMm5WZwoAzBb_qoh5dz` | cross-role documents |
+
+Each folder contains an `OWNER.md` naming the accountable role and its
+Paperclip agent ids; `README.md` at the root restates the convention.
+
+### Rules for agents
+
+- Always pass your role folder's `folder_id` to `gw_create_file` — never
+  drop artifacts at the AI Team root or outside it.
+- Drive-side `owner` is always the single linked OAuth account; role
+  ownership is expressed by folder placement + `OWNER.md`, not Drive ACLs.
+  (Strict per-role Drive ownership would need per-role Google accounts or
+  a Shared Drive — not set up.)
+- `gw_list_files` has no `folder_id` argument: filter with a Drive query,
+  e.g. `'<folder_id>' in parents and trashed=false`.
+
+### Reseed after disaster
+
+```sh
+# Idempotent: skips anything that already exists.
+kubectl -n bionicorg exec -i deploy/bionic-org -c bionic -- \
+  node - < deploy/scripts/gdrive-seed-ai-team.mjs
+```
+
+Requires server image `mcp-servers-gworkspace:oauth-prm-3` or newer
+(`gw_create_folder`; merged upstream in
+`Bionic-AI-Solutions/multitenant-mcp-servers` main, PR #17) and the
+`mcp_api_key` env on the app pod (from `bionic-org-api-keys`). To rebuild
+that image quickly see `deploy/mcp/gworkspace-image/oauth-prm-3.Dockerfile`.
+
 ## Troubleshooting
 
 ### Pod stuck in ContainerCreating
