@@ -181,6 +181,57 @@ Agent-created documents are dropped into the approved Google Drive space
 `Loc-Google Workspace` MCP connection (`https://mcp.baisoln.com/gworkspace/mcp`,
 Kong `apikey` header from the `loc-gworkspace-apikey` Paperclip secret).
 The linked Google account is `salil-bionicaisolutions` (tenant `base`).
+Every gworkspace call needs explicit `tenant_id: "base"` plus `account: "<alias>"`;
+the catalog exposes 23 `gw_*` tools and has **no file-delete verb**, so cleanup of
+a stray artifact must be done in the Drive UI.
+
+### Credential chain (three separate links — do not conflate them)
+
+1. **Paperclip → Kong**: the bound secret value must equal a registered Kong
+   key-auth credential. Ours is `mcp-shared-apikey` in namespace `mcp`
+   (Vault `shared/api-keys` key `mcp_api_key`, ESO `refreshInterval: 1h`).
+   The gworkspace app trusts *only* Kong-injected `x-consumer-username`, and it
+   rejects Kong's `gworkspace-anon` anonymous fallback, so an unregistered key
+   returns `401` rather than degrading.
+2. **Kong → gworkspace app**: `mcp-gworkspace-key-auth` on
+   `mcp-gworkspace-ingress`, `key_names: [apikey, X-API-Key]`.
+3. **gworkspace app → Google**: the tenant OAuth client from Vault
+   `t6-apps/mcp/config` key `gworkspace_tenants_json` → ESO
+   `mcp-gworkspace-tenants` → `/etc/mcp/tenants.json`. The `GOOGLE_AUTH_TOKEN`
+   pod env (Vault `t6-apps/bionic-org/config`) is **not** this client and is read
+   by no code path.
+
+ESO caches for an hour; after changing Vault, force a reconcile with
+`kubectl annotate externalsecret <name> force-sync=$(date +%s)`.
+
+### Known failure mode: health says `ok`, every call returns 401
+
+Health checks resolve credentials from `tool_connections.credential_refs`, but
+agent dispatch resolves them from `connection_grants.credential_secret_refs`
+(`resolveCredentialHeadersUnrecorded` in `server/src/services/tool-gateway.ts`
+skips a header ref with no matching grant ref). A connection whose grant refs
+are empty therefore reports healthy while every real call goes to Kong
+unauthenticated.
+
+Signatures: `tool_call_events.metadata.execution.response.httpStatus = 401` with
+`credential_refs` populated but `select credential_secret_refs from
+connection_grants` returning `[]`.
+
+Repair with the supported reconnect flow (`POST /api/tool-connections/:id/reconnect`),
+then confirm the grant ref landed; `deploy/scripts/fix-gws-grant-credential-ref.sh`
+and `fix-gws-grant-credential-ref-sql.sh` do both and are idempotent. Verify with
+`deploy/scripts/prove-drive-list-e2e.sh` (read path) and
+`prove-drive-write-e2e.sh` (write path).
+
+### Consent: "Google hasn't verified this app" / blocked
+
+The default scope preset includes `gmail.modify` and `gmail.send`, which are
+Google **restricted** scopes. An unverified OAuth client requesting them is hard-
+blocked for anyone not on the consent screen's test-user list, so a Drive-only
+connect fails as part of the whole preset. Add the operator as a test user (or set
+the audience to Internal) before re-consenting. Existing refresh tokens keep
+working — only *new* consents are blocked — so a block does not explain an
+already-linked account failing.
 
 ### Layout (one folder per org role = the owner)
 
