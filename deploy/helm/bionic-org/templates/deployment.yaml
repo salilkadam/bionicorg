@@ -97,6 +97,19 @@ spec:
                 secretKeyRef:
                   key: database_url
                   name: {{ include "bionic-org.name" . }}-secrets
+            # google_auth_token (Vault t6-apps/bionic-org/config) = Google OAuth
+            # WEB-CLIENT JSON (id+secret), redirect_uri points at the Keycloak
+            # Bionic realm Google broker. It is the SSO login client credential,
+            # NOT a Drive access token and NOT the gworkspace MCP tenant client
+            # (that is a separate client with an mcp.baisoln.com callback).
+            # Exposed for Keycloak broker config tooling; never send it as a
+            # bearer/apikey to the gworkspace MCP server.
+            - name: GOOGLE_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: google_auth_token
+                  name: {{ include "bionic-org.name" . }}-secrets
+                  optional: true
             - name: BETTER_AUTH_SECRET
               valueFrom:
                 secretKeyRef:

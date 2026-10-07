@@ -656,17 +656,43 @@
     {
       "key": "loc-gworkspace",
       "displayName": "Loc-Google Workspace",
-      "description": "Requires OAuth bearer from Keycloak realm 'mcp' (MCP_OAUTH_ISSUER); shared/api-keys are not accepted.",
-      "status": "oauth_gated",
+      "description": "Google Workspace (Gmail/Calendar/Contacts/Drive) via the cluster gworkspace MCP. Auth: Kong apikey (mcp_api_key from shared/api-keys) through the mcp.baisoln.com gateway - the server trusts ONLY Kong-injected consumer headers, so the internal DNS URL 401s and cannot be used. Tenant base has salil.kadam@bionicaisolutions.com linked with drive/gmail/calendar/contacts scopes; gw_create_file supports folder_id for approved-space drops.",
+      "status": "ready",
       "transport": "streamable-http",
-      "url": "http://mcp-gworkspace-server.mcp.svc.cluster.local:8015/mcp",
+      "url": "https://mcp.baisoln.com/gworkspace/mcp",
       "auth": {
-        "kind": "oauth",
-        "issuer": "https://auth.bionicaisolutions.com/realms/mcp"
+        "kind": "apikey_header",
+        "headerName": "apikey",
+        "valueEnv": "mcp_api_key",
+        "via": "kong-gateway",
+        "note": "shared/api-keys mcp_api_key; Authorization-Bearer path needs a Keycloak mcp-realm JWT (not provisioned). google_auth_token in org config is the Keycloak SSO login client JSON and is NOT this credential."
       },
       "note": "Requires OAuth bearer from Keycloak realm 'mcp' (MCP_OAUTH_ISSUER); shared/api-keys are not accepted.",
-      "toolCount": 0,
-      "tools": []
+      "toolCount": 22,
+      "tools": [
+        "gw_register_tenant",
+        "gw_add_account",
+        "gw_list_accounts",
+        "gw_remove_account",
+        "gw_list_calendars",
+        "gw_list_events",
+        "gw_create_event",
+        "gw_update_event",
+        "gw_delete_event",
+        "gw_freebusy",
+        "gw_search_messages",
+        "gw_get_message",
+        "gw_send_email",
+        "gw_create_draft",
+        "gw_modify_message",
+        "gw_list_contacts",
+        "gw_search_contacts",
+        "gw_create_contact",
+        "gw_update_contact",
+        "gw_list_files",
+        "gw_get_file",
+        "gw_create_file"
+      ]
     },
     {
       "key": "loc-letta",

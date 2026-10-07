@@ -71,6 +71,35 @@ async function api(path, init = {}) {
       console.log("exist " + s.displayName);
       continue;
     }
+    // authKind "none" is the internal-DNS default. Servers that sit behind
+    // Kong's key-auth wall (e.g. Loc-Google Workspace) must be addressed via
+    // the gateway URL with a stored apikey header: the server trusts only
+    // Kong-injected consumer headers, so sending the apikey straight to the
+    // internal DNS URL 401s. The apikey value comes from the environment
+    // named by auth.valueEnv (e.g. mcp_api_key, ESO-synced from Vault
+    // shared/api-keys) and is stored as a Paperclip managed secret.
+    let credentialRefs = [];
+    let authKind = "none";
+    if (s.auth && s.auth.kind === "apikey_header") {
+      const value = process.env[s.auth.valueEnv];
+      if (!value) throw new Error(s.displayName + ": missing env " + s.auth.valueEnv);
+      const secret = await api("/companies/" + CID + "/secrets", {
+        method: "POST",
+        body: JSON.stringify({
+          name: s.displayName + " apikey",
+          key: s.key + "-apikey",
+          value,
+          description: "Kong gateway apikey for " + s.displayName + " (source: Vault shared/api-keys " + s.auth.valueEnv + ")",
+        }),
+      });
+      credentialRefs = [{
+        name: s.key + "-apikey",
+        secretId: secret.id,
+        placement: "header",
+        key: s.auth.headerName || "apikey",
+      }];
+      authKind = "api_key";
+    }
     const app = await api("/companies/" + CID + "/tools/applications", {
       method: "POST",
       body: JSON.stringify({
@@ -88,12 +117,13 @@ async function api(path, init = {}) {
         name: s.displayName,
         connectionPurpose: "tool",
         transport: "mcp_remote",
-        authKind: "none",
+        authKind,
         credentialPolicy: "shared",
         status: "active",
         enabled: true,
         config: { url: s.url },
         transportConfig: { url: s.url, sourceTemplateKey: s.key, connectionMethodKey: "managed" },
+        ...(credentialRefs.length ? { credentialRefs } : {}),
       }),
     });
     console.log("creat " + s.displayName + " -> " + conn.id + " (" + s.toolCount + " tools)");
