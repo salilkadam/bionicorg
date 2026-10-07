@@ -14,7 +14,7 @@ $PG -c "insert into board_api_keys (user_id,name,key_hash,expires_at) values ('m
 POD=$(kubectl -n $NS get pods --no-headers | awk '/^bionic-org/ {print $1; exit}')
 printf '%s' "$RAW" | kubectl -n $NS exec -i "$POD" -c bionic -- sh -c 'cat > /tmp/.bt; chmod 600 /tmp/.bt'
 
-for ACCT in salil-bionicaisolutions salil-bionicaisol salil-personal-gmail; do
+for ACCT in ${ACCOUNTS:-salil-bionicaisolutions salil-bionicaisol salil-personal-gmail bionicorg}; do
   python3 - "$AGENT" "$ACCT" "$ROOT" <<'PY' > /tmp/scratchpad/e2e.json
 import json, sys
 agent, acct, root = sys.argv[1:4]
