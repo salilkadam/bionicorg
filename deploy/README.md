@@ -233,6 +233,39 @@ the audience to Internal) before re-consenting. Existing refresh tokens keep
 working — only *new* consents are blocked — so a block does not explain an
 already-linked account failing.
 
+### Google OAuth client retirement (executed 2026-10-07)
+
+The old gworkspace OAuth client for tenant `base`
+(`1046539951552-m2ib…apps.googleusercontent.com`, secret sha8 `dcbe8619`) is
+retired. Tenant `base` now uses `382016492812-li56…apps.googleusercontent.com`
+(secret sha8 `8b6327ae`, `state_signing_key` preserved), live in Vault
+`t6-apps/mcp/config` → `gworkspace_tenants_json`.
+
+Proven before the switch with `deploy/scripts/probe_google_redirect_uris.py`
+(uses a guaranteed-bad control URI; Google answers HTTP 200 to both accepted
+and rejected `redirect_uri`s, so only the **body/redirect target**
+discriminates): the callback `https://mcp.baisoln.com/gworkspace/oauth/callback`
+is **registered on the new client**.
+
+The switch is executed by
+`deploy/scripts/switch-tenant-client-3b-write.sh` (fetch → transform → full
+`kv put @file`; never `kv put` with a partial map — this Vault build lacks
+`-stdin` on `kv patch`). Vault keeps the previous version, so rollback is
+`vault kv put …` from version N-1 or the Vault UI.
+
+Consequence measured after the switch: Google refresh tokens are bound to the
+issuing `client_id`; all three pre-existing accounts
+(`salil-bionicaisolutions`, `salil-personal-gmail`, `salil-bionicaisol`) now
+fail refresh with `unauthorized_client` and need one fresh consent each. New
+consents should be **drive-scoped** (`scopes: ["drive"]`) to avoid the
+restricted-scope block above. Get a consent URL with
+`deploy/scripts/gws-auth-url-bionicorg.sh` (edit the `account`/`scopes`
+parameters; the tool is `gw_add_account`, not `gw_get_auth_url`).
+
+Security note found during this work: Vault `t6-apps/bionic-org/config` stores
+a **root** Vault token as `vault_token`, which ESO mirrors into the
+`bionic-org-secrets` k8s Secret. That is an operator follow-up to scope down.
+
 ### Layout (one folder per org role = the owner)
 
 | Folder | ID | Owner role |
