@@ -538,3 +538,7 @@ The heartbeat ships **disabled** at creation so the agent never loops
 `setup_failed` before its Claude login exists. Memory: with 6 agents at
 `maxConcurrentRuns:1` the pod stays under the 6Gi limit; re-check
 `kubectl top pod` after the first week of patrol activity.
+
+See `doc/plans/2026-10-07-gws-consent-url-rewrite-bug.md` for the
+test-calls `auth_url` rewrite bug found during this work and the
+`mint-gws-consent-url.mjs` workaround.
