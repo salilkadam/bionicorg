@@ -259,8 +259,23 @@ issuing `client_id`; all three pre-existing accounts
 fail refresh with `unauthorized_client` and need one fresh consent each. New
 consents should be **drive-scoped** (`scopes: ["drive"]`) to avoid the
 restricted-scope block above. Get a consent URL with
-`deploy/scripts/gws-auth-url-bionicorg.sh` (edit the `account`/`scopes`
-parameters; the tool is `gw_add_account`, not `gw_get_auth_url`).
+`deploy/scripts/mint-gws-consent-url.mjs <account>` (mints the canonical URL
+directly from the upstream MCP endpoint; do **not** use
+`gws-auth-url-bionicorg.sh` — the gateway test-call path rewrites `auth_url`
+into a legacy state shape that the callback rejects; see
+`doc/plans/2026-10-07-gws-consent-url-rewrite-bug.md`).
+
+Post-switch blocker (resolved same day): the new GCP project had **no APIs
+enabled**, so Drive calls returned Google 403 "Google Drive API has not been
+used in project 382016492812". The owning project is **`bionic-core-503216`**
+(project number `382016492812` = the `client_id` prefix; API enablement is
+always enforced on the project that *issued* the OAuth client). Operator
+enabled Drive/Gmail/Calendar/People there; E2E proof then passed green:
+`ACCOUNTS="bionicorg" bash deploy/scripts/prove-drive-list-e2e.sh` →
+`decision: allowed`, real children of the AI Team root, ground-truth
+`tool_call_events … httpStatus = 200`. Use
+`deploy/scripts/run-gws-drive-list-probe.sh` to probe upstream directly
+(`gw_list_files` args are only `tenant_id`/`account`/`query`/`max_results`).
 
 Security note found during this work: Vault `t6-apps/bionic-org/config` stores
 a **root** Vault token as `vault_token`, which ESO mirrors into the
