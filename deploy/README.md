@@ -100,7 +100,7 @@ Two Vault paths feed this deployment via ESO (both synced every 5 min — never 
 | `session_secret` | Session encryption secret (random) |
 | `keycloak_client_id` | Keycloak client ID |
 | `keycloak_client_secret` | Keycloak client secret |
-| `vault_token` | Vault API token |
+| `vault_token` | Scoped Vault ops token (policy `bionic-org-app`; see Rotation note below — NOT root since 2026-10-07) |
 | `minio_root_user` | MinIO access key |
 | `minio_root_password` | MinIO secret key |
 | `paperclip_secrets_master_key` | **AES-256-GCM master key** (`local_encrypted` provider). base64 of a 32-byte key. Generated once by `setup-vault-secrets.sh`; NEVER regenerate while encrypted secret versions exist in the DB — all managed secrets (agent API keys, OAuth tokens, provider keys) become permanently undecryptable. Backed up off-cluster. |
@@ -284,6 +284,27 @@ enabled Drive/Gmail/Calendar/People there; E2E proof then passed green:
 Security note found during this work: Vault `t6-apps/bionic-org/config` stores
 a **root** Vault token as `vault_token`, which ESO mirrors into the
 `bionic-org-secrets` k8s Secret. That is an operator follow-up to scope down.
+
+**Rotation completed 2026-10-07.** The stored token is now an **orphan,
+periodic (720h) service token** under policy `bionic-org-app`, which grants
+exactly `secret/{data,metadata}/t6-apps/bionic-org/config` and
+`secret/{data,metadata}/t6-apps/mcp/config` (read/update/patch). No root token
+is stored anywhere anymore. Facts an operator needs:
+- ESO never used `vault_token` (it authenticates via Vault JWT with role
+  `eso-reader`); the app container mounts `VAULT_TOKEN` but no code reads it.
+  Consumers are the ops scripts (`switch-tenant-client-*`,
+  `probe-bionic-vault-token.sh`), which now self-renew the token on every use
+  so the 720h period never lapses. A token unused for 30 days dies — rerun any
+  script with the break-glass flow below, then re-point the config field.
+- **Never revoke the token's parent to retire it in the same breath as
+  creating a replacement**: revoking a parent cascades to children (this bit
+  us during the rotation and required root regeneration).
+- Break-glass when no token works: `bash deploy/scripts/vault-regenerate-root.sh`
+  (regenerates root from the two shares in `vault/vault-unseal-keys`, t=2/3;
+  pitfalls documented in the script header). Regenerated root cannot be
+  revoked; durable mitigation for share leakage is `vault operator rotate`.
+- `capabilities-self` needs sudo and fails on the scoped token; use
+  `probe-bionic-vault-token.sh`, which proves capabilities functionally.
 
 ### Layout (one folder per org role = the owner)
 

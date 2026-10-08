@@ -10,6 +10,7 @@ rm -f /tmp/va.txt
 kubectl -n vault exec vault-0 -- sh -c '
 export VAULT_ADDR=http://127.0.0.1:8200
 export VAULT_TOKEN=$(cat /tmp/va.txt)
+vault token renew >/dev/null 2>&1 || true  # keep the periodic scoped token alive
 vault kv get -format=json secret/t6-apps/mcp/config > /tmp/mcp-cfg.json
 rm -f /tmp/va.txt
 echo "data keys:"; grep -o "\"[a-z_]*\":" /tmp/mcp-cfg.json | tr -d "\":
