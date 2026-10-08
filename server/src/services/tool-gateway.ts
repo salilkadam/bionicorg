@@ -4022,7 +4022,23 @@ export function createToolGatewayService(
     for (const ref of connection.credentialRefs ?? []) {
       if (ref.placement !== "header") continue;
       const grantRef = grantRefForCredential(grant, ref);
-      if (!grantRef) continue;
+      if (!grantRef) {
+        // A declared header credential with no matching secret on the active
+        // grant used to dispatch unauthenticated — the upstream then failed
+        // with its own confusing error (2026-10 gworkspace Drive outage).
+        // Fail at the gateway with the exact credential instead.
+        await markRemoteConnectionHealth(
+          connection,
+          "missing_secret",
+          "A configured credential is missing from the active grant.",
+        );
+        throw new ToolGatewayHttpError(
+          422,
+          `Credential "${ref.name}" is configured on this connection but missing from the active grant.`,
+          "mcp_remote_grant_credential_missing",
+          { connectionId: connection.id, grantId: grant.id, credential: ref.name },
+        );
+      }
       try {
         const value = await resolveGrantSecretValue(
           session,

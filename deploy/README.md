@@ -260,10 +260,14 @@ fail refresh with `unauthorized_client` and need one fresh consent each. New
 consents should be **drive-scoped** (`scopes: ["drive"]`) to avoid the
 restricted-scope block above. Get a consent URL with
 `deploy/scripts/mint-gws-consent-url.mjs <account>` (mints the canonical URL
-directly from the upstream MCP endpoint; do **not** use
-`gws-auth-url-bionicorg.sh` — the gateway test-call path rewrites `auth_url`
-into a legacy state shape that the callback rejects; see
-`doc/plans/2026-10-07-gws-consent-url-rewrite-bug.md`).
+directly from the upstream MCP endpoint). Until the redaction fix is deployed
+the board's gateway test-call path still returns `auth_url:
+"***REDACTED***"` (the shared redactor matched the `auth_url` field name; see
+`doc/plans/2026-10-07-gws-consent-url-rewrite-bug.md`), so do **not** use
+`gws-auth-url-bionicorg.sh` against an unfixed build. After the fix deploys,
+`deploy/scripts/repro-testcall-authurl-rewrite.sh` proves the gateway path is
+clean (`canonical: true`) and `deploy/scripts/decode-authurl-state.mjs`
+decodes any `state` blob.
 
 Post-switch blocker (resolved same day): the new GCP project had **no APIs
 enabled**, so Drive calls returned Google 403 "Google Drive API has not been
@@ -555,5 +559,6 @@ The heartbeat ships **disabled** at creation so the agent never loops
 `kubectl top pod` after the first week of patrol activity.
 
 See `doc/plans/2026-10-07-gws-consent-url-rewrite-bug.md` for the
-test-calls `auth_url` rewrite bug found during this work and the
+test-calls `auth_url` bug found during this work (root cause: field-name
+redaction of the consent URL, not a state rewrite) and the
 `mint-gws-consent-url.mjs` workaround.

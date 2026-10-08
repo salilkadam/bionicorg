@@ -177,6 +177,61 @@ describe("redaction", () => {
     });
   });
 
+  it("preserves browser consent URLs while redacting real credentials", () => {
+    // Real gworkspace gw_add_account shape: the state blob is unpadded
+    // base64url JSON, not a JWT, so value-shape guards must not eat it.
+    const consentUrl =
+      "https://accounts.google.com/o/oauth2/v2/auth?response_type=code"
+      + "&client_id=382016492812-abcdef.apps.googleusercontent.com"
+      + "&redirect_uri=https%3A%2F%2Fmcp.baisoln.com%2Fgworkspace%2Fcallback"
+      + "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive"
+      + "&state=eyJ0IjoiYmFzZSIsImEiOiJiaW9uaWNvcmcifQ"
+      + "&prompt=consent";
+
+    const result = sanitizeRecord({
+      auth_url: consentUrl,
+      authUrl: consentUrl,
+      auth_token: consentUrl,
+      refresh_auth_url: consentUrl,
+      nested: { auth_url: consentUrl },
+      // A consent-shaped key must not smuggle basic-auth userinfo or a
+      // downgradeable http URL past the redactor.
+      smuggling: { auth_url: "https://user:pass@relay.example/x" },
+      insecure: { auth_url: "http://accounts.google.com/o/oauth2/v2/auth?state=x" },
+    });
+
+    expect(result.auth_url).toBe(consentUrl);
+    expect(result.authUrl).toBe(consentUrl);
+    expect(result.nested).toEqual({ auth_url: consentUrl });
+    expect(result.auth_token).toBe(REDACTED_EVENT_VALUE);
+    expect(result.refresh_auth_url).toBe(REDACTED_EVENT_VALUE);
+    expect(result.smuggling).toEqual({ auth_url: REDACTED_EVENT_VALUE });
+    expect(result.insecure).toEqual({ auth_url: REDACTED_EVENT_VALUE });
+  });
+
+  it("preserves raw and escaped consent URLs in diagnostic text", () => {
+    const consentUrl =
+      "https://accounts.google.com/o/oauth2/v2/auth?client_id=382016492812-abcdef"
+      + "&state=eyJ0IjoiYmFzZSJ9&prompt=consent";
+
+    const rawOut = redactSensitiveText(
+      `result {"token":"leak-value","auth_url":"${consentUrl}","success":true}`,
+    );
+    expect(rawOut).toContain(`"auth_url":"${consentUrl}"`);
+    expect(rawOut).not.toContain("leak-value");
+
+    const escapedOut = redactSensitiveText(
+      String.raw`result {\"token\":\"leak-value\",\"auth_url\":\"${consentUrl}\",\"success\":true}`,
+    );
+    expect(escapedOut).toContain(String.raw`\"auth_url\":\"${consentUrl}\"`);
+    expect(escapedOut).not.toContain("leak-value");
+
+    // Near-miss keys and non-browser values keep redacting.
+    expect(redactSensitiveText(`{"refresh_auth_url":"${consentUrl}"}`)).toContain(REDACTED_EVENT_VALUE);
+    expect(redactSensitiveText(`{"auth_url":"http://accounts.google.com/x"}`)).toContain(REDACTED_EVENT_VALUE);
+    expect(redactSensitiveText(`{"auth_url":"https://user:pass@relay.example/x"}`)).toContain(REDACTED_EVENT_VALUE);
+  });
+
   it("redacts jwt-looking values even when key name is not sensitive", () => {
     const jwt =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";

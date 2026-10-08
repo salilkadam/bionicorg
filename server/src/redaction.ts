@@ -353,15 +353,54 @@ const CLI_SECRET_FLAG_RE = new RegExp(
   "i",
 );
 const JSON_SECRET_FIELD_TEXT_RE = new RegExp(
-  String.raw`((?:"|')?${SECRET_FIELD_NAME_PATTERN}(?:"|')?\s*:\s*(?:"|'))[^"'` +
+  String.raw`((?:"|')?${SECRET_FIELD_NAME_PATTERN}(?:"|')?\s*:\s*(?:"|'))([^"'` +
     "`" +
-    String.raw`\r\n]+((?:"|'))`,
+    String.raw`\r\n]+)((?:"|'))`,
   "gi",
 );
 const ESCAPED_JSON_SECRET_FIELD_TEXT_RE = new RegExp(
-  String.raw`((?:\\")?${SECRET_FIELD_NAME_PATTERN}(?:\\")?\s*:\s*(?:\\"))[^\\\r\n]+((?:\\"))`,
+  String.raw`((?:\\")?${SECRET_FIELD_NAME_PATTERN}(?:\\")?\s*:\s*(?:\\"))([^\\\r\n]+)((?:\\"))`,
   "gi",
 );
+/**
+ * OAuth consent URLs are browser-handoff artifacts: tools such as
+ * gworkspace `gw_add_account` return `auth_url` precisely so a human can
+ * open it and connect an account. The field-name heuristic alone ("auth" is
+ * a secret hint) destroys the value and the connect flow can never start.
+ * The exemption is closed on both sides: the key must be exactly `auth_url`
+ * (or `authUrl`), and the value must be a well-formed https URL with no
+ * embedded basic-auth userinfo. JWT-shaped, non-https, or malformed values
+ * still fall through to redaction, so a smuggled credential cannot ride a
+ * consent-shaped key.
+ */
+const CONSENT_URL_PAYLOAD_KEY_RE = /^auth_?url$/i;
+const CONSENT_URL_TEXT_KEY_RE = /^["']?auth_?url["']?\s*:\s*["']$/i;
+const ESCAPED_CONSENT_URL_TEXT_KEY_RE = /^(?:\\")?auth_?url(?:\\")?\s*:\s*(?:\\")$/i;
+
+function isPublicConsentUrl(value: unknown): value is string {
+  if (typeof value !== "string" || !value.startsWith("https://")) return false;
+  if (JWT_VALUE_RE.test(value)) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
+function redactJsonSecretTextMatch(
+  match: string,
+  keyPrefix: string,
+  value: string,
+  valueSuffix: string,
+  consentKeyRe: RegExp,
+): string {
+  if (consentKeyRe.test(keyPrefix) && isPublicConsentUrl(value)) {
+    return `${keyPrefix}${value}${valueSuffix}`;
+  }
+  return `${keyPrefix}${REDACTED_EVENT_VALUE}${valueSuffix}`;
+}
+
 const SECRET_TEXT_HINTS = [
   "api",
   "key",
@@ -891,6 +930,10 @@ export function sanitizeRecord(
       redacted[key] = redactSensitiveText(value);
       continue;
     }
+    if (CONSENT_URL_PAYLOAD_KEY_RE.test(key) && isPublicConsentUrl(value)) {
+      redacted[key] = value;
+      continue;
+    }
     if (
       SECRET_PAYLOAD_KEY_RE.test(key) &&
       !AUDIT_REASON_PAYLOAD_KEY_RE.test(key) &&
@@ -995,10 +1038,15 @@ export function redactSensitiveText(input: string): string {
   if (!maybeContainsSecretText(input)) return input;
   return redactCommandText(
     redactStandaloneBearerCredentials(redactAuthorizationCredentials(input))
-      .replace(JSON_SECRET_FIELD_TEXT_RE, `$1${REDACTED_EVENT_VALUE}$2`)
+      .replace(
+        JSON_SECRET_FIELD_TEXT_RE,
+        (match, keyPrefix: string, value: string, valueSuffix: string) =>
+          redactJsonSecretTextMatch(match, keyPrefix, value, valueSuffix, CONSENT_URL_TEXT_KEY_RE),
+      )
       .replace(
         ESCAPED_JSON_SECRET_FIELD_TEXT_RE,
-        `$1${REDACTED_EVENT_VALUE}$2`,
+        (match, keyPrefix: string, value: string, valueSuffix: string) =>
+          redactJsonSecretTextMatch(match, keyPrefix, value, valueSuffix, ESCAPED_CONSENT_URL_TEXT_KEY_RE),
       ),
     REDACTED_EVENT_VALUE,
   );

@@ -55,6 +55,7 @@ import {
   summarizeToolValue,
 } from "../services/tool-content-guards.js";
 import { createToolGatewayService, ToolGatewayHttpError } from "../services/tool-gateway.js";
+import { REDACTED_EVENT_VALUE } from "../redaction.js";
 import { resolveConnectionGrantSecret } from "../services/connection-credentials.js";
 import { secretService } from "../services/secrets.js";
 import * as cogneeBridge from "../services/cognee-connection.js";
@@ -2464,6 +2465,133 @@ rl.on("line", (line) => {
       if (originalApiUrl === undefined) delete process.env.PAPERCLIP_API_URL;
       else process.env.PAPERCLIP_API_URL = originalApiUrl;
       await fake.close();
+    }
+  });
+
+  it("keeps a browser consent URL intact through a remote MCP test call", async () => {
+    // Regression: the shared redactor matched the consent-URL field name as a
+    // credential hint and blanked `auth_url`, so the board could never start
+    // the gworkspace account-connect flow (2026-10 Drive outage follow-up).
+    const company = await createCompany(db);
+    const agent = await createAgent(db, company.id);
+    const consentUrl =
+      "https://accounts.google.com/o/oauth2/v2/auth?response_type=code"
+      + "&client_id=382016492812-abcdef.apps.googleusercontent.com"
+      + "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive"
+      + "&state=eyJ0IjoiYmFzZSIsImEiOiJiaW9uaWNvcmcifQ&prompt=consent";
+    const payload = {
+      success: true,
+      account: "bionicorg",
+      auth_url: consentUrl,
+      instructions: "Open auth_url in a browser to connect gworkspace.",
+    };
+    const remote = await startFakeRemoteMcpServer(({ body }) => ({
+      body: {
+        jsonrpc: "2.0",
+        id: body?.id,
+        result: {
+          content: [{ type: "text", text: JSON.stringify(payload) }],
+          structuredContent: payload,
+          isError: false,
+        },
+      },
+    }));
+    try {
+      const { application, connection, catalogEntry } = await createRemoteMcpTool(db, company.id, {
+        url: remote.url, toolName: "gw_add_account", riskLevel: "read",
+      });
+      await db.update(toolCatalogEntries).set({
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
+      }).where(eq(toolCatalogEntries.id, catalogEntry.id));
+      const toolName = expectedConnectedToolName({
+        applicationKey: application.applicationKey,
+        connectionId: connection.id,
+        toolName: catalogEntry.toolName,
+      });
+      await allowAllToolsForAgent(db, company.id, agent.id);
+      await createActiveMember(db, company.id, "consent-user");
+      const gateway = createTestToolGatewayService(db);
+      const testCall = await gateway.executeTestCall({
+        companyId: company.id, connectionId: connection.id,
+        agentId: agent.id, userId: "consent-user", toolName, parameters: {},
+      });
+      expect(testCall).toMatchObject({ decision: "allowed" });
+      expect(testCall.error).toBeUndefined();
+      const result = testCall.result as {
+        content?: unknown;
+        data?: { content?: Array<{ text?: string }>; structuredContent?: Record<string, unknown> };
+      };
+      // All three response spots carry the URL byte-for-byte.
+      expect(result.data?.structuredContent?.auth_url).toBe(consentUrl);
+      expect(JSON.parse(String(result.data?.content?.[0]?.text)).auth_url).toBe(consentUrl);
+      expect(JSON.parse(String(result.content)).auth_url).toBe(consentUrl);
+      const serialized = JSON.stringify(testCall.result);
+      expect(serialized.split(consentUrl).length - 1).toBe(3);
+      expect(serialized).not.toContain(REDACTED_EVENT_VALUE);
+    } finally {
+      await remote.close();
+    }
+  });
+
+  it("fails a remote call when a declared header credential is missing from the active grant", async () => {
+    // Regression: a header credential declared on the connection with no
+    // matching ref on the active grant used to dispatch unauthenticated; the
+    // upstream's own error then masked the real misconfiguration (2026-10
+    // gworkspace Drive outage).
+    const company = await createCompany(db);
+    const agent = await createAgent(db, company.id);
+    const secret = await secretService(db).create(company.id, {
+      name: `Shared mcp apikey ${randomUUID()}`,
+      key: `mcp_shared_apikey_${randomUUID().replace(/-/g, "")}`,
+      provider: "local_encrypted",
+      value: "fixture-api-key",
+    });
+    const remote = await startFakeRemoteMcpServer(() => ({
+      body: { jsonrpc: "2.0", id: "unused", result: { content: [{ type: "text", text: "must never dispatch" }] } },
+    }));
+    try {
+      const { application, connection, catalogEntry } = await createRemoteMcpTool(db, company.id, {
+        url: remote.url,
+        toolName: "gw_search_drive",
+        riskLevel: "read",
+        credentialRefs: [{
+          name: "headers.X-Api-Key",
+          secretId: secret.id,
+          version: "latest",
+          placement: "header",
+          key: "X-Api-Key",
+        }],
+      });
+      await db.update(toolCatalogEntries).set({
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
+      }).where(eq(toolCatalogEntries.id, catalogEntry.id));
+      const toolName = expectedConnectedToolName({
+        applicationKey: application.applicationKey,
+        connectionId: connection.id,
+        toolName: catalogEntry.toolName,
+      });
+      await allowAllToolsForAgent(db, company.id, agent.id);
+      await createActiveMember(db, company.id, "missing-secret-user");
+      const gateway = createTestToolGatewayService(db);
+      const testCall = await gateway.executeTestCall({
+        companyId: company.id, connectionId: connection.id,
+        agentId: agent.id, userId: "missing-secret-user", toolName, parameters: {},
+      });
+      expect(testCall).toMatchObject({
+        decision: "allowed",
+        error: {
+          reasonCode: "mcp_remote_grant_credential_missing",
+          message: expect.stringContaining("headers.X-Api-Key"),
+        },
+      });
+      // The decisive part: nothing was dispatched without the credential.
+      expect(remote.requests).toHaveLength(0);
+      await expect(
+        db.select({ healthStatus: toolConnections.healthStatus }).from(toolConnections)
+          .where(eq(toolConnections.id, connection.id)),
+      ).resolves.toEqual([{ healthStatus: "missing_secret" }]);
+    } finally {
+      await remote.close();
     }
   });
 
